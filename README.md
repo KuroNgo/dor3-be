@@ -38,27 +38,94 @@ It is completely up to the repository how it is going to perform an operation.
 
 ### File Structure
 ```
+│   .gitignore
+│   app.env
+│   go.mod
+│   go.sum
+│   go.work
+│   go.work.sum
+│   main.go
+│   README.md
+│
 ├───.idea
+│       .gitignore
+│       clean-architecture.iml
+│       modules.xml
+│       workspace.xml
+│
 ├───api
 │   ├───controller
+│   │       user.controller.go
+│   │
 │   ├───middleware
+│   │       cors.go
+│   │       deserialization.go
+│   │       rate_limit.go
+│   │
 │   └───route
+│           route.go
+│
 ├───assets
+│       button-view-api-docs.png
+│       go-arch-private-api-request-flow.png
+│       go-arch-public-api-request-flow.png
+│       go-backend-arch-diagram.png
+│
 ├───bootstrap
-├───cmd
+│       app.go
+│       db.go
+│       env.go
+│
 ├───domain
-│   ├───mock
 │   ├───request
+│   │       course.go
+│   │       course.impl.go
+│   │       lesson.go
+│   │       lesson.impl.go
+│   │       permission.go
+│   │       permission.impl.go
+│   │       quiz.go
+│   │       store.go
+│   │       store.impl.go
+│   │       user.go
+│   │       user.impl.go
+│   │       user_process.go
+│   │       user_process.impl.go
+│   │       user_quiz_attempt.go
+│   │       user_quiz_attempt.impl.go
+│   │
 │   └───response
+│           error_response.go
+│           success_response.go
+│
 ├───infrastructor
 │   └───mongo
+│       │   mongo.go
+│       │
 │       └───mocks
+│               client.go
+│               collection.go
+│               cursor.go
+│               database.go
+│               single_result.go
+│
 ├───internal
+│       token.go
+│
 ├───repository
-├───router
+│       permission.repo.go
+│       user.repo.go
+│
 └───usecase
-├───admin
-├───system
-└───user
+    ├───admin
+    │       statistical.go
+    │
+    ├───system
+    │       role.usecase.go
+    │
+    └───user
+            user.usecase.go
+
+
 ```
 ### Run Programming
