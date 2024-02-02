@@ -5,27 +5,25 @@ import (
 	"log"
 )
 
-type (
-	Database struct {
-		DBHost     string `mapstructure:"DB_HOST"`
-		DBPort     string `mapstructure:"DB_PORT"`
-		DBUser     string `mapstructure:"DB_USER"`
-		DBPassword string `mapstructure:"DB_PASS"`
-		DBName     string `mapstructure:"DB_NAME"`
+type Database struct {
+	DBHost     string `mapstructure:"DB_HOST"`
+	DBPort     string `mapstructure:"DB_PORT"`
+	DBUser     string `mapstructure:"DB_USER"`
+	DBPassword string `mapstructure:"DB_PASS"`
+	DBName     string `mapstructure:"DB_NAME"`
 
-		Level  string `mapstructure:"level"`
-		Format string `mapstructure:"format"`
-		Prefix string `mapstructure:"prefix"`
+	Level  string `mapstructure:"level"`
+	Format string `mapstructure:"format"`
+	Prefix string `mapstructure:"prefix"`
 
-		AppEnv         string `mapstructure:"APP_ENV"`
-		ServerAddress  string `mapstructure:"SERVER_ADDRESS"`
-		ContextTimeout int    `mapstructure:"CONTEXT_TIMEOUT"`
+	AppEnv         string `mapstructure:"APP_ENV"`
+	ServerAddress  string `mapstructure:"SERVER_ADDRESS"`
+	ContextTimeout int    `mapstructure:"CONTEXT_TIMEOUT"`
 
-		Secret                string `mapstructure:"secret"`
-		AccessTokenExpiresIn  int64  `mapstructure:"accessTokenExpiresIn"`
-		RefreshTokenExpiresIn int64  `mapstructure:"refreshTokenExpiresIn"`
-	}
-)
+	Secret                string `mapstructure:"secret"`
+	AccessTokenExpiresIn  int64  `mapstructure:"accessTokenExpiresIn"`
+	RefreshTokenExpiresIn int64  `mapstructure:"refreshTokenExpiresIn"`
+}
 
 func NewEnv() *Database {
 	env := Database{}

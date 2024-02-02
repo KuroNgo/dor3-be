@@ -1,4 +1,4 @@
-package request
+package domain
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -6,16 +6,18 @@ import (
 )
 
 type User struct {
-	ID        primitive.ObjectID `bson:"_id" json:"-"`
-	FullName  string             `bson:"full_name" binding:"required" json:"title"`
-	Username  string             `bson:"username"  binding:"required" json:"username"`
-	Password  string             `bson:"password"  binding:"required" json:"password"`
-	Email     string             `bson:"email"  binding:"required" json:"email"`
-	Phone     string             `bson:"phone"  binding:"required" json:"phone"`
-	Age       uint8              `bson:"age"  binding:"required" json:"age"`
-	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
-	RoleID    primitive.ObjectID `bson:"_id" json:"-"`
+	ID         primitive.ObjectID `bson:"_id" json:"-"`
+	FullName   string             `bson:"full_name"  json:"title"`
+	Username   string             `bson:"username"  json:"username"`
+	Password   string             `bson:"password"  json:"password"`
+	Email      string             `bson:"email"  json:"email"`
+	AvatarURL  string             `bson:"avatar_url"  json:"avatar_url"`
+	Specialize string             `bson:"specialize"  json:"specialize"`
+	Phone      string             `bson:"phone"   json:"phone"`
+	Age        uint8              `bson:"age"  json:"age"`
+	CreatedAt  time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt  time.Time          `json:"updated_at" bson:"updated_at"`
+	RoleID     primitive.ObjectID `bson:"_id" json:"-"`
 }
 
 type SignInWithUsername struct {

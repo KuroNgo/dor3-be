@@ -1,4 +1,4 @@
-package request
+package domain
 
 import (
 	"context"
@@ -9,8 +9,10 @@ const (
 	CollectionUser = "users"
 )
 
+//go:generate mockery
 type IUserRepository interface {
-	Create(c context.Context, user *User) <-chan error
+	Create(c context.Context, user *User) error
+	CreateAsync(c context.Context, user *User) <-chan error
 	Fetch(c context.Context) ([]User, error)
 	Update(c context.Context, user *User) error
 	Delete(userID primitive.ObjectID) error
