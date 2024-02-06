@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"clean-architecture/domain/request"
+	"clean-architecture/domain/request/user"
 	"clean-architecture/infrastructor/mongo"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,26 +14,27 @@ type UserRepository struct {
 	collection string
 }
 
-func NewUserRepository(db mongo.Database, collection string) domain.IUserRepository {
+func NewUserRepository(db mongo.Database, collection string) user.IUserRepository {
 	return &UserRepository{
 		database:   db,
 		collection: collection,
 	}
 }
 
-func (u *UserRepository) Create(c context.Context, user *domain.User) error {
+// Create interacted with user in domain to database
+func (u *UserRepository) Create(c context.Context, user *user.User) error {
 	collection := u.database.Collection(u.collection)
 	_, err := collection.InsertOne(c, user)
 
 	return err
 }
 
-func (u *UserRepository) CreateAsync(c context.Context, user *domain.User) <-chan error {
+func (u *UserRepository) CreateAsync(c context.Context, user *user.User) <-chan error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (u *UserRepository) Fetch(c context.Context) ([]domain.User, error) {
+func (u *UserRepository) Fetch(c context.Context) ([]user.User, error) {
 	collection := u.database.Collection(u.collection)
 
 	opts := options.Find().SetProjection(bson.D{{Key: "password", Value: 0}})
@@ -43,32 +44,65 @@ func (u *UserRepository) Fetch(c context.Context) ([]domain.User, error) {
 		return nil, err
 	}
 
-	var users []domain.User
+	var users []user.User
 
 	err = cursor.All(c, &users)
 	if users == nil {
-		return []domain.User{}, err
+		return []user.User{}, err
 	}
 
 	return users, err
 }
 
-func (u *UserRepository) Update(c context.Context, user *domain.User) error {
-	//TODO implement me
-	panic("implement me")
+func (u *UserRepository) Update(c context.Context, userID primitive.ObjectID, updatedUser interface{}) error {
+	collection := u.database.Collection(u.collection)
+	objID, err := primitive.ObjectIDFromHex(userID.Hex())
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{
+		"_id": objID,
+	}
+	update := bson.M{
+		"$set": updatedUser,
+	}
+
+	_, err = collection.UpdateOne(c, filter, update)
+	return err
 }
 
-func (u *UserRepository) Delete(userID primitive.ObjectID) error {
-	//TODO implement me
-	panic("implement me")
+func (u *UserRepository) Delete(c context.Context, userID primitive.ObjectID) error {
+	collection := u.database.Collection(u.collection)
+	objID, err := primitive.ObjectIDFromHex(userID.Hex())
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{
+		"_id": objID,
+	}
+	_, err = collection.DeleteOne(c, filter)
+	return err
 }
 
-func (u *UserRepository) GetByEmail(c context.Context, email string) (domain.User, error) {
-	//TODO implement me
-	panic("implement me")
+func (u *UserRepository) GetByEmail(c context.Context, email string) (user.User, error) {
+	collection := u.database.Collection(u.collection)
+	var user user.User
+	err := collection.FindOne(c, bson.M{"email": email}).Decode(&user)
+	return user, err
 }
 
-func (u *UserRepository) GetByID(c context.Context, id primitive.ObjectID) (domain.User, error) {
-	//TODO implement me
-	panic("implement me")
+func (u *UserRepository) GetByID(c context.Context, id primitive.ObjectID) (user.User, error) {
+	collection := u.database.Collection(u.collection)
+
+	var user user.User
+
+	idHex, err := primitive.ObjectIDFromHex(id.Hex())
+	if err != nil {
+		return user, err
+	}
+
+	err = collection.FindOne(c, bson.M{"_id": idHex}).Decode(&user)
+	return user, err
 }

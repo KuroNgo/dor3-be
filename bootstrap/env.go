@@ -20,9 +20,15 @@ type Database struct {
 	ServerAddress  string `mapstructure:"SERVER_ADDRESS"`
 	ContextTimeout int    `mapstructure:"CONTEXT_TIMEOUT"`
 
-	Secret                string `mapstructure:"secret"`
-	AccessTokenExpiresIn  int64  `mapstructure:"accessTokenExpiresIn"`
-	RefreshTokenExpiresIn int64  `mapstructure:"refreshTokenExpiresIn"`
+	AccessTokenExpiresIn  int    `mapstructure:"accessTokenExpiresIn"`
+	RefreshTokenExpiresIn int    `mapstructure:"refreshTokenExpiresIn"`
+	AccessTokenSecret     string `mapstructure:"ACCESS_TOKEN_SECRET"`
+	RefreshTokenSecret    string `mapstructure:"REFRESH_TOKEN_SECRET"`
+
+	// implement the Google Oauth
+	GoogleClientID         string `mapstructure:"GOOGLE_OAUTH_CLIENT_ID"`
+	GoogleClientSecret     string `mapstructure:"GOOGLE_OAUTH_CLIENT_SECRET"`
+	GoogleOAuthRedirectUrl string `mapstructure:"GOOGLE_OAUTH_REDIRECT_URL"`
 }
 
 func NewEnv() *Database {

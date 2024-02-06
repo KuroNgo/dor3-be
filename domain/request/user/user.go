@@ -1,8 +1,13 @@
-package domain
+package user
 
 import (
+	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
+)
+
+const (
+	CollectionUser = "users"
 )
 
 type User struct {
@@ -20,20 +25,12 @@ type User struct {
 	RoleID     primitive.ObjectID `bson:"_id" json:"-"`
 }
 
-type SignInWithUsername struct {
-	Username string `bson:"username" json:"username"`
-	Password string `bson:"password" json:"password"`
-}
-
-type SignUpInput struct {
-	FullName string `bson:"fullName" json:"fullName"`
-	Username string `bson:"username" json:"username"`
-	Email    string `bson:"email" json:"email"`
-	Password string `bson:"password" json:"password"`
-	Phone    string `bson:"phone" json:"phone"`
-}
-
-type SignInWithEmail struct {
-	Email    string `json:"email"  binding:"required" bson:"email"`
-	Password string `json:"password"  binding:"required" bson:"password"`
+type IUserRepository interface {
+	Create(c context.Context, user *User) error
+	CreateAsync(c context.Context, user *User) <-chan error
+	Fetch(c context.Context) ([]User, error)
+	Update(c context.Context, userID primitive.ObjectID, updatedUser interface{}) error
+	Delete(c context.Context, userID primitive.ObjectID) error
+	GetByEmail(c context.Context, email string) (User, error)
+	GetByID(c context.Context, id primitive.ObjectID) (User, error)
 }

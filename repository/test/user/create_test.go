@@ -1,7 +1,8 @@
 package repository_test
 
 import (
-	"clean-architecture/domain/request"
+	"clean-architecture/domain"
+	"clean-architecture/domain/request/user"
 	"clean-architecture/infrastructor/mongo/mocks"
 	"clean-architecture/repository"
 	"context"
@@ -20,16 +21,16 @@ func TestCreate(t *testing.T) {
 	databaseHelper = &mocks.Database{}
 	collectionHelper = &mocks.Collection{}
 
-	collectionName := domain.CollectionUser
+	collectionName := domain.domain.CollectionUser
 
-	mockUser := &domain.User{
+	mockUser := &user.User{
 		ID:       primitive.NewObjectID(),
 		FullName: "Test",
 		Email:    "test@gmail.com",
 		Password: "password",
 	}
 
-	mockEmptyUser := &domain.User{}
+	mockEmptyUser := &user.User{}
 	mockUserID := primitive.NewObjectID()
 
 	t.Run("success", func(t *testing.T) {
