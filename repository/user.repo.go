@@ -93,6 +93,13 @@ func (u *UserRepository) GetByEmail(c context.Context, email string) (user_domai
 	return user, err
 }
 
+func (u *UserRepository) GetByUsername(c context.Context, username string) (user_domain.User, error) {
+	collection := u.database.Collection(u.collection)
+	var user user_domain.User
+	err := collection.FindOne(c, bson.M{"email": username}).Decode(&user)
+	return user, err
+}
+
 func (u *UserRepository) GetByID(c context.Context, id primitive.ObjectID) (user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 

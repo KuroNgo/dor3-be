@@ -18,7 +18,7 @@ func NewLoginUseCase(userRepository user_domain.IUserRepository, timeout time.Du
 	}
 }
 
-func (l loginUseCase) GetAllUser(c context.Context) ([]user_domain.User, error) {
+func (l loginUseCase) GetCurrentUser(c context.Context) ([]user_domain.User, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -30,6 +30,7 @@ func (l loginUseCase) GetUserByEmail(c context.Context, email string) (user_doma
 }
 
 func (l loginUseCase) GetUserByUsername(c context.Context, username string) (user_domain.User, error) {
-	//TODO implement me
-	panic("implement me")
+	ctx, cancel := context.WithTimeout(c, l.contextTimeout)
+	defer cancel()
+	return l.userRepository.GetByUsername(ctx, username)
 }

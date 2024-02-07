@@ -1,7 +1,6 @@
 package repository_test
 
 import (
-	"clean-architecture/domain"
 	"clean-architecture/domain/request/user"
 	"clean-architecture/infrastructor/mongo/mocks"
 	"clean-architecture/repository"
@@ -21,22 +20,22 @@ func TestCreate(t *testing.T) {
 	databaseHelper = &mocks.Database{}
 	collectionHelper = &mocks.Collection{}
 
-	collectionName := domain.domain.CollectionUser
+	collectionName := user_domain.CollectionUser
 
-	mockUser := &user.User{
+	mockUser := &user_domain.User{
 		ID:       primitive.NewObjectID(),
 		FullName: "Test",
 		Email:    "test@gmail.com",
 		Password: "password",
 	}
 
-	mockEmptyUser := &user.User{}
+	mockEmptyUser := &user_domain.User{}
 	mockUserID := primitive.NewObjectID()
 
 	t.Run("success", func(t *testing.T) {
 
 		collectionHelper.
-			On("InsertOne", mock.Anything, mock.AnythingOfType("*domain.User")).
+			On("InsertOne", mock.Anything, mock.AnythingOfType("*user_domain.User")).
 			Return(mockUserID, nil).Once()
 
 		databaseHelper.
@@ -54,7 +53,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("error", func(t *testing.T) {
 		collectionHelper.
-			On("InsertOne", mock.Anything, mock.AnythingOfType("*domain.User")).
+			On("InsertOne", mock.Anything, mock.AnythingOfType("*user_domain.User")).
 			Return(mockEmptyUser, errors.New("unexpected")).Once()
 
 		databaseHelper.

@@ -17,7 +17,7 @@ type LoginResponse struct {
 }
 
 type ILoginUseCase interface {
-	GetAllUser(c context.Context) ([]User, error)
+	GetCurrentUser(c context.Context) ([]User, error)
 	GetUserByEmail(c context.Context, email string) (User, error)
 	GetUserByUsername(c context.Context, username string) (User, error)
 }

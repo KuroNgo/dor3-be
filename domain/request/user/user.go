@@ -43,5 +43,6 @@ type IUserRepository interface {
 	Update(c context.Context, userID primitive.ObjectID, updatedUser interface{}) error
 	Delete(c context.Context, userID primitive.ObjectID) error
 	GetByEmail(c context.Context, email string) (User, error)
+	GetByUsername(c context.Context, username string) (User, error)
 	GetByID(c context.Context, id primitive.ObjectID) (User, error)
 }
