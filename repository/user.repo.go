@@ -14,7 +14,7 @@ type UserRepository struct {
 	collection string
 }
 
-func NewUserRepository(db mongo.Database, collection string) user.IUserRepository {
+func NewUserRepository(db mongo.Database, collection string) user_domain.IUserRepository {
 	return &UserRepository{
 		database:   db,
 		collection: collection,
@@ -22,19 +22,19 @@ func NewUserRepository(db mongo.Database, collection string) user.IUserRepositor
 }
 
 // Create interacted with user in domain to database
-func (u *UserRepository) Create(c context.Context, user *user.User) error {
+func (u *UserRepository) Create(c context.Context, user *user_domain.User) error {
 	collection := u.database.Collection(u.collection)
 	_, err := collection.InsertOne(c, user)
 
 	return err
 }
 
-func (u *UserRepository) CreateAsync(c context.Context, user *user.User) <-chan error {
+func (u *UserRepository) CreateAsync(c context.Context, user *user_domain.User) <-chan error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (u *UserRepository) Fetch(c context.Context) ([]user.User, error) {
+func (u *UserRepository) Fetch(c context.Context) ([]user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 
 	opts := options.Find().SetProjection(bson.D{{Key: "password", Value: 0}})
@@ -44,11 +44,11 @@ func (u *UserRepository) Fetch(c context.Context) ([]user.User, error) {
 		return nil, err
 	}
 
-	var users []user.User
+	var users []user_domain.User
 
 	err = cursor.All(c, &users)
 	if users == nil {
-		return []user.User{}, err
+		return []user_domain.User{}, err
 	}
 
 	return users, err
@@ -86,17 +86,17 @@ func (u *UserRepository) Delete(c context.Context, userID primitive.ObjectID) er
 	return err
 }
 
-func (u *UserRepository) GetByEmail(c context.Context, email string) (user.User, error) {
+func (u *UserRepository) GetByEmail(c context.Context, email string) (user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
-	var user user.User
+	var user user_domain.User
 	err := collection.FindOne(c, bson.M{"email": email}).Decode(&user)
 	return user, err
 }
 
-func (u *UserRepository) GetByID(c context.Context, id primitive.ObjectID) (user.User, error) {
+func (u *UserRepository) GetByID(c context.Context, id primitive.ObjectID) (user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 
-	var user user.User
+	var user user_domain.User
 
 	idHex, err := primitive.ObjectIDFromHex(id.Hex())
 	if err != nil {

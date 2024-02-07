@@ -1,4 +1,4 @@
-package user
+package user_domain
 
 import "github.com/golang-jwt/jwt/v4"
 

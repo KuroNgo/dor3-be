@@ -1,4 +1,4 @@
-package user
+package user_domain
 
 import (
 	"context"
@@ -23,6 +23,17 @@ type User struct {
 	CreatedAt  time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt  time.Time          `json:"updated_at" bson:"updated_at"`
 	RoleID     primitive.ObjectID `bson:"_id" json:"-"`
+}
+
+type Response struct {
+	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+	Name      string             `json:"name,omitempty" bson:"name,omitempty"`
+	Email     string             `json:"email,omitempty" bson:"email,omitempty"`
+	Role      string             `json:"role,omitempty" bson:"role,omitempty"`
+	Photo     string             `json:"photo,omitempty" bson:"photo,omitempty"`
+	Provider  string             `json:"provider" bson:"provider"`
+	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
 type IUserRepository interface {
