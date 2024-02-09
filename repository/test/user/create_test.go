@@ -2,8 +2,8 @@ package repository_test
 
 import (
 	"clean-architecture/domain/request/user"
-	"clean-architecture/infrastructor/mongo/mocks"
-	"clean-architecture/repository"
+	mocks2 "clean-architecture/infrastructor/mocks"
+	user_repository "clean-architecture/repository/user"
 	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
@@ -14,11 +14,11 @@ import (
 
 func TestCreate(t *testing.T) {
 
-	var databaseHelper *mocks.Database
-	var collectionHelper *mocks.Collection
+	var databaseHelper *mocks2.Database
+	var collectionHelper *mocks2.Collection
 
-	databaseHelper = &mocks.Database{}
-	collectionHelper = &mocks.Collection{}
+	databaseHelper = &mocks2.Database{}
+	collectionHelper = &mocks2.Collection{}
 
 	collectionName := user_domain.CollectionUser
 
@@ -42,7 +42,7 @@ func TestCreate(t *testing.T) {
 			On("Collection", collectionName).
 			Return(collectionHelper)
 
-		ur := repository.NewUserRepository(databaseHelper, collectionName)
+		ur := user_repository.NewUserRepository(databaseHelper, collectionName)
 
 		err := ur.Create(context.Background(), mockUser)
 
@@ -60,7 +60,7 @@ func TestCreate(t *testing.T) {
 			On("Collection", collectionName).
 			Return(collectionHelper)
 
-		ur := repository.NewUserRepository(databaseHelper, collectionName)
+		ur := user.NewUserRepository(databaseHelper, collectionName)
 
 		// test trên hàm create
 		err := ur.Create(context.Background(), mockEmptyUser)

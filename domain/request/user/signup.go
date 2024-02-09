@@ -14,6 +14,7 @@ type SignupResponse struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
+//go:generate mockery --name ISignupUseCase
 type ISignupUseCase interface {
 	Create(c context.Context, user *User) error
 	GetUserByEmail(c context.Context, email string) (User, error)

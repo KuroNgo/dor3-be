@@ -1,40 +1,42 @@
-package repository
+package user_repository
 
 import (
 	"clean-architecture/domain/request/user"
 	"clean-architecture/infrastructor/mongo"
+	"clean-architecture/internal"
 	"context"
+	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type UserRepository struct {
+type userRepository struct {
 	database   mongo.Database
 	collection string
 }
 
 func NewUserRepository(db mongo.Database, collection string) user_domain.IUserRepository {
-	return &UserRepository{
+	return &userRepository{
 		database:   db,
 		collection: collection,
 	}
 }
 
 // Create interacted with user in domain to database
-func (u *UserRepository) Create(c context.Context, user *user_domain.User) error {
+func (u *userRepository) Create(c context.Context, user *user_domain.User) error {
 	collection := u.database.Collection(u.collection)
 	_, err := collection.InsertOne(c, user)
 
 	return err
 }
 
-func (u *UserRepository) CreateAsync(c context.Context, user *user_domain.User) <-chan error {
+func (u *userRepository) CreateAsync(c context.Context, user *user_domain.User) <-chan error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (u *UserRepository) Fetch(c context.Context) ([]user_domain.User, error) {
+func (u *userRepository) Fetch(c context.Context) ([]user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 
 	opts := options.Find().SetProjection(bson.D{{Key: "password", Value: 0}})
@@ -54,7 +56,7 @@ func (u *UserRepository) Fetch(c context.Context) ([]user_domain.User, error) {
 	return users, err
 }
 
-func (u *UserRepository) Update(c context.Context, userID primitive.ObjectID, updatedUser interface{}) error {
+func (u *userRepository) Update(c context.Context, userID primitive.ObjectID, updatedUser interface{}) error {
 	collection := u.database.Collection(u.collection)
 	objID, err := primitive.ObjectIDFromHex(userID.Hex())
 	if err != nil {
@@ -72,7 +74,7 @@ func (u *UserRepository) Update(c context.Context, userID primitive.ObjectID, up
 	return err
 }
 
-func (u *UserRepository) Delete(c context.Context, userID primitive.ObjectID) error {
+func (u *userRepository) Delete(c context.Context, userID primitive.ObjectID) error {
 	collection := u.database.Collection(u.collection)
 	objID, err := primitive.ObjectIDFromHex(userID.Hex())
 	if err != nil {
@@ -86,21 +88,21 @@ func (u *UserRepository) Delete(c context.Context, userID primitive.ObjectID) er
 	return err
 }
 
-func (u *UserRepository) GetByEmail(c context.Context, email string) (user_domain.User, error) {
+func (u *userRepository) GetByEmail(c context.Context, email string) (user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 	var user user_domain.User
 	err := collection.FindOne(c, bson.M{"email": email}).Decode(&user)
 	return user, err
 }
 
-func (u *UserRepository) GetByUsername(c context.Context, username string) (user_domain.User, error) {
+func (u *userRepository) GetByUsername(c context.Context, username string) (user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 	var user user_domain.User
 	err := collection.FindOne(c, bson.M{"email": username}).Decode(&user)
 	return user, err
 }
 
-func (u *UserRepository) GetByID(c context.Context, id primitive.ObjectID) (user_domain.User, error) {
+func (u *userRepository) GetByID(c context.Context, id primitive.ObjectID) (user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 
 	var user user_domain.User
@@ -112,4 +114,25 @@ func (u *UserRepository) GetByID(c context.Context, id primitive.ObjectID) (user
 
 	err = collection.FindOne(c, bson.M{"_id": idHex}).Decode(&user)
 	return user, err
+}
+
+func (u *userRepository) UpsertUser(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
+	collection := u.database.Collection(u.collection)
+	doc, err := internal.ToDoc(user)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(1)
+	query := bson.D{{Key: "email", Value: email}}
+	update := bson.D{{Key: "$set", Value: doc}}
+	res := collection.FindOneAndUpdate(c, query, update, opts)
+
+	var updatedPost *user_domain.Response
+
+	if err := res.Decode(&updatedPost); err != nil {
+		return nil, errors.New("no post with that Id exists")
+	}
+
+	return updatedPost, nil
 }

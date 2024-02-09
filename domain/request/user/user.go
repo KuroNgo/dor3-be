@@ -20,9 +20,11 @@ type User struct {
 	Specialize string             `bson:"specialize"  json:"specialize"`
 	Phone      string             `bson:"phone"   json:"phone"`
 	Age        uint8              `bson:"age"  json:"age"`
+	Provider   string             `json:"provider,omitempty" bson:"provider,omitempty"`
+	Verified   bool               `json:"verified" bson:"verified"`
 	CreatedAt  time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt  time.Time          `json:"updated_at" bson:"updated_at"`
-	RoleID     primitive.ObjectID `bson:"_id" json:"-"`
+	Role       string             `bson:"role" json:"role"`
 }
 
 type Response struct {
@@ -36,6 +38,7 @@ type Response struct {
 	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
+//go:generate mockery --name IUserRepository
 type IUserRepository interface {
 	Create(c context.Context, user *User) error
 	CreateAsync(c context.Context, user *User) <-chan error
@@ -45,4 +48,5 @@ type IUserRepository interface {
 	GetByEmail(c context.Context, email string) (User, error)
 	GetByUsername(c context.Context, username string) (User, error)
 	GetByID(c context.Context, id primitive.ObjectID) (User, error)
+	UpsertUser(c context.Context, email string, user *User) (*Response, error)
 }

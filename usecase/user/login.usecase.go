@@ -1,4 +1,4 @@
-package usecase
+package user_usecase
 
 import (
 	user_domain "clean-architecture/domain/request/user"

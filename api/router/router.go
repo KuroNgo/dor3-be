@@ -1,6 +1,7 @@
 package router
 
 import (
+	"clean-architecture/api/middleware"
 	user_router "clean-architecture/api/router/user"
 	"clean-architecture/bootstrap"
 	"clean-architecture/infrastructor/mongo"
@@ -15,9 +16,11 @@ func Setup(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 
 	// user method
 	user_router.NewLoginRouter(env, timeout, db, publicRouter)
+	user_router.GoogleAuthRouter(env, timeout, db, publicRouter)
 
-	// Middleware to verify accessToken
-
+	// Middleware
+	publicRouter.OPTIONS("/*path", middleware.OptionMessage)
+	publicRouter.Use(middleware.CORSPublic())
 	// All Protected APIs
 
 	// All Private APIs
