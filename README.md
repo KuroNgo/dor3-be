@@ -1,131 +1,79 @@
 ## CLEAN ARCHRITECTURE
 #### Reference Resource: [github clean-architecture](https://github.com/amitshekhariitbhu/go-backend-clean-architecture/tree/main/mongo)
 ![Workflow](./assets/button-view-api-docs.png)
-### API
-### Assets
-### Bootstrap
-### CMD
-### Router
-First of all, the request comes to the Router.
 
-Further, this router gets divided into two routers as follows:
+# Overall 
+![Workflow](./assets/download.jpg)
+## Entities: 
+    Domain and Repository in Entities
+- Directories like domain and repository may contain components related to the core Entities in Clean Architecture. 
+- In this case, domain might hold the core objects and business logic of the application, while repository could contain classes or components related to data access.
 
-Public Router: All the public APIs should go through this router.
-Protected Router: All the private APIs should go through this router.
-The Public API request flow:
-![Workflow](./assets/go-arch-public-api-request-flow.png)
-The Private API request flow:
-![Workflow](./assets/go-arch-private-api-request-flow.png)
-JWT Authentication Middleware for Access Token Validation.
+## UseCase
+    Usecase or Interactions in Usecase
+- The useCase directory may contain the use cases (or interactions) 
+- in Clean Architecture, which are components that contain the business logic of the application.
 
-In between both routers, a middleware gets added to check the validity of the access token. So, the private request with the invalid access token should not reach the protected router at all.
+## Interface Adapters
+    API, Infrastructor and internal in Interface Adapter
+- Directories such as api, infrastructor, and internal may contain components related to interfaces and infrastructure. 
+- In Clean Architecture, these components are often called Interface Adapters, responsible for converting data between internal and external components of the application.
+  #### api 
+- may contain components related to handling HTTP requests from the client.
+  
+  #### infrastructor 
+- may contain components related to implementing infrastructure such as databases, peripheral services, etc.
+  
+  #### internal 
+- may contain internal application components that are not meant to be accessed from outside, such as authentication mechanisms (in this case OAuth2) or special connections to third-party services (e.g., connecting to Google services).
 
-### Controller
-- So now, the request is with the controller. First, it will validate the data present inside the request. If anything is invalid, it returns a "400 Bad Request" as the error response.
-- If everything is valid inside the request, it will call the usecase layer to perform an operation.
 
-### Usecase
-- The usecase layer is dependent on the repository layer.
-- This layer uses the repository layer to perform an operation. 
-It is completely up to the repository how it is going to perform an operation.
-
-### Repository
-- The repository is the dependency of the usecase. The Usecase layer asks the repository to perform an operation.
-- The repository layer is free to choose any database, in fact, it can call any other independent services based on the requirement.
-- In the project, the repository layer makes the database query for performing operations asked by the Usecase layer.
-
-### Domain
+## Frameworks and Drivers
+    Idea, asset and bootstrap
+- Directories like .idea, assets, and bootstrap may contain components related to frameworks, tools, and resources such as images, fonts, CSS files, JavaScript files, etc. 
+- These components are typically not part of Clean Architecture but are still important for implementing the application.
 
 ### File Structure
 ```
-│   .gitignore
-│   app.env
-│   go.mod
-│   go.sum
-│   go.work
-│   go.work.sum
-│   main.go
-│   README.md
-│
 ├───.idea
-│       .gitignore
-│       clean-architecture.iml
-│       modules.xml
-│       workspace.xml
-│
 ├───api
 │   ├───controller
-│   │       user.controller.go
-│   │
+│   │   └───user
 │   ├───middleware
-│   │       cors.go
-│   │       deserialization.go
-│   │       rate_limit.go
-│   │
-│   └───route
-│           route.go
-│
+│   └───router
+│       └───user
 ├───assets
-│       button-view-api-docs.png
-│       go-arch-private-api-request-flow.png
-│       go-arch-public-api-request-flow.png
-│       go-backend-arch-diagram.png
-│
 ├───bootstrap
-│       app.go
-│       db.go
-│       env.go
-│
 ├───domain
+│   ├───mock
+│   │   └───user
 │   ├───request
-│   │       course.go
-│   │       course.impl.go
-│   │       lesson.go
-│   │       lesson.impl.go
-│   │       permission.go
-│   │       permission.impl.go
-│   │       quiz.go
-│   │       store.go
-│   │       store.impl.go
-│   │       user.go
-│   │       user.impl.go
-│   │       user_process.go
-│   │       user_process.impl.go
-│   │       user_quiz_attempt.go
-│   │       user_quiz_attempt.impl.go
-│   │
+│   │   ├───admin
+│   │   ├───course
+│   │   ├───feedback
+│   │   ├───lesson
+│   │   ├───log
+│   │   ├───position
+│   │   ├───quiz
+│   │   ├───role
+│   │   ├───user
+│   │   ├───user_attempt
+│   │   ├───user_process
+│   │   └───user_quiz_attempt
 │   └───response
-│           error_response.go
-│           success_response.go
-│
 ├───infrastructor
 │   └───mongo
-│       │   mongo.go
-│       │
 │       └───mocks
-│               client.go
-│               collection.go
-│               cursor.go
-│               database.go
-│               single_result.go
-│
 ├───internal
-│       token.go
-│
+│   └───Oauth2
+│       └───google
 ├───repository
-│       permission.repo.go
-│       user.repo.go
-│
+│   └───test
+│       ├───admin
+│       └───user
 └───usecase
     ├───admin
-    │       statistical.go
-    │
     ├───system
-    │       role.usecase.go
-    │
     └───user
-            user.usecase.go
-
-
 ```
 ### Run Programming

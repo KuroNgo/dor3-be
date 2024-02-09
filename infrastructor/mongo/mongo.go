@@ -3,21 +3,24 @@ package mongo
 import (
 	"context"
 	"errors"
+	"reflect"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"
 	"go.mongodb.org/mongo-driver/bson/bsonrw"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"reflect"
-	"time"
 )
 
+//go:generate mockery --name Database
 type Database interface {
 	Collection(string) Collection
 	Client() Client
 }
 
+//go:generate mockery --name Collection
 type Collection interface {
 	FindOne(context.Context, interface{}) SingleResult
 	InsertOne(context.Context, interface{}) (interface{}, error)
@@ -25,15 +28,18 @@ type Collection interface {
 	DeleteOne(context.Context, interface{}) (int64, error)
 	Find(context.Context, interface{}, ...*options.FindOptions) (Cursor, error)
 	CountDocuments(context.Context, interface{}, ...*options.CountOptions) (int64, error)
+	FindOneAndUpdate(ctx context.Context, filter interface{}, update interface{}, opts ...*options.FindOneAndUpdateOptions) SingleResult
 	Aggregate(context.Context, interface{}) (Cursor, error)
 	UpdateOne(context.Context, interface{}, interface{}, ...*options.UpdateOptions) (*mongo.UpdateResult, error)
 	UpdateMany(context.Context, interface{}, interface{}, ...*options.UpdateOptions) (*mongo.UpdateResult, error)
 }
 
+//go:generate mockery --name SingleResult
 type SingleResult interface {
 	Decode(interface{}) error
 }
 
+//go:generate mockery --name Cursor
 type Cursor interface {
 	Close(context.Context) error
 	Next(context.Context) bool
@@ -41,6 +47,7 @@ type Cursor interface {
 	All(context.Context, interface{}) error
 }
 
+//go:generate mockery --name Client
 type Client interface {
 	Database(string) Database
 	Connect(context.Context) error
@@ -165,6 +172,10 @@ func (mc *mongoCollection) DeleteOne(ctx context.Context, filter interface{}) (i
 func (mc *mongoCollection) Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (Cursor, error) {
 	findResult, err := mc.coll.Find(ctx, filter, opts...)
 	return &mongoCursor{mc: findResult}, err
+}
+func (mc *mongoCollection) FindOneAndUpdate(ctx context.Context, filter interface{}, update interface{}, opts ...*options.FindOneAndUpdateOptions) SingleResult {
+	findResult := mc.coll.FindOneAndUpdate(ctx, filter, update, opts...)
+	return &mongoSingleResult{sr: findResult}
 }
 
 func (mc *mongoCollection) Aggregate(ctx context.Context, pipeline interface{}) (Cursor, error) {

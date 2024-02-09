@@ -3,29 +3,40 @@ package bootstrap
 import (
 	"github.com/spf13/viper"
 	"log"
+	"time"
 )
 
-type (
-	Database struct {
-		DBHost     string `mapstructure:"DB_HOST"`
-		DBPort     string `mapstructure:"DB_PORT"`
-		DBUser     string `mapstructure:"DB_USER"`
-		DBPassword string `mapstructure:"DB_PASS"`
-		DBName     string `mapstructure:"DB_NAME"`
+type Database struct {
+	DBHost     string `mapstructure:"DB_HOST"`
+	DBPort     string `mapstructure:"DB_PORT"`
+	DBUser     string `mapstructure:"DB_USER"`
+	DBPassword string `mapstructure:"DB_PASS"`
+	DBName     string `mapstructure:"DB_NAME"`
 
-		Level  string `mapstructure:"level"`
-		Format string `mapstructure:"format"`
-		Prefix string `mapstructure:"prefix"`
+	Level  string `mapstructure:"level"`
+	Format string `mapstructure:"format"`
+	Prefix string `mapstructure:"prefix"`
 
-		AppEnv         string `mapstructure:"APP_ENV"`
-		ServerAddress  string `mapstructure:"SERVER_ADDRESS"`
-		ContextTimeout int    `mapstructure:"CONTEXT_TIMEOUT"`
+	ClientOrigin string `mapstructure:"CLIENT_ORIGIN"`
 
-		Secret                string `mapstructure:"secret"`
-		AccessTokenExpiresIn  int64  `mapstructure:"accessTokenExpiresIn"`
-		RefreshTokenExpiresIn int64  `mapstructure:"refreshTokenExpiresIn"`
-	}
-)
+	AppEnv         string `mapstructure:"APP_ENV"`
+	ServerAddress  string `mapstructure:"SERVER_ADDRESS"`
+	ContextTimeout int    `mapstructure:"CONTEXT_TIMEOUT"`
+
+	AccessTokenPrivateKey  string        `mapstructure:"ACCESS_TOKEN_PRIVATE_KEY"`
+	AccessTokenPublicKey   string        `mapstructure:"ACCESS_TOKEN_PUBLIC_KEY"`
+	RefreshTokenPrivateKey string        `mapstructure:"REFRESH_TOKEN_PRIVATE_KEY"`
+	RefreshTokenPublicKey  string        `mapstructure:"REFRESH_TOKEN_PUBLIC_KEY"`
+	AccessTokenExpiresIn   time.Duration `mapstructure:"ACCESS_TOKEN_EXPIRED_IN"`
+	RefreshTokenExpiresIn  time.Duration `mapstructure:"REFRESH_TOKEN_EXPIRED_IN"`
+	AccessTokenMaxAge      int           `mapstructure:"ACCESS_TOKEN_MAXAGE"`
+	RefreshTokenMaxAge     int           `mapstructure:"REFRESH_TOKEN_MAXAGE"`
+
+	// implement the Google Oauth
+	GoogleClientID         string `mapstructure:"GOOGLE_OAUTH_CLIENT_ID"`
+	GoogleClientSecret     string `mapstructure:"GOOGLE_OAUTH_CLIENT_SECRET"`
+	GoogleOAuthRedirectUrl string `mapstructure:"GOOGLE_OAUTH_REDIRECT_URL"`
+}
 
 func NewEnv() *Database {
 	env := Database{}
