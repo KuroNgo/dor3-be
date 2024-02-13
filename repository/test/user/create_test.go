@@ -2,7 +2,7 @@ package repository_test
 
 import (
 	"clean-architecture/domain/request/user"
-	mocks2 "clean-architecture/infrastructor/mocks"
+	"clean-architecture/infrastructor/mongo/mocks"
 	user_repository "clean-architecture/repository/user"
 	"context"
 	"errors"
@@ -14,11 +14,11 @@ import (
 
 func TestCreate(t *testing.T) {
 
-	var databaseHelper *mocks2.Database
-	var collectionHelper *mocks2.Collection
+	var databaseHelper *mocks.Database
+	var collectionHelper *mocks.Collection
 
-	databaseHelper = &mocks2.Database{}
-	collectionHelper = &mocks2.Collection{}
+	databaseHelper = &mocks.Database{}
+	collectionHelper = &mocks.Collection{}
 
 	collectionName := user_domain.CollectionUser
 
@@ -60,7 +60,7 @@ func TestCreate(t *testing.T) {
 			On("Collection", collectionName).
 			Return(collectionHelper)
 
-		ur := user.NewUserRepository(databaseHelper, collectionName)
+		ur := user_repository.NewUserRepository(databaseHelper, collectionName)
 
 		// test trên hàm create
 		err := ur.Create(context.Background(), mockEmptyUser)

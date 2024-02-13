@@ -1,4 +1,4 @@
-package controller
+package user_controller
 
 import (
 	"clean-architecture/bootstrap"

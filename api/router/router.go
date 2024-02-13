@@ -1,6 +1,7 @@
 package router
 
 import (
+	user_controller "clean-architecture/api/controller/user"
 	"clean-architecture/api/middleware"
 	user_router "clean-architecture/api/router/user"
 	"clean-architecture/bootstrap"
@@ -13,10 +14,9 @@ func Setup(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 	publicRouter := gin.Group("")
 
 	// All Public APIs
-
 	// user method
-	user_router.NewLoginRouter(env, timeout, db, publicRouter)
 	user_router.GoogleAuthRouter(env, timeout, db, publicRouter)
+	publicRouter.GET("/logout", user_controller.LogoutUser)
 
 	// Middleware
 	publicRouter.OPTIONS("/*path", middleware.OptionMessage)

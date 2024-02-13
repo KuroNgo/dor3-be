@@ -6,21 +6,30 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
 )
 
+// GetGoogleOauthToken Retrieve the OAuth2 Access Token
 func GetGoogleOauthToken(code string) (*OauthToken, error) {
 	const rootURL = "https://oauth2.googleapis.com/token"
 
 	app := bootstrap.App()
 	env := app.Env
 	values := url.Values{}
+	// grant_type is the type of grant being trequested, which is typically authorization_code
+	values.Add("grant_type", "authorization_code")
+
+	// the authorization code obtained from the authorization endpoint
 	values.Add("code", code)
+
+	// the secret associated with the client ID
 	values.Add("client_id", env.GoogleClientID)
 	values.Add("client_secret", env.GoogleClientSecret)
+
+	// the authorized callback URL registered with the client
 	values.Add("redirect_uri", env.GoogleOAuthRedirectUrl)
 
 	query := values.Encode()
@@ -44,14 +53,20 @@ func GetGoogleOauthToken(code string) (*OauthToken, error) {
 		return nil, errors.New("could not retrieve token")
 	}
 
-	resBody, err := ioutil.ReadAll(res.Body)
+	//resBody, err := ioutil.ReadAll(res.Body)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	var resBody bytes.Buffer
+	_, err = io.Copy(&resBody, res.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	var GoogleOauthTokenRes map[string]interface{}
 
-	if err := json.Unmarshal(resBody, &GoogleOauthTokenRes); err != nil {
+	if err := json.Unmarshal(resBody.Bytes(), &GoogleOauthTokenRes); err != nil {
 		return nil, err
 	}
 
@@ -63,6 +78,7 @@ func GetGoogleOauthToken(code string) (*OauthToken, error) {
 	return tokenBody, nil
 }
 
+// GetGoogleUser Get the Google User's Account Information
 func GetGoogleUser(accessToken string, idToken string) (*UserResult, error) {
 	rootUrl := fmt.Sprintf("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=%s", accessToken)
 
@@ -86,14 +102,20 @@ func GetGoogleUser(accessToken string, idToken string) (*UserResult, error) {
 		return nil, errors.New("could not retrieve user")
 	}
 
-	resBody, err := ioutil.ReadAll(res.Body)
+	//resBody, err := ioutil.ReadAll(res.Body)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	var resBody bytes.Buffer
+	_, err = io.Copy(&resBody, res.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	var GoogleUserRes map[string]interface{}
 
-	if err := json.Unmarshal(resBody, &GoogleUserRes); err != nil {
+	if err := json.Unmarshal(resBody.Bytes(), &GoogleUserRes); err != nil {
 		return nil, err
 	}
 

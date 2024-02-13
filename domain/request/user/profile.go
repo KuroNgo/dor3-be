@@ -7,6 +7,7 @@ type Profile struct {
 	Email string `json:"email"`
 }
 
-type ProfileUseCase interface {
+//go:generate mockery --name IProfileUseCase
+type IProfileUseCase interface {
 	GetProfileByID(c context.Context, userID string) (*Profile, error)
 }
