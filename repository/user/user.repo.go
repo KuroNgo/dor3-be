@@ -23,19 +23,6 @@ func NewUserRepository(db mongo.Database, collection string) user_domain.IUserRe
 	}
 }
 
-// Create interacted with user in domain to database
-func (u *userRepository) Create(c context.Context, user *user_domain.User) error {
-	collection := u.database.Collection(u.collection)
-	_, err := collection.InsertOne(c, user)
-
-	return err
-}
-
-func (u *userRepository) CreateAsync(c context.Context, user *user_domain.User) <-chan error {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (u *userRepository) Fetch(c context.Context) ([]user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 
