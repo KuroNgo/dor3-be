@@ -40,8 +40,6 @@ type Response struct {
 
 //go:generate mockery --name IUserRepository
 type IUserRepository interface {
-	Create(c context.Context, user *User) error
-	CreateAsync(c context.Context, user *User) <-chan error
 	Fetch(c context.Context) ([]User, error)
 	Update(c context.Context, userID primitive.ObjectID, updatedUser interface{}) error
 	Delete(c context.Context, userID primitive.ObjectID) error
