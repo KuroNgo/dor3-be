@@ -19,7 +19,7 @@ func GetGoogleOauthToken(code string) (*OauthToken, error) {
 	app := bootstrap.App()
 	env := app.Env
 	values := url.Values{}
-	// grant_type is the type of grant being trequested, which is typically authorization_code
+	// grant_type is the type of grant being requested, which is typically authorization_code
 	values.Add("grant_type", "authorization_code")
 
 	// the authorization code obtained from the authorization endpoint
@@ -52,11 +52,6 @@ func GetGoogleOauthToken(code string) (*OauthToken, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New("could not retrieve token")
 	}
-
-	//resBody, err := ioutil.ReadAll(res.Body)
-	//if err != nil {
-	//	return nil, err
-	//}
 
 	var resBody bytes.Buffer
 	_, err = io.Copy(&resBody, res.Body)
@@ -101,11 +96,6 @@ func GetGoogleUser(accessToken string, idToken string) (*UserResult, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New("could not retrieve user")
 	}
-
-	//resBody, err := ioutil.ReadAll(res.Body)
-	//if err != nil {
-	//	return nil, err
-	//}
 
 	var resBody bytes.Buffer
 	_, err = io.Copy(&resBody, res.Body)

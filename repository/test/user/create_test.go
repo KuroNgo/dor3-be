@@ -35,7 +35,7 @@ func TestCreate(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 
 		collectionHelper.
-			On("InsertOne", mock.Anything, mock.AnythingOfType("*user_domain.User")).
+			On("FindOneAndUpdate", mock.Anything, mock.AnythingOfType("*user_domain.User")).
 			Return(mockUserID, nil).Once()
 
 		databaseHelper.
@@ -44,7 +44,7 @@ func TestCreate(t *testing.T) {
 
 		ur := user_repository.NewUserRepository(databaseHelper, collectionName)
 
-		err := ur.Create(context.Background(), mockUser)
+		_, err := ur.UpsertUser(context.Background(), mockUser.Email, mockEmptyUser)
 
 		assert.NoError(t, err)
 
@@ -53,7 +53,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("error", func(t *testing.T) {
 		collectionHelper.
-			On("InsertOne", mock.Anything, mock.AnythingOfType("*user_domain.User")).
+			On("FindOneAndUpdate", mock.Anything, mock.AnythingOfType("*user_domain.User")).
 			Return(mockEmptyUser, errors.New("unexpected")).Once()
 
 		databaseHelper.
@@ -62,8 +62,8 @@ func TestCreate(t *testing.T) {
 
 		ur := user_repository.NewUserRepository(databaseHelper, collectionName)
 
-		// test trên hàm create
-		err := ur.Create(context.Background(), mockEmptyUser)
+		// test trên hàm upsert
+		_, err := ur.UpsertUser(context.Background(), mockUser.Email, mockEmptyUser)
 
 		assert.Error(t, err)
 
