@@ -2,12 +2,12 @@ package user_controller
 
 import (
 	"clean-architecture/bootstrap"
-	user_domain "clean-architecture/domain/request/user"
+	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal"
-	"clean-architecture/internal/Oauth2/google"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -16,7 +16,7 @@ type GoogleAuthController struct {
 	Database          *bootstrap.Database
 }
 
-func (auth *GoogleAuthController) GoogleLogin(ctx *gin.Context) {
+func (auth *GoogleAuthController) GoogleLoginWithUser(ctx *gin.Context) {
 	code := ctx.Query("code")
 	pathUrl := "/"
 
@@ -33,7 +33,7 @@ func (auth *GoogleAuthController) GoogleLogin(ctx *gin.Context) {
 	}
 
 	// Use the code get the id and access tokens
-	tokenRes, err := google.GetGoogleOauthToken(code)
+	tokenRes, err := auth.GoogleAuthUseCase.GetGoogleOauthToken(code)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadGateway, gin.H{
@@ -43,7 +43,7 @@ func (auth *GoogleAuthController) GoogleLogin(ctx *gin.Context) {
 		return
 	}
 
-	user, err := google.GetGoogleUser(tokenRes.AccessToken, tokenRes.IDToken)
+	user, err := auth.GoogleAuthUseCase.GetGoogleUser(tokenRes.AccessToken, tokenRes.IDToken)
 	if err != nil {
 		ctx.JSON(http.StatusBadGateway, gin.H{
 			"status":  "fail",
@@ -52,13 +52,20 @@ func (auth *GoogleAuthController) GoogleLogin(ctx *gin.Context) {
 		return
 	}
 
+	var role string
 	createdAt := time.Now()
+	if strings.Contains(user.Email, ".feit") {
+		role = "admin"
+	} else {
+		role = "user"
+	}
+
 	resBody := &user_domain.User{
 		Email:     user.Email,
 		FullName:  user.Name,
 		AvatarURL: user.Picture,
 		Provider:  "google",
-		Role:      "user",
+		Role:      role,
 		Verified:  true,
 		CreatedAt: createdAt,
 		UpdatedAt: createdAt,

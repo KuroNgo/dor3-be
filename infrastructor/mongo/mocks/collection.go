@@ -169,7 +169,7 @@ func (_m *Collection) FindOne(_a0 context.Context, _a1 interface{}) mongo.Single
 }
 
 // FindOneAndUpdate provides a mock function with given fields: ctx, filter, update, opts
-func (_m *Collection) FindOneAndUpdate(ctx context.Context, filter interface{}, update interface{}, opts ...*options.FindOneAndUpdateOptions) (interface{}, error) {
+func (_m *Collection) FindOneAndUpdate(ctx context.Context, filter interface{}, update interface{}, opts ...*options.FindOneAndUpdateOptions) mongo.SingleResult {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -183,26 +183,16 @@ func (_m *Collection) FindOneAndUpdate(ctx context.Context, filter interface{}, 
 		panic("no return value specified for FindOneAndUpdate")
 	}
 
-	var r0 interface{}
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, interface{}, ...*options.FindOneAndUpdateOptions) (interface{}, error)); ok {
-		return rf(ctx, filter, update, opts...)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, interface{}, ...*options.FindOneAndUpdateOptions) interface{}); ok {
+	var r0 mongo.SingleResult
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, interface{}, ...*options.FindOneAndUpdateOptions) mongo.SingleResult); ok {
 		r0 = rf(ctx, filter, update, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(interface{})
+			r0 = ret.Get(0).(mongo.SingleResult)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, interface{}, interface{}, ...*options.FindOneAndUpdateOptions) error); ok {
-		r1 = rf(ctx, filter, update, opts...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // InsertMany provides a mock function with given fields: _a0, _a1

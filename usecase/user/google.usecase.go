@@ -1,7 +1,7 @@
 package user_usecase
 
 import (
-	user_domain "clean-architecture/domain/request/user"
+	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal/Oauth2/google"
 	"context"
 	"time"
