@@ -16,7 +16,7 @@ func Setup(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 	// All Public APIs
 	// user method
 	user_router.GoogleAuthRouter(env, timeout, db, publicRouter)
-	publicRouter.GET("/logout", user_controller.LogoutUser)
+	publicRouter.GET("/logout", middleware.DeserializeUser(), user_controller.LogoutUser)
 
 	// Middleware
 	publicRouter.OPTIONS("/*path", middleware.OptionMessage)

@@ -2,7 +2,7 @@ package user_controller
 
 import (
 	"clean-architecture/bootstrap"
-	user_domain "clean-architecture/domain/request/user"
+	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -16,7 +16,7 @@ type GoogleAuthController struct {
 	Database          *bootstrap.Database
 }
 
-func (auth *GoogleAuthController) GoogleLogin(ctx *gin.Context) {
+func (auth *GoogleAuthController) GoogleLoginWithUser(ctx *gin.Context) {
 	code := ctx.Query("code")
 	pathUrl := "/"
 
@@ -53,13 +53,13 @@ func (auth *GoogleAuthController) GoogleLogin(ctx *gin.Context) {
 	}
 
 	var role string
+	createdAt := time.Now()
 	if strings.Contains(user.Email, ".feit") {
 		role = "admin"
 	} else {
 		role = "user"
 	}
 
-	createdAt := time.Now()
 	resBody := &user_domain.User{
 		Email:     user.Email,
 		FullName:  user.Name,
