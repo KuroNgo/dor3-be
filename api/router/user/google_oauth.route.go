@@ -3,7 +3,7 @@ package user_router
 import (
 	user_controller "clean-architecture/api/controller/user"
 	"clean-architecture/bootstrap"
-	user_domain "clean-architecture/domain/request/user"
+	user_domain "clean-architecture/domain/user"
 	"clean-architecture/infrastructor/mongo"
 	user_repository "clean-architecture/repository/user"
 	usecase "clean-architecture/usecase/user"
@@ -19,5 +19,5 @@ func GoogleAuthRouter(env *bootstrap.Database, timeout time.Duration, db mongo.D
 	}
 
 	router := group.Group("/api/sessions/oauth")
-	router.GET("/google", ga.GoogleLogin)
+	router.POST("/google", ga.GoogleLoginWithUser)
 }

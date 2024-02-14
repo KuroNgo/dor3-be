@@ -1,7 +1,7 @@
 package user_repository
 
 import (
-	"clean-architecture/domain/request/user"
+	"clean-architecture/domain/user"
 	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
 	"context"
