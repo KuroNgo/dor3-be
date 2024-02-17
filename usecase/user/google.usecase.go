@@ -19,16 +19,16 @@ func NewGoogleUseCase(userRepository user_domain.IUserRepository, timeout time.D
 	}
 }
 
-func (g googleUseCase) UpsertUser(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
+func (g *googleUseCase) UpsertUser(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(c, g.contextTimeout)
 	defer cancel()
 	return g.userRepository.UpsertUser(ctx, email, user)
 }
 
-func (g googleUseCase) GetGoogleOauthToken(code string) (*google.OauthToken, error) {
+func (g *googleUseCase) GetGoogleOauthToken(code string) (*google.OauthToken, error) {
 	return google.GetGoogleOauthToken(code)
 }
 
-func (g googleUseCase) GetGoogleUser(accessToken string, idToken string) (*google.UserResult, error) {
+func (g *googleUseCase) GetGoogleUser(accessToken string, idToken string) (*google.UserResult, error) {
 	return google.GetGoogleUser(accessToken, idToken)
 }

@@ -43,27 +43,9 @@ func (u *userRepository) Fetch(c context.Context) ([]user_domain.User, error) {
 	return users, err
 }
 
-func (u *userRepository) Update(c context.Context, userID primitive.ObjectID, updatedUser interface{}) error {
+func (u *userRepository) Delete(c context.Context, userID string) error {
 	collection := u.database.Collection(u.collection)
-	objID, err := primitive.ObjectIDFromHex(userID.Hex())
-	if err != nil {
-		return err
-	}
-
-	filter := bson.M{
-		"_id": objID,
-	}
-	update := bson.M{
-		"$set": updatedUser,
-	}
-
-	_, err = collection.UpdateOne(c, filter, update)
-	return err
-}
-
-func (u *userRepository) Delete(c context.Context, userID primitive.ObjectID) error {
-	collection := u.database.Collection(u.collection)
-	objID, err := primitive.ObjectIDFromHex(userID.Hex())
+	objID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return err
 	}
@@ -75,32 +57,32 @@ func (u *userRepository) Delete(c context.Context, userID primitive.ObjectID) er
 	return err
 }
 
-func (u *userRepository) GetByEmail(c context.Context, email string) (user_domain.User, error) {
+func (u *userRepository) GetByEmail(c context.Context, email string) (*user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 	var user user_domain.User
 	err := collection.FindOne(c, bson.M{"email": email}).Decode(&user)
-	return user, err
+	return &user, err
 }
 
-func (u *userRepository) GetByUsername(c context.Context, username string) (user_domain.User, error) {
+func (u *userRepository) GetByUsername(c context.Context, username string) (*user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 	var user user_domain.User
 	err := collection.FindOne(c, bson.M{"email": username}).Decode(&user)
-	return user, err
+	return &user, err
 }
 
-func (u *userRepository) GetByID(c context.Context, id primitive.ObjectID) (user_domain.User, error) {
+func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 
 	var user user_domain.User
 
-	idHex, err := primitive.ObjectIDFromHex(id.Hex())
+	idHex, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return user, err
+		return &user, err
 	}
 
 	err = collection.FindOne(c, bson.M{"_id": idHex}).Decode(&user)
-	return user, err
+	return &user, err
 }
 
 func (u *userRepository) UpsertUser(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {

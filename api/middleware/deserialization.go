@@ -45,14 +45,6 @@ func DeserializeUser() gin.HandlerFunc {
 			return
 		}
 
-		//var user model.User
-		//
-		//result := conf.DbDefault.First(&user, "userid = ?", fmt.Sprint(sub))
-		//if result.Error != nil {
-		//	ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": "the user belonging to this token no logger exists"})
-		//	return
-		//}
-
 		ctx.Set("currentUser", sub)
 		ctx.Next()
 	}
