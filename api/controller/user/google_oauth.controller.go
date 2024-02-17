@@ -17,6 +17,7 @@ type GoogleAuthController struct {
 }
 
 func (auth *GoogleAuthController) GoogleLoginWithUser(ctx *gin.Context) {
+
 	code := ctx.Query("code")
 	pathUrl := "/"
 
@@ -53,13 +54,13 @@ func (auth *GoogleAuthController) GoogleLoginWithUser(ctx *gin.Context) {
 	}
 
 	var role string
-	createdAt := time.Now()
-	if strings.Contains(user.Email, ".feit") {
+	if strings.Contains(user.Email, "feit") {
 		role = "admin"
 	} else {
 		role = "user"
 	}
 
+	createdAt := time.Now()
 	resBody := &user_domain.User{
 		Email:     user.Email,
 		FullName:  user.Name,
@@ -72,30 +73,35 @@ func (auth *GoogleAuthController) GoogleLoginWithUser(ctx *gin.Context) {
 	}
 
 	updatedUser, err := auth.GoogleAuthUseCase.UpsertUser(ctx, user.Email, resBody)
-
 	if err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{"status": "fail", "message": err.Error()})
+		ctx.JSON(http.StatusBadGateway, gin.H{
+			"status":  "fail",
+			"message": err.Error(),
+		})
 		return
 	}
 
-	app := bootstrap.App()
-
-	env := app.Env
-	accessToken, err := internal.CreateToken(env.AccessTokenExpiresIn, updatedUser.ID.Hex(), env.AccessTokenPrivateKey)
+	accessToken, err := internal.CreateToken(auth.Database.AccessTokenExpiresIn, updatedUser.ID.Hex(), auth.Database.AccessTokenPrivateKey)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "fail",
+			"message": err.Error(),
+		})
 		return
 	}
 
-	refreshToken, err := internal.CreateToken(env.RefreshTokenExpiresIn, updatedUser.ID.Hex(), env.RefreshTokenPrivateKey)
+	refreshToken, err := internal.CreateToken(auth.Database.RefreshTokenExpiresIn, updatedUser.ID.Hex(), auth.Database.RefreshTokenPrivateKey)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "fail",
+			"message": err.Error(),
+		})
 		return
 	}
 
-	ctx.SetCookie("access_token", accessToken, env.AccessTokenMaxAge*60, "/", "localhost", false, true)
-	ctx.SetCookie("refresh_token", refreshToken, env.RefreshTokenMaxAge*60, "/", "localhost", false, true)
-	ctx.SetCookie("logged_in", "true", env.AccessTokenMaxAge*60, "/", "localhost", false, false)
+	ctx.SetCookie("access_token", accessToken, auth.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
+	ctx.SetCookie("refresh_token", refreshToken, auth.Database.RefreshTokenMaxAge*60, "/", "localhost", false, true)
+	ctx.SetCookie("logged_in", "true", auth.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
 
-	ctx.Redirect(http.StatusTemporaryRedirect, fmt.Sprint(env.ClientOrigin, pathUrl))
+	ctx.Redirect(http.StatusTemporaryRedirect, fmt.Sprint(auth.Database.ClientOrigin, pathUrl))
 }

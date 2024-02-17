@@ -1,0 +1,63 @@
+package user_controller
+
+import (
+	"clean-architecture/bootstrap"
+	user_domain "clean-architecture/domain/user"
+	"clean-architecture/internal"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+type RefreshTokenController struct {
+	UserUseCase user_domain.IUserUseCase
+	Database    *bootstrap.Database
+}
+
+func (token *RefreshTokenController) RefreshToken(ctx *gin.Context) {
+	message := "could not refresh access token"
+
+	cookie, err := ctx.Cookie("refresh_token")
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"status":  "fail",
+			"message": message,
+		})
+		return
+	}
+
+	sub, err := internal.ValidateToken(cookie, token.Database.RefreshTokenPublicKey)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"status":  "fail",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	user, err := token.UserUseCase.GetByID(ctx, fmt.Sprint(sub))
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"status":  "fail",
+			"message": "the user belonging to this token no logger exists",
+		})
+		return
+	}
+
+	access_token, err := internal.CreateToken(token.Database.AccessTokenExpiresIn, user.ID, token.Database.AccessTokenPrivateKey)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"status":  "fail",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.SetCookie("access_token", access_token, token.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
+	ctx.SetCookie("logged_in", "true", token.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":       "success",
+		"access_token": access_token,
+	})
+}
