@@ -27,10 +27,10 @@ type User struct {
 
 type Response struct {
 	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	Name      string             `json:"name,omitempty" bson:"name,omitempty"`
-	Email     string             `json:"email,omitempty" bson:"email,omitempty"`
-	Role      string             `json:"role,omitempty" bson:"role,omitempty"`
-	Photo     string             `json:"photo,omitempty" bson:"photo,omitempty"`
+	Name      string             `json:"name" bson:"name"`
+	Email     string             `json:"email" bson:"email"`
+	Role      string             `json:"role" bson:"role"`
+	Photo     string             `json:"photo" bson:"photo"`
 	Provider  string             `json:"provider" bson:"provider"`
 	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`

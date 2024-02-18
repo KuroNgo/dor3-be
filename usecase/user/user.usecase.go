@@ -21,13 +21,25 @@ func NewUserUseCase(userRepository user_domain.IUserRepository, timeout time.Dur
 func (u *userUseCase) Fetch(c context.Context) ([]user_domain.User, error) {
 	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
 	defer cancel()
-	return u.userRepository.Fetch(ctx)
+
+	user, err := u.userRepository.Fetch(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, err
 }
 
 func (u *userUseCase) GetByEmail(c context.Context, email string) (*user_domain.User, error) {
 	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
 	defer cancel()
-	return u.userRepository.GetByEmail(ctx, email)
+
+	user, err := u.userRepository.GetByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, err
 }
 
 func (u *userUseCase) GetByID(c context.Context, id string) (*user_domain.User, error) {
