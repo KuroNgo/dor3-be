@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	google "clean-architecture/internal/Oauth2/google"
+	google "clean-architecture/internal/oauth2/google"
 	context "context"
 
 	mock "github.com/stretchr/testify/mock"
