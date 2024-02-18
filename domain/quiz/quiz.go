@@ -17,13 +17,13 @@ type Quiz struct {
 	QuestionType  string             `bson:"question_type" json:"question_type"`
 }
 
-type Request struct {
-	Question      string   `bson:"question,omitempty"`
-	Options       []string `bson:"options,omitempty"`
-	CorrectAnswer string   `bson:"correct_answer,omitempty"`
+type Response struct {
+	Question      string   `bson:"question" json:"question"`
+	Options       []string `bson:"options" json:"options"`
+	CorrectAnswer string   `bson:"correct_answer" json:"correct_answer"`
 
 	// QuestionType can be included checkbox, check radius or write correct answer
-	QuestionType string `bson:"question_type,omitempty"`
+	QuestionType string `bson:"question_type" json:"question_type"`
 }
 
 //go:generate mockery --name IQuizRepository
@@ -31,6 +31,7 @@ type IQuizRepository interface {
 	Fetch(ctx context.Context) ([]Quiz, error)
 	FetchToDelete(ctx context.Context) (*[]Quiz, error)
 	Update(ctx context.Context, quizID string, quiz Quiz) error
-	Create(ctx context.Context, quiz *Quiz) error
+	Create(ctx context.Context, quiz *Input) error
+	UpsertQuiz(c context.Context, question string, quiz *Quiz) (*Response, error)
 	Delete(ctx context.Context, quizID string) error
 }

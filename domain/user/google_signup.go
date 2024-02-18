@@ -1,7 +1,7 @@
 package user_domain
 
 import (
-	"clean-architecture/internal/Oauth2/google"
+	"clean-architecture/internal/oauth2/google"
 	"context"
 )
 
