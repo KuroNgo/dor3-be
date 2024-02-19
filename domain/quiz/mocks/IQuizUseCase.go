@@ -128,12 +128,12 @@ func (_m *IQuizUseCase) Update(ctx context.Context, quizID string, quiz quiz_dom
 	return r0
 }
 
-// UpsertQuiz provides a mock function with given fields: c, question, quiz
-func (_m *IQuizUseCase) UpsertQuiz(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
+// Upsert provides a mock function with given fields: c, question, quiz
+func (_m *IQuizUseCase) Upsert(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
 	ret := _m.Called(c, question, quiz)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpsertQuiz")
+		panic("no return value specified for Upsert")
 	}
 
 	var r0 *quiz_domain.Response

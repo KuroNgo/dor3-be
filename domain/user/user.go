@@ -43,5 +43,5 @@ type IUserRepository interface {
 	GetByEmail(c context.Context, email string) (*User, error)
 	GetByUsername(c context.Context, username string) (*User, error)
 	GetByID(c context.Context, id string) (*User, error)
-	UpsertUser(c context.Context, email string, user *User) (*Response, error)
+	Upsert(c context.Context, email string, user *User) (*Response, error)
 }

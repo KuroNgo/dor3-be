@@ -11,14 +11,13 @@ import (
 	"time"
 )
 
-func QuizCreateRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
+func QuizRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
 	qu := quiz_repository.NewQuizRepository(db, quiz_domain.CollectionQuiz)
-	quizCreate := &quiz_controller.QuizCreateController{
+	quiz := &quiz_controller.QuizController{
 		QuizUseCase: quiz_usecase.NewQuizUseCase(qu, timeout),
 		Database:    env,
 	}
 
 	router := group.Group("/quiz")
-	router.POST("/create", quizCreate.CreateQuiz)
-
+	router.GET("/fetch", quiz.FetchQuiz)
 }
