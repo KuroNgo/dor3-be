@@ -6,6 +6,7 @@ type Input struct {
 	Question      string   `bson:"question" json:"question"`
 	Options       []string `bson:"options" json:"options"`
 	CorrectAnswer string   `bson:"correct_answer" json:"correct_answer"`
+	Explanation   string   `bson:"explanation" json:"explanation"`
 
 	// QuestionType can be included checkbox, check radius or write correct answer
 	QuestionType string `bson:"question_type" json:"question_type"`
@@ -17,6 +18,6 @@ type IQuizUseCase interface {
 	FetchToDelete(ctx context.Context) (*[]Quiz, error)
 	Update(ctx context.Context, quizID string, quiz Quiz) error
 	Create(ctx context.Context, quiz *Input) error
-	UpsertQuiz(c context.Context, question string, quiz *Quiz) (*Response, error)
+	Upsert(c context.Context, question string, quiz *Quiz) (*Response, error)
 	Delete(ctx context.Context, quizID string) error
 }

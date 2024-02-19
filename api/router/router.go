@@ -27,19 +27,19 @@ func Setup(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 		//middleware.DeserializeUser(),
 	)
 
-	// All Public APIs
-	// user method
-
 	// This is a CORS method for check IP valid
 	publicRouter.OPTIONS("/*path", middleware.OptionMessage)
 
+	// All Public APIs
+	// user method
 	user_router.GoogleAuthRouter(env, timeout, db, publicRouter)
 	user_router.RefreshTokenRouter(env, timeout, db, publicRouter)
 
 	// quiz method
-	quiz_route.QuizFetchRouter(env, timeout, db, publicRouter)
+	quiz_route.QuizRouter(env, timeout, db, publicRouter)
 	publicRouter.GET("/logout", middleware.DeserializeUser(), user_controller.LogoutUser)
 
-	// All Private APIs
-	quiz_route.QuizCreateRouter(env, timeout, db, privateRouter)
+	// private router
+	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
+
 }

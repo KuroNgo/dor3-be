@@ -152,12 +152,12 @@ func (_m *IUserRepository) GetByUsername(c context.Context, username string) (*u
 	return r0, r1
 }
 
-// UpsertUser provides a mock function with given fields: c, email, user
-func (_m *IUserRepository) UpsertUser(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
+// Upsert provides a mock function with given fields: c, email, user
+func (_m *IUserRepository) Upsert(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
 	ret := _m.Called(c, email, user)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpsertUser")
+		panic("no return value specified for Upsert")
 	}
 
 	var r0 *user_domain.Response

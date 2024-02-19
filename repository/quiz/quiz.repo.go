@@ -98,7 +98,7 @@ func (q *quizRepository) Delete(ctx context.Context, quizID string) error {
 	return err
 }
 
-func (q *quizRepository) UpsertQuiz(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
+func (q *quizRepository) Upsert(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
 	collection := q.database.Collection(q.collection)
 	doc, err := internal.ToDoc(quiz)
 	if err != nil {

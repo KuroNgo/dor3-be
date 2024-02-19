@@ -85,7 +85,7 @@ func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.Use
 	return &user, err
 }
 
-func (u *userRepository) UpsertUser(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
+func (u *userRepository) Upsert(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
 	collection := u.database.Collection(u.collection)
 	doc, err := internal.ToDoc(user)
 	if err != nil {
