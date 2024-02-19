@@ -15,7 +15,7 @@ type IQuizRepository struct {
 }
 
 // Create provides a mock function with given fields: ctx, quiz
-func (_m *IQuizRepository) Create(ctx context.Context, quiz *quiz_domain.Quiz) error {
+func (_m *IQuizRepository) Create(ctx context.Context, quiz *quiz_domain.Input) error {
 	ret := _m.Called(ctx, quiz)
 
 	if len(ret) == 0 {
@@ -23,7 +23,7 @@ func (_m *IQuizRepository) Create(ctx context.Context, quiz *quiz_domain.Quiz) e
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *quiz_domain.Quiz) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *quiz_domain.Input) error); ok {
 		r0 = rf(ctx, quiz)
 	} else {
 		r0 = ret.Error(0)
@@ -126,6 +126,36 @@ func (_m *IQuizRepository) Update(ctx context.Context, quizID string, quiz quiz_
 	}
 
 	return r0
+}
+
+// Upsert provides a mock function with given fields: c, question, quiz
+func (_m *IQuizRepository) Upsert(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
+	ret := _m.Called(c, question, quiz)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Upsert")
+	}
+
+	var r0 *quiz_domain.Response
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, *quiz_domain.Quiz) (*quiz_domain.Response, error)); ok {
+		return rf(c, question, quiz)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, *quiz_domain.Quiz) *quiz_domain.Response); ok {
+		r0 = rf(c, question, quiz)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*quiz_domain.Response)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, *quiz_domain.Quiz) error); ok {
+		r1 = rf(c, question, quiz)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // NewIQuizRepository creates a new instance of IQuizRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

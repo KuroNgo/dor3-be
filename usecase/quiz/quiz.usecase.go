@@ -66,10 +66,10 @@ func (q *quizUseCase) Create(ctx context.Context, quiz *quiz_domain.Input) error
 	return nil
 }
 
-func (q *quizUseCase) UpsertQuiz(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
+func (q *quizUseCase) Upsert(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(c, q.contextTimeout)
 	defer cancel()
-	return q.quizRepository.UpsertQuiz(ctx, question, quiz)
+	return q.quizRepository.Upsert(ctx, question, quiz)
 }
 
 func (q *quizUseCase) Delete(ctx context.Context, quizID string) error {
