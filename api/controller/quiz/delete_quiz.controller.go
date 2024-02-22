@@ -5,10 +5,10 @@ import (
 	"net/http"
 )
 
-func (q *QuizController) DeleteQuiz(ctx *gin.Context) {
+func (q *QuizController) DeleteOneQuiz(ctx *gin.Context) {
 	quizID := ctx.Param("_id")
 
-	err := q.QuizUseCase.Delete(ctx, quizID)
+	err := q.QuizUseCase.DeleteOne(ctx, quizID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),

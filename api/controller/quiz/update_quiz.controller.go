@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (q *QuizController) UpdateQuiz(ctx *gin.Context) {
+func (q *QuizController) UpdateOneQuiz(ctx *gin.Context) {
 	var quiz quiz_domain.Input
 	if err := ctx.ShouldBindJSON(&quiz); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -23,7 +23,7 @@ func (q *QuizController) UpdateQuiz(ctx *gin.Context) {
 		QuestionType:  quiz.QuestionType,
 	}
 
-	err := q.QuizUseCase.Update(ctx, updateQuiz.ID.Hex(), updateQuiz)
+	err := q.QuizUseCase.UpdateOne(ctx, updateQuiz.ID.Hex(), updateQuiz)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

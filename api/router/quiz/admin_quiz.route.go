@@ -5,7 +5,7 @@ import (
 	"clean-architecture/bootstrap"
 	quiz_domain "clean-architecture/domain/quiz"
 	"clean-architecture/infrastructor/mongo"
-	quiz_repository "clean-architecture/repository/quiz"
+	quiz_repository "clean-architecture/repository"
 	quiz_usecase "clean-architecture/usecase/quiz"
 	"github.com/gin-gonic/gin"
 	"time"
@@ -19,8 +19,8 @@ func AdminQuizRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Da
 	}
 
 	router := group.Group("/quiz")
-	router.POST("/create", quiz.CreateQuiz)
-	router.POST("/upsert", quiz.UpsertQuiz)
-	router.PUT("/update", quiz.UpdateQuiz)
-	router.DELETE("/delete", quiz.DeleteQuiz)
+	router.POST("/create", quiz.CreateOneQuiz)
+	router.POST("/upsert", quiz.UpsertOneQuiz)
+	router.PUT("/update", quiz.UpdateOneQuiz)
+	router.DELETE("/delete", quiz.DeleteOneQuiz)
 }

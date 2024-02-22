@@ -22,7 +22,7 @@ func (u *userUseCase) Fetch(c context.Context) ([]user_domain.User, error) {
 	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
 	defer cancel()
 
-	user, err := u.userRepository.Fetch(ctx)
+	user, err := u.userRepository.FetchMany(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -5,7 +5,7 @@ import (
 	"clean-architecture/bootstrap"
 	quiz_domain "clean-architecture/domain/quiz"
 	"clean-architecture/infrastructor/mongo"
-	quiz_repository "clean-architecture/repository/quiz"
+	quiz_repository "clean-architecture/repository"
 	quiz_usecase "clean-architecture/usecase/quiz"
 	"github.com/gin-gonic/gin"
 	"time"
@@ -19,5 +19,5 @@ func QuizRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Databas
 	}
 
 	router := group.Group("/quiz")
-	router.GET("/fetch", quiz.FetchQuiz)
+	router.GET("/fetch", quiz.FetchManyQuiz)
 }
