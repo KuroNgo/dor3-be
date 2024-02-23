@@ -30,10 +30,11 @@ type Response struct {
 
 //go:generate mockery --name IQuizRepository
 type IQuizRepository interface {
-	Fetch(ctx context.Context) ([]Quiz, error)
-	FetchToDelete(ctx context.Context) (*[]Quiz, error)
-	Update(ctx context.Context, quizID string, quiz Quiz) error
-	Create(ctx context.Context, quiz *Input) error
-	Upsert(c context.Context, question string, quiz *Quiz) (*Response, error)
-	Delete(ctx context.Context, quizID string) error
+	FetchByID(ctx context.Context, quizID string) (*Quiz, error)
+	FetchMany(ctx context.Context) ([]Quiz, error)
+	FetchToDeleteMany(ctx context.Context) (*[]Quiz, error)
+	UpdateOne(ctx context.Context, quizID string, quiz Quiz) error
+	CreateOne(ctx context.Context, quiz *Input) error
+	UpsertOne(c context.Context, question string, quiz *Quiz) (*Response, error)
+	DeleteOne(ctx context.Context, quizID string) error
 }

@@ -38,41 +38,50 @@
 ├───.idea
 ├───api
 │   ├───controller
+│   │   ├───quiz
 │   │   └───user
 │   ├───middleware
 │   └───router
+│       ├───quiz
 │       └───user
 ├───assets
 ├───bootstrap
+├───config
 ├───domain
-│   ├───mock
-│   │   └───user
-│   ├───request
-│   │   ├───admin
-│   │   ├───course
-│   │   ├───feedback
-│   │   ├───lesson
-│   │   ├───log
-│   │   ├───position
-│   │   ├───quiz
-│   │   ├───role
-│   │   ├───user
-│   │   ├───user_attempt
-│   │   ├───user_process
-│   │   └───user_quiz_attempt
-│   └───response
+│   ├───admin
+│   ├───audio
+│   │   └───mocks
+│   ├───course
+│   ├───feedback
+│   ├───lesson
+│   ├───log
+│   ├───position
+│   ├───quiz
+│   │   └───mocks
+│   ├───role
+│   ├───user
+│   │   └───mocks
+│   ├───user_attempt
+│   ├───user_process
+│   └───user_quiz_attempt
 ├───infrastructor
-│   └───mongo
-│       └───mocks
+│   ├───mongo
+│   │   └───mocks
+│   └───redis
 ├───internal
-│   └───Oauth2
+│   ├───file
+│   └───oauth2
 │       └───google
 ├───repository
-│   └───test
-│       ├───admin
-│       └───user
+│   ├───quiz
+│   ├───test
+│   │   ├───admin
+│   │   ├───quiz
+│   │   └───user
+│   └───user
 └───usecase
     ├───admin
+    ├───quiz
     ├───system
     └───user
 ```

@@ -5,8 +5,8 @@ import (
 	"net/http"
 )
 
-func (q *QuizController) FetchQuiz(ctx *gin.Context) {
-	quiz, err := q.QuizUseCase.Fetch(ctx)
+func (q *QuizController) FetchManyQuiz(ctx *gin.Context) {
+	quiz, err := q.QuizUseCase.FetchMany(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

@@ -3,7 +3,7 @@ package quiz_test
 import (
 	quiz_domain "clean-architecture/domain/quiz"
 	"clean-architecture/infrastructor/mongo/mocks"
-	quiz_repository "clean-architecture/repository/quiz"
+	quiz_repository "clean-architecture/repository"
 	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
@@ -40,7 +40,7 @@ func TestCreate(t *testing.T) {
 
 		ur := quiz_repository.NewQuizRepository(databaseHelper, collectionName)
 
-		err := ur.Create(context.Background(), mockQuiz)
+		err := ur.CreateOne(context.Background(), mockQuiz)
 
 		assert.NoError(t, err)
 
@@ -58,7 +58,7 @@ func TestCreate(t *testing.T) {
 
 		ur := quiz_repository.NewQuizRepository(databaseHelper, collectionName)
 
-		err := ur.Create(context.Background(), mockEmptyQuiz)
+		err := ur.CreateOne(context.Background(), mockEmptyQuiz)
 
 		assert.Error(t, err)
 

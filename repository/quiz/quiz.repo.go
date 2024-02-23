@@ -23,7 +23,21 @@ func NewQuizRepository(db mongo.Database, collection string) quiz_domain.IQuizRe
 	}
 }
 
-func (q *quizRepository) Fetch(ctx context.Context) ([]quiz_domain.Quiz, error) {
+func (q *quizRepository) FetchByID(ctx context.Context, quizID string) (*quiz_domain.Quiz, error) {
+	collection := q.database.Collection(q.collection)
+
+	var quiz quiz_domain.Quiz
+
+	idHex, err := primitive.ObjectIDFromHex(quizID)
+	if err != nil {
+		return &quiz, err
+	}
+
+	err = collection.FindOne(ctx, bson.M{"_id": idHex}).Decode(&quiz)
+	return &quiz, err
+}
+
+func (q *quizRepository) FetchMany(ctx context.Context) ([]quiz_domain.Quiz, error) {
 	collection := q.database.Collection(q.collection)
 
 	cursor, err := collection.Find(ctx, bson.D{})
@@ -41,7 +55,7 @@ func (q *quizRepository) Fetch(ctx context.Context) ([]quiz_domain.Quiz, error) 
 	return quiz, err
 }
 
-func (q *quizRepository) FetchToDelete(ctx context.Context) (*[]quiz_domain.Quiz, error) {
+func (q *quizRepository) FetchToDeleteMany(ctx context.Context) (*[]quiz_domain.Quiz, error) {
 	collection := q.database.Collection(q.collection)
 
 	cursor, err := collection.Find(ctx, bson.D{})
@@ -59,7 +73,7 @@ func (q *quizRepository) FetchToDelete(ctx context.Context) (*[]quiz_domain.Quiz
 	return &quiz, err
 }
 
-func (q *quizRepository) Update(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
+func (q *quizRepository) UpdateOne(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
 	collection := q.database.Collection(q.collection)
 	objID, err := primitive.ObjectIDFromHex(quizID)
 
@@ -78,13 +92,13 @@ func (q *quizRepository) Update(ctx context.Context, quizID string, quiz quiz_do
 	return err
 }
 
-func (q *quizRepository) Create(ctx context.Context, quiz *quiz_domain.Input) error {
+func (q *quizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Input) error {
 	collection := q.database.Collection(q.collection)
 	_, err := collection.InsertOne(ctx, quiz)
 	return err
 }
 
-func (q *quizRepository) Delete(ctx context.Context, quizID string) error {
+func (q *quizRepository) DeleteOne(ctx context.Context, quizID string) error {
 	collection := q.database.Collection(q.collection)
 	objID, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
@@ -98,7 +112,7 @@ func (q *quizRepository) Delete(ctx context.Context, quizID string) error {
 	return err
 }
 
-func (q *quizRepository) Upsert(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
+func (q *quizRepository) UpsertOne(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
 	collection := q.database.Collection(q.collection)
 	doc, err := internal.ToDoc(quiz)
 	if err != nil {

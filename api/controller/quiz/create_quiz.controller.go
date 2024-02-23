@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (q *QuizController) CreateQuiz(ctx *gin.Context) {
+func (q *QuizController) CreateOneQuiz(ctx *gin.Context) {
 	var quizInput quiz_domain.Input
 
 	if err := ctx.ShouldBindJSON(&quizInput); err != nil {
@@ -26,7 +26,7 @@ func (q *QuizController) CreateQuiz(ctx *gin.Context) {
 		return
 	}
 
-	err := q.QuizUseCase.Create(ctx, &quizInput)
+	err := q.QuizUseCase.CreateOne(ctx, &quizInput)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

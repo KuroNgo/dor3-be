@@ -1,4 +1,4 @@
-package user_repository
+package user
 
 import (
 	"clean-architecture/domain/user"
@@ -23,7 +23,7 @@ func NewUserRepository(db mongo.Database, collection string) user_domain.IUserRe
 	}
 }
 
-func (u *userRepository) Fetch(c context.Context) ([]user_domain.User, error) {
+func (u *userRepository) FetchMany(c context.Context) ([]user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 
 	opts := options.Find().SetProjection(bson.D{{Key: "password", Value: 0}})
@@ -43,7 +43,7 @@ func (u *userRepository) Fetch(c context.Context) ([]user_domain.User, error) {
 	return users, err
 }
 
-func (u *userRepository) Delete(c context.Context, userID string) error {
+func (u *userRepository) DeleteOne(c context.Context, userID string) error {
 	collection := u.database.Collection(u.collection)
 	objID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -85,7 +85,7 @@ func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.Use
 	return &user, err
 }
 
-func (u *userRepository) Upsert(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
+func (u *userRepository) UpsertOne(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
 	collection := u.database.Collection(u.collection)
 	doc, err := internal.ToDoc(user)
 	if err != nil {

@@ -18,11 +18,11 @@ func NewQuizUseCase(quizRepository quiz_domain.IQuizRepository, timeout time.Dur
 	}
 }
 
-func (q *quizUseCase) Fetch(ctx context.Context) ([]quiz_domain.Quiz, error) {
+func (q *quizUseCase) FetchMany(ctx context.Context) ([]quiz_domain.Quiz, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	user, err := q.quizRepository.Fetch(ctx)
+	user, err := q.quizRepository.FetchMany(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -30,11 +30,11 @@ func (q *quizUseCase) Fetch(ctx context.Context) ([]quiz_domain.Quiz, error) {
 	return user, err
 }
 
-func (q *quizUseCase) FetchToDelete(ctx context.Context) (*[]quiz_domain.Quiz, error) {
+func (q *quizUseCase) FetchToDeleteMany(ctx context.Context) (*[]quiz_domain.Quiz, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	user, err := q.quizRepository.FetchToDelete(ctx)
+	user, err := q.quizRepository.FetchToDeleteMany(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -42,11 +42,11 @@ func (q *quizUseCase) FetchToDelete(ctx context.Context) (*[]quiz_domain.Quiz, e
 	return user, err
 }
 
-func (q *quizUseCase) Update(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
+func (q *quizUseCase) UpdateOne(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	err := q.quizRepository.Update(ctx, quizID, quiz)
+	err := q.quizRepository.UpdateOne(ctx, quizID, quiz)
 	if err != nil {
 		return err
 	}
@@ -54,10 +54,10 @@ func (q *quizUseCase) Update(ctx context.Context, quizID string, quiz quiz_domai
 	return err
 }
 
-func (q *quizUseCase) Create(ctx context.Context, quiz *quiz_domain.Input) error {
+func (q *quizUseCase) CreateOne(ctx context.Context, quiz *quiz_domain.Input) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
-	err := q.quizRepository.Create(ctx, quiz)
+	err := q.quizRepository.CreateOne(ctx, quiz)
 
 	if err != nil {
 		return err
@@ -66,17 +66,21 @@ func (q *quizUseCase) Create(ctx context.Context, quiz *quiz_domain.Input) error
 	return nil
 }
 
-func (q *quizUseCase) Upsert(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
+func (q *quizUseCase) UpsertOne(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(c, q.contextTimeout)
 	defer cancel()
-	return q.quizRepository.Upsert(ctx, question, quiz)
+	quizRes, err := q.quizRepository.UpsertOne(ctx, question, quiz)
+	if err != nil {
+		return nil, err
+	}
+	return quizRes, nil
 }
 
-func (q *quizUseCase) Delete(ctx context.Context, quizID string) error {
+func (q *quizUseCase) DeleteOne(ctx context.Context, quizID string) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	err := q.quizRepository.Delete(ctx, quizID)
+	err := q.quizRepository.DeleteOne(ctx, quizID)
 	if err != nil {
 		return err
 	}
