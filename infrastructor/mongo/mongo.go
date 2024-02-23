@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"
 	"go.mongodb.org/mongo-driver/bson/bsonrw"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
-	"go.mongodb.org/mongo-driver/mongo"
+	mongo "go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
@@ -26,6 +26,7 @@ type Collection interface {
 	InsertOne(context.Context, interface{}) (interface{}, error)
 	InsertMany(context.Context, []interface{}) ([]interface{}, error)
 	DeleteOne(context.Context, interface{}) (int64, error)
+	DeleteMany(ctx context.Context, filter interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error)
 	Find(context.Context, interface{}, ...*options.FindOptions) (Cursor, error)
 	CountDocuments(context.Context, interface{}, ...*options.CountOptions) (int64, error)
 	FindOneAndUpdate(ctx context.Context, filter interface{}, update interface{}, opts ...*options.FindOneAndUpdateOptions) SingleResult
@@ -167,6 +168,15 @@ func (mc *mongoCollection) InsertMany(ctx context.Context, document []interface{
 func (mc *mongoCollection) DeleteOne(ctx context.Context, filter interface{}) (int64, error) {
 	count, err := mc.coll.DeleteOne(ctx, filter)
 	return count.DeletedCount, err
+}
+
+func (mc *mongoCollection) DeleteMany(ctx context.Context, filter interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
+	count, err := mc.coll.DeleteMany(ctx, filter, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return count, nil
 }
 
 func (mc *mongoCollection) Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (Cursor, error) {

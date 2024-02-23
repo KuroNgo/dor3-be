@@ -19,5 +19,5 @@ func QuizRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Databas
 	}
 
 	router := group.Group("/quiz")
-	router.GET("/fetch", quiz.FetchQuiz)
+	router.GET("/fetch", quiz.FetchManyQuiz)
 }

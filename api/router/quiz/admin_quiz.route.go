@@ -19,8 +19,8 @@ func AdminQuizRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Da
 	}
 
 	router := group.Group("/quiz")
-	router.POST("/create", quiz.CreateQuiz)
-	router.POST("/upsert", quiz.UpsertQuiz)
-	router.PUT("/update", quiz.UpdateQuiz)
-	router.DELETE("/delete", quiz.DeleteQuiz)
+	router.POST("/create", quiz.CreateOneQuiz)
+	router.POST("/upsert", quiz.UpsertOneQuiz)
+	router.PUT("/update", quiz.UpdateOneQuiz)
+	router.DELETE("/delete", quiz.DeleteOneQuiz)
 }

@@ -38,10 +38,10 @@ type Response struct {
 
 //go:generate mockery --name IUserRepository
 type IUserRepository interface {
-	Fetch(c context.Context) ([]User, error)
-	Delete(c context.Context, userID string) error
+	FetchMany(c context.Context) ([]User, error)
+	DeleteOne(c context.Context, userID string) error
 	GetByEmail(c context.Context, email string) (*User, error)
 	GetByUsername(c context.Context, username string) (*User, error)
 	GetByID(c context.Context, id string) (*User, error)
-	Upsert(c context.Context, email string, user *User) (*Response, error)
+	UpsertOne(c context.Context, email string, user *User) (*Response, error)
 }
