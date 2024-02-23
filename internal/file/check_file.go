@@ -1,4 +1,4 @@
-package file
+package file_internal
 
 import "strings"
 
