@@ -22,7 +22,7 @@ func NewGoogleUseCase(userRepository user_domain.IUserRepository, timeout time.D
 func (g *googleUseCase) UpsertUser(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(c, g.contextTimeout)
 	defer cancel()
-	return g.userRepository.Upsert(ctx, email, user)
+	return g.userRepository.UpsertOne(ctx, email, user)
 }
 
 func (g *googleUseCase) GetGoogleOauthToken(code string) (*google.OauthToken, error) {

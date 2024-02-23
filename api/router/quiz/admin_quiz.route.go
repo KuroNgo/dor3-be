@@ -5,7 +5,7 @@ import (
 	"clean-architecture/bootstrap"
 	quiz_domain "clean-architecture/domain/quiz"
 	"clean-architecture/infrastructor/mongo"
-	quiz_repository "clean-architecture/repository"
+	quiz_repository "clean-architecture/repository/quiz"
 	quiz_usecase "clean-architecture/usecase/quiz"
 	"github.com/gin-gonic/gin"
 	"time"

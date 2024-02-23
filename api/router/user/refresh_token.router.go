@@ -5,7 +5,7 @@ import (
 	"clean-architecture/bootstrap"
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/infrastructor/mongo"
-	user_repository "clean-architecture/repository"
+	user_repository "clean-architecture/repository/user"
 	usecase "clean-architecture/usecase/user"
 	"github.com/gin-gonic/gin"
 	"time"
