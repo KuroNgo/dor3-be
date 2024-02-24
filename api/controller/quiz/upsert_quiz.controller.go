@@ -7,6 +7,8 @@ import (
 )
 
 func (q *QuizController) UpsertOneQuiz(ctx *gin.Context) {
+	quizID := ctx.Query("_id")
+
 	var quiz quiz_domain.Input
 	if err := ctx.ShouldBindJSON(&quiz); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -24,7 +26,7 @@ func (q *QuizController) UpsertOneQuiz(ctx *gin.Context) {
 		QuestionType:  quiz.QuestionType,
 	}
 
-	quizRes, err := q.QuizUseCase.UpsertOne(ctx, upsertQuiz.Question, &upsertQuiz)
+	quizRes, err := q.QuizUseCase.UpsertOne(ctx, quizID, &upsertQuiz)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
