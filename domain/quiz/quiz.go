@@ -35,6 +35,6 @@ type IQuizRepository interface {
 	FetchToDeleteMany(ctx context.Context) (*[]Quiz, error)
 	UpdateOne(ctx context.Context, quizID string, quiz Quiz) error
 	CreateOne(ctx context.Context, quiz *Input) error
-	UpsertOne(c context.Context, question string, quiz *Quiz) (*Response, error)
+	UpsertOne(c context.Context, id string, quiz *Quiz) (*Response, error)
 	DeleteOne(ctx context.Context, quizID string) error
 }

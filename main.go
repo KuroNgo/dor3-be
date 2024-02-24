@@ -19,7 +19,7 @@ func main() {
 
 	_gin := gin.Default()
 
-	router.Setup(env, timeout, db, _gin)
+	router.SetUp(env, timeout, db, _gin)
 
 	err := _gin.Run(env.ServerAddress)
 	if err != nil {
