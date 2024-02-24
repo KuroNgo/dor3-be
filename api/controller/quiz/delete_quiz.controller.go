@@ -5,8 +5,9 @@ import (
 	"net/http"
 )
 
+// DeleteOneQuiz done
 func (q *QuizController) DeleteOneQuiz(ctx *gin.Context) {
-	quizID := ctx.Param("_id")
+	quizID := ctx.Query("_id")
 
 	err := q.QuizUseCase.DeleteOne(ctx, quizID)
 	if err != nil {

@@ -33,7 +33,9 @@ func (q *quizRepository) FetchByID(ctx context.Context, quizID string) (*quiz_do
 		return &quiz, err
 	}
 
-	err = collection.FindOne(ctx, bson.M{"_id": idHex}).Decode(&quiz)
+	err = collection.
+		FindOne(ctx, bson.M{"_id": idHex}).
+		Decode(&quiz)
 	return &quiz, err
 }
 
@@ -75,18 +77,11 @@ func (q *quizRepository) FetchToDeleteMany(ctx context.Context) (*[]quiz_domain.
 
 func (q *quizRepository) UpdateOne(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
 	collection := q.database.Collection(q.collection)
+	doc, err := internal.ToDoc(quiz)
 	objID, err := primitive.ObjectIDFromHex(quizID)
 
-	filter := bson.M{"_id": objID}
-
-	update := bson.M{
-		"$set": bson.M{
-			"Question":      quiz.Question,
-			"Options":       quiz.Options,
-			"CorrectAnswer": quiz.CorrectAnswer,
-			"QuestionType":  quiz.QuestionType,
-		},
-	}
+	filter := bson.D{{Key: "_id", Value: objID}}
+	update := bson.D{{Key: "$set", Value: doc}}
 
 	_, err = collection.UpdateOne(ctx, filter, update)
 	return err
@@ -112,15 +107,17 @@ func (q *quizRepository) DeleteOne(ctx context.Context, quizID string) error {
 	return err
 }
 
-func (q *quizRepository) UpsertOne(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
+func (q *quizRepository) UpsertOne(c context.Context, id string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
 	collection := q.database.Collection(q.collection)
 	doc, err := internal.ToDoc(quiz)
+
+	idHex, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
 	}
 
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(1)
-	query := bson.D{{Key: "question", Value: question}}
+	query := bson.D{{Key: "_id", Value: idHex}}
 	update := bson.D{{Key: "$set", Value: doc}}
 	res := collection.FindOneAndUpdate(c, query, update, opts)
 

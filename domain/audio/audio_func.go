@@ -3,15 +3,14 @@ package audio_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"time"
 )
 
 type AutoMatch struct {
 	QuizID primitive.ObjectID `bson:"quiz_id" json:"quiz_id"`
 
 	// admin add file and system will be found it
-	Filename      string    `bson:"filename" json:"filename"`
-	AudioDuration time.Time `bson:"audio_duration" json:"audio_duration"`
+	Filename      string `bson:"filename" json:"filename"`
+	AudioDuration string `bson:"audio_duration" json:"audio_duration"`
 }
 
 //go:generate mockery --name IAudioUseCase

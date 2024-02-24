@@ -15,7 +15,7 @@ type IAudioUseCase struct {
 }
 
 // CreateOne provides a mock function with given fields: ctx, audio
-func (_m *IAudioUseCase) CreateOne(ctx context.Context, audio *audio_domain.Input) error {
+func (_m *IAudioUseCase) CreateOne(ctx context.Context, audio *audio_domain.AutoMatch) error {
 	ret := _m.Called(ctx, audio)
 
 	if len(ret) == 0 {
@@ -23,7 +23,7 @@ func (_m *IAudioUseCase) CreateOne(ctx context.Context, audio *audio_domain.Inpu
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *audio_domain.Input) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *audio_domain.AutoMatch) error); ok {
 		r0 = rf(ctx, audio)
 	} else {
 		r0 = ret.Error(0)
@@ -73,6 +73,36 @@ func (_m *IAudioUseCase) DeleteOne(ctx context.Context, audioID string) error {
 	}
 
 	return r0
+}
+
+// FetchByID provides a mock function with given fields: ctx, audioID
+func (_m *IAudioUseCase) FetchByID(ctx context.Context, audioID string) (*audio_domain.Audio, error) {
+	ret := _m.Called(ctx, audioID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FetchByID")
+	}
+
+	var r0 *audio_domain.Audio
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*audio_domain.Audio, error)); ok {
+		return rf(ctx, audioID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *audio_domain.Audio); ok {
+		r0 = rf(ctx, audioID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*audio_domain.Audio)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, audioID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // FetchMany provides a mock function with given fields: ctx

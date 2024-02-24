@@ -1,4 +1,4 @@
-package audio
+package audio_usecase
 
 import (
 	audio_domain "clean-architecture/domain/audio"
@@ -17,7 +17,6 @@ func NewAudioUseCase(audioRepository audio_domain.IAudioUseCase, timeout time.Du
 		contextTimeout:  timeout,
 	}
 }
-
 func (a *audioUseCase) FetchByID(ctx context.Context, audioID string) (*audio_domain.Audio, error) {
 	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
 	defer cancel()
@@ -90,11 +89,11 @@ func (a *audioUseCase) DeleteOne(ctx context.Context, audioID string) error {
 	return err
 }
 
-func (a *audioUseCase) DeleteMany(ctx context.Context, audioIDs ...string) error {
+func (a *audioUseCase) DeleteMany(ctx context.Context, audioID ...string) error {
 	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
 	defer cancel()
 
-	err := a.audioRepository.DeleteMany(ctx, audioIDs...)
+	err := a.audioRepository.DeleteMany(ctx, audioID...)
 	if err != nil {
 		return err
 	}
