@@ -10,7 +10,7 @@ const (
 )
 
 type Audio struct {
-	Id     primitive.ObjectID `bson:"audio_id" json:"audio_id"`
+	Id     primitive.ObjectID `bson:"_id" json:"_id"`
 	QuizID primitive.ObjectID `bson:"quiz_id" json:"quiz_id"`
 
 	// admin add metadata of file and system will be found it
