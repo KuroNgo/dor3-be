@@ -3,7 +3,7 @@ package quiz_test
 import (
 	quiz_domain "clean-architecture/domain/quiz"
 	"clean-architecture/infrastructor/mongo/mocks"
-	quiz_repository "clean-architecture/repository"
+	quiz_repository "clean-architecture/repository/quiz"
 	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"

@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// FetchManyQuiz done
 func (q *QuizController) FetchManyQuiz(ctx *gin.Context) {
 	quiz, err := q.QuizUseCase.FetchMany(ctx)
 	if err != nil {

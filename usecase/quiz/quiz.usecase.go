@@ -66,10 +66,10 @@ func (q *quizUseCase) CreateOne(ctx context.Context, quiz *quiz_domain.Input) er
 	return nil
 }
 
-func (q *quizUseCase) UpsertOne(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
+func (q *quizUseCase) UpsertOne(c context.Context, id string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(c, q.contextTimeout)
 	defer cancel()
-	quizRes, err := q.quizRepository.UpsertOne(ctx, question, quiz)
+	quizRes, err := q.quizRepository.UpsertOne(ctx, id, quiz)
 	if err != nil {
 		return nil, err
 	}

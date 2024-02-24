@@ -30,7 +30,9 @@ func (a *audioRepository) FetchByID(ctx context.Context, audioID string) (*audio
 		return &audio, err
 	}
 
-	err = collection.FindOne(ctx, bson.M{"_id": idHex}).Decode(&audio)
+	err = collection.
+		FindOne(ctx, bson.M{"_id": idHex}).
+		Decode(&audio)
 	return &audio, err
 }
 

@@ -1,4 +1,4 @@
-package audio
+package audio_controller
 
 import (
 	"clean-architecture/bootstrap"

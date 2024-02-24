@@ -3,6 +3,7 @@ package router
 import (
 	user_controller "clean-architecture/api/controller/user"
 	"clean-architecture/api/middleware"
+	audio_route "clean-architecture/api/router/audio"
 	quiz_route "clean-architecture/api/router/quiz"
 	user_router "clean-architecture/api/router/user"
 	"clean-architecture/bootstrap"
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-func Setup(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gin *gin.Engine) {
+func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gin *gin.Engine) {
 	publicRouter := gin.Group("")
 	privateRouter := gin.Group("/admin")
 
@@ -22,12 +23,12 @@ func Setup(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 	)
 
 	privateRouter.Use(
-		middleware.CORSForDev(),
+		middleware.CORS(),
 		middleware.RateLimiter(),
 		//middleware.DeserializeUser(),
 	)
 
-	// This is a CORS method for check IP valid
+	// This is a CORS method for check IP validation
 	publicRouter.OPTIONS("/*path", middleware.OptionMessage)
 
 	// All Public APIs
@@ -41,5 +42,6 @@ func Setup(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 
 	// private router
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
+	audio_route.AdminAudioRouter(env, timeout, db, privateRouter)
 
 }
