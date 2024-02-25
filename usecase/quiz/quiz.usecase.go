@@ -22,24 +22,24 @@ func (q *quizUseCase) FetchMany(ctx context.Context) ([]quiz_domain.Quiz, error)
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	user, err := q.quizRepository.FetchMany(ctx)
+	quiz, err := q.quizRepository.FetchMany(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return user, err
+	return quiz, err
 }
 
 func (q *quizUseCase) FetchToDeleteMany(ctx context.Context) (*[]quiz_domain.Quiz, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	user, err := q.quizRepository.FetchToDeleteMany(ctx)
+	quiz, err := q.quizRepository.FetchToDeleteMany(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return user, err
+	return quiz, err
 }
 
 func (q *quizUseCase) UpdateOne(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {

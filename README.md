@@ -36,12 +36,15 @@
 ## File Structure
 ```
 ├───.idea
+│   └───inspectionProfiles
 ├───api
 │   ├───controller
+│   │   ├───audio
 │   │   ├───quiz
 │   │   └───user
 │   ├───middleware
 │   └───router
+│       ├───audio
 │       ├───quiz
 │       └───user
 ├───assets
@@ -52,6 +55,7 @@
 │   ├───audio
 │   │   └───mocks
 │   ├───course
+│   │   └───mocks
 │   ├───feedback
 │   ├───lesson
 │   ├───log
@@ -69,10 +73,14 @@
 │   │   └───mocks
 │   └───redis
 ├───internal
+│   ├───cloud
+│   │   └───firebase
+│   │       └───audio
 │   ├───file
 │   └───oauth2
 │       └───google
 ├───repository
+│   ├───audio
 │   ├───quiz
 │   ├───test
 │   │   ├───admin
@@ -81,6 +89,7 @@
 │   └───user
 └───usecase
     ├───admin
+    ├───audio
     ├───quiz
     ├───system
     └───user
