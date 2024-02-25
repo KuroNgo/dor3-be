@@ -65,14 +65,14 @@ func (q *quizRepository) FetchToDeleteMany(ctx context.Context) (*[]quiz_domain.
 		return nil, err
 	}
 
-	var quiz []quiz_domain.Quiz
+	var quiz *[]quiz_domain.Quiz
 
 	err = cursor.All(ctx, &quiz)
 	if quiz == nil {
 		return &[]quiz_domain.Quiz{}, err
 	}
 
-	return &quiz, err
+	return quiz, err
 }
 
 func (q *quizRepository) UpdateOne(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
