@@ -11,6 +11,13 @@ type courseUseCase struct {
 	contextTimeout   time.Duration
 }
 
+func NewCourseUseCase(courseRepository course_domain.ICourseRepository, timeout time.Duration) course_domain.ICourseUseCase {
+	return &courseUseCase{
+		courseRepository: courseRepository,
+		contextTimeout:   timeout,
+	}
+}
+
 func (c *courseUseCase) FetchByID(ctx context.Context, courseID string) (*course_domain.Course, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
@@ -91,11 +98,4 @@ func (c *courseUseCase) DeleteOne(ctx context.Context, courseID string) error {
 	}
 
 	return err
-}
-
-func NewCourseUseCase(courseRepository course_domain.ICourseRepository, timeout time.Duration) course_domain.ICourseUseCase {
-	return &courseUseCase{
-		courseRepository: courseRepository,
-		contextTimeout:   timeout,
-	}
 }

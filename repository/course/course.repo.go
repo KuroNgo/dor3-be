@@ -16,6 +16,13 @@ type courseRepository struct {
 	collection string
 }
 
+func NewCourseRepository(db mongo.Database, collection string) course_domain.ICourseRepository {
+	return &courseRepository{
+		database:   db,
+		collection: collection,
+	}
+}
+
 func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (*course_domain.Course, error) {
 	collection := c.database.Collection(c.collection)
 
@@ -120,11 +127,4 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 	}
 	_, err = collection.DeleteOne(ctx, filter)
 	return err
-}
-
-func NewQuizRepository(db mongo.Database, collection string) course_domain.ICourseRepository {
-	return &courseRepository{
-		database:   db,
-		collection: collection,
-	}
 }
