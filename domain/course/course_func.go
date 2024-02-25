@@ -10,7 +10,7 @@ type Input struct {
 
 //go:generate mockery --name ICourseUseCase
 type ICourseUseCase interface {
-	FetchByID(ctx context.Context, courseID string) (*Response, error)
+	FetchByID(ctx context.Context, courseID string) (*Course, error)
 	FetchMany(ctx context.Context) ([]Course, error)
 	FetchToDeleteMany(ctx context.Context) (*[]Course, error)
 	UpdateOne(ctx context.Context, courseID string, course Course) error
