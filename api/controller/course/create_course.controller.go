@@ -4,6 +4,7 @@ import (
 	course_domain "clean-architecture/domain/course"
 	"clean-architecture/internal"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"time"
 )
@@ -11,7 +12,7 @@ import (
 func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
 	var courseInput course_domain.Input
 	if err := ctx.ShouldBindJSON(&courseInput); err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid request"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
@@ -24,6 +25,7 @@ func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
 	}
 
 	course := &course_domain.Course{
+		Id:          primitive.NewObjectID(),
 		Name:        courseInput.Name,
 		Description: courseInput.Description,
 		Level:       courseInput.Level,
