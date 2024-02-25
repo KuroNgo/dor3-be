@@ -8,6 +8,7 @@ type Input struct {
 	Level       int    `bson:"level" json:"level"`
 }
 
+//go:generate mockery --name ICourseUseCase
 type ICourseUseCase interface {
 	FetchByID(ctx context.Context, courseID string) (*Response, error)
 	FetchMany(ctx context.Context) ([]Course, error)
