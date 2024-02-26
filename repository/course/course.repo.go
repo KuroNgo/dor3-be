@@ -140,7 +140,7 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 	if err != nil {
 		return err
 	}
-	if count < 0 {
+	if count <= 0 {
 		return errors.New(`the course is removed`)
 	}
 	_, err = collection.DeleteOne(ctx, filter)

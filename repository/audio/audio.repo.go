@@ -4,6 +4,7 @@ import (
 	audio_domain "clean-architecture/domain/audio"
 	"clean-architecture/infrastructor/mongo"
 	"context"
+	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -90,9 +91,18 @@ func (a *audioRepository) UpdateOne(ctx context.Context, audioID string, audio a
 	return err
 }
 
-func (a *audioRepository) CreateOne(ctx context.Context, audio *audio_domain.AutoMatch) error {
+func (a *audioRepository) CreateOne(ctx context.Context, audio *audio_domain.Audio) error {
 	collection := a.database.Collection(a.collection)
-	_, err := collection.InsertOne(ctx, audio)
+	filter := bson.M{"quizID": audio.QuizID}
+	// check exists with CountDocuments
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("the question id did exists")
+	}
+	_, err = collection.InsertOne(ctx, audio)
 	return err
 }
 
@@ -105,6 +115,13 @@ func (a *audioRepository) DeleteOne(ctx context.Context, audioID string) error {
 
 	filter := bson.M{
 		"_id": objID,
+	}
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count <= 0 {
+		return errors.New(`the course had been removed or does not exists`)
 	}
 	_, err = collection.DeleteOne(ctx, filter)
 	return err
@@ -125,6 +142,13 @@ func (a *audioRepository) DeleteMany(ctx context.Context, audioIDs ...string) er
 	filter := bson.M{
 		"_id": bson.M{"$in": objIDs}, // use $in operator for delete many document in the same time
 	}
-	_, err := collection.DeleteMany(ctx, filter)
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count <= 0 {
+		return errors.New("the audios do not exists or had been removed")
+	}
+	_, err = collection.DeleteMany(ctx, filter)
 	return err
 }
