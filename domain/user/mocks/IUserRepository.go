@@ -14,12 +14,12 @@ type IUserRepository struct {
 	mock.Mock
 }
 
-// Delete provides a mock function with given fields: c, userID
-func (_m *IUserRepository) Delete(c context.Context, userID string) error {
+// DeleteOne provides a mock function with given fields: c, userID
+func (_m *IUserRepository) DeleteOne(c context.Context, userID string) error {
 	ret := _m.Called(c, userID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Delete")
+		panic("no return value specified for DeleteOne")
 	}
 
 	var r0 error
@@ -32,12 +32,12 @@ func (_m *IUserRepository) Delete(c context.Context, userID string) error {
 	return r0
 }
 
-// Fetch provides a mock function with given fields: c
-func (_m *IUserRepository) Fetch(c context.Context) ([]user_domain.User, error) {
+// FetchMany provides a mock function with given fields: c
+func (_m *IUserRepository) FetchMany(c context.Context) ([]user_domain.User, error) {
 	ret := _m.Called(c)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Fetch")
+		panic("no return value specified for FetchMany")
 	}
 
 	var r0 []user_domain.User
@@ -152,12 +152,12 @@ func (_m *IUserRepository) GetByUsername(c context.Context, username string) (*u
 	return r0, r1
 }
 
-// Upsert provides a mock function with given fields: c, email, user
-func (_m *IUserRepository) Upsert(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
+// UpsertOne provides a mock function with given fields: c, email, user
+func (_m *IUserRepository) UpsertOne(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
 	ret := _m.Called(c, email, user)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Upsert")
+		panic("no return value specified for UpsertOne")
 	}
 
 	var r0 *user_domain.Response

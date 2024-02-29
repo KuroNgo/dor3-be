@@ -51,23 +51,23 @@ func (_m *ICourseRepository) DeleteOne(ctx context.Context, courseID string) err
 }
 
 // FetchByID provides a mock function with given fields: ctx, courseID
-func (_m *ICourseRepository) FetchByID(ctx context.Context, courseID string) (*course_domain.Response, error) {
+func (_m *ICourseRepository) FetchByID(ctx context.Context, courseID string) (*course_domain.Course, error) {
 	ret := _m.Called(ctx, courseID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FetchByID")
 	}
 
-	var r0 *course_domain.Response
+	var r0 *course_domain.Course
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*course_domain.Response, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*course_domain.Course, error)); ok {
 		return rf(ctx, courseID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *course_domain.Response); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) *course_domain.Course); ok {
 		r0 = rf(ctx, courseID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*course_domain.Response)
+			r0 = ret.Get(0).(*course_domain.Course)
 		}
 	}
 
