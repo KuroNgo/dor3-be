@@ -88,7 +88,18 @@ func (c *courseRepository) UpdateOne(ctx context.Context, courseID string, cours
 
 func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.Course) error {
 	collection := c.database.Collection(c.collection)
-	_, err := collection.InsertOne(ctx, course)
+
+	filter := bson.M{"name": course.Name}
+	// check exists with CountDocuments
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("the course name did exist")
+	}
+
+	_, err = collection.InsertOne(ctx, course)
 	return err
 }
 
@@ -124,6 +135,13 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 
 	filter := bson.M{
 		"_id": objID,
+	}
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count <= 0 {
+		return errors.New(`the course is removed`)
 	}
 	_, err = collection.DeleteOne(ctx, filter)
 	return err

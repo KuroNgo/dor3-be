@@ -51,7 +51,8 @@ func (au *AudioController) CreateAudioInFireBaseAndSaveMetaDataInDatabase(ctx *g
 	}
 
 	// the metadata will be saved in database
-	metadata := &audio_domain.AutoMatch{
+	metadata := &audio_domain.Audio{
+		Id:            primitive.NewObjectID(),
 		QuizID:        quizID,
 		Filename:      filename,
 		AudioDuration: duration,

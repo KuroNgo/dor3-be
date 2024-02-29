@@ -32,7 +32,7 @@ type IAudioRepository interface {
 	FetchMany(ctx context.Context) ([]Audio, error)
 	FetchToDeleteMany(ctx context.Context) (*[]Audio, error)
 	UpdateOne(ctx context.Context, audioID string, audio Audio) error
-	CreateOne(ctx context.Context, audio *AutoMatch) error
+	CreateOne(ctx context.Context, audio *Audio) error
 	DeleteOne(ctx context.Context, audioID string) error
 	DeleteMany(ctx context.Context, audioID ...string) error
 }

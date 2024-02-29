@@ -5,22 +5,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Lesson struct {
-	ID       primitive.ObjectID `bson:"id" json:"id"`
+type Input struct {
 	CourseID primitive.ObjectID `bson:"course_id" json:"course_id"`
 	Name     string             `bson:"name" json:"name"`
 	Content  string             `bson:"content" json:"content"`
 }
 
-type Response struct {
-	ID       primitive.ObjectID `bson:"id" json:"id"`
-	CourseID primitive.ObjectID `bson:"course_id" json:"course_id"`
-	Name     string             `bson:"name" json:"name"`
-	Content  string             `bson:"content" json:"content"`
-}
-
-//go:generate mockery --name ILessonRepository
-type ILessonRepository interface {
+//go:generate mockery --name ICourseUseCase
+type ICourseUseCase interface {
 	FetchByID(ctx context.Context, lessonID string) (*Lesson, error)
 	FetchMany(ctx context.Context) ([]Lesson, error)
 	FetchToDeleteMany(ctx context.Context) (*[]Lesson, error)

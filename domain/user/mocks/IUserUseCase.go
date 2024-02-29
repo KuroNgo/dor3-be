@@ -14,29 +14,27 @@ type IUserUseCase struct {
 	mock.Mock
 }
 
-// Fetch provides a mock function with given fields: c
-func (_m *IUserUseCase) Fetch(c context.Context) ([]user_domain.User, error) {
-	ret := _m.Called(c)
+// Create provides a mock function with given fields: c, user
+func (_m *IUserUseCase) Create(c context.Context, user user_domain.Input) (user_domain.User, error) {
+	ret := _m.Called(c, user)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Fetch")
+		panic("no return value specified for Create")
 	}
 
-	var r0 []user_domain.User
+	var r0 user_domain.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]user_domain.User, error)); ok {
-		return rf(c)
+	if rf, ok := ret.Get(0).(func(context.Context, user_domain.Input) (user_domain.User, error)); ok {
+		return rf(c, user)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) []user_domain.User); ok {
-		r0 = rf(c)
+	if rf, ok := ret.Get(0).(func(context.Context, user_domain.Input) user_domain.User); ok {
+		r0 = rf(c, user)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]user_domain.User)
-		}
+		r0 = ret.Get(0).(user_domain.User)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(c)
+	if rf, ok := ret.Get(1).(func(context.Context, user_domain.Input) error); ok {
+		r1 = rf(c, user)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -97,6 +95,36 @@ func (_m *IUserUseCase) GetByID(c context.Context, id string) (*user_domain.User
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(c, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetByUsername provides a mock function with given fields: c, username
+func (_m *IUserUseCase) GetByUsername(c context.Context, username string) (*user_domain.User, error) {
+	ret := _m.Called(c, username)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetByUsername")
+	}
+
+	var r0 *user_domain.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*user_domain.User, error)); ok {
+		return rf(c, username)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *user_domain.User); ok {
+		r0 = rf(c, username)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*user_domain.User)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(c, username)
 	} else {
 		r1 = ret.Error(1)
 	}

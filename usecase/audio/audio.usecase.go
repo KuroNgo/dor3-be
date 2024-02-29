@@ -65,7 +65,7 @@ func (a *audioUseCase) UpdateOne(ctx context.Context, audioID string, audio audi
 	return err
 }
 
-func (a *audioUseCase) CreateOne(ctx context.Context, audio *audio_domain.AutoMatch) error {
+func (a *audioUseCase) CreateOne(ctx context.Context, audio *audio_domain.Audio) error {
 	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
 	defer cancel()
 	err := a.audioRepository.CreateOne(ctx, audio)

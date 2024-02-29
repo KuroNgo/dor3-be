@@ -16,6 +16,22 @@ type userRepository struct {
 	collection string
 }
 
+func (u *userRepository) Create(c context.Context, user user_domain.Input) error {
+	collection := u.database.Collection(u.collection)
+
+	filter := bson.M{"email": user.Email}
+	count, err := collection.CountDocuments(c, filter)
+	if err != nil {
+		return err
+	}
+
+	if count > 0 {
+		return errors.New("the email do not unique")
+	}
+	_, err = collection.InsertOne(c, user)
+	return err
+}
+
 func NewUserRepository(db mongo.Database, collection string) user_domain.IUserRepository {
 	return &userRepository{
 		database:   db,

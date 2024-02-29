@@ -20,5 +20,6 @@ func AdminCourseRouter(env *bootstrap.Database, timeout time.Duration, db mongo.
 
 	router := group.Group("/course")
 	router.POST("/create", course.CreateOneCourse)
-
+	router.PUT("/update", course.UpdateCourse)
+	router.POST("/upsert", course.UpsertOneQuiz)
 }

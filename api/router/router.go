@@ -1,7 +1,6 @@
 package router
 
 import (
-	user_controller "clean-architecture/api/controller/user"
 	"clean-architecture/api/middleware"
 	audio_route "clean-architecture/api/router/audio"
 	course_route "clean-architecture/api/router/course"
@@ -40,15 +39,12 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 	publicRouter.OPTIONS("/*path", middleware.OptionMessage)
 
 	// All Public APIs
-	// user method
 	user_router.GoogleAuthRouter(env, timeout, db, publicRouter)
-	user_router.RefreshTokenRouter(env, timeout, db, publicRouter)
-
-	// quiz method
+	user_router.UserRouter(env, timeout, db, publicRouter)
 	quiz_route.QuizRouter(env, timeout, db, publicRouter)
-	publicRouter.GET("/logout", middleware.DeserializeUser(), user_controller.LogoutUser)
+	course_route.CourseRouter(env, timeout, db, publicRouter)
 
-	// private router
+	// All Private API
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
 	audio_route.AdminAudioRouter(env, timeout, db, privateRouter)
 	course_route.AdminCourseRouter(env, timeout, db, privateRouter)

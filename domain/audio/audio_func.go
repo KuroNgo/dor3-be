@@ -21,7 +21,7 @@ type IAudioUseCase interface {
 	UpdateOne(ctx context.Context, audioID string, audio Audio) error
 
 	// CreateOne needn't input, because the system will be found information file
-	CreateOne(ctx context.Context, audio *AutoMatch) error
+	CreateOne(ctx context.Context, audio *Audio) error
 
 	DeleteOne(ctx context.Context, audioID string) error
 	DeleteMany(ctx context.Context, audioID ...string) error

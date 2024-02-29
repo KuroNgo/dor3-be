@@ -89,7 +89,18 @@ func (q *quizRepository) UpdateOne(ctx context.Context, quizID string, quiz quiz
 
 func (q *quizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Input) error {
 	collection := q.database.Collection(q.collection)
-	_, err := collection.InsertOne(ctx, quiz)
+
+	filter := bson.M{"question": quiz.Question}
+	// check exists with Count Documents
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("the question did exist")
+	}
+
+	_, err = collection.InsertOne(ctx, quiz)
 	return err
 }
 
@@ -102,6 +113,13 @@ func (q *quizRepository) DeleteOne(ctx context.Context, quizID string) error {
 
 	filter := bson.M{
 		"_id": objID,
+	}
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count < 0 {
+		return errors.New(`the quiz is removed`)
 	}
 	_, err = collection.DeleteOne(ctx, filter)
 	return err

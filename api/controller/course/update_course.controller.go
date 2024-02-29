@@ -2,40 +2,31 @@ package course_controller
 
 import (
 	course_domain "clean-architecture/domain/course"
-	"clean-architecture/internal"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"time"
 )
 
-func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
+// UpdateCourse in this method, system can not need to check valid
+func (c *CourseController) UpdateCourse(ctx *gin.Context) {
+	courseID := ctx.Query("_id")
+
 	var courseInput course_domain.Input
 	if err := ctx.ShouldBindJSON(&courseInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
-	if err := internal.IsValidCourse(courseInput); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"message": err.Error(),
-		})
-		return
-	}
-
-	course := &course_domain.Course{
-		Id:          primitive.NewObjectID(),
+	updateCourse := course_domain.Course{
 		Name:        courseInput.Name,
 		Description: courseInput.Description,
 		Level:       courseInput.Level,
-		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
 
-	err := c.CourseUseCase.CreateOne(ctx, course)
+	err := c.CourseUseCase.UpdateOne(ctx, courseID, updateCourse)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": err.Error(),
 		})
@@ -45,4 +36,5 @@ func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
+
 }
