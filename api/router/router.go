@@ -41,10 +41,9 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 
 	// All Public APIs
 	user_router.GoogleAuthRouter(env, timeout, db, publicRouter)
-	user_router.RefreshTokenRouter(env, timeout, db, publicRouter)
+	user_router.UserRouter(env, timeout, db, publicRouter)
 	quiz_route.QuizRouter(env, timeout, db, publicRouter)
 	course_route.CourseRouter(env, timeout, db, publicRouter)
-	publicRouter.GET("/logout", middleware.DeserializeUser(), user_controller.LogoutUser)
 
 	// All Private API
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
