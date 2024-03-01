@@ -19,6 +19,6 @@ func GoogleAuthRouter(env *bootstrap.Database, timeout time.Duration, db mongo.D
 	}
 
 	router := group.Group("/api/sessions/oauth")
-	router.POST("/google", ga.GoogleLoginWithUser)
+	router.GET("/google", ga.GoogleLoginWithUser)
 
 }

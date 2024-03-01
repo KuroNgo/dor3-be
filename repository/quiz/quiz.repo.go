@@ -87,7 +87,7 @@ func (q *quizRepository) UpdateOne(ctx context.Context, quizID string, quiz quiz
 	return err
 }
 
-func (q *quizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Input) error {
+func (q *quizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) error {
 	collection := q.database.Collection(q.collection)
 
 	filter := bson.M{"question": quiz.Question}
