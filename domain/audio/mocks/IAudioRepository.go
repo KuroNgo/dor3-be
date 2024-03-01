@@ -15,7 +15,7 @@ type IAudioRepository struct {
 }
 
 // CreateOne provides a mock function with given fields: ctx, audio
-func (_m *IAudioRepository) CreateOne(ctx context.Context, audio *audio_domain.AutoMatch) error {
+func (_m *IAudioRepository) CreateOne(ctx context.Context, audio *audio_domain.Audio) error {
 	ret := _m.Called(ctx, audio)
 
 	if len(ret) == 0 {
@@ -23,7 +23,7 @@ func (_m *IAudioRepository) CreateOne(ctx context.Context, audio *audio_domain.A
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *audio_domain.AutoMatch) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *audio_domain.Audio) error); ok {
 		r0 = rf(ctx, audio)
 	} else {
 		r0 = ret.Error(0)

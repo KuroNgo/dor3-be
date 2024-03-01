@@ -11,13 +11,14 @@ import (
 	"time"
 )
 
-func RefreshTokenRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
+func UserRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
-	token := &user_controller.RefreshTokenController{
+	user := &user_controller.UserController{
 		UserUseCase: usecase.NewUserUseCase(ur, timeout),
 		Database:    env,
 	}
 
 	router := group.Group("/token")
-	router.GET("/refresh", token.RefreshToken)
+	router.GET("/refresh", user.RefreshToken)
+	router.GET("/logout", user.LogoutUser)
 }

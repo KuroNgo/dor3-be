@@ -14,12 +14,12 @@ type IQuizRepository struct {
 	mock.Mock
 }
 
-// Create provides a mock function with given fields: ctx, quiz
-func (_m *IQuizRepository) Create(ctx context.Context, quiz *quiz_domain.Input) error {
+// CreateOne provides a mock function with given fields: ctx, quiz
+func (_m *IQuizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Input) error {
 	ret := _m.Called(ctx, quiz)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Create")
+		panic("no return value specified for CreateOne")
 	}
 
 	var r0 error
@@ -32,12 +32,12 @@ func (_m *IQuizRepository) Create(ctx context.Context, quiz *quiz_domain.Input) 
 	return r0
 }
 
-// Delete provides a mock function with given fields: ctx, quizID
-func (_m *IQuizRepository) Delete(ctx context.Context, quizID string) error {
+// DeleteOne provides a mock function with given fields: ctx, quizID
+func (_m *IQuizRepository) DeleteOne(ctx context.Context, quizID string) error {
 	ret := _m.Called(ctx, quizID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Delete")
+		panic("no return value specified for DeleteOne")
 	}
 
 	var r0 error
@@ -50,12 +50,42 @@ func (_m *IQuizRepository) Delete(ctx context.Context, quizID string) error {
 	return r0
 }
 
-// Fetch provides a mock function with given fields: ctx
-func (_m *IQuizRepository) Fetch(ctx context.Context) ([]quiz_domain.Quiz, error) {
+// FetchByID provides a mock function with given fields: ctx, quizID
+func (_m *IQuizRepository) FetchByID(ctx context.Context, quizID string) (*quiz_domain.Quiz, error) {
+	ret := _m.Called(ctx, quizID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FetchByID")
+	}
+
+	var r0 *quiz_domain.Quiz
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*quiz_domain.Quiz, error)); ok {
+		return rf(ctx, quizID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *quiz_domain.Quiz); ok {
+		r0 = rf(ctx, quizID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*quiz_domain.Quiz)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, quizID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FetchMany provides a mock function with given fields: ctx
+func (_m *IQuizRepository) FetchMany(ctx context.Context) ([]quiz_domain.Quiz, error) {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Fetch")
+		panic("no return value specified for FetchMany")
 	}
 
 	var r0 []quiz_domain.Quiz
@@ -80,12 +110,12 @@ func (_m *IQuizRepository) Fetch(ctx context.Context) ([]quiz_domain.Quiz, error
 	return r0, r1
 }
 
-// FetchToDelete provides a mock function with given fields: ctx
-func (_m *IQuizRepository) FetchToDelete(ctx context.Context) (*[]quiz_domain.Quiz, error) {
+// FetchToDeleteMany provides a mock function with given fields: ctx
+func (_m *IQuizRepository) FetchToDeleteMany(ctx context.Context) (*[]quiz_domain.Quiz, error) {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FetchToDelete")
+		panic("no return value specified for FetchToDeleteMany")
 	}
 
 	var r0 *[]quiz_domain.Quiz
@@ -110,12 +140,12 @@ func (_m *IQuizRepository) FetchToDelete(ctx context.Context) (*[]quiz_domain.Qu
 	return r0, r1
 }
 
-// Update provides a mock function with given fields: ctx, quizID, quiz
-func (_m *IQuizRepository) Update(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
+// UpdateOne provides a mock function with given fields: ctx, quizID, quiz
+func (_m *IQuizRepository) UpdateOne(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
 	ret := _m.Called(ctx, quizID, quiz)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Update")
+		panic("no return value specified for UpdateOne")
 	}
 
 	var r0 error
@@ -128,21 +158,21 @@ func (_m *IQuizRepository) Update(ctx context.Context, quizID string, quiz quiz_
 	return r0
 }
 
-// Upsert provides a mock function with given fields: c, question, quiz
-func (_m *IQuizRepository) Upsert(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
-	ret := _m.Called(c, question, quiz)
+// UpsertOne provides a mock function with given fields: c, id, quiz
+func (_m *IQuizRepository) UpsertOne(c context.Context, id string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
+	ret := _m.Called(c, id, quiz)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Upsert")
+		panic("no return value specified for UpsertOne")
 	}
 
 	var r0 *quiz_domain.Response
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, *quiz_domain.Quiz) (*quiz_domain.Response, error)); ok {
-		return rf(c, question, quiz)
+		return rf(c, id, quiz)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string, *quiz_domain.Quiz) *quiz_domain.Response); ok {
-		r0 = rf(c, question, quiz)
+		r0 = rf(c, id, quiz)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*quiz_domain.Response)
@@ -150,7 +180,7 @@ func (_m *IQuizRepository) Upsert(c context.Context, question string, quiz *quiz
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, *quiz_domain.Quiz) error); ok {
-		r1 = rf(c, question, quiz)
+		r1 = rf(c, id, quiz)
 	} else {
 		r1 = ret.Error(1)
 	}

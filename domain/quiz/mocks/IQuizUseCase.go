@@ -14,12 +14,12 @@ type IQuizUseCase struct {
 	mock.Mock
 }
 
-// Create provides a mock function with given fields: ctx, quiz
-func (_m *IQuizUseCase) Create(ctx context.Context, quiz *quiz_domain.Input) error {
+// CreateOne provides a mock function with given fields: ctx, quiz
+func (_m *IQuizUseCase) CreateOne(ctx context.Context, quiz *quiz_domain.Input) error {
 	ret := _m.Called(ctx, quiz)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Create")
+		panic("no return value specified for CreateOne")
 	}
 
 	var r0 error
@@ -32,12 +32,12 @@ func (_m *IQuizUseCase) Create(ctx context.Context, quiz *quiz_domain.Input) err
 	return r0
 }
 
-// Delete provides a mock function with given fields: ctx, quizID
-func (_m *IQuizUseCase) Delete(ctx context.Context, quizID string) error {
+// DeleteOne provides a mock function with given fields: ctx, quizID
+func (_m *IQuizUseCase) DeleteOne(ctx context.Context, quizID string) error {
 	ret := _m.Called(ctx, quizID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Delete")
+		panic("no return value specified for DeleteOne")
 	}
 
 	var r0 error
@@ -50,12 +50,12 @@ func (_m *IQuizUseCase) Delete(ctx context.Context, quizID string) error {
 	return r0
 }
 
-// Fetch provides a mock function with given fields: ctx
-func (_m *IQuizUseCase) Fetch(ctx context.Context) ([]quiz_domain.Quiz, error) {
+// FetchMany provides a mock function with given fields: ctx
+func (_m *IQuizUseCase) FetchMany(ctx context.Context) ([]quiz_domain.Quiz, error) {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Fetch")
+		panic("no return value specified for FetchMany")
 	}
 
 	var r0 []quiz_domain.Quiz
@@ -80,12 +80,12 @@ func (_m *IQuizUseCase) Fetch(ctx context.Context) ([]quiz_domain.Quiz, error) {
 	return r0, r1
 }
 
-// FetchToDelete provides a mock function with given fields: ctx
-func (_m *IQuizUseCase) FetchToDelete(ctx context.Context) (*[]quiz_domain.Quiz, error) {
+// FetchToDeleteMany provides a mock function with given fields: ctx
+func (_m *IQuizUseCase) FetchToDeleteMany(ctx context.Context) (*[]quiz_domain.Quiz, error) {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FetchToDelete")
+		panic("no return value specified for FetchToDeleteMany")
 	}
 
 	var r0 *[]quiz_domain.Quiz
@@ -110,12 +110,12 @@ func (_m *IQuizUseCase) FetchToDelete(ctx context.Context) (*[]quiz_domain.Quiz,
 	return r0, r1
 }
 
-// Update provides a mock function with given fields: ctx, quizID, quiz
-func (_m *IQuizUseCase) Update(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
+// UpdateOne provides a mock function with given fields: ctx, quizID, quiz
+func (_m *IQuizUseCase) UpdateOne(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
 	ret := _m.Called(ctx, quizID, quiz)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Update")
+		panic("no return value specified for UpdateOne")
 	}
 
 	var r0 error
@@ -128,21 +128,21 @@ func (_m *IQuizUseCase) Update(ctx context.Context, quizID string, quiz quiz_dom
 	return r0
 }
 
-// Upsert provides a mock function with given fields: c, question, quiz
-func (_m *IQuizUseCase) Upsert(c context.Context, question string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
-	ret := _m.Called(c, question, quiz)
+// UpsertOne provides a mock function with given fields: c, id, quiz
+func (_m *IQuizUseCase) UpsertOne(c context.Context, id string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
+	ret := _m.Called(c, id, quiz)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Upsert")
+		panic("no return value specified for UpsertOne")
 	}
 
 	var r0 *quiz_domain.Response
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, *quiz_domain.Quiz) (*quiz_domain.Response, error)); ok {
-		return rf(c, question, quiz)
+		return rf(c, id, quiz)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string, *quiz_domain.Quiz) *quiz_domain.Response); ok {
-		r0 = rf(c, question, quiz)
+		r0 = rf(c, id, quiz)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*quiz_domain.Response)
@@ -150,7 +150,7 @@ func (_m *IQuizUseCase) Upsert(c context.Context, question string, quiz *quiz_do
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, *quiz_domain.Quiz) error); ok {
-		r1 = rf(c, question, quiz)
+		r1 = rf(c, id, quiz)
 	} else {
 		r1 = ret.Error(1)
 	}

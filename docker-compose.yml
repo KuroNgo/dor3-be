@@ -1,31 +1,20 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  web:
+  app:
     build:
-      context: config
+      context: .
       dockerfile: Dockerfile
-    image: app
-    container_name: app
-    restart: unless-stopped
-    env_file: app.env
     ports:
-      - "$PORT:$PORT"
+      - "8080:8080"
     depends_on:
-      - mongodb
+      - mongo
+    env_file: app.env
 
-  mongodb:
-    image: mongo:6.0
-    container_name: mongodb
-    restart: unless-stopped
-    env_file: .env
+  mongo:
+    image: mongo
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=$DB_USER
-      - MONGO_INITDB_ROOT_PASSWORD=$DB_PASS
+      - MONGO_INITDB_ROOT_USERNAME=kurodev
+      - MONGO_INITDB_ROOT_PASSWORD=11062001Phong.
     ports:
-      - "$DB_PORT:$DB_PORT"
-    volumes:
-      - dbdata:/data/db
-
-volumes:
-  dbdata:
+      - "27017:27017"

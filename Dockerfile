@@ -1,5 +1,5 @@
 # Sử dụng hình ảnh Alpine Go
-FROM golang:1.20-alpine
+FROM golang:1.21-alpine
 
 # Thiết lập thư mục làm việc là /app
 WORKDIR /app

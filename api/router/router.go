@@ -1,7 +1,6 @@
 package router
 
 import (
-	user_controller "clean-architecture/api/controller/user"
 	"clean-architecture/api/middleware"
 	audio_route "clean-architecture/api/router/audio"
 	course_route "clean-architecture/api/router/course"
