@@ -16,7 +16,14 @@ type userRepository struct {
 	collection string
 }
 
-func (u *userRepository) Create(c context.Context, user user_domain.Input) error {
+func NewUserRepository(db mongo.Database, collection string) user_domain.IUserRepository {
+	return &userRepository{
+		database:   db,
+		collection: collection,
+	}
+}
+
+func (u *userRepository) Create(c context.Context, user user_domain.User) error {
 	collection := u.database.Collection(u.collection)
 
 	filter := bson.M{"email": user.Email}
@@ -30,13 +37,6 @@ func (u *userRepository) Create(c context.Context, user user_domain.Input) error
 	}
 	_, err = collection.InsertOne(c, user)
 	return err
-}
-
-func NewUserRepository(db mongo.Database, collection string) user_domain.IUserRepository {
-	return &userRepository{
-		database:   db,
-		collection: collection,
-	}
 }
 
 func (u *userRepository) FetchMany(c context.Context) ([]user_domain.User, error) {

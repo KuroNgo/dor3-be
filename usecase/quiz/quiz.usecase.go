@@ -54,7 +54,7 @@ func (q *quizUseCase) UpdateOne(ctx context.Context, quizID string, quiz quiz_do
 	return err
 }
 
-func (q *quizUseCase) CreateOne(ctx context.Context, quiz *quiz_domain.Input) error {
+func (q *quizUseCase) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 	err := q.quizRepository.CreateOne(ctx, quiz)

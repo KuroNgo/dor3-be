@@ -24,7 +24,7 @@ type Database interface {
 type Collection interface {
 	FindOne(context.Context, interface{}) SingleResult
 	InsertOne(context.Context, interface{}) (interface{}, error)
-	InsertMany(context.Context, []interface{}) ([]interface{}, error)
+	InsertMany(ctx context.Context, documents []interface{}, opts ...*options.InsertManyOptions) (*mongo.InsertManyResult, error)
 	DeleteOne(context.Context, interface{}) (int64, error)
 	DeleteMany(ctx context.Context, filter interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error)
 	Find(context.Context, interface{}, ...*options.FindOptions) (Cursor, error)
@@ -160,9 +160,12 @@ func (mc *mongoCollection) InsertOne(ctx context.Context, document interface{}) 
 	return id.InsertedID, err
 }
 
-func (mc *mongoCollection) InsertMany(ctx context.Context, document []interface{}) ([]interface{}, error) {
-	res, err := mc.coll.InsertMany(ctx, document)
-	return res.InsertedIDs, err
+func (mc *mongoCollection) InsertMany(ctx context.Context, documents []interface{}, opts ...*options.InsertManyOptions) (*mongo.InsertManyResult, error) {
+	id, err := mc.coll.InsertMany(ctx, documents, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return id, err
 }
 
 func (mc *mongoCollection) DeleteOne(ctx context.Context, filter interface{}) (int64, error) {

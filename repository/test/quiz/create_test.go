@@ -8,6 +8,7 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"testing"
 )
 
@@ -19,20 +20,23 @@ func TestCreate(t *testing.T) {
 	collectionHelper = &mocks.Collection{}
 
 	collectionName := quiz_domain.CollectionQuiz
-	mockQuiz := &quiz_domain.Input{
+	mockQuiz := &quiz_domain.Quiz{
+		ID:            primitive.NewObjectID(),
 		Question:      "What is the capital of France?",
 		Options:       []string{"Paris", "London", "Berlin", "Rome"},
 		QuestionType:  "checkbox",
 		CorrectAnswer: "Paris",
 	}
 
-	mockEmptyQuiz := &quiz_domain.Input{}
-	mockQuizQuestion := "What is the capital of France?"
+	mockEmptyQuiz := &quiz_domain.Quiz{}
+	mockQuizID := primitive.NewObjectID()
 
 	t.Run("success", func(t *testing.T) {
+		collectionHelper.On("CountDocuments", mock.Anything,
+			mock.Anything).Return(int64(0), nil)
 		collectionHelper.On("InsertOne", mock.Anything,
-			mock.AnythingOfType("*quiz_domain.Input")).
-			Return(mockQuizQuestion, nil).
+			mock.AnythingOfType("*quiz_domain.Quiz")).
+			Return(mockQuizID, nil).
 			Once()
 		databaseHelper.
 			On("Collection", collectionName).
@@ -48,8 +52,9 @@ func TestCreate(t *testing.T) {
 	})
 
 	t.Run("error", func(t *testing.T) {
+		collectionHelper.On("CountDocuments", mock.Anything, mock.Anything).Return(int64(0), nil)
 		collectionHelper.On("InsertOne", mock.Anything,
-			mock.AnythingOfType("*quiz_domain.Input")).
+			mock.AnythingOfType("*quiz_domain.Quiz")).
 			Return(mockEmptyQuiz, errors.New("Unexpected")).
 			Once()
 		databaseHelper.

@@ -14,7 +14,7 @@ type Input struct {
 
 //go:generate mockery --name IUserUseCase
 type IUserUseCase interface {
-	Create(c context.Context, user Input) error
+	Create(c context.Context, user User) error
 	GetByEmail(c context.Context, email string) (*User, error)
 	GetByUsername(c context.Context, username string) (*User, error)
 	GetByID(c context.Context, id string) (*User, error)

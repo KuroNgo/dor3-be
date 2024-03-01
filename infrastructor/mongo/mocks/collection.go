@@ -232,29 +232,36 @@ func (_m *Collection) FindOneAndUpdate(ctx context.Context, filter interface{}, 
 	return r0
 }
 
-// InsertMany provides a mock function with given fields: _a0, _a1
-func (_m *Collection) InsertMany(_a0 context.Context, _a1 []interface{}) ([]interface{}, error) {
-	ret := _m.Called(_a0, _a1)
+// InsertMany provides a mock function with given fields: ctx, documents, opts
+func (_m *Collection) InsertMany(ctx context.Context, documents []interface{}, opts ...*options.InsertManyOptions) (*mongo_drivermongo.InsertManyResult, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, documents)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	if len(ret) == 0 {
 		panic("no return value specified for InsertMany")
 	}
 
-	var r0 []interface{}
+	var r0 *mongo_drivermongo.InsertManyResult
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, []interface{}) ([]interface{}, error)); ok {
-		return rf(_a0, _a1)
+	if rf, ok := ret.Get(0).(func(context.Context, []interface{}, ...*options.InsertManyOptions) (*mongo_drivermongo.InsertManyResult, error)); ok {
+		return rf(ctx, documents, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []interface{}) []interface{}); ok {
-		r0 = rf(_a0, _a1)
+	if rf, ok := ret.Get(0).(func(context.Context, []interface{}, ...*options.InsertManyOptions) *mongo_drivermongo.InsertManyResult); ok {
+		r0 = rf(ctx, documents, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]interface{})
+			r0 = ret.Get(0).(*mongo_drivermongo.InsertManyResult)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []interface{}) error); ok {
-		r1 = rf(_a0, _a1)
+	if rf, ok := ret.Get(1).(func(context.Context, []interface{}, ...*options.InsertManyOptions) error); ok {
+		r1 = rf(ctx, documents, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
