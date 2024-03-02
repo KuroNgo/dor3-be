@@ -55,7 +55,7 @@ func TestCreate(t *testing.T) {
 		collectionHelper.On("CountDocuments", mock.Anything, mock.Anything).Return(int64(0), nil)
 		collectionHelper.On("InsertOne", mock.Anything,
 			mock.AnythingOfType("*quiz_domain.Quiz")).
-			Return(mockEmptyQuiz, errors.New("Unexpected")).
+			Return(mockEmptyQuiz, errors.New("unexpected")).
 			Once()
 		databaseHelper.
 			On("Collection", collectionName).
