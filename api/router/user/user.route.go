@@ -2,6 +2,7 @@ package user_router
 
 import (
 	user_controller "clean-architecture/api/controller/user"
+	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/infrastructor/mongo"
@@ -18,7 +19,7 @@ func UserRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Databas
 		Database:    env,
 	}
 
-	router := group.Group("/token")
+	router := group.Group("/user")
 	router.GET("/refresh", user.RefreshToken)
-	router.GET("/logout", user.LogoutUser)
+	router.GET("/logout", middleware.DeserializeUser(), user.LogoutUser)
 }
