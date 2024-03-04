@@ -6,8 +6,8 @@ import (
 	"clean-architecture/internal"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -53,20 +53,14 @@ func (auth *GoogleAuthController) GoogleLoginWithUser(ctx *gin.Context) {
 		return
 	}
 
-	var role string
-	if strings.Contains(user.Email, "feit") {
-		role = "admin"
-	} else {
-		role = "user"
-	}
-
 	createdAt := time.Now()
 	resBody := &user_domain.User{
+		ID:        primitive.NewObjectID(),
 		Email:     user.Email,
 		FullName:  user.Name,
 		AvatarURL: user.Picture,
 		Provider:  "google",
-		Role:      role,
+		Role:      "user",
 		Verified:  true,
 		CreatedAt: createdAt,
 		UpdatedAt: createdAt,
