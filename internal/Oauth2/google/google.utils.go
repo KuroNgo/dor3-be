@@ -12,12 +12,14 @@ import (
 	"time"
 )
 
+var (
+	Database *bootstrap.Database
+)
+
 // GetGoogleOauthToken Retrieve the OAuth2 Access Token
 func GetGoogleOauthToken(code string) (*OauthToken, error) {
 	const rootURL = "https://oauth2.googleapis.com/token"
 
-	app := bootstrap.App()
-	env := app.Env
 	values := url.Values{}
 	// grant_type is the type of grant being requested, which is typically authorization_code
 	values.Add("grant_type", "authorization_code")
@@ -26,11 +28,11 @@ func GetGoogleOauthToken(code string) (*OauthToken, error) {
 	values.Add("code", code)
 
 	// the secret associated with the client ID
-	values.Add("client_id", env.GoogleClientID)
-	values.Add("client_secret", env.GoogleClientSecret)
+	values.Add("client_id", Database.GoogleClientID)
+	values.Add("client_secret", Database.GoogleClientSecret)
 
 	// the authorized callback URL registered with the client
-	values.Add("redirect_uri", env.GoogleOAuthRedirectUrl)
+	values.Add("redirect_uri", Database.GoogleOAuthRedirectUrl)
 
 	query := values.Encode()
 
