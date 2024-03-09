@@ -11,14 +11,14 @@ import (
 	"time"
 )
 
-func GoogleAuthRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
+func GoogleAuthRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
 	ga := &user_controller.GoogleAuthController{
 		GoogleAuthUseCase: usecase.NewGoogleUseCase(ur, timeout),
 		Database:          env,
 	}
 
-	router := group.Group("/api/sessions/oauth")
+	router := group.Group("/sessions/oauth")
 	router.GET("/google", ga.GoogleLoginWithUser)
 
 }

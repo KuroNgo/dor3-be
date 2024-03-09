@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func AdminAudioRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
+func AdminAudioRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
 	au := audio_repository.NewAudioRepository(db, audio_domain.CollectionAudio)
 	audio := &audio_controller.AudioController{
 		AudioUseCase: audio_usecase.NewAudioUseCase(au, timeout),

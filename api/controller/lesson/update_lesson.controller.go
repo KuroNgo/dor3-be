@@ -13,7 +13,7 @@ func (l *LessonController) UpdateOneLesson(ctx *gin.Context) {
 	var lessonInput lesson_domain.Input
 	if err := ctx.ShouldBindJSON(&lessonInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "fail",
+			"status":  "error",
 			"message": err.Error(),
 		})
 		return

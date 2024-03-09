@@ -7,6 +7,7 @@ import (
 	lesson_route "clean-architecture/api/router/lesson"
 	quiz_route "clean-architecture/api/router/quiz"
 	user_router "clean-architecture/api/router/user"
+	vocabulary_route "clean-architecture/api/router/vocabulary"
 	"clean-architecture/bootstrap"
 	"clean-architecture/infrastructor/mongo"
 	"github.com/gin-contrib/gzip"
@@ -16,8 +17,8 @@ import (
 )
 
 func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gin *gin.Engine) {
-	publicRouter := gin.Group("")
-	privateRouter := gin.Group("/admin")
+	publicRouter := gin.Group("/api/")
+	privateRouter := gin.Group("/api/admin")
 
 	// Middleware
 	publicRouter.Use(
@@ -43,15 +44,16 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 	publicRouter.OPTIONS("/*path", middleware.OptionMessage)
 
 	// All Public APIs
-	user_router.GoogleAuthRouter(env, timeout, db, publicRouter)
+	user_router.GoogleAuthRoute(env, timeout, db, publicRouter)
 	user_router.UserRouter(env, timeout, db, publicRouter)
 	quiz_route.QuizRouter(env, timeout, db, publicRouter)
-	course_route.CourseRouter(env, timeout, db, publicRouter)
+	course_route.CourseRoute(env, timeout, db, publicRouter)
 	lesson_route.LessonRoute(env, timeout, db, publicRouter)
 
 	// All Private API
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
-	audio_route.AdminAudioRouter(env, timeout, db, privateRouter)
-	course_route.AdminCourseRouter(env, timeout, db, privateRouter)
+	audio_route.AdminAudioRoute(env, timeout, db, privateRouter)
+	course_route.AdminCourseRoute(env, timeout, db, privateRouter)
 	lesson_route.AdminLessonRoute(env, timeout, db, privateRouter)
+	vocabulary_route.AdminVocabularyRoute(env, timeout, db, privateRouter)
 }

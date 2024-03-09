@@ -1,15 +1,14 @@
-package quiz_controller
+package lesson_controller
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-// DeleteOneQuiz done
-func (q *QuizController) DeleteOneQuiz(ctx *gin.Context) {
-	quizID := ctx.Query("_id")
+func (l *LessonController) DeleteOneLesson(ctx *gin.Context) {
+	lessonID := ctx.Query("_id")
 
-	err := q.QuizUseCase.DeleteOne(ctx, quizID)
+	err := l.LessonUseCase.DeleteOne(ctx, lessonID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -21,6 +20,6 @@ func (q *QuizController) DeleteOneQuiz(ctx *gin.Context) {
 	// Trả về mảng dữ liệu dưới dạng JSON
 	ctx.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "the quiz is deleted!",
+		"message": "the lesson is deleted!",
 	})
 }

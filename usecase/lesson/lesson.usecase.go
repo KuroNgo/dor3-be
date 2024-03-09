@@ -22,12 +22,12 @@ func (l *lessonUseCase) FetchByID(ctx context.Context, lessonID string) (*lesson
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()
 
-	course, err := l.lessonRepository.FetchByID(ctx, lessonID)
+	lesson, err := l.lessonRepository.FetchByID(ctx, lessonID)
 	if err != nil {
 		return nil, err
 	}
 
-	return course, err
+	return lesson, err
 }
 
 func (l *lessonUseCase) FetchMany(ctx context.Context) ([]lesson_domain.Lesson, error) {
