@@ -35,9 +35,12 @@ func IsValidCourse(course course_domain.Input) error {
 	return nil
 }
 
-func IsValidLesson(lesson lesson_domain.Lesson) error {
+func IsValidLesson(lesson lesson_domain.Input) error {
 	if lesson.Name == "" {
 		return fmt.Errorf("name lesson cannot be empty")
+	}
+	if lesson.CourseID.Hex() == "" || lesson.CourseID.IsZero() {
+		return fmt.Errorf("name lesson cannot be empty or data null")
 	}
 	if lesson.Content == "" {
 		return fmt.Errorf("content cannot be empty")

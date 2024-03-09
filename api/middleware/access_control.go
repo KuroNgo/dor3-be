@@ -14,7 +14,7 @@ func Authorize(obj string, act string, enforcer *casbin.Enforcer) gin.HandlerFun
 		sub, existed := c.Get("userID")
 		if !existed {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"msg": "User hasn't logged in yet",
+				"message": "User hasn't logged in yet",
 			})
 			return
 		}
@@ -23,7 +23,7 @@ func Authorize(obj string, act string, enforcer *casbin.Enforcer) gin.HandlerFun
 		err := enforcer.LoadPolicy()
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"msg": "Failed to load policy from DB",
+				"message": "Failed to load policy from DB",
 			})
 			return
 		}
@@ -33,14 +33,14 @@ func Authorize(obj string, act string, enforcer *casbin.Enforcer) gin.HandlerFun
 
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"msg": "Error occurred when authorizing user",
+				"message": "Error occurred when authorizing user",
 			})
 			return
 		}
 
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"msg": "You are not authorized",
+				"message": "You are not authorized",
 			})
 			return
 		}
