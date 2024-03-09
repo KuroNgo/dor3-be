@@ -12,7 +12,10 @@ import (
 func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
 	var courseInput course_domain.Input
 	if err := ctx.ShouldBindJSON(&courseInput); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status": "error",
+			"error":  err.Error(),
+		})
 		return
 	}
 

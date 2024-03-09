@@ -15,7 +15,7 @@ type IQuizRepository struct {
 }
 
 // CreateOne provides a mock function with given fields: ctx, quiz
-func (_m *IQuizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Input) error {
+func (_m *IQuizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) error {
 	ret := _m.Called(ctx, quiz)
 
 	if len(ret) == 0 {
@@ -23,7 +23,7 @@ func (_m *IQuizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Inpu
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *quiz_domain.Input) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *quiz_domain.Quiz) error); ok {
 		r0 = rf(ctx, quiz)
 	} else {
 		r0 = ret.Error(0)

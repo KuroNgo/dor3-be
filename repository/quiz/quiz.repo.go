@@ -118,7 +118,7 @@ func (q *quizRepository) DeleteOne(ctx context.Context, quizID string) error {
 	if err != nil {
 		return err
 	}
-	if count < 0 {
+	if count == 0 {
 		return errors.New(`the quiz is removed`)
 	}
 	_, err = collection.DeleteOne(ctx, filter)

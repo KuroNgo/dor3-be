@@ -105,7 +105,7 @@ func (l *lessonRepository) CreateOne(ctx context.Context, lesson *lesson_domain.
 		return err
 	}
 
-	if count <= 0 {
+	if count == 0 {
 		return errors.New("the course ID do not exist")
 	}
 
@@ -162,7 +162,7 @@ func (l *lessonRepository) DeleteOne(ctx context.Context, lessonID string) error
 	if err != nil {
 		return err
 	}
-	if count < 0 {
+	if count == 0 {
 		return errors.New(`the lesson is removed`)
 	}
 

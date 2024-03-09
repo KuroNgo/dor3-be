@@ -23,4 +23,5 @@ func AdminLessonRoute(env *bootstrap.Database, timeout time.Duration, db mongo.D
 	router.POST("/create", lesson.CreateOneLesson)
 	router.POST("/upsert", lesson.UpsertOneLesson)
 	router.PUT("/update", lesson.UpdateOneLesson)
+	router.DELETE("/delete", lesson.DeleteOneLesson)
 }

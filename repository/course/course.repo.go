@@ -130,6 +130,18 @@ func (c *courseRepository) UpsertOne(ctx context.Context, id string, course *cou
 
 func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error {
 	collectionCourse := c.database.Collection(c.collectionCourse)
+	collectionLesson := c.database.Collection(c.collectionLesson)
+
+	filterLesson := bson.M{"course_id": courseID}
+	// check exists with CountDocuments
+	countFK, err := collectionLesson.CountDocuments(ctx, filterLesson)
+	if err != nil {
+		return err
+	}
+	if countFK > 0 {
+		return errors.New("the course cannot delete")
+	}
+
 	objID, err := primitive.ObjectIDFromHex(courseID)
 	if err != nil {
 		return err
@@ -142,7 +154,7 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 	if err != nil {
 		return err
 	}
-	if count <= 0 {
+	if count == 0 {
 		return errors.New(`the course is removed`)
 	}
 	_, err = collectionCourse.DeleteOne(ctx, filter)

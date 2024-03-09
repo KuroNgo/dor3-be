@@ -14,7 +14,8 @@ func (c *CourseController) UpdateCourse(ctx *gin.Context) {
 	var courseInput course_domain.Input
 	if err := ctx.ShouldBindJSON(&courseInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid request",
+			"error":  err.Error(),
+			"status": "error",
 		})
 		return
 	}
