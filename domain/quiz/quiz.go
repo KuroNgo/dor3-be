@@ -3,6 +3,7 @@ package quiz_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
 )
 
 const (
@@ -20,6 +21,10 @@ type Quiz struct {
 	// admin add metadata of file and system will be found it
 	Filename      string `bson:"filename" json:"filename"`
 	AudioDuration string `bson:"audio_duration" json:"audio_duration"`
+
+	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
+	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
 }
 
 type Response struct {
@@ -34,6 +39,10 @@ type Response struct {
 	// admin add metadata of file and system will be found it
 	Filename      string `bson:"filename" json:"filename"`
 	AudioDuration string `bson:"audio_duration" json:"audio_duration"`
+
+	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
+	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
 }
 
 //go:generate mockery --name IQuizRepository

@@ -12,19 +12,21 @@ import (
 )
 
 type courseRepository struct {
-	database   mongo.Database
-	collection string
+	database         mongo.Database
+	collectionCourse string
+	collectionLesson string
 }
 
-func NewCourseRepository(db mongo.Database, collection string) course_domain.ICourseRepository {
+func NewCourseRepository(db mongo.Database, collectionCourse string, collectionLesson string) course_domain.ICourseRepository {
 	return &courseRepository{
-		database:   db,
-		collection: collection,
+		database:         db,
+		collectionCourse: collectionCourse,
+		collectionLesson: collectionLesson,
 	}
 }
 
 func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (*course_domain.Course, error) {
-	collection := c.database.Collection(c.collection)
+	collectionCourse := c.database.Collection(c.collectionCourse)
 
 	var course course_domain.Course
 
@@ -33,16 +35,16 @@ func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (*cou
 		return &course, err
 	}
 
-	err = collection.
+	err = collectionCourse.
 		FindOne(ctx, bson.M{"_id": idHex}).
 		Decode(&course)
 	return &course, err
 }
 
 func (c *courseRepository) FetchMany(ctx context.Context) ([]course_domain.Course, error) {
-	collection := c.database.Collection(c.collection)
+	collectionCourse := c.database.Collection(c.collectionCourse)
 
-	cursor, err := collection.Find(ctx, bson.D{})
+	cursor, err := collectionCourse.Find(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}
@@ -58,9 +60,9 @@ func (c *courseRepository) FetchMany(ctx context.Context) ([]course_domain.Cours
 }
 
 func (c *courseRepository) FetchToDeleteMany(ctx context.Context) (*[]course_domain.Course, error) {
-	collection := c.database.Collection(c.collection)
+	collectionCourse := c.database.Collection(c.collectionCourse)
 
-	cursor, err := collection.Find(ctx, bson.D{})
+	cursor, err := collectionCourse.Find(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}
@@ -75,23 +77,23 @@ func (c *courseRepository) FetchToDeleteMany(ctx context.Context) (*[]course_dom
 }
 
 func (c *courseRepository) UpdateOne(ctx context.Context, courseID string, course course_domain.Course) error {
-	collection := c.database.Collection(c.collection)
+	collectionCourse := c.database.Collection(c.collectionCourse)
 	doc, err := internal.ToDoc(course)
 	objID, err := primitive.ObjectIDFromHex(courseID)
 
 	filter := bson.D{{Key: "_id", Value: objID}}
 	update := bson.D{{Key: "$set", Value: doc}}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
+	_, err = collectionCourse.UpdateOne(ctx, filter, update)
 	return err
 }
 
 func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.Course) error {
-	collection := c.database.Collection(c.collection)
+	collectionCourse := c.database.Collection(c.collectionCourse)
 
 	filter := bson.M{"name": course.Name}
 	// check exists with CountDocuments
-	count, err := collection.CountDocuments(ctx, filter)
+	count, err := collectionCourse.CountDocuments(ctx, filter)
 	if err != nil {
 		return err
 	}
@@ -99,12 +101,12 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 		return errors.New("the course name did exist")
 	}
 
-	_, err = collection.InsertOne(ctx, course)
+	_, err = collectionCourse.InsertOne(ctx, course)
 	return err
 }
 
 func (c *courseRepository) UpsertOne(ctx context.Context, id string, course *course_domain.Course) (*course_domain.Response, error) {
-	collection := c.database.Collection(c.collection)
+	collectionCourse := c.database.Collection(c.collectionCourse)
 	doc, err := internal.ToDoc(course)
 
 	idHex, err := primitive.ObjectIDFromHex(id)
@@ -115,7 +117,7 @@ func (c *courseRepository) UpsertOne(ctx context.Context, id string, course *cou
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(1)
 	query := bson.D{{Key: "_id", Value: idHex}}
 	update := bson.D{{Key: "$set", Value: doc}}
-	res := collection.FindOneAndUpdate(ctx, query, update, opts)
+	res := collectionCourse.FindOneAndUpdate(ctx, query, update, opts)
 
 	var updatedPost *course_domain.Response
 
@@ -127,7 +129,7 @@ func (c *courseRepository) UpsertOne(ctx context.Context, id string, course *cou
 }
 
 func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error {
-	collection := c.database.Collection(c.collection)
+	collectionCourse := c.database.Collection(c.collectionCourse)
 	objID, err := primitive.ObjectIDFromHex(courseID)
 	if err != nil {
 		return err
@@ -136,13 +138,13 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 	filter := bson.M{
 		"_id": objID,
 	}
-	count, err := collection.CountDocuments(ctx, filter)
+	count, err := collectionCourse.CountDocuments(ctx, filter)
 	if err != nil {
 		return err
 	}
 	if count <= 0 {
 		return errors.New(`the course is removed`)
 	}
-	_, err = collection.DeleteOne(ctx, filter)
+	_, err = collectionCourse.DeleteOne(ctx, filter)
 	return err
 }

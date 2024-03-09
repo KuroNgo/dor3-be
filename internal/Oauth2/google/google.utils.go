@@ -27,7 +27,7 @@ func GetGoogleOauthToken(code string) (*OauthToken, error) {
 	// the authorization code obtained from the authorization endpoint
 	values.Add("code", code)
 
-	// the secret associated with the client ID
+	// FIXME: the secret associated with the client ID
 	values.Add("client_id", Database.GoogleClientID)
 	values.Add("client_secret", Database.GoogleClientSecret)
 

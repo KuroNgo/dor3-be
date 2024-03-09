@@ -4,6 +4,7 @@ import (
 	quiz_domain "clean-architecture/domain/quiz"
 	"clean-architecture/internal"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 )
 
@@ -27,6 +28,7 @@ func (q *QuizController) CreateOneQuiz(ctx *gin.Context) {
 	}
 
 	quizRes := &quiz_domain.Quiz{
+		ID:            primitive.NewObjectID(),
 		Question:      quizInput.Question,
 		Options:       quizInput.Options,
 		CorrectAnswer: quizInput.CorrectAnswer,

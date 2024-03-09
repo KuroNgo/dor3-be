@@ -12,8 +12,10 @@ type Input struct {
 }
 
 //go:generate mockery --name ICourseUseCase
-type ICourseUseCase interface {
+type ILessonUseCase interface {
+	// FetchByID this func not alone api
 	FetchByID(ctx context.Context, lessonID string) (*Lesson, error)
+
 	FetchMany(ctx context.Context) ([]Lesson, error)
 	FetchToDeleteMany(ctx context.Context) (*[]Lesson, error)
 	UpdateOne(ctx context.Context, lessonID string, lesson Lesson) error
