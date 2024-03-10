@@ -14,6 +14,14 @@ type Input struct {
 	LessonID      primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 }
 
+type FetchByWordInput struct {
+	Word string `bson:"word" json:"word"`
+}
+
+type FetchByLessonInput struct {
+	Lesson string `bson:"lesson_id" json:"lesson_id"`
+}
+
 //go:generate mockery --name IVocabularyUseCase
 type IVocabularyUseCase interface {
 	FetchByID(ctx context.Context, vocabularyID string) (*Vocabulary, error)
