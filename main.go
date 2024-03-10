@@ -4,7 +4,6 @@ import (
 	"clean-architecture/api/router"
 	"clean-architecture/bootstrap"
 	"github.com/gin-gonic/gin"
-	"net/http"
 	"time"
 )
 
@@ -20,21 +19,21 @@ func main() {
 
 	_gin := gin.Default()
 	// Tạo server HTTP tùy chỉnh với thời gian timeout là 0
-	// TODO: Chỉ dùng trong môi trường dev
-	srv := &http.Server{
-		Addr:         ":8080", // Cổng server
-		Handler:      _gin,    // Sử dụng router Gin đã tạo
-		ReadTimeout:  0,       // Tắt timeout cho thời gian đọc
-		WriteTimeout: 0,       // Tắt timeout cho thời gian ghi
-	}
+	//// TODO: Chỉ dùng trong môi trường dev
+	//srv := &http.Server{
+	//	Addr:         ":8080", // Cổng server
+	//	Handler:      _gin,    // Sử dụng router Gin đã tạo
+	//	ReadTimeout:  0,       // Tắt timeout cho thời gian đọc
+	//	WriteTimeout: 0,       // Tắt timeout cho thời gian ghi
+	//}
 	router.SetUp(env, timeout, db, _gin)
 
 	// Khởi động server
 	// TODO: chỉ dùng trong môi trường dev
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		// Xử lý lỗi nếu có
-		panic(err)
-	}
+	//if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	//	// Xử lý lỗi nếu có
+	//	panic(err)
+	//}
 
 	err := _gin.Run(env.ServerAddress)
 	if err != nil {

@@ -44,44 +44,28 @@ func (v *vocabularyRepository) FetchByID(ctx context.Context, vocabularyID strin
 func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) ([]vocabulary_domain.Vocabulary, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
-	filter := bson.D{{Key: "word", Value: word}}
-	// check exists with CountDocuments
-	count, err := collectionVocabulary.CountDocuments(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-	if count == 0 {
-		return nil, errors.New("the word do not exist")
-	}
-	var vocabulary []vocabulary_domain.Vocabulary
+	filter := bson.M{"word": primitive.Regex{Pattern: word, Options: "i"}}
+	var vocabularies []vocabulary_domain.Vocabulary
 
 	// Tìm kiếm tài liệu với điều kiện name
-	err = collectionVocabulary.FindOne(context.Background(), bson.M{"word": word}).Decode(&vocabulary)
-	if err != nil {
-		return nil, err
+	cursor, err := collectionVocabulary.Find(ctx, filter)
+	err = cursor.All(ctx, &vocabularies)
+	if vocabularies == nil {
+		return []vocabulary_domain.Vocabulary{}, err
 	}
 
-	return vocabulary, nil
+	return vocabularies, nil
 }
 
 func (v *vocabularyRepository) FetchByLesson(ctx context.Context, lessonName string) ([]vocabulary_domain.Vocabulary, error) {
 	collectionLesson := v.database.Collection(v.collectionLesson)
-
-	filter := bson.D{{Key: "name", Value: lessonName}}
-	// check exists with CountDocuments
-	count, err := collectionLesson.CountDocuments(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-	if count == 0 {
-		return nil, errors.New("the lesson name do not exist")
-	}
 	var vocabulary []vocabulary_domain.Vocabulary
 
 	// Tìm kiếm tài liệu với điều kiện name
-	err = collectionLesson.FindOne(context.Background(), bson.M{"name": lessonName}).Decode(&vocabulary)
-	if err != nil {
-		return nil, err
+	cursor, err := collectionLesson.Find(ctx, bson.M{"name": lessonName})
+	err = cursor.All(ctx, &vocabulary)
+	if vocabulary == nil {
+		return []vocabulary_domain.Vocabulary{}, err
 	}
 
 	return vocabulary, nil

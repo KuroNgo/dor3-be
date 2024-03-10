@@ -20,5 +20,6 @@ func VocabularyRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Da
 	}
 
 	router := group.Group("/vocabulary")
-	router.POST("/fetch-by-lesson", vocabulary)
+	router.GET("/fetch-by-word", vocabulary.FetchByWord)
+	router.GET("/fetch-by-lesson", vocabulary.FetchByLesson)
 }

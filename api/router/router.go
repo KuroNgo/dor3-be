@@ -49,6 +49,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 	quiz_route.QuizRouter(env, timeout, db, publicRouter)
 	course_route.CourseRoute(env, timeout, db, publicRouter)
 	lesson_route.LessonRoute(env, timeout, db, publicRouter)
+	vocabulary_route.VocabularyRoute(env, timeout, db, publicRouter)
 
 	// All Private API
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
