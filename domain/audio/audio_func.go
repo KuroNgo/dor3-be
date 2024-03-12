@@ -15,7 +15,6 @@ type AutoMatch struct {
 
 //go:generate mockery --name IAudioUseCase
 type IAudioUseCase interface {
-	FetchByID(ctx context.Context, audioID string) (*Audio, error)
 	FetchMany(ctx context.Context) ([]Audio, error)
 	FetchToDeleteMany(ctx context.Context) (*[]Audio, error)
 	UpdateOne(ctx context.Context, audioID string, audio Audio) error

@@ -25,22 +25,6 @@ func NewCourseRepository(db mongo.Database, collectionCourse string, collectionL
 	}
 }
 
-func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (*course_domain.Course, error) {
-	collectionCourse := c.database.Collection(c.collectionCourse)
-
-	var course course_domain.Course
-
-	idHex, err := primitive.ObjectIDFromHex(courseID)
-	if err != nil {
-		return &course, err
-	}
-
-	err = collectionCourse.
-		FindOne(ctx, bson.M{"_id": idHex}).
-		Decode(&course)
-	return &course, err
-}
-
 func (c *courseRepository) FetchMany(ctx context.Context) ([]course_domain.Course, error) {
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
@@ -54,23 +38,6 @@ func (c *courseRepository) FetchMany(ctx context.Context) ([]course_domain.Cours
 	err = cursor.All(ctx, &course)
 	if course == nil {
 		return []course_domain.Course{}, err
-	}
-
-	return course, err
-}
-
-func (c *courseRepository) FetchToDeleteMany(ctx context.Context) (*[]course_domain.Course, error) {
-	collectionCourse := c.database.Collection(c.collectionCourse)
-
-	cursor, err := collectionCourse.Find(ctx, bson.D{})
-	if err != nil {
-		return nil, err
-	}
-
-	var course *[]course_domain.Course
-	err = cursor.All(ctx, course)
-	if course == nil {
-		return &[]course_domain.Course{}, err
 	}
 
 	return course, err

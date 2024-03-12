@@ -18,35 +18,11 @@ func NewCourseUseCase(courseRepository course_domain.ICourseRepository, timeout 
 	}
 }
 
-func (c *courseUseCase) FetchByID(ctx context.Context, courseID string) (*course_domain.Course, error) {
-	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
-	defer cancel()
-
-	course, err := c.courseRepository.FetchByID(ctx, courseID)
-	if err != nil {
-		return nil, err
-	}
-
-	return course, err
-}
-
 func (c *courseUseCase) FetchMany(ctx context.Context) ([]course_domain.Course, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
 
 	course, err := c.courseRepository.FetchMany(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return course, err
-}
-
-func (c *courseUseCase) FetchToDeleteMany(ctx context.Context) (*[]course_domain.Course, error) {
-	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
-	defer cancel()
-
-	course, err := c.courseRepository.FetchToDeleteMany(ctx)
 	if err != nil {
 		return nil, err
 	}

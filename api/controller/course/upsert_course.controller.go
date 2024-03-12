@@ -23,7 +23,6 @@ func (c *CourseController) UpsertOneQuiz(ctx *gin.Context) {
 	upsertCourse := &course_domain.Course{
 		Name:        course.Name,
 		Description: course.Description,
-		Level:       course.Level,
 		UpdatedAt:   time.Now(),
 	}
 

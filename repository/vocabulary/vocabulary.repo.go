@@ -25,22 +25,6 @@ func NewVocabularyRepository(db mongo.Database, collectionVocabulary string, col
 	}
 }
 
-func (v *vocabularyRepository) FetchByID(ctx context.Context, vocabularyID string) (*vocabulary_domain.Vocabulary, error) {
-	collection := v.database.Collection(v.collectionVocabulary)
-
-	var vocabulary vocabulary_domain.Vocabulary
-
-	idHex, err := primitive.ObjectIDFromHex(vocabularyID)
-	if err != nil {
-		return &vocabulary, err
-	}
-
-	err = collection.
-		FindOne(ctx, bson.M{"_id": idHex}).
-		Decode(&vocabulary)
-	return &vocabulary, err
-}
-
 func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) ([]vocabulary_domain.Vocabulary, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 

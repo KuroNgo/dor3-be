@@ -22,7 +22,6 @@ type Vocabulary struct {
 
 //go:generate mockery --name IVocabularyRepository
 type IVocabularyRepository interface {
-	FetchByID(ctx context.Context, vocabularyID string) (*Vocabulary, error)
 	FetchMany(ctx context.Context) ([]Vocabulary, error)
 	FetchByWord(ctx context.Context, word string) ([]Vocabulary, error)
 	FetchByLesson(ctx context.Context, lessonName string) ([]Vocabulary, error)

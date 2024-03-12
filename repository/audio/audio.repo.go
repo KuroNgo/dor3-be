@@ -21,22 +21,6 @@ func NewAudioRepository(db mongo.Database, collection string) audio_domain.IAudi
 	}
 }
 
-func (a *audioRepository) FetchByID(ctx context.Context, audioID string) (*audio_domain.Audio, error) {
-	collection := a.database.Collection(a.collection)
-
-	var audio audio_domain.Audio
-
-	idHex, err := primitive.ObjectIDFromHex(audioID)
-	if err != nil {
-		return &audio, err
-	}
-
-	err = collection.
-		FindOne(ctx, bson.M{"_id": idHex}).
-		Decode(&audio)
-	return &audio, err
-}
-
 func (a *audioRepository) FetchMany(ctx context.Context) ([]audio_domain.Audio, error) {
 	collection := a.database.Collection(a.collection)
 

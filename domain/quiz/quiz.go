@@ -22,6 +22,7 @@ type Quiz struct {
 	Filename      string `bson:"filename" json:"filename"`
 	AudioDuration string `bson:"audio_duration" json:"audio_duration"`
 
+	IsComplete int       `bson:"is_complete" json:"is_complete"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
 	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
@@ -47,9 +48,7 @@ type Response struct {
 
 //go:generate mockery --name IQuizRepository
 type IQuizRepository interface {
-	FetchByID(ctx context.Context, quizID string) (*Quiz, error)
 	FetchMany(ctx context.Context) ([]Quiz, error)
-	FetchToDeleteMany(ctx context.Context) (*[]Quiz, error)
 	UpdateOne(ctx context.Context, quizID string, quiz Quiz) error
 	CreateOne(ctx context.Context, quiz *Quiz) error
 	UpsertOne(c context.Context, id string, quiz *Quiz) (*Response, error)

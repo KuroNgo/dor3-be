@@ -31,7 +31,6 @@ func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
 		Id:          primitive.NewObjectID(),
 		Name:        courseInput.Name,
 		Description: courseInput.Description,
-		Level:       courseInput.Level,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}

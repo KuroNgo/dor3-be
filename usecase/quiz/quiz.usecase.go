@@ -30,18 +30,6 @@ func (q *quizUseCase) FetchMany(ctx context.Context) ([]quiz_domain.Quiz, error)
 	return quiz, err
 }
 
-func (q *quizUseCase) FetchToDeleteMany(ctx context.Context) (*[]quiz_domain.Quiz, error) {
-	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
-	defer cancel()
-
-	quiz, err := q.quizRepository.FetchToDeleteMany(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return quiz, err
-}
-
 func (q *quizUseCase) UpdateOne(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
