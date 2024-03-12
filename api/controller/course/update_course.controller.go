@@ -23,7 +23,6 @@ func (c *CourseController) UpdateCourse(ctx *gin.Context) {
 	updateCourse := course_domain.Course{
 		Name:        courseInput.Name,
 		Description: courseInput.Description,
-		Level:       courseInput.Level,
 		UpdatedAt:   time.Now(),
 	}
 

@@ -1,6 +1,7 @@
 package lesson_repository
 
 import (
+	course_domain "clean-architecture/domain/course"
 	lesson_domain "clean-architecture/domain/lesson"
 	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
@@ -25,52 +26,42 @@ func NewLessonRepository(db mongo.Database, collectionLesson string, collectionC
 	}
 }
 
-func (l *lessonRepository) FetchByID(ctx context.Context, lessonID string) (*lesson_domain.Lesson, error) {
-	collection := l.database.Collection(l.collectionLesson)
+func (l *lessonRepository) FetchMany(ctx context.Context) ([]lesson_domain.Response, error) {
+	collectionLesson := l.database.Collection(l.collectionLesson)
+	collectionCourse := l.database.Collection(l.collectionCourse)
 
-	var lesson lesson_domain.Lesson
-
-	idHex, err := primitive.ObjectIDFromHex(lessonID)
-	if err != nil {
-		return &lesson, err
-	}
-
-	err = collection.
-		FindOne(ctx, bson.M{"_id": idHex}).
-		Decode(&lesson)
-	return &lesson, err
-}
-
-func (l *lessonRepository) FetchMany(ctx context.Context) ([]lesson_domain.Lesson, error) {
-	collection := l.database.Collection(l.collectionLesson)
-
-	cursor, err := collection.Find(ctx, bson.D{})
+	cursor, err := collectionLesson.Find(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}
+	defer cursor.Close(ctx)
 
-	var lesson []lesson_domain.Lesson
-	err = cursor.All(ctx, &lesson)
-	if lesson == nil {
-		return []lesson_domain.Lesson{}, err
+	var lessons []lesson_domain.Response
+	for cursor.Next(ctx) {
+		var lesson lesson_domain.Lesson
+		var lesson2 lesson_domain.Response
+		if err := cursor.Decode(&lesson); err != nil {
+			return nil, err
+		}
+
+		// Tìm tên của course tương ứng với ID của lesson
+		var course course_domain.Course
+		err := collectionCourse.FindOne(ctx, bson.M{"_id": lesson.CourseID}).Decode(&course)
+		if err != nil {
+			return nil, err
+		}
+
+		// Gắn tên của course vào lesson
+		lesson2.Course = course
+
+		// Thêm lesson vào slice lessons
+		lessons = append(lessons, lesson2)
 	}
-	return lesson, err
-}
-
-func (l *lessonRepository) FetchToDeleteMany(ctx context.Context) (*[]lesson_domain.Lesson, error) {
-	collection := l.database.Collection(l.collectionLesson)
-
-	cursor, err := collection.Find(ctx, bson.D{})
-	if err != nil {
-		return nil, err
+	err = cursor.All(ctx, &lessons)
+	if lessons == nil {
+		return []lesson_domain.Response{}, err
 	}
-
-	var lesson *[]lesson_domain.Lesson
-	err = cursor.All(ctx, lesson)
-	if lesson == nil {
-		return &[]lesson_domain.Lesson{}, err
-	}
-	return lesson, err
+	return lessons, err
 }
 
 func (l *lessonRepository) UpdateOne(ctx context.Context, lessonID string, lesson lesson_domain.Lesson) error {

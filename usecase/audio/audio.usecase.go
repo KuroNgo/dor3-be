@@ -17,17 +17,6 @@ func NewAudioUseCase(audioRepository audio_domain.IAudioUseCase, timeout time.Du
 		contextTimeout:  timeout,
 	}
 }
-func (a *audioUseCase) FetchByID(ctx context.Context, audioID string) (*audio_domain.Audio, error) {
-	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
-	defer cancel()
-
-	audio, err := a.audioRepository.FetchByID(ctx, audioID)
-	if err != nil {
-		return nil, err
-	}
-
-	return audio, err
-}
 
 func (a *audioUseCase) FetchMany(ctx context.Context) ([]audio_domain.Audio, error) {
 	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)

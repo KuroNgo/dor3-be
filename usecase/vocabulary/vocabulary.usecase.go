@@ -42,18 +42,6 @@ func NewVocabularyUseCase(vocabularyRepository vocabulary_domain.IVocabularyRepo
 	}
 }
 
-func (v *vocabularyUseCase) FetchByID(ctx context.Context, vocabularyID string) (*vocabulary_domain.Vocabulary, error) {
-	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
-	defer cancel()
-
-	vocabulary, err := v.vocabularyRepository.FetchByID(ctx, vocabularyID)
-	if err != nil {
-		return nil, err
-	}
-
-	return vocabulary, err
-}
-
 func (v *vocabularyUseCase) FetchMany(ctx context.Context) ([]vocabulary_domain.Vocabulary, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()

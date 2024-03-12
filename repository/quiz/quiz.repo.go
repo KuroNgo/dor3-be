@@ -23,22 +23,6 @@ func NewQuizRepository(db mongo.Database, collection string) quiz_domain.IQuizRe
 	}
 }
 
-func (q *quizRepository) FetchByID(ctx context.Context, quizID string) (*quiz_domain.Quiz, error) {
-	collection := q.database.Collection(q.collection)
-
-	var quiz quiz_domain.Quiz
-
-	idHex, err := primitive.ObjectIDFromHex(quizID)
-	if err != nil {
-		return &quiz, err
-	}
-
-	err = collection.
-		FindOne(ctx, bson.M{"_id": idHex}).
-		Decode(&quiz)
-	return &quiz, err
-}
-
 func (q *quizRepository) FetchMany(ctx context.Context) ([]quiz_domain.Quiz, error) {
 	collection := q.database.Collection(q.collection)
 
@@ -52,24 +36,6 @@ func (q *quizRepository) FetchMany(ctx context.Context) ([]quiz_domain.Quiz, err
 	err = cursor.All(ctx, &quiz)
 	if quiz == nil {
 		return []quiz_domain.Quiz{}, err
-	}
-
-	return quiz, err
-}
-
-func (q *quizRepository) FetchToDeleteMany(ctx context.Context) (*[]quiz_domain.Quiz, error) {
-	collection := q.database.Collection(q.collection)
-
-	cursor, err := collection.Find(ctx, bson.D{})
-	if err != nil {
-		return nil, err
-	}
-
-	var quiz *[]quiz_domain.Quiz
-
-	err = cursor.All(ctx, &quiz)
-	if quiz == nil {
-		return &[]quiz_domain.Quiz{}, err
 	}
 
 	return quiz, err
