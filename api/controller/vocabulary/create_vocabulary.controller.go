@@ -34,6 +34,7 @@ func (v *VocabularyController) CreateOneLesson(ctx *gin.Context) {
 		Pronunciation: vocabularyInput.Pronunciation,
 		Example:       vocabularyInput.Example,
 		FieldOfIT:     vocabularyInput.FieldOfIT,
+		LinkURL:       vocabularyInput.LinkURL,
 		LessonID:      vocabularyInput.LessonID,
 	}
 

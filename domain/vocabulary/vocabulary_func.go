@@ -11,6 +11,7 @@ type Input struct {
 	Pronunciation string             `bson:"pronunciation" json:"pronunciation"`
 	Example       string             `bson:"example" json:"example"`
 	FieldOfIT     string             `bson:"field_of_it" json:"field_of_it"`
+	LinkURL       string             `bson:"link_url" json:"link_url"`
 	LessonID      primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 }
 
