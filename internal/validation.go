@@ -1,10 +1,10 @@
 package internal
 
 import (
+	unit_domain "clean-architecture/domain/_unit"
 	course_domain "clean-architecture/domain/course"
 	lesson_domain "clean-architecture/domain/lesson"
 	quiz_domain "clean-architecture/domain/quiz"
-	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"gopkg.in/errgo.v2/fmt/errors"
 )
 
@@ -62,25 +62,17 @@ func IsValidLesson(lesson lesson_domain.Input) error {
 	return nil
 }
 
-func IsValidVocabulary(vocabulary vocabulary_domain.Input) error {
-	if vocabulary.Word == "" {
-		return errors.New("word cannot be empty")
+func IsValidUnit(unit unit_domain.Input) error {
+	if unit.LessonID.IsZero() {
+		return errors.New("lesson name cannot be empty")
 	}
 
-	if vocabulary.Example == "" {
-		return errors.New("example cannot be empty")
+	if unit.Name == "" {
+		return errors.New("name cannot be empty")
 	}
 
-	if vocabulary.FieldOfIT == "" {
-		return errors.New("field of IT cannot be empty")
-	}
-
-	if vocabulary.PartOfSpeech == "" {
-		return errors.New("part of speech cannot be empty")
-	}
-
-	if vocabulary.Pronunciation == "" {
-		return errors.New("pronunciation cannot be empty")
+	if unit.Content == "" {
+		return errors.New("content cannot be empty")
 	}
 	return nil
 }
