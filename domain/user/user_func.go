@@ -7,7 +7,6 @@ import (
 type SignUp struct {
 	FullName   string `json:"full_name"  bson:"full_name"`
 	Email      string `json:"email" bson:"email"`
-	Password   string `bson:"password"  json:"password"`
 	AvatarURL  string `json:"avatar_url"  bson:"avatar_url"`
 	Specialize string `json:"specialize"  bson:"specialize"`
 	Photo      string `json:"photo" bson:"photo"`

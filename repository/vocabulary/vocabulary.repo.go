@@ -14,48 +14,48 @@ import (
 type vocabularyRepository struct {
 	database             mongo.Database
 	collectionVocabulary string
-	collectionLesson     string
+	collectionUnit       string
 }
 
-func NewVocabularyRepository(db mongo.Database, collectionVocabulary string, collectionLesson string) vocabulary_domain.IVocabularyRepository {
+func NewVocabularyRepository(db mongo.Database, collectionVocabulary string, collectionUnit string) vocabulary_domain.IVocabularyRepository {
 	return &vocabularyRepository{
 		database:             db,
 		collectionVocabulary: collectionVocabulary,
-		collectionLesson:     collectionLesson,
+		collectionUnit:       collectionUnit,
 	}
 }
 
-func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) ([]vocabulary_domain.Vocabulary, error) {
+func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) ([]vocabulary_domain.Response, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
 	filter := bson.M{"word": primitive.Regex{Pattern: word, Options: "i"}}
-	var vocabularies []vocabulary_domain.Vocabulary
+	var vocabularies []vocabulary_domain.Response
 
 	// Tìm kiếm tài liệu với điều kiện name
 	cursor, err := collectionVocabulary.Find(ctx, filter)
 	err = cursor.All(ctx, &vocabularies)
 	if vocabularies == nil {
-		return []vocabulary_domain.Vocabulary{}, err
+		return []vocabulary_domain.Response{}, err
 	}
 
 	return vocabularies, nil
 }
 
-func (v *vocabularyRepository) FetchByLesson(ctx context.Context, lessonName string) ([]vocabulary_domain.Vocabulary, error) {
-	collectionLesson := v.database.Collection(v.collectionLesson)
-	var vocabulary []vocabulary_domain.Vocabulary
+func (v *vocabularyRepository) FetchByLesson(ctx context.Context, unitName string) ([]vocabulary_domain.Response, error) {
+	collectionUnit := v.database.Collection(v.collectionUnit)
+	var vocabulary []vocabulary_domain.Response
 
 	// Tìm kiếm tài liệu với điều kiện name
-	cursor, err := collectionLesson.Find(ctx, bson.M{"name": lessonName})
+	cursor, err := collectionUnit.Find(ctx, bson.M{"name": unitName})
 	err = cursor.All(ctx, &vocabulary)
 	if vocabulary == nil {
-		return []vocabulary_domain.Vocabulary{}, err
+		return []vocabulary_domain.Response{}, err
 	}
 
 	return vocabulary, nil
 }
 
-func (v *vocabularyRepository) FetchMany(ctx context.Context) ([]vocabulary_domain.Vocabulary, error) {
+func (v *vocabularyRepository) FetchMany(ctx context.Context) ([]vocabulary_domain.Response, error) {
 	collection := v.database.Collection(v.collectionVocabulary)
 
 	cursor, err := collection.Find(ctx, bson.D{})
@@ -63,15 +63,15 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context) ([]vocabulary_doma
 		return nil, err
 	}
 
-	var vocabulary []vocabulary_domain.Vocabulary
+	var vocabulary []vocabulary_domain.Response
 	err = cursor.All(ctx, &vocabulary)
 	if vocabulary == nil {
-		return []vocabulary_domain.Vocabulary{}, err
+		return []vocabulary_domain.Response{}, err
 	}
 	return vocabulary, err
 }
 
-func (v *vocabularyRepository) FetchToDeleteMany(ctx context.Context) (*[]vocabulary_domain.Vocabulary, error) {
+func (v *vocabularyRepository) FetchToDeleteMany(ctx context.Context) (*[]vocabulary_domain.Response, error) {
 	collection := v.database.Collection(v.collectionVocabulary)
 
 	cursor, err := collection.Find(ctx, bson.D{})
@@ -79,11 +79,11 @@ func (v *vocabularyRepository) FetchToDeleteMany(ctx context.Context) (*[]vocabu
 		return nil, err
 	}
 
-	var vocabulary *[]vocabulary_domain.Vocabulary
+	var vocabulary *[]vocabulary_domain.Response
 
 	err = cursor.All(ctx, vocabulary)
 	if vocabulary == nil {
-		return &[]vocabulary_domain.Vocabulary{}, err
+		return &[]vocabulary_domain.Response{}, err
 	}
 	return vocabulary, err
 }
@@ -102,7 +102,7 @@ func (v *vocabularyRepository) UpdateOne(ctx context.Context, vocabularyID strin
 
 func (v *vocabularyRepository) CreateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
-	collectionLesson := v.database.Collection(v.collectionLesson)
+	collectionUnit := v.database.Collection(v.collectionUnit)
 
 	filter := bson.M{"name": vocabulary.Word}
 	// check exists with CountDocuments
@@ -114,26 +114,26 @@ func (v *vocabularyRepository) CreateOne(ctx context.Context, vocabulary *vocabu
 		return errors.New("the word did exist")
 	}
 
-	filterReference := bson.M{"_id": vocabulary.LessonID}
-	count, err = collectionLesson.CountDocuments(ctx, filterReference)
+	filterReference := bson.M{"_id": vocabulary.UnitID}
+	count, err = collectionUnit.CountDocuments(ctx, filterReference)
 	if err != nil {
 		return err
 	}
 
 	if count == 0 {
-		return errors.New("the lesson ID do not exist")
+		return errors.New("the unit ID do not exist")
 	}
 
-	_, err = collectionLesson.InsertOne(ctx, vocabulary)
+	_, err = collectionVocabulary.InsertOne(ctx, vocabulary)
 	return nil
 }
 
-func (v *vocabularyRepository) UpsertOne(ctx context.Context, id string, vocabulary *vocabulary_domain.Vocabulary) (*vocabulary_domain.Vocabulary, error) {
+func (v *vocabularyRepository) UpsertOne(ctx context.Context, id string, vocabulary *vocabulary_domain.Vocabulary) (*vocabulary_domain.Response, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
-	collectionLesson := v.database.Collection(v.collectionLesson)
+	collectionUnit := v.database.Collection(v.collectionUnit)
 
-	filterReference := bson.M{"_id": vocabulary.LessonID}
-	count, err := collectionLesson.CountDocuments(ctx, filterReference)
+	filterReference := bson.M{"_id": vocabulary.UnitID}
+	count, err := collectionUnit.CountDocuments(ctx, filterReference)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func (v *vocabularyRepository) UpsertOne(ctx context.Context, id string, vocabul
 	update := bson.D{{Key: "$set", Value: doc}}
 	res := collectionVocabulary.FindOneAndUpdate(ctx, query, update, opts)
 
-	var updatePost *vocabulary_domain.Vocabulary
+	var updatePost *vocabulary_domain.Response
 	if err := res.Decode(&updatePost); err != nil {
 		return nil, err
 	}

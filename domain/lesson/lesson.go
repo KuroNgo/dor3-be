@@ -19,18 +19,18 @@ type Lesson struct {
 	Level      int                `bson:"level" json:"level"`
 	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time          `bson:"updated_at" json:"updated_at"`
-	WhoUpdates time.Time          `bson:"who_updates" json:"who_updates"`
+	WhoUpdates string             `bson:"who_updates" json:"who_updates"`
 }
 
 type Response struct {
-	ID         primitive.ObjectID `bson:"id" json:"id"`
+	ID         primitive.ObjectID `bson:"_id" json:"_id"`
 	Course     course_domain.Course
 	Name       string    `bson:"name" json:"name"`
 	Content    string    `bson:"content" json:"content"`
 	Level      int       `bson:"level" json:"level"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
-	WhoUpdates time.Time `bson:"who_updates" json:"who_updates"`
+	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
 }
 
 //go:generate mockery --name ILessonRepository
