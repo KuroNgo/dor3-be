@@ -11,7 +11,7 @@ type vocabularyUseCase struct {
 	contextTimeout       time.Duration
 }
 
-func (v *vocabularyUseCase) FetchByWord(ctx context.Context, word string) ([]vocabulary_domain.Vocabulary, error) {
+func (v *vocabularyUseCase) FetchByWord(ctx context.Context, word string) ([]vocabulary_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
@@ -23,7 +23,7 @@ func (v *vocabularyUseCase) FetchByWord(ctx context.Context, word string) ([]voc
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) FetchByLesson(ctx context.Context, lessonName string) ([]vocabulary_domain.Vocabulary, error) {
+func (v *vocabularyUseCase) FetchByLesson(ctx context.Context, lessonName string) ([]vocabulary_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
@@ -42,7 +42,7 @@ func NewVocabularyUseCase(vocabularyRepository vocabulary_domain.IVocabularyRepo
 	}
 }
 
-func (v *vocabularyUseCase) FetchMany(ctx context.Context) ([]vocabulary_domain.Vocabulary, error) {
+func (v *vocabularyUseCase) FetchMany(ctx context.Context) ([]vocabulary_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
@@ -54,7 +54,7 @@ func (v *vocabularyUseCase) FetchMany(ctx context.Context) ([]vocabulary_domain.
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) FetchToDeleteMany(ctx context.Context) (*[]vocabulary_domain.Vocabulary, error) {
+func (v *vocabularyUseCase) FetchToDeleteMany(ctx context.Context) (*[]vocabulary_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
@@ -90,7 +90,7 @@ func (v *vocabularyUseCase) CreateOne(ctx context.Context, vocabulary *vocabular
 	return nil
 }
 
-func (v *vocabularyUseCase) UpsertOne(ctx context.Context, id string, vocabulary *vocabulary_domain.Vocabulary) (*vocabulary_domain.Vocabulary, error) {
+func (v *vocabularyUseCase) UpsertOne(ctx context.Context, id string, vocabulary *vocabulary_domain.Vocabulary) (*vocabulary_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 

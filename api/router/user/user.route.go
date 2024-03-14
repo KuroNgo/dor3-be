@@ -1,4 +1,4 @@
-package user_router
+package user_route
 
 import (
 	user_controller "clean-architecture/api/controller/user"

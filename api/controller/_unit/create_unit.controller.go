@@ -1,7 +1,7 @@
-package lesson_controller
+package unit_controller
 
 import (
-	lesson_domain "clean-architecture/domain/lesson"
+	unit_domain "clean-architecture/domain/_unit"
 	"clean-architecture/internal"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -9,9 +9,9 @@ import (
 	"time"
 )
 
-func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
-	var lessonInput lesson_domain.Input
-	if err := ctx.ShouldBindJSON(&lessonInput); err != nil {
+func (u *UnitController) CreateOneUnit(ctx *gin.Context) {
+	var unitInput unit_domain.Input
+	if err := ctx.ShouldBindJSON(&unitInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": err.Error(),
@@ -19,7 +19,7 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 		return
 	}
 
-	if err := internal.IsValidLesson(lessonInput); err != nil {
+	if err := internal.IsValidUnit(unitInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": err.Error(),
@@ -27,18 +27,17 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 		return
 	}
 
-	lessonRes := &lesson_domain.Lesson{
+	unitRes := &unit_domain.Unit{
 		ID:        primitive.NewObjectID(),
-		CourseID:  lessonInput.CourseID,
-		Name:      lessonInput.Name,
-		Content:   lessonInput.Content,
-		Level:     lessonInput.Level,
+		LessonID:  unitInput.LessonID,
+		Name:      unitInput.Name,
+		Content:   unitInput.Content,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		//WhoUpdates:
 	}
 
-	err := l.LessonUseCase.CreateOne(ctx, lessonRes)
+	err := u.UnitUseCase.CreateOne(ctx, unitRes)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
