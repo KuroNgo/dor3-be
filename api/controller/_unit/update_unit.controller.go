@@ -27,7 +27,7 @@ func (u *UnitController) UpdateOneUnit(ctx *gin.Context) {
 		//WhoUpdates:
 	}
 
-	err := u.UnitUseCase.UpdateOne(ctx, lessonID, updateLesson)
+	unit, err := u.UnitUseCase.UpdateOne(ctx, lessonID, updateLesson)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -38,5 +38,6 @@ func (u *UnitController) UpdateOneUnit(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
+		"data":   unit,
 	})
 }

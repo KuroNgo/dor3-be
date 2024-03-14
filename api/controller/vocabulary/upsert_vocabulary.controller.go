@@ -25,7 +25,7 @@ func (v *VocabularyController) UpsertOneVocabulary(ctx *gin.Context) {
 		Example:       vocabularyInput.Example,
 		FieldOfIT:     vocabularyInput.FieldOfIT,
 		LinkURL:       vocabularyInput.LinkURL,
-		LessonID:      vocabularyInput.LessonID,
+		UnitID:        vocabularyInput.UnitID,
 	}
 
 	vocabularyRes, err := v.VocabularyUseCase.UpsertOne(ctx, vocabularyID, &upsertVocabulary)

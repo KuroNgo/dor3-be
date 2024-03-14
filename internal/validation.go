@@ -5,6 +5,7 @@ import (
 	course_domain "clean-architecture/domain/course"
 	lesson_domain "clean-architecture/domain/lesson"
 	quiz_domain "clean-architecture/domain/quiz"
+	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"gopkg.in/errgo.v2/fmt/errors"
 )
 
@@ -74,5 +75,33 @@ func IsValidUnit(unit unit_domain.Input) error {
 	if unit.Content == "" {
 		return errors.New("content cannot be empty")
 	}
+	return nil
+}
+
+func IsValidVocabulary(vocabulary vocabulary_domain.Input) error {
+	if vocabulary.Word == "" {
+		return errors.New("word cannot be empty")
+	}
+
+	if vocabulary.PartOfSpeech == "" {
+		return errors.New("part of speech cannot be empty")
+	}
+
+	if vocabulary.Pronunciation == "" {
+		return errors.New("pronunciation cannot be empty")
+	}
+
+	if vocabulary.Example == "" {
+		return errors.New("example cannot be empty")
+	}
+
+	if vocabulary.FieldOfIT == "" {
+		return errors.New("field of IT cannot be empty")
+	}
+
+	if vocabulary.LinkURL == "" {
+		return errors.New("link URL cannot be empty")
+	}
+
 	return nil
 }

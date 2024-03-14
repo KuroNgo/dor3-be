@@ -35,7 +35,7 @@ func (v *VocabularyController) CreateOneLesson(ctx *gin.Context) {
 		Example:       vocabularyInput.Example,
 		FieldOfIT:     vocabularyInput.FieldOfIT,
 		LinkURL:       vocabularyInput.LinkURL,
-		LessonID:      vocabularyInput.LessonID,
+		UnitID:        vocabularyInput.UnitID,
 	}
 
 	err := v.VocabularyUseCase.CreateOne(ctx, vocabularyRes)
