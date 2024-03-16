@@ -1,7 +1,7 @@
 package unit_controller
 
 import (
-	unit_domain "clean-architecture/domain/_unit"
+	unit_domain "clean-architecture/domain/unit"
 	"clean-architecture/internal"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"

@@ -1,6 +1,7 @@
 package vocabulary_repository
 
 import (
+	unit_domain "clean-architecture/domain/unit"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
@@ -56,34 +57,40 @@ func (v *vocabularyRepository) FetchByLesson(ctx context.Context, unitName strin
 }
 
 func (v *vocabularyRepository) FetchMany(ctx context.Context) ([]vocabulary_domain.Response, error) {
-	collection := v.database.Collection(v.collectionVocabulary)
+	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
+	collectionUnit := v.database.Collection(v.collectionUnit)
 
-	cursor, err := collection.Find(ctx, bson.D{})
+	cursor, err := collectionVocabulary.Find(ctx, bson.D{})
 	if err != nil {
 		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var vocabularies []vocabulary_domain.Response
+
+	for cursor.Next(ctx) {
+		var vocabulary vocabulary_domain.Vocabulary
+		var vocabulary2 vocabulary_domain.Response
+		if err := cursor.Decode(&vocabulary); err != nil {
+			return nil, err
+		}
+
+		var unit unit_domain.Unit
+		err := collectionUnit.FindOne(ctx, bson.M{"_id": vocabulary.UnitID}).Decode(&unit)
+		if err != nil {
+			return nil, err
+		}
+
+		// Gắn tên của course vào lesson
+		vocabulary2.UnitID = unit.ID
+
+		// Thêm lesson vào slice lessons
+		vocabularies = append(vocabularies, vocabulary2)
 	}
 
 	var vocabulary []vocabulary_domain.Response
 	err = cursor.All(ctx, &vocabulary)
 	if vocabulary == nil {
 		return []vocabulary_domain.Response{}, err
-	}
-	return vocabulary, err
-}
-
-func (v *vocabularyRepository) FetchToDeleteMany(ctx context.Context) (*[]vocabulary_domain.Response, error) {
-	collection := v.database.Collection(v.collectionVocabulary)
-
-	cursor, err := collection.Find(ctx, bson.D{})
-	if err != nil {
-		return nil, err
-	}
-
-	var vocabulary *[]vocabulary_domain.Response
-
-	err = cursor.All(ctx, vocabulary)
-	if vocabulary == nil {
-		return &[]vocabulary_domain.Response{}, err
 	}
 	return vocabulary, err
 }

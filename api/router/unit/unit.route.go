@@ -1,10 +1,10 @@
 package unit_route
 
 import (
-	unit_controller "clean-architecture/api/controller/_unit"
+	unit_controller "clean-architecture/api/controller/unit"
 	"clean-architecture/bootstrap"
-	unit_domain "clean-architecture/domain/_unit"
 	lesson_domain "clean-architecture/domain/lesson"
+	unit_domain "clean-architecture/domain/unit"
 	"clean-architecture/infrastructor/mongo"
 	unit_repo "clean-architecture/repository/unit"
 	unit_usecase "clean-architecture/usecase/unit"

@@ -1,7 +1,6 @@
 package vocabulary_domain
 
 import (
-	unit_domain "clean-architecture/domain/_unit"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -18,7 +17,7 @@ type Vocabulary struct {
 	Example       string             `bson:"example" json:"example"`
 	FieldOfIT     string             `bson:"field_of_it" json:"field_of_it"`
 	LinkURL       string             `bson:"link_url" json:"link_url"`
-	UnitID        primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
+	UnitID        primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 }
 
 type Response struct {
@@ -29,7 +28,7 @@ type Response struct {
 	Example       string             `bson:"example" json:"example"`
 	FieldOfIT     string             `bson:"field_of_it" json:"field_of_it"`
 	LinkURL       string             `bson:"link_url" json:"link_url"`
-	Unit          unit_domain.Unit
+	UnitID        primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 }
 
 //go:generate mockery --name IVocabularyRepository

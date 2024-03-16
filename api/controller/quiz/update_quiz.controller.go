@@ -23,7 +23,10 @@ func (q *QuizController) UpdateOneQuiz(ctx *gin.Context) {
 		Question:      quiz.Question,
 		Options:       quiz.Options,
 		CorrectAnswer: quiz.CorrectAnswer,
+		Explanation:   quiz.Explanation,
 		QuestionType:  quiz.QuestionType,
+		Filename:      quiz.Filename,
+		AudioDuration: quiz.AudioDuration,
 	}
 
 	err := q.QuizUseCase.UpdateOne(ctx, quizID, updateQuiz)

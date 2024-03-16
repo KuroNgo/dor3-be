@@ -11,8 +11,8 @@ const (
 )
 
 type Audio struct {
-	Id     primitive.ObjectID `bson:"_id" json:"_id"`
-	QuizID primitive.ObjectID `bson:"quiz_id" json:"quiz_id"`
+	Id primitive.ObjectID `bson:"_id" json:"_id"`
+	//QuizID primitive.ObjectID `bson:"quiz_id" json:"quiz_id"`
 
 	// admin add metadata of file and system will be found it
 	Filename      string `bson:"filename" json:"filename"`
@@ -30,7 +30,6 @@ type Response struct {
 //go:generate mockery --name IAudioRepository
 type IAudioRepository interface {
 	FetchMany(ctx context.Context) ([]Audio, error)
-	FetchToDeleteMany(ctx context.Context) (*[]Audio, error)
 	UpdateOne(ctx context.Context, audioID string, audio Audio) error
 	CreateOne(ctx context.Context, audio *Audio) error
 	DeleteOne(ctx context.Context, audioID string) error

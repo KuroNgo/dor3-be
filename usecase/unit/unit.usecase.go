@@ -1,7 +1,7 @@
 package unit_usecase
 
 import (
-	unit_domain "clean-architecture/domain/_unit"
+	unit_domain "clean-architecture/domain/unit"
 	"context"
 	"time"
 )

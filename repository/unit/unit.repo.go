@@ -1,8 +1,8 @@
 package unit_repo
 
 import (
-	unit_domain "clean-architecture/domain/_unit"
 	lesson_domain "clean-architecture/domain/lesson"
+	unit_domain "clean-architecture/domain/unit"
 	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
 	"context"
@@ -25,6 +25,7 @@ func NewUnitRepository(db mongo.Database, collectionUnit string, collectionLesso
 		collectionLesson: collectionLesson,
 	}
 }
+
 func (u *unitRepository) FetchMany(ctx context.Context) ([]unit_domain.Response, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 	collectionLesson := u.database.Collection(u.collectionLesson)
@@ -43,7 +44,6 @@ func (u *unitRepository) FetchMany(ctx context.Context) ([]unit_domain.Response,
 			return nil, err
 		}
 
-		// Tìm tên của course tương ứng với ID của lesson
 		var lesson lesson_domain.Lesson
 		err := collectionLesson.FindOne(ctx, bson.M{"_id": unit.LessonID}).Decode(&lesson)
 		if err != nil {
@@ -51,7 +51,7 @@ func (u *unitRepository) FetchMany(ctx context.Context) ([]unit_domain.Response,
 		}
 
 		// Gắn tên của course vào lesson
-		unit2.Lesson = lesson
+		unit2.LessonID = lesson.ID
 
 		// Thêm lesson vào slice lessons
 		units = append(units, unit2)
@@ -64,30 +64,30 @@ func (u *unitRepository) FetchMany(ctx context.Context) ([]unit_domain.Response,
 }
 
 func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) error {
-	collectionLesson := u.database.Collection(u.collectionUnit)
-	collectionCourse := u.database.Collection(u.collectionLesson)
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	collectionLesson := u.database.Collection(u.collectionLesson)
 
-	filter := bson.M{"name": unit.Name}
+	filterUnit := bson.M{"name": unit.Name, "lesson_id": unit.LessonID}
+	filterLess := bson.M{"_id": unit.LessonID}
 	// check exists with CountDocuments
-	count, err := collectionLesson.CountDocuments(ctx, filter)
-	if err != nil {
-		return err
-	}
-	if count > 0 {
-		return errors.New("the unit name did exist")
-	}
-
-	filterReference := bson.M{"_id": unit.LessonID}
-	count, err = collectionCourse.CountDocuments(ctx, filterReference)
+	countLess, err := collectionLesson.CountDocuments(ctx, filterLess)
 	if err != nil {
 		return err
 	}
 
-	if count == 0 {
+	countUnit, err := collectionUnit.CountDocuments(ctx, filterUnit)
+	if err != nil {
+		return err
+	}
+
+	if countUnit > 0 {
+		return errors.New("the unit name in lesson did exist")
+	}
+	if countLess == 0 {
 		return errors.New("the lesson ID do not exist")
 	}
 
-	_, err = collectionLesson.InsertOne(ctx, unit)
+	_, err = collectionUnit.InsertOne(ctx, unit)
 	return nil
 }
 

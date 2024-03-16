@@ -16,6 +16,18 @@ type userRepository struct {
 	collection string
 }
 
+func (u *userRepository) Update(ctx context.Context, userID string, user user_domain.User) error {
+	collection := u.database.Collection(u.collection)
+	doc, err := internal.ToDoc(user)
+	objID, err := primitive.ObjectIDFromHex(userID)
+
+	filter := bson.D{{Key: "_id", Value: objID}}
+	update := bson.D{{Key: "$set", Value: doc}}
+
+	_, err = collection.UpdateOne(ctx, filter, update)
+	return err
+}
+
 func NewUserRepository(db mongo.Database, collection string) user_domain.IUserRepository {
 	return &userRepository{
 		database:   db,
@@ -80,11 +92,14 @@ func (u *userRepository) GetByEmail(c context.Context, email string) (*user_doma
 	return &user, err
 }
 
-func (u *userRepository) GetByUsername(c context.Context, username string) (*user_domain.User, error) {
-	collection := u.database.Collection(u.collection)
-	var user user_domain.User
-	err := collection.FindOne(c, bson.M{"email": username}).Decode(&user)
-	return &user, err
+func (u *userRepository) Login(c context.Context, email string) (*user_domain.User, error) {
+	user, err := u.GetByEmail(c, email)
+
+	// Kiểm tra xem mật khẩu đã nhập có đúng với mật khẩu đã hash trong cơ sở dữ liệu không
+	if err = internal.VerifyPassword(user.Password, user.Password); err != nil {
+		return &user_domain.User{}, errors.New("email or password not found! ")
+	}
+	return user, nil
 }
 
 func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.User, error) {

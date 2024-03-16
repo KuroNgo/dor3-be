@@ -30,18 +30,6 @@ func (a *audioUseCase) FetchMany(ctx context.Context) ([]audio_domain.Audio, err
 	return quiz, err
 }
 
-func (a *audioUseCase) FetchToDeleteMany(ctx context.Context) (*[]audio_domain.Audio, error) {
-	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
-	defer cancel()
-
-	user, err := a.audioRepository.FetchToDeleteMany(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, err
-}
-
 func (a *audioUseCase) UpdateOne(ctx context.Context, audioID string, audio audio_domain.Audio) error {
 	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
 	defer cancel()

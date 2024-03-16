@@ -2,24 +2,16 @@ package audio_controller
 
 import (
 	audio_domain "clean-architecture/domain/audio"
-	quiz_domain "clean-architecture/domain/quiz"
 	file_internal "clean-architecture/internal/file"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
-	"path/filepath"
+	"os"
 )
 
 // CreateAudioInFireBaseAndSaveMetaDataInDatabase used for
 // collect information from file and upload to firebase with audio and database with metadata
 func (au *AudioController) CreateAudioInFireBaseAndSaveMetaDataInDatabase(ctx *gin.Context) {
-	var quiz quiz_domain.Quiz
-	if err := ctx.ShouldBindJSON(&quiz); err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid request"})
-		return
-	}
-
 	// Just filename contains "file" in OS (operating system)
 	file, err := ctx.FormFile("file")
 	if err != nil {
@@ -27,34 +19,32 @@ func (au *AudioController) CreateAudioInFireBaseAndSaveMetaDataInDatabase(ctx *g
 		return
 	}
 
-	// Define the path where the file will be saved
-	filePath := filepath.Join("uploads", file.Filename)
-
-	// get filename mp3
-	filename, err := file_internal.GetNameFileMP3(filePath)
+	// Lưu file vào thư mục tạm thời
+	err = ctx.SaveUploadedFile(file, "./"+file.Filename)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+
 	// get time duration mp3
-	duration, err := file_internal.GetDurationFileMP3(filePath)
+	duration, err := file_internal.GetDurationFileMP3(file.Filename)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	ID := ctx.PostForm("quiz_id")
-	quizID, err := primitive.ObjectIDFromHex(ID)
+	//ID := ctx.Query("quiz_id")
+	//quizID, err := primitive.ObjectIDFromHex(ID)
 	if err != nil {
-		fmt.Println("Fail to convert: ", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// the metadata will be saved in database
 	metadata := &audio_domain.Audio{
-		Id:            primitive.NewObjectID(),
-		QuizID:        quizID,
-		Filename:      filename,
+		Id: primitive.NewObjectID(),
+		//QuizID:        quizID,
+		Filename:      file.Filename,
 		AudioDuration: duration,
 	}
 
@@ -67,6 +57,12 @@ func (au *AudioController) CreateAudioInFireBaseAndSaveMetaDataInDatabase(ctx *g
 
 	// process in firebase below code
 
+	// Xóa file sau khi đã sử dụng
+	err = os.Remove("./" + file.Filename)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})

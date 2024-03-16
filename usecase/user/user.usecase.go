@@ -41,6 +41,19 @@ func (u *userUseCase) GetByUsername(c context.Context, username string) (*user_d
 
 	return user, err
 }
+
+func (u *userUseCase) Login(c context.Context, email string) (*user_domain.User, error) {
+	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
+	defer cancel()
+
+	user, err := u.userRepository.Login(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, err
+}
+
 func (u *userUseCase) Fetch(c context.Context) ([]user_domain.User, error) {
 	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
 	defer cancel()
@@ -75,4 +88,28 @@ func (u *userUseCase) GetByID(c context.Context, id string) (*user_domain.User, 
 	}
 
 	return user, err
+}
+
+func (u *userUseCase) Update(ctx context.Context, userID string, user user_domain.User) error {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+	err := u.userRepository.Update(ctx, userID, user)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userUseCase) Delete(ctx context.Context, userID string, user user_domain.User) error {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+	err := u.userRepository.Update(ctx, userID, user)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

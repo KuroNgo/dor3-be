@@ -9,6 +9,15 @@ type Input struct {
 	CourseID primitive.ObjectID `bson:"course_id" json:"course_id"`
 	Name     string             `bson:"name" json:"name"`
 	Content  string             `bson:"content" json:"content"`
+	Image    string             `bson:"image" json:"image"`
+	Level    int                `bson:"level" json:"level"`
+}
+
+type Update struct {
+	CourseID primitive.ObjectID `bson:"course_id" json:"course_id"`
+	Name     string             `bson:"name" json:"name"`
+	Content  string             `bson:"content" json:"content"`
+	Image    string             `bson:"image" json:"image"`
 	Level    int                `bson:"level" json:"level"`
 }
 

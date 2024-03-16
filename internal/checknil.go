@@ -1,10 +1,10 @@
 package internal
 
 import (
-	unit_domain "clean-architecture/domain/_unit"
 	course_domain "clean-architecture/domain/course"
 	lesson_domain "clean-architecture/domain/lesson"
 	quiz_domain "clean-architecture/domain/quiz"
+	unit_domain "clean-architecture/domain/unit"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"gopkg.in/errgo.v2/fmt/errors"
 )
