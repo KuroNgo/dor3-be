@@ -11,15 +11,16 @@ const (
 )
 
 type Lesson struct {
-	ID         primitive.ObjectID `bson:"_id" json:"_id"`
-	CourseID   primitive.ObjectID `bson:"course_id" json:"course_id"`
-	Name       string             `bson:"name" json:"name"`
-	Content    string             `bson:"content" json:"content"`
-	Image      string             `bson:"image" json:"image"`
-	Level      int                `bson:"level" json:"level"`
-	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
-	UpdatedAt  time.Time          `bson:"updated_at" json:"updated_at"`
-	WhoUpdates string             `bson:"who_updates" json:"who_updates"`
+	ID          primitive.ObjectID `bson:"_id" json:"_id"`
+	CourseID    primitive.ObjectID `bson:"course_id" json:"course_id"`
+	Name        string             `bson:"name" json:"name"`
+	Content     string             `bson:"content" json:"content"`
+	Image       string             `bson:"image" json:"image"`
+	Level       int                `bson:"level" json:"level"`
+	IsCompleted int                `bson:"is_completed" json:"is_completed"`
+	CreatedAt   time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt   time.Time          `bson:"updated_at" json:"updated_at"`
+	WhoUpdates  string             `bson:"who_updates" json:"who_updates"`
 }
 
 type Response struct {

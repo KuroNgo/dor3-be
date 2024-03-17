@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (v *VocabularyController) CreateOneLesson(ctx *gin.Context) {
+func (v *VocabularyController) CreateOneVocabulary(ctx *gin.Context) {
 	var vocabularyInput vocabulary_domain.Input
 
 	if err := ctx.ShouldBindJSON(&vocabularyInput); err != nil {

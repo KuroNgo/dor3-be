@@ -111,22 +111,23 @@ func (v *vocabularyRepository) CreateOne(ctx context.Context, vocabulary *vocabu
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
 
-	filter := bson.M{"name": vocabulary.Word}
-	// check exists with CountDocuments
-	count, err := collectionVocabulary.CountDocuments(ctx, filter)
-	if err != nil {
-		return err
-	}
-	if count > 0 {
-		return errors.New("the word did exist")
-	}
-
+	filter := bson.M{"word": vocabulary.Word, "unit_id": vocabulary.UnitID}
 	filterReference := bson.M{"_id": vocabulary.UnitID}
-	count, err = collectionUnit.CountDocuments(ctx, filterReference)
+
+	count, err := collectionUnit.CountDocuments(ctx, filterReference)
 	if err != nil {
 		return err
 	}
 
+	// check exists with CountDocuments
+	count, err = collectionVocabulary.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	if count > 0 {
+		return errors.New("the word in unit did exist")
+	}
 	if count == 0 {
 		return errors.New("the unit ID do not exist")
 	}

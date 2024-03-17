@@ -69,6 +69,7 @@ func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) 
 
 	filterUnit := bson.M{"name": unit.Name, "lesson_id": unit.LessonID}
 	filterLess := bson.M{"_id": unit.LessonID}
+
 	// check exists with CountDocuments
 	countLess, err := collectionLesson.CountDocuments(ctx, filterLess)
 	if err != nil {

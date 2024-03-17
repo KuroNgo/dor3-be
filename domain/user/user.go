@@ -45,7 +45,6 @@ type IUserRepository interface {
 	DeleteOne(c context.Context, userID string) error
 	Login(c context.Context, email string) (*User, error)
 	GetByEmail(c context.Context, email string) (*User, error)
-	GetByUsername(c context.Context, username string) (*User, error)
 	GetByID(c context.Context, id string) (*User, error)
 	Create(c context.Context, user User) error
 	Update(ctx context.Context, userID string, user User) error

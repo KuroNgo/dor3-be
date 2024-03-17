@@ -20,6 +20,7 @@ func UserRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Databas
 	}
 
 	router := group.Group("/user")
+	router.POST("/signup", user.SignUp)
 	router.GET("/info", middleware.DeserializeUser(), user.GetMe)
 	router.GET("/refresh", user.RefreshToken)
 	router.GET("/logout", middleware.DeserializeUser(), user.LogoutUser)

@@ -26,6 +26,5 @@ type IUserUseCase interface {
 	Delete(ctx context.Context, userID string, user User) error
 	Login(c context.Context, email string) (*User, error)
 	GetByEmail(ctx context.Context, email string) (*User, error)
-	GetByUsername(ctx context.Context, username string) (*User, error)
 	GetByID(ctx context.Context, id string) (*User, error)
 }
