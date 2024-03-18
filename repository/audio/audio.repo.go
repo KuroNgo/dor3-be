@@ -39,22 +39,21 @@ func (a *audioRepository) FetchMany(ctx context.Context) ([]audio_domain.Audio, 
 	return audio, err
 }
 
-func (a *audioRepository) FetchToDeleteMany(ctx context.Context) (*[]audio_domain.Audio, error) {
+func (a *audioRepository) CreateOne(ctx context.Context, audio *audio_domain.Audio) error {
 	collection := a.database.Collection(a.collection)
 
-	cursor, err := collection.Find(ctx, bson.D{})
+	filter := bson.M{"filename": audio.Filename}
+
+	count, err := collection.CountDocuments(ctx, filter)
 	if err != nil {
-		return nil, err
+		return err
+	}
+	if count > 0 {
+		return errors.New("the audio id did exists")
 	}
 
-	var audio []audio_domain.Audio
-
-	err = cursor.All(ctx, &audio)
-	if audio == nil {
-		return &[]audio_domain.Audio{}, err
-	}
-
-	return &audio, err
+	_, err = collection.InsertOne(ctx, audio)
+	return err
 }
 
 func (a *audioRepository) UpdateOne(ctx context.Context, audioID string, audio audio_domain.Audio) error {
@@ -62,31 +61,9 @@ func (a *audioRepository) UpdateOne(ctx context.Context, audioID string, audio a
 	objID, err := primitive.ObjectIDFromHex(audioID)
 
 	filter := bson.M{"_id": objID}
-
-	update := bson.M{
-		"$set": bson.M{
-			"QuizID":        audio.QuizID,
-			"Filename":      audio.Filename,
-			"AudioDuration": audio.AudioDuration,
-		},
-	}
+	update := bson.M{"$set": bson.M{}}
 
 	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
-}
-
-func (a *audioRepository) CreateOne(ctx context.Context, audio *audio_domain.Audio) error {
-	collection := a.database.Collection(a.collection)
-	filter := bson.M{"quizID": audio.QuizID}
-	// check exists with CountDocuments
-	count, err := collection.CountDocuments(ctx, filter)
-	if err != nil {
-		return err
-	}
-	if count > 0 {
-		return errors.New("the question id did exists")
-	}
-	_, err = collection.InsertOne(ctx, audio)
 	return err
 }
 

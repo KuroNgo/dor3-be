@@ -7,6 +7,7 @@ type Input struct {
 	Options       []string `bson:"options" json:"options"`
 	CorrectAnswer string   `bson:"correct_answer" json:"correct_answer"`
 	Explanation   string   `bson:"explanation" json:"explanation"`
+	Level         int      `bson:"level" json:"level"`
 
 	// QuestionType can be included checkbox, check radius or write correct answer
 	QuestionType string `bson:"question_type" json:"question_type"`

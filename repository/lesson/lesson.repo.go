@@ -44,7 +44,6 @@ func (l *lessonRepository) FetchMany(ctx context.Context) ([]lesson_domain.Respo
 			return nil, err
 		}
 
-		// Tìm tên của course tương ứng với ID của lesson
 		var course course_domain.Course
 		err := collectionCourse.FindOne(ctx, bson.M{"_id": lesson.CourseID}).Decode(&course)
 		if err != nil {
@@ -52,7 +51,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context) ([]lesson_domain.Respo
 		}
 
 		// Gắn tên của course vào lesson
-		lesson2.Course = course
+		lesson2.CourseID = course.Id
 
 		// Thêm lesson vào slice lessons
 		lessons = append(lessons, lesson2)

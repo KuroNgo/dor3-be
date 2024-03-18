@@ -1,7 +1,7 @@
 package unit_controller
 
 import (
-	unit_domain "clean-architecture/domain/_unit"
+	unit_domain "clean-architecture/domain/unit"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"

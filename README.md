@@ -3,7 +3,7 @@
 ![Workflow](./assets/button-view-api-docs.png)
 
 # Overall 
-![Workflow](./assets/download.jpg)
+![Workflow](./assets/CleanArchitecture.jpg)
 ## Entities: 
     Domain and Repository in Entities
 - Directories like domain and repository may contain components related to the core Entities in Clean Architecture. 

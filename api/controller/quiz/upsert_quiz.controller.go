@@ -24,6 +24,8 @@ func (q *QuizController) UpsertOneQuiz(ctx *gin.Context) {
 		CorrectAnswer: quiz.CorrectAnswer,
 		Explanation:   quiz.Explanation,
 		QuestionType:  quiz.QuestionType,
+		Filename:      quiz.Filename,
+		AudioDuration: quiz.AudioDuration,
 	}
 
 	quizRes, err := q.QuizUseCase.UpsertOne(ctx, quizID, &upsertQuiz)

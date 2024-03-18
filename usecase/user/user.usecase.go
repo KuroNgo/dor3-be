@@ -30,17 +30,18 @@ func (u *userUseCase) Create(c context.Context, user user_domain.User) error {
 	return nil
 }
 
-func (u *userUseCase) GetByUsername(c context.Context, username string) (*user_domain.User, error) {
+func (u *userUseCase) Login(c context.Context, request user_domain.SignIn) (*user_domain.User, error) {
 	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
 	defer cancel()
 
-	user, err := u.userRepository.GetByUsername(ctx, username)
+	user, err := u.userRepository.Login(ctx, request)
 	if err != nil {
 		return nil, err
 	}
 
 	return user, err
 }
+
 func (u *userUseCase) Fetch(c context.Context) ([]user_domain.User, error) {
 	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
 	defer cancel()
@@ -75,4 +76,28 @@ func (u *userUseCase) GetByID(c context.Context, id string) (*user_domain.User, 
 	}
 
 	return user, err
+}
+
+func (u *userUseCase) Update(ctx context.Context, userID string, user user_domain.User) error {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+	err := u.userRepository.Update(ctx, userID, user)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userUseCase) Delete(ctx context.Context, userID string, user user_domain.User) error {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+	err := u.userRepository.Update(ctx, userID, user)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

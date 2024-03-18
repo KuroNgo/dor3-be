@@ -17,6 +17,7 @@ type Quiz struct {
 	CorrectAnswer string             `bson:"correct_answer" json:"correct_answer"`
 	Explanation   string             `bson:"explanation" json:"explanation"`
 	QuestionType  string             `bson:"question_type" json:"question_type"`
+	Level         int                `bson:"level" json:"level"`
 
 	// admin add metadata of file and system will be found it
 	Filename      string `bson:"filename" json:"filename"`

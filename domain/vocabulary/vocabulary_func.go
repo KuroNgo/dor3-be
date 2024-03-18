@@ -12,7 +12,7 @@ type Input struct {
 	Example       string             `bson:"example" json:"example"`
 	FieldOfIT     string             `bson:"field_of_it" json:"field_of_it"`
 	LinkURL       string             `bson:"link_url" json:"link_url"`
-	UnitID        primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
+	UnitID        primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 }
 
 type FetchByWordInput struct {
@@ -28,7 +28,6 @@ type IVocabularyUseCase interface {
 	FetchMany(ctx context.Context) ([]Response, error)
 	FetchByWord(ctx context.Context, word string) ([]Response, error)
 	FetchByLesson(ctx context.Context, lessonName string) ([]Response, error)
-	FetchToDeleteMany(ctx context.Context) (*[]Response, error)
 	UpdateOne(ctx context.Context, vocabularyID string, vocabulary Vocabulary) error
 	CreateOne(ctx context.Context, vocabulary *Vocabulary) error
 	UpsertOne(c context.Context, id string, vocabulary *Vocabulary) (*Response, error)
