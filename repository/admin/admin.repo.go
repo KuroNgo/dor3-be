@@ -17,6 +17,20 @@ type adminRepository struct {
 	collection string
 }
 
+func (a *adminRepository) GetByID(c context.Context, id string) (*admin_domain.Admin, error) {
+	collection := a.database.Collection(a.collection)
+
+	var admin admin_domain.Admin
+
+	idHex, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return &admin, err
+	}
+
+	err = collection.FindOne(c, bson.M{"_id": idHex}).Decode(&admin)
+	return &admin, err
+}
+
 func (a *adminRepository) FetchMany(c context.Context) ([]admin_domain.Admin, error) {
 	collection := a.database.Collection(a.collection)
 
@@ -45,11 +59,11 @@ func (a *adminRepository) GetByEmail(c context.Context, username string) (*admin
 	return &admin, err
 }
 
-func (a *adminRepository) Login(c context.Context, username string) (*admin_domain.Admin, error) {
-	admin, err := a.GetByEmail(c, username)
+func (a *adminRepository) Login(c context.Context, request admin_domain.SignIn) (*admin_domain.Admin, error) {
+	admin, err := a.GetByEmail(c, request.Email)
 
 	// Kiểm tra xem mật khẩu đã nhập có đúng với mật khẩu đã hash trong cơ sở dữ liệu không
-	if err = internal.VerifyPassword(admin.Password, admin.Password); err != nil {
+	if err = internal.VerifyPassword(admin.Password, request.Password); err != nil {
 		return &admin_domain.Admin{}, errors.New("email or password not found! ")
 	}
 	return admin, nil

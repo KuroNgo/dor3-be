@@ -30,11 +30,11 @@ func (u *userUseCase) Create(c context.Context, user user_domain.User) error {
 	return nil
 }
 
-func (u *userUseCase) Login(c context.Context, email string) (*user_domain.User, error) {
+func (u *userUseCase) Login(c context.Context, request user_domain.SignIn) (*user_domain.User, error) {
 	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
 	defer cancel()
 
-	user, err := u.userRepository.Login(ctx, email)
+	user, err := u.userRepository.Login(ctx, request)
 	if err != nil {
 		return nil, err
 	}

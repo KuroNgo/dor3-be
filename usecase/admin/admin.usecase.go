@@ -11,11 +11,23 @@ type adminUseCase struct {
 	contextTimeout  time.Duration
 }
 
-func (a *adminUseCase) Login(c context.Context, username string) (*admin_domain.Admin, error) {
+func (a *adminUseCase) GetByID(ctx context.Context, id string) (*admin_domain.Admin, error) {
+	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
+	defer cancel()
+
+	quiz, err := a.adminRepository.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return quiz, err
+}
+
+func (a *adminUseCase) Login(c context.Context, request admin_domain.SignIn) (*admin_domain.Admin, error) {
 	ctx, cancel := context.WithTimeout(c, a.contextTimeout)
 	defer cancel()
 
-	quiz, err := a.adminRepository.Login(ctx, username)
+	quiz, err := a.adminRepository.Login(ctx, request)
 	if err != nil {
 		return nil, err
 	}

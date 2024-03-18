@@ -1,7 +1,7 @@
-package user_controller
+package admin_controller
 
 import (
-	user_domain "clean-architecture/domain/user"
+	admin_domain "clean-architecture/domain/admin"
 	"clean-architecture/internal"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -9,9 +9,9 @@ import (
 	"time"
 )
 
-func (u *UserController) SignUp(ctx *gin.Context) {
-	var user user_domain.SignUp
-	if err := ctx.ShouldBindJSON(&user); err != nil {
+func (a *AdminController) SignUp(ctx *gin.Context) {
+	var admin admin_domain.SignUp
+	if err := ctx.ShouldBindJSON(&admin); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": err.Error()},
@@ -19,7 +19,7 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	if !internal.EmailValid(user.Email) {
+	if !internal.EmailValid(admin.Email) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": "Email không hợp lệ !",
@@ -27,7 +27,7 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 		return
 	}
 	// Bên phía client sẽ phải so sánh password thêm một lần nữa đã đúng chưa
-	if !internal.PasswordStrong(user.Password) {
+	if !internal.PasswordStrong(admin.Password) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số !",
@@ -36,7 +36,7 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 	}
 
 	// Băm mật khẩu
-	hashedPassword, err := internal.HashPassword(user.Password)
+	hashedPassword, err := internal.HashPassword(admin.Password)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -45,27 +45,25 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	user.Password = hashedPassword
-	user.Password = internal.Santize(user.Password)
-	user.Email = internal.Santize(user.Email)
-	user.Email = strings.ToLower(user.Email)
+	admin.Password = hashedPassword
+	admin.Password = internal.Santize(admin.Password)
+	admin.Email = internal.Santize(admin.Email)
+	admin.Email = strings.ToLower(admin.Email)
 
-	newUser := user_domain.User{
-		FullName:   user.FullName,
-		AvatarURL:  user.AvatarURL,
-		Specialize: user.Specialize,
-		Email:      user.Email,
-		Password:   hashedPassword,
-		Verified:   false,
-		Provider:   "fe-it",
-		Role:       "user",
-		Phone:      user.Phone,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+	newAdmin := admin_domain.Admin{
+		Address:   admin.Address,
+		FullName:  admin.FullName,
+		Avatar:    admin.Avatar,
+		Email:     admin.Email,
+		Password:  hashedPassword,
+		Role:      "admin",
+		Phone:     admin.Phone,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	// thực hiện đăng ký người dùng
-	err = u.UserUseCase.Create(ctx, newUser)
+	err = a.AdminUseCase.CreateOne(ctx, newAdmin)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

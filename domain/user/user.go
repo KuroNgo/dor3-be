@@ -18,7 +18,6 @@ type User struct {
 	AvatarURL  string             `bson:"avatar_url"  json:"avatar_url"`
 	Specialize string             `bson:"specialize"  json:"specialize"`
 	Phone      string             `bson:"phone"   json:"phone"`
-	Age        uint8              `bson:"age"  json:"age"`
 	Provider   string             `json:"provider" bson:"provider"`
 	Verified   bool               `json:"verified" bson:"verified"`
 	CreatedAt  time.Time          `json:"created_at" bson:"created_at"`
@@ -43,7 +42,7 @@ type Response struct {
 type IUserRepository interface {
 	FetchMany(c context.Context) ([]User, error)
 	DeleteOne(c context.Context, userID string) error
-	Login(c context.Context, email string) (*User, error)
+	Login(c context.Context, request SignIn) (*User, error)
 	GetByEmail(c context.Context, email string) (*User, error)
 	GetByID(c context.Context, id string) (*User, error)
 	Create(c context.Context, user User) error

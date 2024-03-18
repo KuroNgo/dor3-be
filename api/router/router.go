@@ -2,6 +2,7 @@ package router
 
 import (
 	"clean-architecture/api/middleware"
+	admin_route "clean-architecture/api/router/admin"
 	audio_route "clean-architecture/api/router/audio"
 	course_route "clean-architecture/api/router/course"
 	lesson_route "clean-architecture/api/router/lesson"
@@ -47,6 +48,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 	// All Public APIs
 	user_route.GoogleAuthRoute(env, timeout, db, publicRouter)
 	user_route.UserRouter(env, timeout, db, publicRouter)
+	admin_route.AdminRouter(env, timeout, db, publicRouter)
 	user_route.LoginFromRoleRoute(env, timeout, db, publicRouter)
 	audio_route.AudioRoute(env, timeout, db, publicRouter)
 	quiz_route.QuizRouter(env, timeout, db, publicRouter)

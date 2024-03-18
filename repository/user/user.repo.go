@@ -92,11 +92,11 @@ func (u *userRepository) GetByEmail(c context.Context, email string) (*user_doma
 	return &user, err
 }
 
-func (u *userRepository) Login(c context.Context, email string) (*user_domain.User, error) {
-	user, err := u.GetByEmail(c, email)
+func (u *userRepository) Login(c context.Context, request user_domain.SignIn) (*user_domain.User, error) {
+	user, err := u.GetByEmail(c, request.Email)
 
 	// Kiểm tra xem mật khẩu đã nhập có đúng với mật khẩu đã hash trong cơ sở dữ liệu không
-	if err = internal.VerifyPassword(user.Password, user.Password); err != nil {
+	if err = internal.VerifyPassword(user.Password, request.Password); err != nil {
 		return &user_domain.User{}, errors.New("email or password not found! ")
 	}
 	return user, nil
