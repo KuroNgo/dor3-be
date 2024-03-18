@@ -5,7 +5,6 @@ import (
 	"clean-architecture/internal"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -48,7 +47,6 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 	admin.Password = hashedPassword
 	admin.Password = internal.Santize(admin.Password)
 	admin.Email = internal.Santize(admin.Email)
-	admin.Email = strings.ToLower(admin.Email)
 
 	newAdmin := admin_domain.Admin{
 		Address:   admin.Address,

@@ -6,7 +6,7 @@ import (
 )
 
 type UserProcess struct {
-	ID            primitive.ObjectID `bson:"id" json:"id"`
+	ID            primitive.ObjectID `bson:"_id" json:"_id"`
 	UserID        primitive.ObjectID `bson:"user_id" json:"user_id"`
 	CourseID      primitive.ObjectID `bson:"course_id" json:"course_id"`
 	LessonID      primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`

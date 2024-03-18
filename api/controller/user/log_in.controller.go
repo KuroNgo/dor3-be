@@ -26,7 +26,7 @@ func (l *LoginFromRoleController) Login2(ctx *gin.Context) {
 
 	// Kiểm tra thông tin đăng nhập trong cả hai bảng user và admin
 	admin, err := l.AdminUseCase.Login(ctx, adminInput)
-	if err == nil {
+	if err == nil && admin.Role == "admin" {
 		// Generate token
 		accessToken, err := internal.CreateToken(l.Database.AccessTokenExpiresIn, admin.Id, l.Database.AccessTokenPrivateKey)
 		if err != nil {
@@ -52,14 +52,14 @@ func (l *LoginFromRoleController) Login2(ctx *gin.Context) {
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":  "success",
-			"message": "Login successful",
+			"message": "Login successful with admin role",
 		})
 		return
 	}
 
 	// Tìm kiếm user trong database
 	user, err := l.UserUseCase.Login(ctx, userInput)
-	if err == nil {
+	if err == nil && user.Role == "user" {
 		// Generate token
 		accessToken, err := internal.CreateToken(l.Database.AccessTokenExpiresIn, user.ID, l.Database.AccessTokenPrivateKey)
 		if err != nil {
@@ -85,7 +85,7 @@ func (l *LoginFromRoleController) Login2(ctx *gin.Context) {
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":  "success",
-			"message": "Login successful",
+			"message": "Login successful with user role",
 		})
 		return
 	}

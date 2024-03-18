@@ -11,7 +11,7 @@ const (
 )
 
 type User struct {
-	ID         primitive.ObjectID `bson:"user_id" json:"user_id"`
+	ID         primitive.ObjectID `bson:"_id" json:"_id"`
 	FullName   string             `bson:"full_name"  json:"full_name"`
 	Email      string             `bson:"email"  json:"email"`
 	Password   string             `bson:"password"  json:"password"`
@@ -26,7 +26,7 @@ type User struct {
 }
 
 type Response struct {
-	ID         primitive.ObjectID `json:"id" bson:"id"`
+	ID         primitive.ObjectID `json:"_id" bson:"_id"`
 	FullName   string             `json:"full_name"  bson:"full_name"`
 	Email      string             `json:"email" bson:"email"`
 	AvatarURL  string             `json:"avatar_url"  bson:"avatar_url"`

@@ -4,8 +4,8 @@ import (
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -48,9 +48,9 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 	user.Password = hashedPassword
 	user.Password = internal.Santize(user.Password)
 	user.Email = internal.Santize(user.Email)
-	user.Email = strings.ToLower(user.Email)
 
 	newUser := user_domain.User{
+		ID:         primitive.NewObjectID(),
 		FullName:   user.FullName,
 		AvatarURL:  user.AvatarURL,
 		Specialize: user.Specialize,
