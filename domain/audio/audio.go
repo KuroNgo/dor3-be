@@ -15,16 +15,16 @@ type Audio struct {
 	//QuizID primitive.ObjectID `bson:"quiz_id" json:"quiz_id"`
 
 	// admin add metadata of file and system will be found it
-	Filename      string `bson:"filename" json:"filename"`
-	AudioDuration string `bson:"audio_duration" json:"audio_duration"`
+	Filename string `bson:"filename" json:"filename"`
+	Size     int64  `bson:"size" json:"size"`
 }
 
 type Response struct {
 	Quiz quiz_domain.Quiz
 
 	// admin add metadata file and system will be found it
-	Filename      string `bson:"filename" json:"filename"`
-	AudioDuration string `bson:"audio_duration" json:"audio_duration"`
+	Filename string `bson:"filename" json:"filename"`
+	Size     int64  `bson:"size" json:"size"`
 }
 
 //go:generate mockery --name IAudioRepository

@@ -16,7 +16,7 @@ import (
 
 func LoginFromRoleRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
-	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin)
+	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
 	lg := &user_controller.LoginFromRoleController{
 		UserUseCase:  usecase.NewUserUseCase(ur, timeout),

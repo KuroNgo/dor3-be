@@ -19,6 +19,11 @@ func (au *AudioController) CreateAudioInFireBaseAndSaveMetaDataInDatabase(ctx *g
 		return
 	}
 
+	if !file_internal.IsMP3(file.Filename) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	// Lưu file vào thư mục tạm thời
 	err = ctx.SaveUploadedFile(file, "./"+file.Filename)
 	if err != nil {
@@ -26,26 +31,12 @@ func (au *AudioController) CreateAudioInFireBaseAndSaveMetaDataInDatabase(ctx *g
 		return
 	}
 
-	// get time duration mp3
-	duration, err := file_internal.GetDurationFileMP3(file.Filename)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	//ID := ctx.Query("quiz_id")
-	//quizID, err := primitive.ObjectIDFromHex(ID)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
 	// the metadata will be saved in database
 	metadata := &audio_domain.Audio{
 		Id: primitive.NewObjectID(),
 		//QuizID:        quizID,
-		Filename:      file.Filename,
-		AudioDuration: duration,
+		Filename: file.Filename,
+		Size:     file.Size,
 	}
 
 	// save data in database

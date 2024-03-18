@@ -17,3 +17,6 @@ func IsExcel(filename string) bool {
 	ext := strings.ToLower(filename[len(filename)-4:])
 	return ext == ".xls" || ext == ".xlsx"
 }
+func IsImage(filename string) bool {
+	return strings.ToLower(filename[len(filename)-4:]) == ".jpg" || strings.ToLower(filename[len(filename)-4:]) == "png"
+}

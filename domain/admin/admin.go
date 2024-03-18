@@ -30,6 +30,6 @@ type IAdminRepository interface {
 	GetByEmail(ctx context.Context, username string) (*Admin, error)
 	CreateOne(ctx context.Context, admin Admin) error
 	UpdateOne(ctx context.Context, adminID string, admin Admin) error
-	DeleteOne(ctx context.Context, adminID string, admin Admin) error
+	DeleteOne(ctx context.Context, adminID string) error
 	UpsertOne(ctx context.Context, email string, admin *Admin) error
 }

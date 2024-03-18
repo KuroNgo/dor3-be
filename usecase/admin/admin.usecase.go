@@ -90,11 +90,11 @@ func (a *adminUseCase) UpdateOne(ctx context.Context, adminID string, admin admi
 	return err
 }
 
-func (a *adminUseCase) DeleteOne(ctx context.Context, adminID string, admin admin_domain.Admin) error {
+func (a *adminUseCase) DeleteOne(ctx context.Context, adminID string) error {
 	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
 	defer cancel()
 
-	err := a.adminRepository.DeleteOne(ctx, adminID, admin)
+	err := a.adminRepository.DeleteOne(ctx, adminID)
 	if err != nil {
 		return err
 	}

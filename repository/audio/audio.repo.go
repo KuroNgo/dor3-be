@@ -39,24 +39,6 @@ func (a *audioRepository) FetchMany(ctx context.Context) ([]audio_domain.Audio, 
 	return audio, err
 }
 
-func (a *audioRepository) FetchToDeleteMany(ctx context.Context) (*[]audio_domain.Audio, error) {
-	collection := a.database.Collection(a.collection)
-
-	cursor, err := collection.Find(ctx, bson.D{})
-	if err != nil {
-		return nil, err
-	}
-
-	var audio []audio_domain.Audio
-
-	err = cursor.All(ctx, &audio)
-	if audio == nil {
-		return &[]audio_domain.Audio{}, err
-	}
-
-	return &audio, err
-}
-
 func (a *audioRepository) CreateOne(ctx context.Context, audio *audio_domain.Audio) error {
 	collection := a.database.Collection(a.collection)
 
@@ -79,14 +61,7 @@ func (a *audioRepository) UpdateOne(ctx context.Context, audioID string, audio a
 	objID, err := primitive.ObjectIDFromHex(audioID)
 
 	filter := bson.M{"_id": objID}
-
-	update := bson.M{
-		"$set": bson.M{
-			//"QuizID":        audio.QuizID,
-			"Filename":      audio.Filename,
-			"AudioDuration": audio.AudioDuration,
-		},
-	}
+	update := bson.M{"$set": bson.M{}}
 
 	_, err = collection.UpdateOne(ctx, filter, update)
 	return err

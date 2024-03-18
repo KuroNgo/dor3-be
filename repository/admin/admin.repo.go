@@ -13,12 +13,21 @@ import (
 )
 
 type adminRepository struct {
-	database   mongo.Database
-	collection string
+	database        mongo.Database
+	collectionAdmin string
+	collectionUser  string
+}
+
+func NewAdminRepository(db mongo.Database, collectionAdmin string, collectionUser string) admin_domain.IAdminRepository {
+	return &adminRepository{
+		database:        db,
+		collectionAdmin: collectionAdmin,
+		collectionUser:  collectionUser,
+	}
 }
 
 func (a *adminRepository) GetByID(c context.Context, id string) (*admin_domain.Admin, error) {
-	collection := a.database.Collection(a.collection)
+	collection := a.database.Collection(a.collectionAdmin)
 
 	var admin admin_domain.Admin
 
@@ -32,7 +41,7 @@ func (a *adminRepository) GetByID(c context.Context, id string) (*admin_domain.A
 }
 
 func (a *adminRepository) FetchMany(c context.Context) ([]admin_domain.Admin, error) {
-	collection := a.database.Collection(a.collection)
+	collection := a.database.Collection(a.collectionAdmin)
 
 	opts := options.Find().SetProjection(bson.D{{Key: "password", Value: 0}})
 	cursor, err := collection.Find(c, bson.D{}, opts)
@@ -52,7 +61,7 @@ func (a *adminRepository) FetchMany(c context.Context) ([]admin_domain.Admin, er
 }
 
 func (a *adminRepository) GetByEmail(c context.Context, username string) (*admin_domain.Admin, error) {
-	collection := a.database.Collection(a.collection)
+	collection := a.database.Collection(a.collectionAdmin)
 	var admin admin_domain.Admin
 	err := collection.FindOne(c, bson.M{"email": username}).Decode(&admin)
 
@@ -70,23 +79,32 @@ func (a *adminRepository) Login(c context.Context, request admin_domain.SignIn) 
 }
 
 func (a *adminRepository) CreateOne(c context.Context, admin admin_domain.Admin) error {
-	collection := a.database.Collection(a.collection)
+	collectionAdmin := a.database.Collection(a.collectionAdmin)
+	collectionUser := a.database.Collection(a.collectionUser)
 
 	filter := bson.M{"email": admin.Email}
-	count, err := collection.CountDocuments(c, filter)
+	count, err := collectionAdmin.CountDocuments(c, filter)
 	if err != nil {
 		return err
 	}
-
 	if count > 0 {
 		return errors.New("the email do not unique")
 	}
-	_, err = collection.InsertOne(c, admin)
+
+	count, err = collectionUser.CountDocuments(c, filter)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("the email do not the same email in user")
+	}
+
+	_, err = collectionAdmin.InsertOne(c, admin)
 	return err
 }
 
 func (a *adminRepository) UpdateOne(ctx context.Context, adminID string, admin admin_domain.Admin) error {
-	collection := a.database.Collection(a.collection)
+	collection := a.database.Collection(a.collectionAdmin)
 	doc, err := internal.ToDoc(admin)
 	objID, err := primitive.ObjectIDFromHex(adminID)
 
@@ -97,8 +115,8 @@ func (a *adminRepository) UpdateOne(ctx context.Context, adminID string, admin a
 	return err
 }
 
-func (a *adminRepository) DeleteOne(ctx context.Context, adminID string, admin admin_domain.Admin) error {
-	collection := a.database.Collection(a.collection)
+func (a *adminRepository) DeleteOne(ctx context.Context, adminID string) error {
+	collection := a.database.Collection(a.collectionAdmin)
 	objID, err := primitive.ObjectIDFromHex(adminID)
 	if err != nil {
 		return err
@@ -113,24 +131,38 @@ func (a *adminRepository) DeleteOne(ctx context.Context, adminID string, admin a
 		return err
 	}
 	if count == 0 {
-		return errors.New(`the user is removed`)
+		return errors.New(`the admin is removed`)
 	}
 
+	countElement, err := collection.CountDocuments(ctx, bson.M{})
+	if countElement <= 1 {
+		return errors.New(`the admin can not delete`)
+	}
 	_, err = collection.DeleteOne(ctx, filter)
 	return err
 }
 
 func (a *adminRepository) UpsertOne(c context.Context, email string, admin *admin_domain.Admin) error {
-	collection := a.database.Collection(a.collection)
+	collectionAdmin := a.database.Collection(a.collectionAdmin)
+	collectionUser := a.database.Collection(a.collectionUser)
+
 	doc, err := internal.ToDoc(admin)
 	if err != nil {
 		return err
 	}
 
+	count, err := collectionUser.CountDocuments(c, bson.M{})
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("the email do not the same email in user")
+	}
+
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(1)
 	query := bson.D{{Key: "email", Value: email}}
 	update := bson.D{{Key: "$set", Value: doc}}
-	res := collection.FindOneAndUpdate(c, query, update, opts)
+	res := collectionAdmin.FindOneAndUpdate(c, query, update, opts)
 
 	var updatedPost *user_domain.Response
 
@@ -139,11 +171,4 @@ func (a *adminRepository) UpsertOne(c context.Context, email string, admin *admi
 	}
 
 	return nil
-}
-
-func NewAdminRepository(db mongo.Database, collection string) admin_domain.IAdminRepository {
-	return &adminRepository{
-		database:   db,
-		collection: collection,
-	}
 }

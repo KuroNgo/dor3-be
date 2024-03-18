@@ -39,7 +39,7 @@ func (a *audioUseCase) UpdateOne(ctx context.Context, audioID string, audio audi
 		return err
 	}
 
-	return err
+	return nil
 }
 
 func (a *audioUseCase) CreateOne(ctx context.Context, audio *audio_domain.Audio) error {
