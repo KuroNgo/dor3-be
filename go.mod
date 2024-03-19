@@ -22,6 +22,7 @@ require (
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.1 // indirect
 	github.com/cloudinary/cloudinary-go v1.7.0 // indirect
+	github.com/cloudinary/cloudinary-go/v2 v2.7.0 // indirect
 	github.com/creasty/defaults v1.5.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect

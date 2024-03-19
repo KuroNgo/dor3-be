@@ -11,20 +11,21 @@ const (
 
 type Image struct {
 	Id        primitive.ObjectID `bson:"_id" json:"_id"`
-	ImageName string             `bson:"image-name" json:"image-name"`
+	ImageName string             `bson:"image_name" json:"image_name"`
 	Size      int64              `bson:"size" json:"size"`
-	ImageUri  string             `bson:"image-uri" json:"image-uri"`
+	ImageUrl  string             `bson:"image_url" json:"image_url"`
 }
 
 type Response struct {
 	Id        primitive.ObjectID `bson:"_id" json:"_id"`
-	ImageName string             `bson:"image-name" json:"image-name"`
+	ImageName string             `bson:"image_name" json:"image_name"`
 	Size      int64              `bson:"size" json:"size"`
-	ImageUri  string             `bson:"image-uri" json:"image-uri"`
+	ImageUrl  string             `bson:"image_url" json:"image_url"`
 }
 
 //go:generate mockery --name IAudioRepository
 type IImageRepository interface {
+	GetURLByName(ctx context.Context, name string) (Image, error)
 	FetchMany(ctx context.Context) ([]Image, error)
 	UpdateOne(ctx context.Context, imageID string, image Image) error
 	CreateOne(ctx context.Context, image *Image) error
