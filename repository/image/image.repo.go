@@ -1,4 +1,4 @@
-package image
+package image_repository
 
 import (
 	image_domain "clean-architecture/domain/image"
@@ -12,6 +12,13 @@ import (
 type imageRepository struct {
 	database   mongo.Database
 	collection string
+}
+
+func (i *imageRepository) GetURLByName(ctx context.Context, name string) (image_domain.Image, error) {
+	collection := i.database.Collection(i.collection)
+	var image image_domain.Image
+	err := collection.FindOne(ctx, bson.M{"image_name": name}).Decode(&image)
+	return image, err
 }
 
 func (i *imageRepository) FetchMany(ctx context.Context) ([]image_domain.Image, error) {
@@ -53,7 +60,7 @@ func (i *imageRepository) CreateOne(ctx context.Context, image *image_domain.Ima
 		return err
 	}
 	if count > 0 {
-		return errors.New("the image id did exists")
+		return errors.New("the image name did exists")
 	}
 
 	_, err = collection.InsertOne(ctx, image)

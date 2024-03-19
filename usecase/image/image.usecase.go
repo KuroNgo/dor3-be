@@ -1,4 +1,4 @@
-package image
+package image_usecase
 
 import (
 	image_domain "clean-architecture/domain/image"
@@ -9,6 +9,18 @@ import (
 type imageUseCase struct {
 	imageRepository image_domain.IImageRepository
 	contextTimeout  time.Duration
+}
+
+func (i *imageUseCase) GetURLByName(ctx context.Context, name string) (image_domain.Image, error) {
+	ctx, cancel := context.WithTimeout(ctx, i.contextTimeout)
+	defer cancel()
+
+	image, err := i.imageRepository.GetURLByName(ctx, name)
+	if err != nil {
+		return image_domain.Image{}, err
+	}
+
+	return image, err
 }
 
 func NewImageUseCase(imageRepository image_domain.IImageRepository, timeout time.Duration) image_domain.IImageUseCase {
