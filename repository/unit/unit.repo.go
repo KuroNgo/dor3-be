@@ -34,7 +34,12 @@ func (u *unitRepository) FetchMany(ctx context.Context) ([]unit_domain.Response,
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+
+		}
+	}(cursor, ctx)
 
 	var units []unit_domain.Response
 	for cursor.Next(ctx) {
@@ -139,7 +144,7 @@ func (u *unitRepository) UpsertOne(ctx context.Context, id string, unit *unit_do
 }
 
 func (u *unitRepository) DeleteOne(ctx context.Context, unitID string) error {
-	collection := u.database.Collection(u.collectionLesson)
+	collection := u.database.Collection(u.collectionUnit)
 	objID, err := primitive.ObjectIDFromHex(unitID)
 	if err != nil {
 		return err

@@ -20,6 +20,16 @@ func AdminImageRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Da
 	}
 
 	router := group.Group("/image")
-	// riêng audio thì giành cho cả 2 phiá
-	router.POST("/file", cloudinary.FileUploadMiddleware(), image.CreateImageInCloudinaryAndSaveMetadataInDatabase)
+
+	router.POST("/file/upload/1/static", cloudinary.FileUploadMiddleware(), image.CreateOneImageStatic)
+	router.POST("/file/upload/1/lesson", cloudinary.FileUploadMiddleware(), image.CreateOneImageLesson)
+	router.POST("/file/upload/1/exam", cloudinary.FileUploadMiddleware(), image.CreateOneImageExam)
+	router.POST("/file/upload/1/user", cloudinary.FileUploadMiddleware(), image.CreateOneImageUser)
+	router.POST("/file/upload/1/quiz", cloudinary.FileUploadMiddleware(), image.CreateOneImageQuiz)
+
+	router.POST("/files/upload/many/user", cloudinary.FileUploadMiddleware(), image.CreateManyImageForUser)
+	router.POST("/files/upload/many/quiz", cloudinary.FileUploadMiddleware(), image.CreateManyImageForQuiz)
+	router.POST("/files/upload/many/static", cloudinary.FileUploadMiddleware(), image.CreateManyImageForStatic)
+	router.POST("/files/upload/many/lesson", cloudinary.FileUploadMiddleware(), image.CreateManyImageForLesson)
+	router.POST("/file/upload/many/exam", cloudinary.FileUploadMiddleware(), image.CreateManyImageForExam)
 }

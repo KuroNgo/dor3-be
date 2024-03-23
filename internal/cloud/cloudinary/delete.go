@@ -5,18 +5,18 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 )
 
-func DeleteToCloudinary(filename string) (string, error) {
+func DeleteToCloudinary(assetID string) (string, error) {
 	ctx := context.Background()
 	cld, err := SetupCloudinary()
 	if err != nil {
 		return "", err
 	}
 
-	uploadParams := uploader.DestroyParams{
-		PublicID: filename,
+	deleteParams := uploader.DestroyParams{
+		PublicID: assetID,
 	}
 
-	result, err := cld.Upload.Destroy(ctx, uploadParams)
+	result, err := cld.Upload.Destroy(ctx, deleteParams)
 	if err != nil {
 		return "", err
 	}

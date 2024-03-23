@@ -14,6 +14,8 @@ type Image struct {
 	ImageName string             `bson:"image_name" json:"image_name"`
 	Size      int64              `bson:"size" json:"size"`
 	ImageUrl  string             `bson:"image_url" json:"image_url"`
+	Category  string             `bson:"category" json:"category"`
+	AssetId   string             `bson:"asset_id" json:"asset_id"`
 }
 
 type Response struct {
@@ -21,14 +23,16 @@ type Response struct {
 	ImageName string             `bson:"image_name" json:"image_name"`
 	Size      int64              `bson:"size" json:"size"`
 	ImageUrl  string             `bson:"image_url" json:"image_url"`
+	Category  string             `bson:"category" json:"category"`
 }
 
-//go:generate mockery --name IAudioRepository
+//go:generate mockery --name IImageRepository
 type IImageRepository interface {
 	GetURLByName(ctx context.Context, name string) (Image, error)
 	FetchMany(ctx context.Context) ([]Image, error)
 	UpdateOne(ctx context.Context, imageID string, image Image) error
 	CreateOne(ctx context.Context, image *Image) error
+	CreateMany(ctx context.Context, image []*Image) error
 	DeleteOne(ctx context.Context, imageID string) error
 	DeleteMany(ctx context.Context, imageID ...string) error
 }

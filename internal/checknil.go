@@ -3,6 +3,7 @@ package internal
 import (
 	course_domain "clean-architecture/domain/course"
 	lesson_domain "clean-architecture/domain/lesson"
+	mean_domain "clean-architecture/domain/mean"
 	quiz_domain "clean-architecture/domain/quiz"
 	unit_domain "clean-architecture/domain/unit"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
@@ -101,6 +102,29 @@ func IsValidVocabulary(vocabulary vocabulary_domain.Input) error {
 
 	if vocabulary.LinkURL == "" {
 		return errors.New("link URL cannot be empty")
+	}
+
+	return nil
+}
+func IsValidMean(mean mean_domain.Input) error {
+	if mean.Antonym == "" {
+		return errors.New("word cannot be empty")
+	}
+
+	if mean.Synonym == "" {
+		return errors.New("part of speech cannot be empty")
+	}
+
+	if mean.Description == "" {
+		return errors.New("pronunciation cannot be empty")
+	}
+
+	if mean.Example == "" {
+		return errors.New("example cannot be empty")
+	}
+
+	if mean.VocabularyID.IsZero() || mean.VocabularyID.Hex() == "" {
+		return errors.New("field of IT cannot be empty")
 	}
 
 	return nil

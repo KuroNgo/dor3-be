@@ -14,6 +14,37 @@ type imageRepository struct {
 	collection string
 }
 
+func (i *imageRepository) CreateMany(ctx context.Context, images []*image_domain.Image) error {
+	collection := i.database.Collection(i.collection)
+
+	var imageNames []string
+	for _, img := range images {
+		imageNames = append(imageNames, img.ImageName)
+	}
+
+	filter := bson.M{"image-name": bson.M{"$in": imageNames}}
+
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		errors.New("one or more image names already exist")
+	}
+
+	var documents []interface{}
+	for _, img := range images {
+		documents = append(documents, img)
+	}
+
+	_, err = collection.InsertMany(ctx, documents)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (i *imageRepository) GetURLByName(ctx context.Context, name string) (image_domain.Image, error) {
 	collection := i.database.Collection(i.collection)
 	var image image_domain.Image
@@ -53,7 +84,7 @@ func (i *imageRepository) UpdateOne(ctx context.Context, imageID string, image i
 func (i *imageRepository) CreateOne(ctx context.Context, image *image_domain.Image) error {
 	collection := i.database.Collection(i.collection)
 
-	filter := bson.M{"image-name": image.ImageName}
+	filter := bson.M{"image_name": image.ImageName, "image_url": image.ImageUrl}
 
 	count, err := collection.CountDocuments(ctx, filter)
 	if err != nil {
