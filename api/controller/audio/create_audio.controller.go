@@ -24,13 +24,6 @@ func (au *AudioController) CreateAudioInFireBaseAndSaveMetaDataInDatabase(ctx *g
 		return
 	}
 
-	// Lưu file vào thư mục tạm thời
-	err = ctx.SaveUploadedFile(file, "./"+file.Filename)
-	if err != nil {
-		ctx.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
 	// the metadata will be saved in database
 	metadata := &audio_domain.Audio{
 		Id: primitive.NewObjectID(),
