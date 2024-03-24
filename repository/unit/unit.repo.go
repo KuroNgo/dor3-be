@@ -18,6 +18,50 @@ type unitRepository struct {
 	collectionLesson string
 }
 
+func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string) (unit_domain.Response, error) {
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	collectionLesson := u.database.Collection(u.collectionLesson)
+
+	idLesson2, err := primitive.ObjectIDFromHex(idLesson)
+	filter := bson.M{"lesson_id": idLesson2}
+
+	cursor, err := collectionUnit.Find(ctx, filter)
+	if err != nil {
+		return unit_domain.Response{}, err
+	}
+	defer cursor.Close(ctx)
+
+	var units []unit_domain.Unit
+	// Lặp qua các kết quả và giải mã vào slice units
+	for cursor.Next(ctx) {
+		var unit unit_domain.Unit
+		if err := cursor.Decode(&unit); err != nil {
+			return unit_domain.Response{}, err
+		}
+
+		var lesson lesson_domain.Lesson
+		err := collectionLesson.FindOne(ctx, bson.M{"_id": idLesson2}).Decode(&lesson)
+		if err != nil {
+			return unit_domain.Response{}, err
+		}
+
+		unit.LessonID = idLesson2
+
+		units = append(units, unit)
+	}
+
+	// Tạo và trả về phản hồi với dữ liệu units và số lượng tài liệu trong collection bài học
+	response := unit_domain.Response{
+		Unit: units,
+	}
+	return response, nil
+}
+
+func (u *unitRepository) UpdateComplete(ctx context.Context, unitID string, unit unit_domain.Unit) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewUnitRepository(db mongo.Database, collectionUnit string, collectionLesson string) unit_domain.IUnitRepository {
 	return &unitRepository{
 		database:         db,
@@ -26,13 +70,13 @@ func NewUnitRepository(db mongo.Database, collectionUnit string, collectionLesso
 	}
 }
 
-func (u *unitRepository) FetchMany(ctx context.Context) ([]unit_domain.Response, error) {
+func (u *unitRepository) FetchMany(ctx context.Context) (unit_domain.Response, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 	collectionLesson := u.database.Collection(u.collectionLesson)
 
 	cursor, err := collectionUnit.Find(ctx, bson.D{})
 	if err != nil {
-		return nil, err
+		return unit_domain.Response{}, err
 	}
 	defer func(cursor mongo.Cursor, ctx context.Context) {
 		err := cursor.Close(ctx)
@@ -41,31 +85,31 @@ func (u *unitRepository) FetchMany(ctx context.Context) ([]unit_domain.Response,
 		}
 	}(cursor, ctx)
 
-	var units []unit_domain.Response
+	var units []unit_domain.Unit
 	for cursor.Next(ctx) {
 		var unit unit_domain.Unit
-		var unit2 unit_domain.Response
 		if err := cursor.Decode(&unit); err != nil {
-			return nil, err
+			return unit_domain.Response{}, err
 		}
 
 		var lesson lesson_domain.Lesson
 		err := collectionLesson.FindOne(ctx, bson.M{"_id": unit.LessonID}).Decode(&lesson)
 		if err != nil {
-			return nil, err
+			return unit_domain.Response{}, err
 		}
 
 		// Gắn tên của course vào lesson
-		unit2.LessonID = lesson.ID
+		unit.LessonID = lesson.ID
 
 		// Thêm lesson vào slice lessons
-		units = append(units, unit2)
+		units = append(units, unit)
 	}
 	err = cursor.All(ctx, &units)
-	if units == nil {
-		return []unit_domain.Response{}, err
+	unitRes := unit_domain.Response{
+		Unit: units,
 	}
-	return units, err
+
+	return unitRes, err
 }
 
 func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) error {

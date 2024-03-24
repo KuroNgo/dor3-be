@@ -21,4 +21,5 @@ func UnitRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Databas
 
 	router := group.Group("/unit")
 	router.GET("/fetch", unit.FetchMany)
+	router.GET("/fetch/:lesson_id", unit.FetchByIdLesson)
 }

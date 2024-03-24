@@ -22,3 +22,20 @@ func (u *UnitController) FetchMany(ctx *gin.Context) {
 		},
 	})
 }
+
+func (u *UnitController) FetchByIdLesson(ctx *gin.Context) {
+	idLesson := ctx.Param("lesson_id")
+	unit, err := u.UnitUseCase.FetchByIdLesson(ctx, idLesson)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"unit":   unit,
+	})
+}
