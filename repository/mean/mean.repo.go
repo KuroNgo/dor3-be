@@ -18,7 +18,7 @@ type meanRepository struct {
 	collectionVocabulary string
 }
 
-func NewUnitRepository(db mongo.Database, collectionMean string, collectionVocabulary string) mean_domain.IMeanRepository {
+func NewMeanRepository(db mongo.Database, collectionMean string, collectionVocabulary string) mean_domain.IMeanRepository {
 	return &meanRepository{
 		database:             db,
 		collectionMean:       collectionMean,

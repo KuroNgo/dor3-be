@@ -4,6 +4,7 @@ import (
 	admin_domain "clean-architecture/domain/admin"
 	"clean-architecture/internal"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"time"
 )
@@ -49,6 +50,7 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 	admin.Email = internal.Santize(admin.Email)
 
 	newAdmin := admin_domain.Admin{
+		Id:        primitive.NewObjectID(),
 		Address:   admin.Address,
 		FullName:  admin.FullName,
 		Avatar:    admin.Avatar,

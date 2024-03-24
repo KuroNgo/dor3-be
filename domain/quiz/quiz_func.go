@@ -11,6 +11,7 @@ type Input struct {
 
 	// QuestionType can be included checkbox, check radius or write correct answer
 	QuestionType string `bson:"question_type" json:"question_type"`
+	Skill        string `bson:"skill" json:"skill"`
 
 	// admin add metadata of file and system will be found it
 	Filename      string `bson:"filename" json:"filename"`
@@ -20,6 +21,7 @@ type Input struct {
 //go:generate mockery --name IQuizUseCase
 type IQuizUseCase interface {
 	FetchMany(ctx context.Context) ([]Quiz, error)
+	//FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]Response, error)
 	UpdateOne(ctx context.Context, quizID string, quiz Quiz) error
 	CreateOne(ctx context.Context, quiz *Quiz) error
 	UpsertOne(c context.Context, id string, quiz *Quiz) (*Response, error)

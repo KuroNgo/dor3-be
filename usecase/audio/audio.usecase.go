@@ -18,13 +18,13 @@ func NewAudioUseCase(audioRepository audio_domain.IAudioUseCase, timeout time.Du
 	}
 }
 
-func (a *audioUseCase) FetchMany(ctx context.Context) ([]audio_domain.Audio, error) {
+func (a *audioUseCase) FetchMany(ctx context.Context) (audio_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
 	defer cancel()
 
 	quiz, err := a.audioRepository.FetchMany(ctx)
 	if err != nil {
-		return nil, err
+		return audio_domain.Response{}, err
 	}
 
 	return quiz, err

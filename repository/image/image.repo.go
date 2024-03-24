@@ -14,37 +14,6 @@ type imageRepository struct {
 	collection string
 }
 
-func (i *imageRepository) CreateMany(ctx context.Context, images []*image_domain.Image) error {
-	collection := i.database.Collection(i.collection)
-
-	var imageNames []string
-	for _, img := range images {
-		imageNames = append(imageNames, img.ImageName)
-	}
-
-	filter := bson.M{"image-name": bson.M{"$in": imageNames}}
-
-	count, err := collection.CountDocuments(ctx, filter)
-	if err != nil {
-		return err
-	}
-	if count > 0 {
-		errors.New("one or more image names already exist")
-	}
-
-	var documents []interface{}
-	for _, img := range images {
-		documents = append(documents, img)
-	}
-
-	_, err = collection.InsertMany(ctx, documents)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (i *imageRepository) GetURLByName(ctx context.Context, name string) (image_domain.Image, error) {
 	collection := i.database.Collection(i.collection)
 	var image image_domain.Image
@@ -52,22 +21,46 @@ func (i *imageRepository) GetURLByName(ctx context.Context, name string) (image_
 	return image, err
 }
 
-func (i *imageRepository) FetchMany(ctx context.Context) ([]image_domain.Image, error) {
+func (i *imageRepository) FetchMany(ctx context.Context) (image_domain.Response, error) {
 	collection := i.database.Collection(i.collection)
+
+	// Đếm tổng số lượng tài liệu trong collection
+	count, err := collection.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return image_domain.Response{}, err
+	}
 
 	cursor, err := collection.Find(ctx, bson.D{})
 	if err != nil {
-		return nil, err
+		return image_domain.Response{}, err
+	}
+
+	// Lặp qua các tài liệu và tính tổng của trường FieldToSum
+	var size int64
+	var images []image_domain.Image
+	for cursor.Next(context.Background()) {
+		var doc image_domain.Image
+		if err := cursor.Decode(&doc); err != nil {
+			return image_domain.Response{}, errors.New("")
+		}
+		images = append(images, doc)
+		size += doc.Size
 	}
 
 	var image []image_domain.Image
 
 	err = cursor.All(ctx, &image)
 	if image == nil {
-		return []image_domain.Image{}, err
+		return image_domain.Response{}, err
+	}
+	// Tạo cấu trúc dữ liệu Response
+	response := image_domain.Response{
+		Image: image,
+		Count: count,
+		Size:  size,
 	}
 
-	return image, err
+	return response, err
 }
 
 func (i *imageRepository) UpdateOne(ctx context.Context, imageID string, image image_domain.Image) error {

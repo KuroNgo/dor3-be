@@ -65,9 +65,9 @@ func (im *ImageController) CreateManyImageForLesson(ctx *gin.Context) {
 
 		err = im.ImageUseCase.CreateOne(ctx, metadata)
 		if err != nil {
-			//ctx.JSON(http.StatusBadRequest, gin.H{
-			//	"error": err.Error(),
-			//})
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
 			continue
 		}
 	}

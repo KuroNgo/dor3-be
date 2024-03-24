@@ -26,16 +26,8 @@ type User struct {
 }
 
 type Response struct {
-	ID         primitive.ObjectID `json:"_id" bson:"_id"`
-	FullName   string             `json:"full_name"  bson:"full_name"`
-	Email      string             `json:"email" bson:"email"`
-	AvatarURL  string             `json:"avatar_url"  bson:"avatar_url"`
-	Specialize string             `json:"specialize"  bson:"specialize"`
-	Role       string             `json:"role" bson:"role"`
-	Photo      string             `json:"photo" bson:"photo"`
-	Provider   string             `json:"provider" bson:"provider"`
-	CreatedAt  time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt  time.Time          `json:"updated_at" bson:"updated_at"`
+	User  []User `bson:"user" json:"user"`
+	Count int64  `bson:"count" json:"count"`
 }
 
 //go:generate mockery --name IUserRepository
@@ -47,5 +39,5 @@ type IUserRepository interface {
 	GetByID(c context.Context, id string) (*User, error)
 	Create(c context.Context, user User) error
 	Update(ctx context.Context, userID string, user User) error
-	UpsertOne(c context.Context, email string, user *User) (*Response, error)
+	UpsertOne(c context.Context, email string, user *User) (*User, error)
 }

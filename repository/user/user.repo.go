@@ -116,7 +116,7 @@ func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.Use
 	return &user, err
 }
 
-func (u *userRepository) UpsertOne(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
+func (u *userRepository) UpsertOne(c context.Context, email string, user *user_domain.User) (*user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 	doc, err := internal.ToDoc(user)
 	if err != nil {
@@ -128,7 +128,7 @@ func (u *userRepository) UpsertOne(c context.Context, email string, user *user_d
 	update := bson.D{{Key: "$set", Value: doc}}
 	res := collection.FindOneAndUpdate(c, query, update, opts)
 
-	var updatedPost *user_domain.Response
+	var updatedPost *user_domain.User
 
 	if err := res.Decode(&updatedPost); err != nil {
 		return nil, errors.New("no post with that Id exists")

@@ -20,16 +20,8 @@ func (im *ImageController) CreateOneImageStatic(ctx *gin.Context) {
 		return
 	}
 
-	file, err := ctx.FormFile("file")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
 	// Just filename contains "file" in OS (operating system)
-	file2, _, err := ctx.Request.FormFile("file")
+	file, header, err := ctx.Request.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
@@ -37,7 +29,7 @@ func (im *ImageController) CreateOneImageStatic(ctx *gin.Context) {
 		return
 	}
 
-	if !file_internal.IsImage(file.Filename) {
+	if !file_internal.IsImage(header.Filename) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -51,7 +43,7 @@ func (im *ImageController) CreateOneImageStatic(ctx *gin.Context) {
 		})
 	}
 
-	result, err := cloudinary.UploadToCloudinary(file2, filename.(string), im.Database.CloudinaryUploadFolderStatic)
+	result, err := cloudinary.UploadToCloudinary(file, filename.(string), im.Database.CloudinaryUploadFolderStatic)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -62,9 +54,9 @@ func (im *ImageController) CreateOneImageStatic(ctx *gin.Context) {
 	// the metadata will be saved in database
 	metadata := &image_domain.Image{
 		Id:        primitive.NewObjectID(),
-		ImageName: file.Filename,
+		ImageName: header.Filename,
 		ImageUrl:  result.ImageURL,
-		Size:      file.Size / 1024,
+		Size:      header.Size / 1024,
 		Category:  "static",
 		AssetId:   result.AssetID,
 	}
@@ -94,16 +86,8 @@ func (im *ImageController) CreateOneImageLesson(ctx *gin.Context) {
 		return
 	}
 
-	file, err := ctx.FormFile("file")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
 	// Just filename contains "file" in OS (operating system)
-	file2, _, err := ctx.Request.FormFile("file")
+	file, header, err := ctx.Request.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
@@ -111,7 +95,7 @@ func (im *ImageController) CreateOneImageLesson(ctx *gin.Context) {
 		return
 	}
 
-	if !file_internal.IsImage(file.Filename) {
+	if !file_internal.IsImage(header.Filename) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -125,7 +109,7 @@ func (im *ImageController) CreateOneImageLesson(ctx *gin.Context) {
 		})
 	}
 
-	result, err := cloudinary.UploadToCloudinary(file2, filename.(string), im.Database.CloudinaryUploadFolderLesson)
+	result, err := cloudinary.UploadToCloudinary(file, filename.(string), im.Database.CloudinaryUploadFolderLesson)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -136,9 +120,9 @@ func (im *ImageController) CreateOneImageLesson(ctx *gin.Context) {
 	// the metadata will be saved in database
 	metadata := &image_domain.Image{
 		Id:        primitive.NewObjectID(),
-		ImageName: file.Filename,
+		ImageName: header.Filename,
 		ImageUrl:  result.ImageURL,
-		Size:      file.Size / 1024,
+		Size:      header.Size / 1024,
 		Category:  "lesson",
 		AssetId:   result.AssetID,
 	}
@@ -168,16 +152,8 @@ func (im *ImageController) CreateOneImageUser(ctx *gin.Context) {
 		return
 	}
 
-	file, err := ctx.FormFile("file")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
 	// Just filename contains "file" in OS (operating system)
-	file2, _, err := ctx.Request.FormFile("file")
+	file, header, err := ctx.Request.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
@@ -185,7 +161,7 @@ func (im *ImageController) CreateOneImageUser(ctx *gin.Context) {
 		return
 	}
 
-	if !file_internal.IsImage(file.Filename) {
+	if !file_internal.IsImage(header.Filename) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -199,7 +175,7 @@ func (im *ImageController) CreateOneImageUser(ctx *gin.Context) {
 		})
 	}
 
-	result, err := cloudinary.UploadToCloudinary(file2, filename.(string), im.Database.CloudinaryUploadFolderUser)
+	result, err := cloudinary.UploadToCloudinary(file, filename.(string), im.Database.CloudinaryUploadFolderUser)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -210,9 +186,9 @@ func (im *ImageController) CreateOneImageUser(ctx *gin.Context) {
 	// the metadata will be saved in database
 	metadata := &image_domain.Image{
 		Id:        primitive.NewObjectID(),
-		ImageName: file.Filename,
+		ImageName: header.Filename,
 		ImageUrl:  result.ImageURL,
-		Size:      file.Size / 1024,
+		Size:      header.Size / 1024,
 		Category:  "user",
 		AssetId:   result.AssetID,
 	}
@@ -242,16 +218,8 @@ func (im *ImageController) CreateOneImageExam(ctx *gin.Context) {
 		return
 	}
 
-	file, err := ctx.FormFile("file")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
 	// Just filename contains "file" in OS (operating system)
-	file2, _, err := ctx.Request.FormFile("file")
+	file, header, err := ctx.Request.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
@@ -259,7 +227,7 @@ func (im *ImageController) CreateOneImageExam(ctx *gin.Context) {
 		return
 	}
 
-	if !file_internal.IsImage(file.Filename) {
+	if !file_internal.IsImage(header.Filename) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -273,7 +241,7 @@ func (im *ImageController) CreateOneImageExam(ctx *gin.Context) {
 		})
 	}
 
-	result, err := cloudinary.UploadToCloudinary(file2, filename.(string), im.Database.CloudinaryUploadFolderExam)
+	result, err := cloudinary.UploadToCloudinary(file, filename.(string), im.Database.CloudinaryUploadFolderExam)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -284,9 +252,9 @@ func (im *ImageController) CreateOneImageExam(ctx *gin.Context) {
 	// the metadata will be saved in database
 	metadata := &image_domain.Image{
 		Id:        primitive.NewObjectID(),
-		ImageName: file.Filename,
+		ImageName: header.Filename,
 		ImageUrl:  result.ImageURL,
-		Size:      file.Size / 1024,
+		Size:      header.Size / 1024,
 		Category:  "exam",
 		AssetId:   result.AssetID,
 	}
@@ -316,16 +284,8 @@ func (im *ImageController) CreateOneImageQuiz(ctx *gin.Context) {
 		return
 	}
 
-	file, err := ctx.FormFile("file")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
 	// Just filename contains "file" in OS (operating system)
-	file2, _, err := ctx.Request.FormFile("file")
+	file, header, err := ctx.Request.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
@@ -333,7 +293,7 @@ func (im *ImageController) CreateOneImageQuiz(ctx *gin.Context) {
 		return
 	}
 
-	if !file_internal.IsImage(file.Filename) {
+	if !file_internal.IsImage(header.Filename) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -347,7 +307,7 @@ func (im *ImageController) CreateOneImageQuiz(ctx *gin.Context) {
 		})
 	}
 
-	result, err := cloudinary.UploadToCloudinary(file2, filename.(string), im.Database.CloudinaryUploadFolderQuiz)
+	result, err := cloudinary.UploadToCloudinary(file, filename.(string), im.Database.CloudinaryUploadFolderQuiz)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -358,9 +318,9 @@ func (im *ImageController) CreateOneImageQuiz(ctx *gin.Context) {
 	// the metadata will be saved in database
 	metadata := &image_domain.Image{
 		Id:        primitive.NewObjectID(),
-		ImageName: file.Filename,
+		ImageName: header.Filename,
 		ImageUrl:  result.ImageURL,
-		Size:      file.Size / 1024,
+		Size:      header.Size / 1024,
 		Category:  "quiz",
 		AssetId:   result.AssetID,
 	}

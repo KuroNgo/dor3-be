@@ -17,7 +17,9 @@ type Quiz struct {
 	CorrectAnswer string             `bson:"correct_answer" json:"correct_answer"`
 	Explanation   string             `bson:"explanation" json:"explanation"`
 	QuestionType  string             `bson:"question_type" json:"question_type"`
-	Level         int                `bson:"level" json:"level"`
+	Skill         string             `bson:"skill" json:"skill"`
+
+	Level int `bson:"level" json:"level"`
 
 	// admin add metadata of file and system will be found it
 	Filename      string `bson:"filename" json:"filename"`
@@ -30,14 +32,15 @@ type Quiz struct {
 }
 
 type Response struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Question      string             `bson:"question" json:"question"`
-	Options       []string           `bson:"options" json:"options"`
-	CorrectAnswer string             `bson:"correct_answer" json:"correct_answer"`
-	Explanation   string             `bson:"explanation" json:"explanation"`
+	Question      string   `bson:"question" json:"question"`
+	Options       []string `bson:"options" json:"options"`
+	CorrectAnswer string   `bson:"correct_answer" json:"correct_answer"`
+	Explanation   string   `bson:"explanation" json:"explanation"`
 
 	// QuestionType can be included checkbox, check radius or write correct answer
 	QuestionType string `bson:"question_type" json:"question_type"`
+	Skill        string `bson:"skill" json:"skill"`
+	Level        int    `bson:"level" json:"level"`
 
 	// admin add metadata of file and system will be found it
 	Filename      string `bson:"filename" json:"filename"`
@@ -50,6 +53,7 @@ type Response struct {
 
 //go:generate mockery --name IQuizRepository
 type IQuizRepository interface {
+	//FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]Response, error)
 	FetchMany(ctx context.Context) ([]Quiz, error)
 	UpdateOne(ctx context.Context, quizID string, quiz Quiz) error
 	CreateOne(ctx context.Context, quiz *Quiz) error
