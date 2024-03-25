@@ -11,6 +11,13 @@ type unitUseCase struct {
 	contextTimeout time.Duration
 }
 
+func NewUnitUseCase(unitRepository unit_domain.IUnitRepository, timeout time.Duration) unit_domain.IUnitUseCase {
+	return &unitUseCase{
+		unitRepository: unitRepository,
+		contextTimeout: timeout,
+	}
+}
+
 func (u *unitUseCase) FetchByIdLesson(ctx context.Context, idLesson string) (unit_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
@@ -26,13 +33,6 @@ func (u *unitUseCase) FetchByIdLesson(ctx context.Context, idLesson string) (uni
 func (u *unitUseCase) UpdateComplete(ctx context.Context, unitID string, unit unit_domain.Unit) error {
 	//TODO implement me
 	panic("implement me")
-}
-
-func NewUnitUseCase(unitRepository unit_domain.IUnitRepository, timeout time.Duration) unit_domain.IUnitUseCase {
-	return &unitUseCase{
-		unitRepository: unitRepository,
-		contextTimeout: timeout,
-	}
 }
 
 func (u *unitUseCase) FetchMany(ctx context.Context) (unit_domain.Response, error) {

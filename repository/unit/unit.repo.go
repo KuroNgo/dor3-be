@@ -18,6 +18,14 @@ type unitRepository struct {
 	collectionLesson string
 }
 
+func NewUnitRepository(db mongo.Database, collectionUnit string, collectionLesson string) unit_domain.IUnitRepository {
+	return &unitRepository{
+		database:         db,
+		collectionUnit:   collectionUnit,
+		collectionLesson: collectionLesson,
+	}
+}
+
 func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string) (unit_domain.Response, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 	collectionLesson := u.database.Collection(u.collectionLesson)
@@ -60,14 +68,6 @@ func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string) (
 func (u *unitRepository) UpdateComplete(ctx context.Context, unitID string, unit unit_domain.Unit) error {
 	//TODO implement me
 	panic("implement me")
-}
-
-func NewUnitRepository(db mongo.Database, collectionUnit string, collectionLesson string) unit_domain.IUnitRepository {
-	return &unitRepository{
-		database:         db,
-		collectionUnit:   collectionUnit,
-		collectionLesson: collectionLesson,
-	}
 }
 
 func (u *unitRepository) FetchMany(ctx context.Context) (unit_domain.Response, error) {

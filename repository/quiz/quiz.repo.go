@@ -16,16 +16,16 @@ type quizRepository struct {
 	collection string
 }
 
-func (q *quizRepository) FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]quiz_domain.Response, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewQuizRepository(db mongo.Database, collection string) quiz_domain.IQuizRepository {
 	return &quizRepository{
 		database:   db,
 		collection: collection,
 	}
+}
+
+func (q *quizRepository) FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]quiz_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (q *quizRepository) FetchMany(ctx context.Context) ([]quiz_domain.Quiz, error) {

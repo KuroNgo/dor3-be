@@ -166,7 +166,7 @@ func (a *adminRepository) UpsertOne(c context.Context, email string, admin *admi
 
 	var updatedPost *user_domain.Response
 
-	if err := res.Decode(&updatedPost); err != nil {
+	if err = res.Decode(&updatedPost); err != nil {
 		return errors.New("no post with that Id exists")
 	}
 

@@ -45,7 +45,7 @@ func (a *audioRepository) FetchMany(ctx context.Context) (audio_domain.Response,
 	var audio []audio_domain.Audio
 
 	// Decode dữ liệu từ cursor vào slice audio
-	if err := cursor.All(ctx, &audio); err != nil {
+	if err = cursor.All(ctx, &audio); err != nil {
 		return audio_domain.Response{}, err
 	}
 

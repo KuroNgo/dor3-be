@@ -18,6 +18,13 @@ type lessonRepository struct {
 	collectionCourse string
 }
 
+func NewLessonRepository(db mongo.Database, collectionLesson string, collectionCourse string) lesson_domain.ILessonRepository {
+	return &lessonRepository{
+		database:         db,
+		collectionLesson: collectionLesson,
+		collectionCourse: collectionCourse,
+	}
+}
 func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string) (lesson_domain.Response, error) {
 	collectionLesson := l.database.Collection(l.collectionLesson)
 	collectionCourse := l.database.Collection(l.collectionCourse)
@@ -35,12 +42,12 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string)
 	// Lặp qua các kết quả và giải mã vào slice units
 	for cursor.Next(ctx) {
 		var lesson lesson_domain.Lesson
-		if err := cursor.Decode(&lesson); err != nil {
+		if err = cursor.Decode(&lesson); err != nil {
 			return lesson_domain.Response{}, err
 		}
 
 		var course course_domain.Course
-		err := collectionCourse.FindOne(ctx, bson.M{"_id": idCourse2}).Decode(&course)
+		err = collectionCourse.FindOne(ctx, bson.M{"_id": idCourse2}).Decode(&course)
 		if err != nil {
 			return lesson_domain.Response{}, err
 		}
@@ -62,14 +69,6 @@ func (l *lessonRepository) UpdateComplete(ctx context.Context, lessonID string, 
 	panic("implement me")
 }
 
-func NewLessonRepository(db mongo.Database, collectionLesson string, collectionCourse string) lesson_domain.ILessonRepository {
-	return &lessonRepository{
-		database:         db,
-		collectionLesson: collectionLesson,
-		collectionCourse: collectionCourse,
-	}
-}
-
 func (l *lessonRepository) FetchMany(ctx context.Context) (lesson_domain.Response, error) {
 	collectionLesson := l.database.Collection(l.collectionLesson)
 	collectionCourse := l.database.Collection(l.collectionCourse)
@@ -79,7 +78,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context) (lesson_domain.Respons
 		return lesson_domain.Response{}, err
 	}
 	defer func(cursor mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+		err = cursor.Close(ctx)
 		if err != nil {
 
 		}
@@ -88,12 +87,12 @@ func (l *lessonRepository) FetchMany(ctx context.Context) (lesson_domain.Respons
 	var lessons []lesson_domain.Lesson
 	for cursor.Next(ctx) {
 		var lesson lesson_domain.Lesson
-		if err := cursor.Decode(&lesson); err != nil {
+		if err = cursor.Decode(&lesson); err != nil {
 			return lesson_domain.Response{}, err
 		}
 
 		var course course_domain.Course
-		err := collectionCourse.FindOne(ctx, bson.M{"_id": lesson.CourseID}).Decode(&course)
+		err = collectionCourse.FindOne(ctx, bson.M{"_id": lesson.CourseID}).Decode(&course)
 		if err != nil {
 			return lesson_domain.Response{}, err
 		}

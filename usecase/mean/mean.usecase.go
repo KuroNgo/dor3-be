@@ -11,6 +11,13 @@ type meanUseCase struct {
 	contextTimeout time.Duration
 }
 
+func NewMeanUseCase(meanRepository mean_domain.IMeanRepository, timeout time.Duration) mean_domain.IMeanUseCase {
+	return &meanUseCase{
+		meanRepository: meanRepository,
+		contextTimeout: timeout,
+	}
+}
+
 func (m *meanUseCase) FetchMany(ctx context.Context) ([]mean_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()
@@ -23,11 +30,11 @@ func (m *meanUseCase) FetchMany(ctx context.Context) ([]mean_domain.Response, er
 	return mean, err
 }
 
-func (m *meanUseCase) CreateOne(ctx context.Context, mean *mean_domain.Mean) error {
+func (m *meanUseCase) CreateOne(ctx context.Context, mean *mean_domain.Mean, fieldOfIT string) error {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()
 
-	err := m.meanRepository.CreateOne(ctx, mean)
+	err := m.meanRepository.CreateOne(ctx, mean, fieldOfIT)
 	if err != nil {
 		return err
 	}
@@ -67,11 +74,4 @@ func (m *meanUseCase) DeleteOne(ctx context.Context, meanID string) error {
 	}
 
 	return err
-}
-
-func NewMeanUseCase(meanRepository mean_domain.IMeanRepository, timeout time.Duration) mean_domain.IMeanUseCase {
-	return &meanUseCase{
-		meanRepository: meanRepository,
-		contextTimeout: timeout,
-	}
 }

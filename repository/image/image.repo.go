@@ -14,6 +14,12 @@ type imageRepository struct {
 	collection string
 }
 
+func NewImageRepository(db mongo.Database, collection string) image_domain.IImageRepository {
+	return &imageRepository{
+		database:   db,
+		collection: collection,
+	}
+}
 func (i *imageRepository) GetURLByName(ctx context.Context, name string) (image_domain.Image, error) {
 	collection := i.database.Collection(i.collection)
 	var image image_domain.Image
@@ -40,7 +46,7 @@ func (i *imageRepository) FetchMany(ctx context.Context) (image_domain.Response,
 	var images []image_domain.Image
 	for cursor.Next(context.Background()) {
 		var doc image_domain.Image
-		if err := cursor.Decode(&doc); err != nil {
+		if err = cursor.Decode(&doc); err != nil {
 			return image_domain.Response{}, errors.New("")
 		}
 		images = append(images, doc)
@@ -136,11 +142,4 @@ func (i *imageRepository) DeleteMany(ctx context.Context, imageID ...string) err
 	}
 	_, err = collection.DeleteMany(ctx, filter)
 	return err
-}
-
-func NewImageRepository(db mongo.Database, collection string) image_domain.IImageRepository {
-	return &imageRepository{
-		database:   db,
-		collection: collection,
-	}
 }

@@ -11,6 +11,12 @@ type imageUseCase struct {
 	contextTimeout  time.Duration
 }
 
+func NewImageUseCase(imageRepository image_domain.IImageRepository, timeout time.Duration) image_domain.IImageUseCase {
+	return &imageUseCase{
+		imageRepository: imageRepository,
+		contextTimeout:  timeout,
+	}
+}
 func (i *imageUseCase) GetURLByName(ctx context.Context, name string) (image_domain.Image, error) {
 	ctx, cancel := context.WithTimeout(ctx, i.contextTimeout)
 	defer cancel()
@@ -21,13 +27,6 @@ func (i *imageUseCase) GetURLByName(ctx context.Context, name string) (image_dom
 	}
 
 	return image, err
-}
-
-func NewImageUseCase(imageRepository image_domain.IImageRepository, timeout time.Duration) image_domain.IImageUseCase {
-	return &imageUseCase{
-		imageRepository: imageRepository,
-		contextTimeout:  timeout,
-	}
 }
 
 func (i *imageUseCase) FetchMany(ctx context.Context) (image_domain.Response, error) {

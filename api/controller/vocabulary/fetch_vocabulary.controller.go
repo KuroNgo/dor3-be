@@ -77,3 +77,21 @@ func (v *VocabularyController) FetchMany(ctx *gin.Context) {
 		},
 	})
 }
+
+func (v *VocabularyController) FetchVocabularyByIdUnit(ctx *gin.Context) {
+	idUnit := ctx.Param("unit_id")
+
+	vocabulary, err := v.VocabularyUseCase.FetchByIdUnit(ctx, idUnit)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":     "success",
+		"vocabulary": vocabulary,
+	})
+
+}

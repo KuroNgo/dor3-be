@@ -11,6 +11,12 @@ type lessonUseCase struct {
 	contextTimeout   time.Duration
 }
 
+func NewLessonUseCase(lessonRepository lesson_domain.ILessonRepository, timeout time.Duration) lesson_domain.ILessonUseCase {
+	return &lessonUseCase{
+		lessonRepository: lessonRepository,
+		contextTimeout:   timeout,
+	}
+}
 func (l *lessonUseCase) FetchByIdCourse(ctx context.Context, idCourse string) (lesson_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()
@@ -26,13 +32,6 @@ func (l *lessonUseCase) FetchByIdCourse(ctx context.Context, idCourse string) (l
 func (l *lessonUseCase) UpdateComplete(ctx context.Context, lessonID string, lesson lesson_domain.Lesson) error {
 	//TODO implement me
 	panic("implement me")
-}
-
-func NewLessonUseCase(lessonRepository lesson_domain.ILessonRepository, timeout time.Duration) lesson_domain.ILessonUseCase {
-	return &lessonUseCase{
-		lessonRepository: lessonRepository,
-		contextTimeout:   timeout,
-	}
 }
 
 func (l *lessonUseCase) FetchMany(ctx context.Context) (lesson_domain.Response, error) {
