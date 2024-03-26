@@ -14,7 +14,7 @@ type AutoMatch struct {
 
 //go:generate mockery --name IAudioUseCase
 type IAudioUseCase interface {
-	FetchMany(ctx context.Context) ([]Audio, error)
+	FetchMany(ctx context.Context) (Response, error)
 	UpdateOne(ctx context.Context, audioID string, audio Audio) error
 
 	// CreateOne needn't input, because the system will be found information file

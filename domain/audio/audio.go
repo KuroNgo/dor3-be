@@ -1,7 +1,6 @@
 package audio_domain
 
 import (
-	quiz_domain "clean-architecture/domain/quiz"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -20,16 +19,13 @@ type Audio struct {
 }
 
 type Response struct {
-	Quiz quiz_domain.Quiz
-
-	// admin add metadata file and system will be found it
-	Filename string `bson:"filename" json:"filename"`
-	Size     int64  `bson:"size" json:"size"`
+	Audio []Audio `json:"data"`
+	Count int64   `json:"count"`
 }
 
 //go:generate mockery --name IAudioRepository
 type IAudioRepository interface {
-	FetchMany(ctx context.Context) ([]Audio, error)
+	FetchMany(ctx context.Context) (Response, error)
 	UpdateOne(ctx context.Context, audioID string, audio Audio) error
 	CreateOne(ctx context.Context, audio *Audio) error
 	DeleteOne(ctx context.Context, audioID string) error

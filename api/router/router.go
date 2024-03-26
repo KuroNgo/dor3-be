@@ -39,7 +39,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 		middleware.Recover(),
 		gzip.Gzip(gzip.DefaultCompression,
 			gzip.WithExcludedPaths([]string{",*"})),
-		//middleware.DeserializeUser(),
+		middleware.DeserializeUser(),
 		middleware.StructuredLogger(&log.Logger),
 	)
 

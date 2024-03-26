@@ -23,9 +23,13 @@ type Update struct {
 
 //go:generate mockery --name ICourseUseCase
 type ILessonUseCase interface {
-	FetchMany(ctx context.Context) ([]Response, error)
+	FetchMany(ctx context.Context) (Response, error)
+	FetchByIdCourse(ctx context.Context, idCourse string) (Response, error)
 	UpdateOne(ctx context.Context, lessonID string, lesson Lesson) error
 	CreateOne(ctx context.Context, lesson *Lesson) error
 	UpsertOne(ctx context.Context, id string, lesson *Lesson) (*Lesson, error)
 	DeleteOne(ctx context.Context, lessonID string) error
+
+	// UpdateComplete automation
+	UpdateComplete(ctx context.Context, lessonID string, lesson Lesson) error
 }

@@ -11,30 +11,6 @@ type vocabularyUseCase struct {
 	contextTimeout       time.Duration
 }
 
-func (v *vocabularyUseCase) FetchByWord(ctx context.Context, word string) ([]vocabulary_domain.Response, error) {
-	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
-	defer cancel()
-
-	vocabulary, err := v.vocabularyRepository.FetchByLesson(ctx, word)
-	if err != nil {
-		return nil, err
-	}
-
-	return vocabulary, err
-}
-
-func (v *vocabularyUseCase) FetchByLesson(ctx context.Context, lessonName string) ([]vocabulary_domain.Response, error) {
-	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
-	defer cancel()
-
-	vocabulary, err := v.vocabularyRepository.FetchByLesson(ctx, lessonName)
-	if err != nil {
-		return nil, err
-	}
-
-	return vocabulary, err
-}
-
 func NewVocabularyUseCase(vocabularyRepository vocabulary_domain.IVocabularyRepository, timeout time.Duration) vocabulary_domain.IVocabularyUseCase {
 	return &vocabularyUseCase{
 		vocabularyRepository: vocabularyRepository,
@@ -42,19 +18,55 @@ func NewVocabularyUseCase(vocabularyRepository vocabulary_domain.IVocabularyRepo
 	}
 }
 
-func (v *vocabularyUseCase) FetchMany(ctx context.Context) ([]vocabulary_domain.Response, error) {
+func (v *vocabularyUseCase) FetchByIdUnit(ctx context.Context, idUnit string) (vocabulary_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := v.vocabularyRepository.FetchMany(ctx)
+	vocabulary, err := v.vocabularyRepository.FetchByLesson(ctx, idUnit)
 	if err != nil {
-		return nil, err
+		return vocabulary_domain.Response{}, err
 	}
 
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) FetchToDeleteMany(ctx context.Context) (*[]vocabulary_domain.Response, error) {
+func (v *vocabularyUseCase) FetchByWord(ctx context.Context, word string) (vocabulary_domain.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+
+	vocabulary, err := v.vocabularyRepository.FetchByLesson(ctx, word)
+	if err != nil {
+		return vocabulary_domain.Response{}, err
+	}
+
+	return vocabulary, err
+}
+
+func (v *vocabularyUseCase) FetchByLesson(ctx context.Context, lessonName string) (vocabulary_domain.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+
+	vocabulary, err := v.vocabularyRepository.FetchByLesson(ctx, lessonName)
+	if err != nil {
+		return vocabulary_domain.Response{}, err
+	}
+
+	return vocabulary, err
+}
+
+func (v *vocabularyUseCase) FetchMany(ctx context.Context) (vocabulary_domain.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+
+	vocabulary, err := v.vocabularyRepository.FetchMany(ctx)
+	if err != nil {
+		return vocabulary_domain.Response{}, err
+	}
+
+	return vocabulary, err
+}
+
+func (v *vocabularyUseCase) FetchToDeleteMany(ctx context.Context) (*vocabulary_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 

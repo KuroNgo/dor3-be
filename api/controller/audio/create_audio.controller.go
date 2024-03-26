@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
-	"os"
 )
 
 // CreateAudioInFireBaseAndSaveMetaDataInDatabase used for
@@ -41,12 +40,6 @@ func (au *AudioController) CreateAudioInFireBaseAndSaveMetaDataInDatabase(ctx *g
 
 	// process in firebase below code
 
-	// Xóa file sau khi đã sử dụng
-	err = os.Remove("./" + file.Filename)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})

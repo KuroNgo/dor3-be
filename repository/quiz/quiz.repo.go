@@ -23,6 +23,11 @@ func NewQuizRepository(db mongo.Database, collection string) quiz_domain.IQuizRe
 	}
 }
 
+func (q *quizRepository) FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]quiz_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (q *quizRepository) FetchMany(ctx context.Context) ([]quiz_domain.Quiz, error) {
 	collection := q.database.Collection(q.collection)
 

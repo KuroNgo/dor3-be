@@ -31,5 +31,5 @@ func AdminImageRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Da
 	router.POST("/files/upload/many/quiz", cloudinary.FileUploadMiddleware(), image.CreateManyImageForQuiz)
 	router.POST("/files/upload/many/static", cloudinary.FileUploadMiddleware(), image.CreateManyImageForStatic)
 	router.POST("/files/upload/many/lesson", cloudinary.FileUploadMiddleware(), image.CreateManyImageForLesson)
-	router.POST("/file/upload/many/exam", cloudinary.FileUploadMiddleware(), image.CreateManyImageForExam)
+	router.POST("/files/upload/many/exam", cloudinary.FileUploadMiddleware(), image.CreateManyImageForExam)
 }

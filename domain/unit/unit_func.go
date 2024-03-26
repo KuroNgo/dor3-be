@@ -13,9 +13,13 @@ type Input struct {
 
 //go:generate mockery --name IUnitUseCase
 type IUnitUseCase interface {
-	FetchMany(ctx context.Context) ([]Response, error)
+	FetchMany(ctx context.Context) (Response, error)
+	FetchByIdLesson(ctx context.Context, idLesson string) (Response, error)
 	CreateOne(ctx context.Context, unit *Unit) error
 	UpdateOne(ctx context.Context, unitID string, unit Unit) (Response, error)
 	UpsertOne(ctx context.Context, id string, unit *Unit) (Response, error)
 	DeleteOne(ctx context.Context, unitID string) error
+
+	// UpdateComplete automation
+	UpdateComplete(ctx context.Context, unitID string, unit Unit) error
 }

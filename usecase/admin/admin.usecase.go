@@ -11,6 +11,13 @@ type adminUseCase struct {
 	contextTimeout  time.Duration
 }
 
+func NewAdminUseCase(adminRepository admin_domain.IAdminRepository, timeout time.Duration) admin_domain.IAdminUseCase {
+	return &adminUseCase{
+		adminRepository: adminRepository,
+		contextTimeout:  timeout,
+	}
+}
+
 func (a *adminUseCase) GetByID(ctx context.Context, id string) (*admin_domain.Admin, error) {
 	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
 	defer cancel()
@@ -33,13 +40,6 @@ func (a *adminUseCase) Login(c context.Context, request admin_domain.SignIn) (*a
 	}
 
 	return quiz, err
-}
-
-func NewAdminUseCase(adminRepository admin_domain.IAdminRepository, timeout time.Duration) admin_domain.IAdminUseCase {
-	return &adminUseCase{
-		adminRepository: adminRepository,
-		contextTimeout:  timeout,
-	}
 }
 
 func (a *adminUseCase) FetchMany(ctx context.Context) ([]admin_domain.Admin, error) {

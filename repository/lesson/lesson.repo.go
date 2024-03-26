@@ -25,42 +25,90 @@ func NewLessonRepository(db mongo.Database, collectionLesson string, collectionC
 		collectionCourse: collectionCourse,
 	}
 }
+func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string) (lesson_domain.Response, error) {
+	collectionLesson := l.database.Collection(l.collectionLesson)
+	collectionCourse := l.database.Collection(l.collectionCourse)
 
-func (l *lessonRepository) FetchMany(ctx context.Context) ([]lesson_domain.Response, error) {
+	idCourse2, err := primitive.ObjectIDFromHex(idCourse)
+	filter := bson.M{"course_id": idCourse2}
+
+	cursor, err := collectionLesson.Find(ctx, filter)
+	if err != nil {
+		return lesson_domain.Response{}, err
+	}
+	defer cursor.Close(ctx)
+
+	var lessons []lesson_domain.Lesson
+	// Lặp qua các kết quả và giải mã vào slice units
+	for cursor.Next(ctx) {
+		var lesson lesson_domain.Lesson
+		if err = cursor.Decode(&lesson); err != nil {
+			return lesson_domain.Response{}, err
+		}
+
+		var course course_domain.Course
+		err = collectionCourse.FindOne(ctx, bson.M{"_id": idCourse2}).Decode(&course)
+		if err != nil {
+			return lesson_domain.Response{}, err
+		}
+
+		lesson.CourseID = idCourse2
+
+		lessons = append(lessons, lesson)
+	}
+
+	// Tạo và trả về phản hồi với dữ liệu units và số lượng tài liệu trong collection bài học
+	response := lesson_domain.Response{
+		Lesson: lessons,
+	}
+	return response, nil
+}
+
+func (l *lessonRepository) UpdateComplete(ctx context.Context, lessonID string, lesson lesson_domain.Lesson) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (l *lessonRepository) FetchMany(ctx context.Context) (lesson_domain.Response, error) {
 	collectionLesson := l.database.Collection(l.collectionLesson)
 	collectionCourse := l.database.Collection(l.collectionCourse)
 
 	cursor, err := collectionLesson.Find(ctx, bson.D{})
 	if err != nil {
-		return nil, err
+		return lesson_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor mongo.Cursor, ctx context.Context) {
+		err = cursor.Close(ctx)
+		if err != nil {
 
-	var lessons []lesson_domain.Response
+		}
+	}(cursor, ctx)
+
+	var lessons []lesson_domain.Lesson
 	for cursor.Next(ctx) {
 		var lesson lesson_domain.Lesson
-		var lesson2 lesson_domain.Response
-		if err := cursor.Decode(&lesson); err != nil {
-			return nil, err
+		if err = cursor.Decode(&lesson); err != nil {
+			return lesson_domain.Response{}, err
 		}
 
 		var course course_domain.Course
-		err := collectionCourse.FindOne(ctx, bson.M{"_id": lesson.CourseID}).Decode(&course)
+		err = collectionCourse.FindOne(ctx, bson.M{"_id": lesson.CourseID}).Decode(&course)
 		if err != nil {
-			return nil, err
+			return lesson_domain.Response{}, err
 		}
 
 		// Gắn tên của course vào lesson
-		lesson2.CourseID = course.Id
+		lesson.CourseID = course.Id
 
 		// Thêm lesson vào slice lessons
-		lessons = append(lessons, lesson2)
+		lessons = append(lessons, lesson)
 	}
 	err = cursor.All(ctx, &lessons)
-	if lessons == nil {
-		return []lesson_domain.Response{}, err
+	lessonRes := lesson_domain.Response{
+		Lesson: lessons,
 	}
-	return lessons, err
+
+	return lessonRes, err
 }
 
 func (l *lessonRepository) UpdateOne(ctx context.Context, lessonID string, lesson lesson_domain.Lesson) error {

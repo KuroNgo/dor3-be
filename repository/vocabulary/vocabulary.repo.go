@@ -26,73 +26,123 @@ func NewVocabularyRepository(db mongo.Database, collectionVocabulary string, col
 	}
 }
 
-func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) ([]vocabulary_domain.Response, error) {
+func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string) (vocabulary_domain.Response, error) {
+	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
+	collectionUnit := v.database.Collection(v.collectionUnit)
+
+	idUnit2, err := primitive.ObjectIDFromHex(idUnit)
+	filter := bson.M{"unit_id": idUnit2}
+
+	cursor, err := collectionVocabulary.Find(ctx, filter)
+	if err != nil {
+		return vocabulary_domain.Response{}, err
+	}
+	defer cursor.Close(ctx)
+
+	var vocabularies []vocabulary_domain.Vocabulary
+	// Lặp qua các kết quả và giải mã vào slice units
+	for cursor.Next(ctx) {
+		var vocabulary vocabulary_domain.Vocabulary
+		if err = cursor.Decode(&vocabulary); err != nil {
+			return vocabulary_domain.Response{}, err
+		}
+
+		var unit unit_domain.Unit
+		err = collectionUnit.FindOne(ctx, bson.M{"_id": idUnit2}).Decode(&unit)
+		if err != nil {
+			return vocabulary_domain.Response{}, err
+		}
+
+		vocabulary.UnitID = idUnit2
+
+		vocabularies = append(vocabularies, vocabulary)
+	}
+
+	// Tạo và trả về phản hồi với dữ liệu units và số lượng tài liệu trong collection bài học
+	response := vocabulary_domain.Response{
+		Vocabulary: vocabularies,
+	}
+	return response, nil
+}
+
+func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) (vocabulary_domain.Response, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
 	filter := bson.M{"word": primitive.Regex{Pattern: word, Options: "i"}}
-	var vocabularies []vocabulary_domain.Response
+	var vocabularies []vocabulary_domain.Vocabulary
 
 	// Tìm kiếm tài liệu với điều kiện name
 	cursor, err := collectionVocabulary.Find(ctx, filter)
+	if err != nil {
+		return vocabulary_domain.Response{}, err
+	}
+	for cursor.Next(ctx) {
+		var vocabulary vocabulary_domain.Vocabulary
+		if err = cursor.Decode(&vocabulary); err != nil {
+			return vocabulary_domain.Response{}, err
+		}
+
+		// Thêm lesson vào slice lessons
+		vocabularies = append(vocabularies, vocabulary)
+	}
 	err = cursor.All(ctx, &vocabularies)
-	if vocabularies == nil {
-		return []vocabulary_domain.Response{}, err
+	vocabularyRes := vocabulary_domain.Response{
+		Vocabulary: vocabularies,
 	}
 
-	return vocabularies, nil
+	return vocabularyRes, nil
 }
 
-func (v *vocabularyRepository) FetchByLesson(ctx context.Context, unitName string) ([]vocabulary_domain.Response, error) {
+func (v *vocabularyRepository) FetchByLesson(ctx context.Context, unitName string) (vocabulary_domain.Response, error) {
 	collectionUnit := v.database.Collection(v.collectionUnit)
-	var vocabulary []vocabulary_domain.Response
+	var vocabulary vocabulary_domain.Response
 
 	// Tìm kiếm tài liệu với điều kiện name
 	cursor, err := collectionUnit.Find(ctx, bson.M{"name": unitName})
-	err = cursor.All(ctx, &vocabulary)
-	if vocabulary == nil {
-		return []vocabulary_domain.Response{}, err
+	if err != nil {
+		return vocabulary_domain.Response{}, err
 	}
+	err = cursor.All(ctx, &vocabulary)
 
 	return vocabulary, nil
 }
 
-func (v *vocabularyRepository) FetchMany(ctx context.Context) ([]vocabulary_domain.Response, error) {
+func (v *vocabularyRepository) FetchMany(ctx context.Context) (vocabulary_domain.Response, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
 
 	cursor, err := collectionVocabulary.Find(ctx, bson.D{})
 	if err != nil {
-		return nil, err
+		return vocabulary_domain.Response{}, err
 	}
 	defer cursor.Close(ctx)
-	var vocabularies []vocabulary_domain.Response
+	var vocabularies []vocabulary_domain.Vocabulary
 
 	for cursor.Next(ctx) {
 		var vocabulary vocabulary_domain.Vocabulary
-		var vocabulary2 vocabulary_domain.Response
-		if err := cursor.Decode(&vocabulary); err != nil {
-			return nil, err
+		if err = cursor.Decode(&vocabulary); err != nil {
+			return vocabulary_domain.Response{}, err
 		}
 
 		var unit unit_domain.Unit
-		err := collectionUnit.FindOne(ctx, bson.M{"_id": vocabulary.UnitID}).Decode(&unit)
+		err = collectionUnit.FindOne(ctx, bson.M{"_id": vocabulary.UnitID}).Decode(&unit)
 		if err != nil {
-			return nil, err
+			return vocabulary_domain.Response{}, err
 		}
 
 		// Gắn tên của course vào lesson
-		vocabulary2.UnitID = unit.ID
+		vocabulary.UnitID = unit.ID
 
 		// Thêm lesson vào slice lessons
-		vocabularies = append(vocabularies, vocabulary2)
+		vocabularies = append(vocabularies, vocabulary)
 	}
 
-	var vocabulary []vocabulary_domain.Response
+	var vocabulary vocabulary_domain.Response
 	err = cursor.All(ctx, &vocabulary)
-	if vocabulary == nil {
-		return []vocabulary_domain.Response{}, err
+	vocabularyRes := vocabulary_domain.Response{
+		Vocabulary: vocabularies,
 	}
-	return vocabulary, err
+	return vocabularyRes, err
 }
 
 func (v *vocabularyRepository) UpdateOne(ctx context.Context, vocabularyID string, vocabulary vocabulary_domain.Vocabulary) error {

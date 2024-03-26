@@ -21,22 +21,41 @@ func NewAudioRepository(db mongo.Database, collection string) audio_domain.IAudi
 	}
 }
 
-func (a *audioRepository) FetchMany(ctx context.Context) ([]audio_domain.Audio, error) {
+func (a *audioRepository) FetchMany(ctx context.Context) (audio_domain.Response, error) {
 	collection := a.database.Collection(a.collection)
 
+	// Đếm tổng số lượng tài liệu trong collection
+	count, err := collection.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return audio_domain.Response{}, err
+	}
+
+	// Sử dụng Find() để lấy dữ liệu từ collection
 	cursor, err := collection.Find(ctx, bson.D{})
 	if err != nil {
-		return nil, err
+		return audio_domain.Response{}, err
 	}
+	defer func(cursor mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+
+		}
+	}(cursor, ctx)
 
 	var audio []audio_domain.Audio
 
-	err = cursor.All(ctx, &audio)
-	if audio == nil {
-		return []audio_domain.Audio{}, err
+	// Decode dữ liệu từ cursor vào slice audio
+	if err = cursor.All(ctx, &audio); err != nil {
+		return audio_domain.Response{}, err
 	}
 
-	return audio, err
+	// Tạo cấu trúc dữ liệu Response
+	response := audio_domain.Response{
+		Audio: audio,
+		Count: count,
+	}
+
+	return response, nil
 }
 
 func (a *audioRepository) CreateOne(ctx context.Context, audio *audio_domain.Audio) error {

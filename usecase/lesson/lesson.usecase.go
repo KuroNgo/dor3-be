@@ -17,14 +17,30 @@ func NewLessonUseCase(lessonRepository lesson_domain.ILessonRepository, timeout 
 		contextTimeout:   timeout,
 	}
 }
+func (l *lessonUseCase) FetchByIdCourse(ctx context.Context, idCourse string) (lesson_domain.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
+	defer cancel()
 
-func (l *lessonUseCase) FetchMany(ctx context.Context) ([]lesson_domain.Response, error) {
+	lesson, err := l.lessonRepository.FetchByIdCourse(ctx, idCourse)
+	if err != nil {
+		return lesson_domain.Response{}, err
+	}
+
+	return lesson, err
+}
+
+func (l *lessonUseCase) UpdateComplete(ctx context.Context, lessonID string, lesson lesson_domain.Lesson) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (l *lessonUseCase) FetchMany(ctx context.Context) (lesson_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()
 
 	lesson, err := l.lessonRepository.FetchMany(ctx)
 	if err != nil {
-		return nil, err
+		return lesson_domain.Response{}, err
 	}
 
 	return lesson, err

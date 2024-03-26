@@ -18,13 +18,30 @@ func NewUnitUseCase(unitRepository unit_domain.IUnitRepository, timeout time.Dur
 	}
 }
 
-func (u *unitUseCase) FetchMany(ctx context.Context) ([]unit_domain.Response, error) {
+func (u *unitUseCase) FetchByIdLesson(ctx context.Context, idLesson string) (unit_domain.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
+	unit, err := u.unitRepository.FetchByIdLesson(ctx, idLesson)
+	if err != nil {
+		return unit_domain.Response{}, err
+	}
+
+	return unit, err
+}
+
+func (u *unitUseCase) UpdateComplete(ctx context.Context, unitID string, unit unit_domain.Unit) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u *unitUseCase) FetchMany(ctx context.Context) (unit_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
 	unit, err := u.unitRepository.FetchMany(ctx)
 	if err != nil {
-		return nil, err
+		return unit_domain.Response{}, err
 	}
 
 	return unit, err

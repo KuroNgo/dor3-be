@@ -16,6 +16,12 @@ type userRepository struct {
 	collection string
 }
 
+func NewUserRepository(db mongo.Database, collection string) user_domain.IUserRepository {
+	return &userRepository{
+		database:   db,
+		collection: collection,
+	}
+}
 func (u *userRepository) Update(ctx context.Context, userID string, user user_domain.User) error {
 	collection := u.database.Collection(u.collection)
 	doc, err := internal.ToDoc(user)
@@ -26,13 +32,6 @@ func (u *userRepository) Update(ctx context.Context, userID string, user user_do
 
 	_, err = collection.UpdateOne(ctx, filter, update)
 	return err
-}
-
-func NewUserRepository(db mongo.Database, collection string) user_domain.IUserRepository {
-	return &userRepository{
-		database:   db,
-		collection: collection,
-	}
 }
 
 func (u *userRepository) Create(c context.Context, user user_domain.User) error {
@@ -116,7 +115,7 @@ func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.Use
 	return &user, err
 }
 
-func (u *userRepository) UpsertOne(c context.Context, email string, user *user_domain.User) (*user_domain.Response, error) {
+func (u *userRepository) UpsertOne(c context.Context, email string, user *user_domain.User) (*user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 	doc, err := internal.ToDoc(user)
 	if err != nil {
@@ -128,7 +127,7 @@ func (u *userRepository) UpsertOne(c context.Context, email string, user *user_d
 	update := bson.D{{Key: "$set", Value: doc}}
 	res := collection.FindOneAndUpdate(c, query, update, opts)
 
-	var updatedPost *user_domain.Response
+	var updatedPost *user_domain.User
 
 	if err := res.Decode(&updatedPost); err != nil {
 		return nil, errors.New("no post with that Id exists")
