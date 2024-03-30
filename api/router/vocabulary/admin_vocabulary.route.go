@@ -3,6 +3,8 @@ package vocabulary_route
 import (
 	vocabulary_controller "clean-architecture/api/controller/vocabulary"
 	"clean-architecture/bootstrap"
+	mark_domain "clean-architecture/domain/mark_vocabulary"
+	mean_domain "clean-architecture/domain/mean"
 	unit_domain "clean-architecture/domain/unit"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"clean-architecture/infrastructor/mongo"
@@ -13,7 +15,7 @@ import (
 )
 
 func AdminVocabularyRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
-	vo := vocabulary_repository.NewVocabularyRepository(db, vocabulary_domain.CollectionVocabulary, unit_domain.CollectionUnit)
+	vo := vocabulary_repository.NewVocabularyRepository(db, vocabulary_domain.CollectionVocabulary, mean_domain.CollectionMean, mark_domain.CollectionMark, unit_domain.CollectionUnit)
 	vocabulary := &vocabulary_controller.VocabularyController{
 		VocabularyUseCase: vocabulary_usecase.NewVocabularyUseCase(vo, timeout),
 		Database:          env,

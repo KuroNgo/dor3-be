@@ -31,6 +31,6 @@ type IVocabularyUseCase interface {
 	FetchByLesson(ctx context.Context, lessonName string) (Response, error)
 	UpdateOne(ctx context.Context, vocabularyID string, vocabulary Vocabulary) error
 	CreateOne(ctx context.Context, vocabulary *Vocabulary) error
-	UpsertOne(c context.Context, id string, vocabulary *Vocabulary) (*Response, error)
+	UpsertOne(c context.Context, id string, vocabulary *Vocabulary) (Response, error)
 	DeleteOne(ctx context.Context, vocabularyID string) error
 }

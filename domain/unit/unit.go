@@ -14,7 +14,7 @@ type Unit struct {
 	ID         primitive.ObjectID `bson:"_id" json:"_id"`
 	LessonID   primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 	Name       string             `bson:"name" json:"name"`
-	Image      string             `bson:"image" json:"image"`
+	ImageURL   string             `bson:"image_url" json:"image_url"`
 	Content    string             `bson:"content" json:"content"`
 	IsComplete int                `bson:"is_complete" json:"is_complete"`
 	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
@@ -36,5 +36,6 @@ type IUnitRepository interface {
 	DeleteOne(ctx context.Context, unitID string) error
 
 	// UpdateComplete automation
-	UpdateComplete(ctx context.Context, unitID string, unit Unit) error
+	UpdateComplete(ctx context.Context, update Update) error
+	CheckLessonComplete(ctx context.Context, lessonID string) (bool, error)
 }

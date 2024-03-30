@@ -11,7 +11,7 @@ import (
 func (a *AdminController) GetMe(ctx *gin.Context) {
 	cookie, err := ctx.Cookie("access_token")
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "fail",
 			"message": "You are not login!",
 		})
@@ -20,7 +20,7 @@ func (a *AdminController) GetMe(ctx *gin.Context) {
 
 	sub, err := internal.ValidateToken(cookie, a.Database.AccessTokenPublicKey)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+		ctx.JSON(http.StatusForbidden, gin.H{
 			"status":  "fail",
 			"message": err.Error(),
 		})
@@ -30,7 +30,7 @@ func (a *AdminController) GetMe(ctx *gin.Context) {
 	resultString, err := json.Marshal(result)
 
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+		ctx.JSON(http.StatusForbidden, gin.H{
 			"status":  "fail",
 			"message": string(resultString) + "the user belonging to this token no logger exists",
 		})

@@ -78,7 +78,7 @@ func (v *VocabularyController) FetchMany(ctx *gin.Context) {
 	})
 }
 
-func (v *VocabularyController) FetchVocabularyByIdUnit(ctx *gin.Context) {
+func (v *VocabularyController) FetchByIdUnit(ctx *gin.Context) {
 	idUnit := ctx.Param("unit_id")
 
 	vocabulary, err := v.VocabularyUseCase.FetchByIdUnit(ctx, idUnit)

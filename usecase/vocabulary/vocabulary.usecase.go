@@ -102,13 +102,13 @@ func (v *vocabularyUseCase) CreateOne(ctx context.Context, vocabulary *vocabular
 	return nil
 }
 
-func (v *vocabularyUseCase) UpsertOne(ctx context.Context, id string, vocabulary *vocabulary_domain.Vocabulary) (*vocabulary_domain.Response, error) {
+func (v *vocabularyUseCase) UpsertOne(ctx context.Context, id string, vocabulary *vocabulary_domain.Vocabulary) (vocabulary_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
 	lesson, err := v.vocabularyRepository.UpsertOne(ctx, id, vocabulary)
 	if err != nil {
-		return nil, err
+		return vocabulary_domain.Response{}, err
 	}
 	return lesson, nil
 }

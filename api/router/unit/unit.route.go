@@ -5,6 +5,7 @@ import (
 	"clean-architecture/bootstrap"
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
+	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"clean-architecture/infrastructor/mongo"
 	unit_repo "clean-architecture/repository/unit"
 	unit_usecase "clean-architecture/usecase/unit"
@@ -13,7 +14,7 @@ import (
 )
 
 func UnitRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
-	un := unit_repo.NewUnitRepository(db, unit_domain.CollectionUnit, lesson_domain.CollectionLesson)
+	un := unit_repo.NewUnitRepository(db, unit_domain.CollectionUnit, lesson_domain.CollectionLesson, vocabulary_domain.CollectionVocabulary)
 	unit := &unit_controller.UnitController{
 		UnitUseCase: unit_usecase.NewUnitUseCase(un, timeout),
 		Database:    env,
@@ -22,4 +23,5 @@ func UnitRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Databas
 	router := group.Group("/unit")
 	router.GET("/fetch", unit.FetchMany)
 	router.GET("/fetch/:lesson_id", unit.FetchByIdLesson)
+	router.PATCH("/update/complete/:_id", unit.UpdateCompletedByIdUnit) // automation
 }

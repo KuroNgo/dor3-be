@@ -11,7 +11,6 @@ import (
 func (l *LoginFromRoleController) Login2(ctx *gin.Context) {
 	//  Lấy thông tin từ request
 	var adminInput admin_domain.SignIn
-
 	if err := ctx.ShouldBindJSON(&adminInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -48,7 +47,7 @@ func (l *LoginFromRoleController) Login2(ctx *gin.Context) {
 
 		ctx.SetCookie("access_token", accessToken, l.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
 		ctx.SetCookie("refresh_token", refreshToken, l.Database.RefreshTokenMaxAge*60, "/", "localhost", false, true)
-		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
+		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":  "success",
@@ -81,7 +80,7 @@ func (l *LoginFromRoleController) Login2(ctx *gin.Context) {
 
 		ctx.SetCookie("access_token", accessToken, l.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
 		ctx.SetCookie("refresh_token", refreshToken, l.Database.RefreshTokenMaxAge*60, "/", "localhost", false, true)
-		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
+		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":  "success",
@@ -91,7 +90,7 @@ func (l *LoginFromRoleController) Login2(ctx *gin.Context) {
 	}
 
 	// Trả về thông báo login không thành công
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusBadRequest, gin.H{
 		"status":  "error",
 		"message": err.Error(),
 	})

@@ -12,7 +12,7 @@ func (a *AdminController) RefreshToken(ctx *gin.Context) {
 
 	cookie, err := ctx.Cookie("refresh_token")
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+		ctx.JSON(http.StatusForbidden, gin.H{
 			"status":  "fail",
 			"message": message,
 		})
@@ -21,7 +21,7 @@ func (a *AdminController) RefreshToken(ctx *gin.Context) {
 
 	sub, err := internal.ValidateToken(cookie, a.Database.RefreshTokenPublicKey)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+		ctx.JSON(http.StatusForbidden, gin.H{
 			"status":  "fail",
 			"message": err.Error(),
 		})
@@ -30,7 +30,7 @@ func (a *AdminController) RefreshToken(ctx *gin.Context) {
 
 	admin, err := a.AdminUseCase.GetByID(ctx, fmt.Sprint(sub))
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+		ctx.JSON(http.StatusForbidden, gin.H{
 			"status":  "fail",
 			"message": "the user belonging to this token no logger exists",
 		})
@@ -39,7 +39,7 @@ func (a *AdminController) RefreshToken(ctx *gin.Context) {
 
 	access_token, err := internal.CreateToken(a.Database.AccessTokenExpiresIn, admin.Id, a.Database.AccessTokenPrivateKey)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+		ctx.JSON(http.StatusForbidden, gin.H{
 			"status":  "fail",
 			"message": err.Error(),
 		})

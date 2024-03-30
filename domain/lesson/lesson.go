@@ -15,7 +15,7 @@ type Lesson struct {
 	CourseID    primitive.ObjectID `bson:"course_id" json:"course_id"`
 	Name        string             `bson:"name" json:"name"`
 	Content     string             `bson:"content" json:"content"`
-	Image       string             `bson:"image" json:"image"`
+	ImageURL    string             `bson:"image_url" json:"image_url"`
 	Level       int                `bson:"level" json:"level"`
 	IsCompleted int                `bson:"is_completed" json:"is_completed"`
 	CreatedAt   time.Time          `bson:"created_at" json:"created_at"`

@@ -18,13 +18,13 @@ func NewMeanUseCase(meanRepository mean_domain.IMeanRepository, timeout time.Dur
 	}
 }
 
-func (m *meanUseCase) FetchMany(ctx context.Context) ([]mean_domain.Response, error) {
+func (m *meanUseCase) FetchMany(ctx context.Context) (mean_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()
 
 	mean, err := m.meanRepository.FetchMany(ctx)
 	if err != nil {
-		return nil, err
+		return mean_domain.Response{}, err
 	}
 
 	return mean, err

@@ -5,6 +5,7 @@ import (
 	"clean-architecture/bootstrap"
 	course_domain "clean-architecture/domain/course"
 	lesson_domain "clean-architecture/domain/lesson"
+	unit_domain "clean-architecture/domain/unit"
 	"clean-architecture/infrastructor/mongo"
 	lesson_repository "clean-architecture/repository/lesson"
 	lesson_usecase "clean-architecture/usecase/lesson"
@@ -13,7 +14,7 @@ import (
 )
 
 func AdminLessonRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
-	le := lesson_repository.NewLessonRepository(db, lesson_domain.CollectionLesson, course_domain.CollectionCourse)
+	le := lesson_repository.NewLessonRepository(db, lesson_domain.CollectionLesson, course_domain.CollectionCourse, unit_domain.CollectionUnit)
 	lesson := &lesson_controller.LessonController{
 		LessonUseCase: lesson_usecase.NewLessonUseCase(le, timeout),
 		Database:      env,

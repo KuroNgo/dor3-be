@@ -11,6 +11,18 @@ type userUseCase struct {
 	contextTimeout time.Duration
 }
 
+func (u *userUseCase) UpdateImage(c context.Context, userID string, imageURL string) error {
+	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
+	defer cancel()
+	err := u.userRepository.UpdateImage(ctx, imageURL, userID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func NewUserUseCase(userRepository user_domain.IUserRepository, timeout time.Duration) user_domain.IUserUseCase {
 	return &userUseCase{
 		userRepository: userRepository,
@@ -42,13 +54,13 @@ func (u *userUseCase) Login(c context.Context, request user_domain.SignIn) (*use
 	return user, err
 }
 
-func (u *userUseCase) Fetch(c context.Context) ([]user_domain.User, error) {
+func (u *userUseCase) Fetch(c context.Context) (user_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
 	defer cancel()
 
 	user, err := u.userRepository.FetchMany(ctx)
 	if err != nil {
-		return nil, err
+		return user_domain.Response{}, err
 	}
 
 	return user, err

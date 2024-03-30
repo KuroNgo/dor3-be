@@ -15,7 +15,7 @@ type Input struct {
 }
 
 type IMeanUseCase interface {
-	FetchMany(ctx context.Context) ([]Response, error)
+	FetchMany(ctx context.Context) (Response, error)
 	CreateOne(ctx context.Context, mean *Mean, fieldOfIT string) error
 	UpdateOne(ctx context.Context, meanID string, mean Mean) error
 	UpsertOne(ctx context.Context, id string, mean *Mean) (*Mean, error)

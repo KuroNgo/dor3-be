@@ -11,6 +11,13 @@ type Input struct {
 	Content  string             `bson:"content" json:"content"`
 }
 
+type Update struct {
+	UnitID     string `bson:"_id" json:"_id"`
+	LessonID   string `bson:"lesson_id" json:"lesson_id"`
+	IsComplete int    `bson:"is_complete" json:"is_complete"`
+	WhoUpdate  string `bson:"who_update" json:"who_update"`
+}
+
 //go:generate mockery --name IUnitUseCase
 type IUnitUseCase interface {
 	FetchMany(ctx context.Context) (Response, error)
@@ -21,5 +28,5 @@ type IUnitUseCase interface {
 	DeleteOne(ctx context.Context, unitID string) error
 
 	// UpdateComplete automation
-	UpdateComplete(ctx context.Context, unitID string, unit Unit) error
+	UpdateComplete(ctx context.Context, update Update) error
 }
