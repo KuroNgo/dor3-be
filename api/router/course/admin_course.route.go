@@ -21,6 +21,7 @@ func AdminCourseRoute(env *bootstrap.Database, timeout time.Duration, db mongo.D
 
 	router := group.Group("/course")
 	router.POST("/create", course.CreateOneCourse)
+	router.POST("/create/file", course.CreateCourseWithFile)
 	router.PUT("/update/:id", course.UpdateCourse)
 	router.POST("/upsert", course.UpsertOneQuiz)
 }
