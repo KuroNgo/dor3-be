@@ -28,22 +28,28 @@ func (q *quizRepository) FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]q
 	panic("implement me")
 }
 
-func (q *quizRepository) FetchMany(ctx context.Context) ([]quiz_domain.Quiz, error) {
+func (q *quizRepository) FetchMany(ctx context.Context) (quiz_domain.Response, error) {
 	collection := q.database.Collection(q.collection)
 
 	cursor, err := collection.Find(ctx, bson.D{})
 	if err != nil {
-		return nil, err
+		return quiz_domain.Response{}, err
 	}
+	defer cursor.Close(ctx)
 
 	var quiz []quiz_domain.Quiz
 
-	err = cursor.All(ctx, &quiz)
-	if quiz == nil {
-		return []quiz_domain.Quiz{}, err
+	for cursor.Next(ctx) {
+		var q quiz_domain.Quiz
+		if err := cursor.Decode(&q); err != nil {
+			return quiz_domain.Response{}, err
+		}
+		quiz = append(quiz, q)
 	}
-
-	return quiz, err
+	quizRes := quiz_domain.Response{
+		Quiz: quiz,
+	}
+	return quizRes, nil
 }
 
 func (q *quizRepository) UpdateOne(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
@@ -96,13 +102,13 @@ func (q *quizRepository) DeleteOne(ctx context.Context, quizID string) error {
 	return err
 }
 
-func (q *quizRepository) UpsertOne(c context.Context, id string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
+func (q *quizRepository) UpsertOne(c context.Context, id string, quiz *quiz_domain.Quiz) (quiz_domain.Response, error) {
 	collection := q.database.Collection(q.collection)
 	doc, err := internal.ToDoc(quiz)
 
 	idHex, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, err
+		return quiz_domain.Response{}, err
 	}
 
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(1)
@@ -110,10 +116,10 @@ func (q *quizRepository) UpsertOne(c context.Context, id string, quiz *quiz_doma
 	update := bson.D{{Key: "$set", Value: doc}}
 	res := collection.FindOneAndUpdate(c, query, update, opts)
 
-	var updatedPost *quiz_domain.Response
+	var updatedPost quiz_domain.Response
 
 	if err := res.Decode(&updatedPost); err != nil {
-		return nil, errors.New("no post with that Id exists")
+		return quiz_domain.Response{}, errors.New("no post with that Id exists")
 	}
 
 	return updatedPost, nil

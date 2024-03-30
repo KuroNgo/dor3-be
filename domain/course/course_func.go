@@ -9,7 +9,7 @@ type Input struct {
 
 //go:generate mockery --name ICourseUseCase
 type ICourseUseCase interface {
-	FetchMany(ctx context.Context) ([]Course, error)
+	FetchMany(ctx context.Context) (Response, error)
 	UpdateOne(ctx context.Context, courseID string, course Course) error
 	CreateOne(ctx context.Context, course *Course) error
 	UpsertOne(ctx context.Context, id string, course *Course) (*Response, error)

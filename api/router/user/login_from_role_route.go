@@ -18,12 +18,12 @@ func LoginFromRoleRoute(env *bootstrap.Database, timeout time.Duration, db mongo
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
-	lg := &user_controller.LoginFromRoleController{
+	login := &user_controller.LoginFromRoleController{
 		UserUseCase:  usecase.NewUserUseCase(ur, timeout),
 		AdminUseCase: admin_usecase.NewAdminUseCase(ad, timeout),
 		Database:     env,
 	}
 
-	router := group.Group("/user")
-	router.POST("/login-from-role", lg.Login2)
+	router := group.Group("/login")
+	router.POST("/role", login.Login2)
 }

@@ -17,8 +17,6 @@ func (c *CourseController) FetchCourse(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
-		"data": gin.H{
-			"course": course,
-		},
+		"data":   course,
 	})
 }

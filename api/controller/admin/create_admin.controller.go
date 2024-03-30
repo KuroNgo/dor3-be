@@ -22,7 +22,7 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 	if !internal.EmailValid(admin.Email) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
-			"message": "Email không hợp lệ !",
+			"message": "Email Invalid !",
 		})
 		return
 	}

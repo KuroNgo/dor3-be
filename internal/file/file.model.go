@@ -14,6 +14,3 @@ type FileVocabulary struct {
 
 type FileQuiz struct {
 }
-
-type FileAudio struct {
-}

@@ -13,24 +13,29 @@ import (
 )
 
 type unitRepository struct {
-	database         mongo.Database
-	collectionUnit   string
-	collectionLesson string
+	database             mongo.Database
+	collectionUnit       string
+	collectionLesson     string
+	collectionVocabulary string
 }
 
-func NewUnitRepository(db mongo.Database, collectionUnit string, collectionLesson string) unit_domain.IUnitRepository {
+func NewUnitRepository(db mongo.Database, collectionUnit string, collectionLesson string, collectionVocabulary string) unit_domain.IUnitRepository {
 	return &unitRepository{
-		database:         db,
-		collectionUnit:   collectionUnit,
-		collectionLesson: collectionLesson,
+		database:             db,
+		collectionUnit:       collectionUnit,
+		collectionLesson:     collectionLesson,
+		collectionVocabulary: collectionVocabulary,
 	}
 }
 
 func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string) (unit_domain.Response, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
-	collectionLesson := u.database.Collection(u.collectionLesson)
 
 	idLesson2, err := primitive.ObjectIDFromHex(idLesson)
+	if err != nil {
+		return unit_domain.Response{}, err
+	}
+
 	filter := bson.M{"lesson_id": idLesson2}
 
 	cursor, err := collectionUnit.Find(ctx, filter)
@@ -40,34 +45,91 @@ func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string) (
 	defer cursor.Close(ctx)
 
 	var units []unit_domain.Unit
-	// Lặp qua các kết quả và giải mã vào slice units
+
 	for cursor.Next(ctx) {
 		var unit unit_domain.Unit
 		if err := cursor.Decode(&unit); err != nil {
 			return unit_domain.Response{}, err
 		}
 
-		var lesson lesson_domain.Lesson
-		err := collectionLesson.FindOne(ctx, bson.M{"_id": idLesson2}).Decode(&lesson)
-		if err != nil {
-			return unit_domain.Response{}, err
-		}
-
+		// Gắn LessonID vào đơn vị
 		unit.LessonID = idLesson2
 
 		units = append(units, unit)
 	}
 
-	// Tạo và trả về phản hồi với dữ liệu units và số lượng tài liệu trong collection bài học
 	response := unit_domain.Response{
 		Unit: units,
 	}
 	return response, nil
 }
 
-func (u *unitRepository) UpdateComplete(ctx context.Context, unitID string, unit unit_domain.Unit) error {
-	//TODO implement me
-	panic("implement me")
+func (u *unitRepository) UpdateComplete(ctx context.Context, updateData unit_domain.Update) error {
+	collection := u.database.Collection(u.collectionUnit)
+	objID, err := primitive.ObjectIDFromHex(updateData.UnitID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.D{{Key: "_id", Value: objID}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "is_complete", Value: updateData.IsComplete},
+		{Key: "who_updates", Value: updateData.WhoUpdate},
+	}}}
+
+	_, err = collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	isLessonComplete, err := u.CheckLessonComplete(ctx, updateData.LessonID)
+	if err != nil {
+		return err
+	}
+
+	lessonCollection := u.database.Collection(u.collectionLesson)
+	lessonObjID, err := primitive.ObjectIDFromHex(updateData.LessonID)
+	if err != nil {
+		return err
+	}
+
+	lessonUpdate := bson.D{{Key: "$set", Value: bson.D{{Key: "is_complete", Value: isLessonComplete}}}}
+	lessonFilter := bson.D{{Key: "_id", Value: lessonObjID}}
+	_, err = lessonCollection.UpdateOne(ctx, lessonFilter, lessonUpdate)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *unitRepository) CheckLessonComplete(ctx context.Context, lessonID string) (bool, error) {
+	collection := u.database.Collection(u.collectionUnit)
+
+	lessonID2, _ := primitive.ObjectIDFromHex(lessonID)
+
+	cursor, err := collection.Find(ctx, bson.D{{Key: "lesson_id", Value: lessonID2}})
+	if err != nil {
+		return false, err
+	}
+	defer cursor.Close(ctx)
+
+	if !cursor.Next(ctx) {
+		return false, nil
+	}
+
+	for cursor.Next(ctx) {
+		var unit unit_domain.Unit
+		if err := cursor.Decode(&unit); err != nil {
+			return false, err
+		}
+
+		if unit.IsComplete != 1 {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
 
 func (u *unitRepository) FetchMany(ctx context.Context) (unit_domain.Response, error) {
@@ -188,7 +250,8 @@ func (u *unitRepository) UpsertOne(ctx context.Context, id string, unit *unit_do
 }
 
 func (u *unitRepository) DeleteOne(ctx context.Context, unitID string) error {
-	collection := u.database.Collection(u.collectionUnit)
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	collectionVocabulary := u.database.Collection(u.collectionVocabulary)
 	objID, err := primitive.ObjectIDFromHex(unitID)
 	if err != nil {
 		return err
@@ -198,7 +261,18 @@ func (u *unitRepository) DeleteOne(ctx context.Context, unitID string) error {
 		"_id": objID,
 	}
 
-	count, err := collection.CountDocuments(ctx, filter)
+	filterChild := bson.M{
+		"unit_id": objID,
+	}
+	countChild, err := collectionVocabulary.CountDocuments(ctx, filterChild)
+	if err != nil {
+		return err
+	}
+	if countChild == 0 {
+		return errors.New(`the unit can not remove`)
+	}
+
+	count, err := collectionUnit.CountDocuments(ctx, filter)
 	if err != nil {
 		return err
 	}
@@ -206,6 +280,6 @@ func (u *unitRepository) DeleteOne(ctx context.Context, unitID string) error {
 		return errors.New(`the unit is removed`)
 	}
 
-	_, err = collection.DeleteOne(ctx, filter)
+	_, err = collectionUnit.DeleteOne(ctx, filter)
 	return err
 }

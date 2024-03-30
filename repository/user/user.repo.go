@@ -16,6 +16,18 @@ type userRepository struct {
 	collection string
 }
 
+func (u *userRepository) UpdateImage(c context.Context, userID string, imageURL string) error {
+	collection := u.database.Collection(u.collection)
+	doc, err := internal.ToDoc(imageURL)
+	objID, err := primitive.ObjectIDFromHex(userID)
+
+	filter := bson.D{{Key: "_id", Value: objID}}
+	update := bson.D{{Key: "$set", Value: doc}}
+
+	_, err = collection.UpdateOne(c, filter, update)
+	return err
+}
+
 func NewUserRepository(db mongo.Database, collection string) user_domain.IUserRepository {
 	return &userRepository{
 		database:   db,
@@ -50,24 +62,24 @@ func (u *userRepository) Create(c context.Context, user user_domain.User) error 
 	return err
 }
 
-func (u *userRepository) FetchMany(c context.Context) ([]user_domain.User, error) {
+func (u *userRepository) FetchMany(c context.Context) (user_domain.Response, error) {
 	collection := u.database.Collection(u.collection)
 
 	opts := options.Find().SetProjection(bson.D{{Key: "password", Value: 0}})
 	cursor, err := collection.Find(c, bson.D{}, opts)
 
 	if err != nil {
-		return nil, err
+		return user_domain.Response{}, err
 	}
 
 	var users []user_domain.User
 
 	err = cursor.All(c, &users)
 	if users == nil {
-		return []user_domain.User{}, err
+		return user_domain.Response{}, err
 	}
 
-	return users, err
+	return user_domain.Response{}, err
 }
 
 func (u *userRepository) DeleteOne(c context.Context, userID string) error {

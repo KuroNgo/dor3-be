@@ -18,13 +18,13 @@ func NewCourseUseCase(courseRepository course_domain.ICourseRepository, timeout 
 	}
 }
 
-func (c *courseUseCase) FetchMany(ctx context.Context) ([]course_domain.Course, error) {
+func (c *courseUseCase) FetchMany(ctx context.Context) (course_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
 
 	course, err := c.courseRepository.FetchMany(ctx)
 	if err != nil {
-		return nil, err
+		return course_domain.Response{}, err
 	}
 
 	return course, err

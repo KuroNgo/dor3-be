@@ -16,20 +16,25 @@ type lessonRepository struct {
 	database         mongo.Database
 	collectionLesson string
 	collectionCourse string
+	collectionUnit   string
 }
 
-func NewLessonRepository(db mongo.Database, collectionLesson string, collectionCourse string) lesson_domain.ILessonRepository {
+func NewLessonRepository(db mongo.Database, collectionLesson string, collectionCourse string, collectionUnit string) lesson_domain.ILessonRepository {
 	return &lessonRepository{
 		database:         db,
 		collectionLesson: collectionLesson,
 		collectionCourse: collectionCourse,
+		collectionUnit:   collectionUnit,
 	}
 }
 func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string) (lesson_domain.Response, error) {
 	collectionLesson := l.database.Collection(l.collectionLesson)
-	collectionCourse := l.database.Collection(l.collectionCourse)
 
 	idCourse2, err := primitive.ObjectIDFromHex(idCourse)
+	if err != nil {
+		return lesson_domain.Response{}, err
+	}
+
 	filter := bson.M{"course_id": idCourse2}
 
 	cursor, err := collectionLesson.Find(ctx, filter)
@@ -39,25 +44,19 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string)
 	defer cursor.Close(ctx)
 
 	var lessons []lesson_domain.Lesson
-	// Lặp qua các kết quả và giải mã vào slice units
+
 	for cursor.Next(ctx) {
 		var lesson lesson_domain.Lesson
 		if err = cursor.Decode(&lesson); err != nil {
 			return lesson_domain.Response{}, err
 		}
 
-		var course course_domain.Course
-		err = collectionCourse.FindOne(ctx, bson.M{"_id": idCourse2}).Decode(&course)
-		if err != nil {
-			return lesson_domain.Response{}, err
-		}
-
+		// Gắn CourseID vào bài học
 		lesson.CourseID = idCourse2
 
 		lessons = append(lessons, lesson)
 	}
 
-	// Tạo và trả về phản hồi với dữ liệu units và số lượng tài liệu trong collection bài học
 	response := lesson_domain.Response{
 		Lesson: lessons,
 	}
@@ -186,24 +185,33 @@ func (l *lessonRepository) UpsertOne(ctx context.Context, id string, lesson *les
 }
 
 func (l *lessonRepository) DeleteOne(ctx context.Context, lessonID string) error {
-	collection := l.database.Collection(l.collectionLesson)
+	collectionLesson := l.database.Collection(l.collectionLesson)
+	collectionUnit := l.database.Collection(l.collectionUnit)
+
 	objID, err := primitive.ObjectIDFromHex(lessonID)
 	if err != nil {
 		return err
 	}
 
-	filter := bson.M{
-		"_id": objID,
+	filter := bson.M{"_id": objID}
+	filterInUnit := bson.M{"lesson_id": objID}
+
+	exist, err := collectionUnit.CountDocuments(ctx, filterInUnit)
+	if err != nil {
+		return err
+	}
+	if exist > 0 {
+		return errors.New(`lesson can not remove`)
 	}
 
-	count, err := collection.CountDocuments(ctx, filter)
+	count, err := collectionLesson.CountDocuments(ctx, filter)
 	if err != nil {
 		return err
 	}
 	if count == 0 {
-		return errors.New(`the lesson is removed`)
+		return errors.New(`lesson is removed`)
 	}
 
-	_, err = collection.DeleteOne(ctx, filter)
+	_, err = collectionLesson.DeleteOne(ctx, filter)
 	return err
 }

@@ -25,22 +25,30 @@ func NewCourseRepository(db mongo.Database, collectionCourse string, collectionL
 	}
 }
 
-func (c *courseRepository) FetchMany(ctx context.Context) ([]course_domain.Course, error) {
+func (c *courseRepository) FetchMany(ctx context.Context) (course_domain.Response, error) {
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
 	cursor, err := collectionCourse.Find(ctx, bson.D{})
 	if err != nil {
-		return nil, err
+		return course_domain.Response{}, err
 	}
 
-	var course []course_domain.Course
+	var courses []course_domain.Course
+	for cursor.Next(ctx) {
+		var course course_domain.Course
+		if err = cursor.Decode(&course); err != nil {
+			return course_domain.Response{}, err
+		}
 
-	err = cursor.All(ctx, &course)
-	if course == nil {
-		return []course_domain.Course{}, err
+		// Thêm lesson vào slice lessons
+		courses = append(courses, course)
+	}
+	err = cursor.All(ctx, &courses)
+	courseRes := course_domain.Response{
+		Course: courses,
 	}
 
-	return course, err
+	return courseRes, err
 }
 
 func (c *courseRepository) UpdateOne(ctx context.Context, courseID string, course course_domain.Course) error {

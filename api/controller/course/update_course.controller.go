@@ -38,5 +38,4 @@ func (c *CourseController) UpdateCourse(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
-
 }

@@ -26,13 +26,13 @@ func NewMeanRepository(db mongo.Database, collectionMean string, collectionVocab
 	}
 }
 
-func (m *meanRepository) FetchMany(ctx context.Context) ([]mean_domain.Response, error) {
+func (m *meanRepository) FetchMany(ctx context.Context) (mean_domain.Response, error) {
 	collectionMean := m.database.Collection(m.collectionMean)
 	collectionVocabulary := m.database.Collection(m.collectionVocabulary)
 
 	cursor, err := collectionMean.Find(ctx, bson.D{})
 	if err != nil {
-		return nil, err
+		return mean_domain.Response{}, err
 	}
 	defer func(cursor mongo.Cursor, ctx context.Context) {
 		err := cursor.Close(ctx)
@@ -41,31 +41,30 @@ func (m *meanRepository) FetchMany(ctx context.Context) ([]mean_domain.Response,
 		}
 	}(cursor, ctx)
 
-	var means []mean_domain.Response
+	var means []mean_domain.Mean
 	for cursor.Next(ctx) {
 		var mean mean_domain.Mean
-		var mean2 mean_domain.Response
 		if err := cursor.Decode(&mean); err != nil {
-			return nil, err
+			return mean_domain.Response{}, err
 		}
 
 		var vocabulary vocabulary_domain.Vocabulary
-		err := collectionVocabulary.FindOne(ctx, bson.M{"_id": mean.VocabularyID}).Decode(&vocabulary)
+		err = collectionVocabulary.FindOne(ctx, bson.M{"_id": mean.VocabularyID}).Decode(&vocabulary)
 		if err != nil {
-			return nil, err
+			return mean_domain.Response{}, err
 		}
 
 		// Gắn tên của course vào lesson
-		mean2.VocabularyID = vocabulary.Id
+		mean.VocabularyID = vocabulary.Id
 
 		// Thêm lesson vào slice lessons
-		means = append(means, mean2)
+		means = append(means, mean)
 	}
 	err = cursor.All(ctx, &means)
-	if means == nil {
-		return []mean_domain.Response{}, err
+	meanRes := mean_domain.Response{
+		Mean: means,
 	}
-	return means, err
+	return meanRes, err
 }
 
 func (m *meanRepository) CreateOne(ctx context.Context, mean *mean_domain.Mean, fieldOfIT string) error {

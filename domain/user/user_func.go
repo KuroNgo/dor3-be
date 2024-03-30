@@ -18,6 +18,15 @@ type SignIn struct {
 	Password string `bson:"password"  json:"password"`
 }
 
+type Input struct {
+	FullName   string `bson:"full_name"  json:"full_name"`
+	Email      string `bson:"email"  json:"email"`
+	Password   string `bson:"password"  json:"password"`
+	AvatarURL  string `bson:"avatar_url"  json:"avatar_url"`
+	Specialize string `bson:"specialize"  json:"specialize"`
+	Phone      string `bson:"phone"   json:"phone"`
+}
+
 //go:generate mockery --name IUserUseCase
 type IUserUseCase interface {
 	Create(ctx context.Context, user User) error
@@ -25,5 +34,6 @@ type IUserUseCase interface {
 	Delete(ctx context.Context, userID string, user User) error
 	Login(c context.Context, request SignIn) (*User, error)
 	GetByEmail(ctx context.Context, email string) (*User, error)
+	UpdateImage(c context.Context, userID string, imageURL string) error
 	GetByID(ctx context.Context, id string) (*User, error)
 }

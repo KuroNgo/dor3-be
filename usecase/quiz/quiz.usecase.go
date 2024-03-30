@@ -18,13 +18,13 @@ func NewQuizUseCase(quizRepository quiz_domain.IQuizRepository, timeout time.Dur
 	}
 }
 
-func (q *quizUseCase) FetchMany(ctx context.Context) ([]quiz_domain.Quiz, error) {
+func (q *quizUseCase) FetchMany(ctx context.Context) (quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
 	quiz, err := q.quizRepository.FetchMany(ctx)
 	if err != nil {
-		return nil, err
+		return quiz_domain.Response{}, err
 	}
 
 	return quiz, err
@@ -54,12 +54,12 @@ func (q *quizUseCase) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) err
 	return nil
 }
 
-func (q *quizUseCase) UpsertOne(c context.Context, id string, quiz *quiz_domain.Quiz) (*quiz_domain.Response, error) {
+func (q *quizUseCase) UpsertOne(c context.Context, id string, quiz *quiz_domain.Quiz) (quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(c, q.contextTimeout)
 	defer cancel()
 	quizRes, err := q.quizRepository.UpsertOne(ctx, id, quiz)
 	if err != nil {
-		return nil, err
+		return quiz_domain.Response{}, err
 	}
 	return quizRes, nil
 }
