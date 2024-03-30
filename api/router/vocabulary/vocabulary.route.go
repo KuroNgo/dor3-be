@@ -26,5 +26,5 @@ func VocabularyRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Da
 	router.GET("/fetch", vocabulary.FetchMany)
 	router.GET("/fetch-by-word", vocabulary.FetchByWord)
 	router.GET("/fetch-by-lesson", vocabulary.FetchByLesson)
-	router.GET("/fetch/:unit_id", vocabulary.FetchByIdUnit)
+	router.GET("/fetch/unit", vocabulary.FetchByIdUnit)
 }

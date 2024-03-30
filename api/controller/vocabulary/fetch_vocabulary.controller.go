@@ -79,7 +79,7 @@ func (v *VocabularyController) FetchMany(ctx *gin.Context) {
 }
 
 func (v *VocabularyController) FetchByIdUnit(ctx *gin.Context) {
-	idUnit := ctx.Param("unit_id")
+	idUnit := ctx.Query("unit_id")
 
 	vocabulary, err := v.VocabularyUseCase.FetchByIdUnit(ctx, idUnit)
 	if err != nil {
@@ -89,9 +89,10 @@ func (v *VocabularyController) FetchByIdUnit(ctx *gin.Context) {
 		})
 		return
 	}
+
+	// Nếu không có lỗi và có từ vựng được tìm thấy, trả về dữ liệu thành công
 	ctx.JSON(http.StatusOK, gin.H{
 		"status":     "success",
 		"vocabulary": vocabulary,
 	})
-
 }

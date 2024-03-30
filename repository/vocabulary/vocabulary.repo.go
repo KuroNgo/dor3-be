@@ -50,7 +50,7 @@ func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string)
 
 	for cursor.Next(ctx) {
 		var vocabulary vocabulary_domain.Vocabulary
-		if err := cursor.Decode(&vocabulary); err != nil {
+		if err = cursor.Decode(&vocabulary); err != nil {
 			return vocabulary_domain.Response{}, err
 		}
 
@@ -58,6 +58,11 @@ func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string)
 		vocabulary.UnitID = idUnit2
 
 		vocabularies = append(vocabularies, vocabulary)
+	}
+
+	// Kiểm tra nếu slice vocabularies rỗng
+	if len(vocabularies) == 0 {
+		return vocabulary_domain.Response{}, errors.New("no vocabulary found for the provided unit_id")
 	}
 
 	response := vocabulary_domain.Response{
@@ -132,10 +137,10 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context) (vocabulary_domain
 			return vocabulary_domain.Response{}, err
 		}
 
-		// Gắn tên của course vào lesson
+		// Gắn tên của unit vào vocabulary
 		vocabulary.UnitID = unit.ID
 
-		// Thêm lesson vào slice lessons
+		// Thêm unit vào slice vocabulary
 		vocabularies = append(vocabularies, vocabulary)
 	}
 
@@ -164,13 +169,13 @@ func (v *vocabularyRepository) CreateOne(ctx context.Context, vocabulary *vocabu
 	filter := bson.M{"word": vocabulary.Word, "unit_id": vocabulary.UnitID}
 	filterReference := bson.M{"_id": vocabulary.UnitID}
 
-	count, err := collectionUnit.CountDocuments(ctx, filterReference)
+	countParent, err := collectionUnit.CountDocuments(ctx, filterReference)
 	if err != nil {
 		return err
 	}
 
 	// check exists with CountDocuments
-	count, err = collectionVocabulary.CountDocuments(ctx, filter)
+	count, err := collectionVocabulary.CountDocuments(ctx, filter)
 	if err != nil {
 		return err
 	}
@@ -178,7 +183,7 @@ func (v *vocabularyRepository) CreateOne(ctx context.Context, vocabulary *vocabu
 	if count > 0 {
 		return errors.New("the word in unit did exist")
 	}
-	if count == 0 {
+	if countParent == 0 {
 		return errors.New("the unit ID do not exist")
 	}
 

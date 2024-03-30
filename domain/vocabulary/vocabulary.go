@@ -11,17 +11,17 @@ const (
 
 type Vocabulary struct {
 	Id            primitive.ObjectID `bson:"_id" json:"_id"`
+	UnitID        primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 	Word          string             `bson:"word" json:"word"`
 	PartOfSpeech  string             `bson:"part_of_speech" json:"part_of_speech"`
 	Pronunciation string             `bson:"pronunciation" json:"pronunciation"`
 	Example       string             `bson:"example" json:"example"`
 	FieldOfIT     string             `bson:"field_of_it" json:"field_of_it"`
 	LinkURL       string             `bson:"link_url" json:"link_url"`
-	UnitID        primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 }
 
 type Response struct {
-	Vocabulary []Vocabulary `bson:"vocabulary" json:"vocabulary"`
+	Vocabulary []Vocabulary `bson:"data" json:"data"`
 }
 
 //go:generate mockery --name IVocabularyRepository

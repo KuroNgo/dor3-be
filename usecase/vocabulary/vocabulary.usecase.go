@@ -22,7 +22,7 @@ func (v *vocabularyUseCase) FetchByIdUnit(ctx context.Context, idUnit string) (v
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := v.vocabularyRepository.FetchByLesson(ctx, idUnit)
+	vocabulary, err := v.vocabularyRepository.FetchByIdUnit(ctx, idUnit)
 	if err != nil {
 		return vocabulary_domain.Response{}, err
 	}
