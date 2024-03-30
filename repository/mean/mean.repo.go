@@ -162,7 +162,7 @@ func (m *meanRepository) DeleteOne(ctx context.Context, meanID string) error {
 		return err
 	}
 	if count == 0 {
-		return errors.New(`the unit is removed`)
+		return errors.New(`mean is removed or exist'`)
 	}
 
 	_, err = collection.DeleteOne(ctx, filter)
