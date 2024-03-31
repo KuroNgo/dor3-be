@@ -14,6 +14,7 @@ type Mean struct {
 	VocabularyID primitive.ObjectID `bson:"vocabulary_id" json:"vocabulary_id"`
 	Description  string             `bson:"description" json:"description"`
 	Example      string             `bson:"example" json:"example"`
+	VietSub      string             `bson:"viet_sub" json:"viet_sub"`
 	SynonymID    string             `bson:"synonym" json:"synonym"`
 	AntonymID    string             `bson:"antonyms" json:"antonyms"`
 }

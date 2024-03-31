@@ -1,9 +1,13 @@
-package activity_log
+package activity_log_domain
 
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
+)
+
+const (
+	CollectionActivityLog = "activity_log"
 )
 
 // ActivityLog this code process write log user automation
@@ -22,7 +26,7 @@ type ActivityLog struct {
 
 type IActivityRepository interface {
 	CreateOne(ctx context.Context, log ActivityLog) error
-	DeleteOne(ctx context.Context, time time.Time) error
+	DeleteOne(ctx context.Context) error
 	FetchMany(ctx context.Context) ([]ActivityLog, error)
 	FetchByUserName(ctx context.Context, username string) (ActivityLog, error)
 }
