@@ -30,8 +30,10 @@ type Response struct {
 //go:generate mockery --name ILessonRepository
 type ILessonRepository interface {
 	FetchMany(ctx context.Context) (Response, error)
+	FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error)
 	FetchByIdCourse(ctx context.Context, idCourse string) (Response, error)
 	CreateOne(ctx context.Context, lesson *Lesson) error
+	CreateOneByNameCourse(ctx context.Context, lesson *Lesson) error
 	UpdateOne(ctx context.Context, lessonID string, lesson Lesson) error
 	UpsertOne(ctx context.Context, id string, lesson *Lesson) (*Lesson, error)
 	DeleteOne(ctx context.Context, lessonID string) error

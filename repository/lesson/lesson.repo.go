@@ -19,6 +19,22 @@ type lessonRepository struct {
 	collectionUnit   string
 }
 
+func (l *lessonRepository) FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error) {
+	collectionCourse := l.database.Collection(l.collectionCourse)
+
+	filter := bson.M{"name": courseName}
+	var data struct {
+		Id primitive.ObjectID `bson:"_id"`
+	}
+
+	err := collectionCourse.FindOne(ctx, filter).Decode(&data)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	return data.Id, nil
+}
+
 func NewLessonRepository(db mongo.Database, collectionLesson string, collectionCourse string, collectionUnit string) lesson_domain.ILessonRepository {
 	return &lessonRepository{
 		database:         db,
@@ -144,6 +160,23 @@ func (l *lessonRepository) CreateOne(ctx context.Context, lesson *lesson_domain.
 
 	if count == 0 {
 		return errors.New("the course ID do not exist")
+	}
+
+	_, err = collectionLesson.InsertOne(ctx, lesson)
+	return nil
+}
+
+func (l *lessonRepository) CreateOneByNameCourse(ctx context.Context, lesson *lesson_domain.Lesson) error {
+	collectionLesson := l.database.Collection(l.collectionLesson)
+
+	filter := bson.M{"name": lesson.Name}
+	// check exists with CountDocuments
+	count, err := collectionLesson.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("the lesson name did exist")
 	}
 
 	_, err = collectionLesson.InsertOne(ctx, lesson)

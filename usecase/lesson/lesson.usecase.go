@@ -3,12 +3,37 @@ package lesson_usecase
 import (
 	lesson_domain "clean-architecture/domain/lesson"
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
 type lessonUseCase struct {
 	lessonRepository lesson_domain.ILessonRepository
 	contextTimeout   time.Duration
+}
+
+func (l *lessonUseCase) FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error) {
+	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
+	defer cancel()
+	data, err := l.lessonRepository.FindCourseIDByCourseName(ctx, courseName)
+
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	return data, nil
+}
+
+func (l *lessonUseCase) CreateOneByNameCourse(ctx context.Context, lesson *lesson_domain.Lesson) error {
+	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
+	defer cancel()
+	err := l.lessonRepository.CreateOneByNameCourse(ctx, lesson)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func NewLessonUseCase(lessonRepository lesson_domain.ILessonRepository, timeout time.Duration) lesson_domain.ILessonUseCase {
