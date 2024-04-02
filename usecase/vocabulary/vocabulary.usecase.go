@@ -3,12 +3,37 @@ package vocabulary_usecase
 import (
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
 type vocabularyUseCase struct {
 	vocabularyRepository vocabulary_domain.IVocabularyRepository
 	contextTimeout       time.Duration
+}
+
+func (v *vocabularyUseCase) FindUnitIDByUnitName(ctx context.Context, unitName string) (primitive.ObjectID, error) {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+
+	unitID, err := v.vocabularyRepository.FindUnitIDByUnitName(ctx, unitName)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	return unitID, err
+}
+
+func (v *vocabularyUseCase) CreateOneByNameUnit(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+	err := v.vocabularyRepository.CreateOne(ctx, vocabulary)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func NewVocabularyUseCase(vocabularyRepository vocabulary_domain.IVocabularyRepository, timeout time.Duration) vocabulary_domain.IVocabularyUseCase {
@@ -34,7 +59,7 @@ func (v *vocabularyUseCase) FetchByWord(ctx context.Context, word string) (vocab
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := v.vocabularyRepository.FetchByLesson(ctx, word)
+	vocabulary, err := v.vocabularyRepository.FetchByWord(ctx, word)
 	if err != nil {
 		return vocabulary_domain.Response{}, err
 	}
@@ -54,28 +79,16 @@ func (v *vocabularyUseCase) FetchByLesson(ctx context.Context, lessonName string
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) FetchMany(ctx context.Context) (vocabulary_domain.Response, error) {
+func (v *vocabularyUseCase) FetchMany(ctx context.Context, page string) (vocabulary_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := v.vocabularyRepository.FetchMany(ctx)
+	vocabulary, err := v.vocabularyRepository.FetchMany(ctx, page)
 	if err != nil {
 		return vocabulary_domain.Response{}, err
 	}
 
 	return vocabulary, err
-}
-
-func (v *vocabularyUseCase) FetchToDeleteMany(ctx context.Context) (*vocabulary_domain.Response, error) {
-	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
-	defer cancel()
-
-	vocabulary, err := v.vocabularyRepository.FetchMany(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return &vocabulary, err
 }
 
 func (v *vocabularyUseCase) UpdateOne(ctx context.Context, vocabularyID string, vocabulary vocabulary_domain.Vocabulary) error {

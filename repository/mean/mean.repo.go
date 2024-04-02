@@ -1,4 +1,4 @@
-package mean
+package mean_repository
 
 import (
 	mean_domain "clean-architecture/domain/mean"
@@ -16,6 +16,52 @@ type meanRepository struct {
 	database             mongo.Database
 	collectionMean       string
 	collectionVocabulary string
+}
+
+func (m *meanRepository) FindVocabularyIDByWord(ctx context.Context, unitName string) (primitive.ObjectID, error) {
+	collectionVocabulary := m.database.Collection(m.collectionVocabulary)
+
+	filter := bson.M{"name": unitName}
+	var data struct {
+		Id primitive.ObjectID `bson:"_id"`
+	}
+
+	err := collectionVocabulary.FindOne(ctx, filter).Decode(&data)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	return data.Id, nil
+}
+
+func (m *meanRepository) CreateOneByWord(ctx context.Context, mean *mean_domain.Mean) error {
+	collectionMean := m.database.Collection(m.collectionVocabulary)
+	collectionVocabulary := m.database.Collection(m.collectionVocabulary)
+
+	filter := bson.M{"description": mean.Description, "vocabulary_id": mean.VocabularyID}
+
+	filterParent := bson.M{"_id": mean.VocabularyID}
+	countParent, err := collectionVocabulary.CountDocuments(ctx, filterParent)
+	if err != nil {
+		return err
+	}
+	if countParent == 0 {
+		return errors.New("parent unit not found")
+	}
+
+	count, err := collectionMean.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("the mean already exists in the lesson")
+	}
+
+	_, err = collectionMean.InsertOne(ctx, mean)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func NewMeanRepository(db mongo.Database, collectionMean string, collectionVocabulary string) mean_domain.IMeanRepository {
@@ -71,32 +117,38 @@ func (m *meanRepository) CreateOne(ctx context.Context, mean *mean_domain.Mean, 
 	collectionMean := m.database.Collection(m.collectionMean)
 	collectionVocabulary := m.database.Collection(m.collectionVocabulary)
 
-	filterMean := bson.M{"name": mean.Description, "vocabulary_id": mean.VocabularyID}
 	filterVocabulary := bson.M{"_id": mean.VocabularyID}
-	filterCondition := bson.M{"field_of_it": fieldOfIT}
-
-	// check exists with CountDocuments
 	countVocabulary, err := collectionVocabulary.CountDocuments(ctx, filterVocabulary)
 	if err != nil {
 		return err
 	}
+	if countVocabulary == 0 {
+		return errors.New("the vocabulary does not exist")
+	}
 
+	filterMean := bson.M{"name": mean.Description, "vocabulary_id": mean.VocabularyID}
 	countMean, err := collectionMean.CountDocuments(ctx, filterMean)
 	if err != nil {
 		return err
 	}
-
-	countCond, err := collectionVocabulary.CountDocuments(ctx, filterCondition)
 	if countMean > 0 {
-		return errors.New("the unit name in lesson did exist")
+		return errors.New("the mean already exists for the vocabulary")
 	}
-	if countVocabulary == 0 {
-		return errors.New("the lesson ID do not exist")
+
+	filterCondition := bson.M{"_id": mean.VocabularyID, "field_of_it": fieldOfIT}
+	countCond, err := collectionVocabulary.CountDocuments(ctx, filterCondition)
+	if err != nil {
+		return err
 	}
-	if countCond > 0 && countMean > 0 {
-		return errors.New("the means is unique in one lesson")
+	if countCond == 0 {
+		return errors.New("the vocabulary does not belong to the specified field of IT")
 	}
+
+	// Insert the mean into the database
 	_, err = collectionMean.InsertOne(ctx, mean)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

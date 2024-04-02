@@ -4,7 +4,6 @@ import (
 	"clean-architecture/internal/file"
 	"errors"
 	"github.com/xuri/excelize/v2"
-	"strconv"
 )
 
 func ReadFileForLesson(filename string) ([]file_internal.Lesson, error) {
@@ -13,35 +12,21 @@ func ReadFileForLesson(filename string) ([]file_internal.Lesson, error) {
 		return nil, err
 	}
 
-	sheetName := f.GetSheetName(0)
-	if sheetName == "" {
+	sheetList := f.GetSheetList()
+	if sheetList == nil {
 		return nil, errors.New("empty sheet name")
 	}
 
 	var lessons []file_internal.Lesson
-	rows, err := f.GetRows(sheetName)
-	if err != nil {
-		return nil, err
-	}
-
-	for i, row := range rows {
-		if i == 0 {
-			continue
+	for i, elementSheet := range sheetList {
+		l := file_internal.Lesson{
+			CourseID: "English for IT",
+			Name:     elementSheet,
+			Content:  "null",
+			Level:    i,
 		}
 
-		if len(row) >= 2 {
-			level, err := strconv.Atoi(row[3])
-			if err != nil {
-				continue
-			}
-			l := file_internal.Lesson{
-				CourseID: row[0],
-				Name:     row[1],
-				Content:  row[2],
-				Level:    level,
-			}
-			lessons = append(lessons, l)
-		}
+		lessons = append(lessons, l)
 	}
 
 	return lessons, nil

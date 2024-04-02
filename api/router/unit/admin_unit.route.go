@@ -22,7 +22,8 @@ func AdminUnitRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Da
 
 	router := group.Group("/unit")
 	router.POST("/create", unit.CreateOneUnit)
-	router.PUT("/update", unit.UpdateOneUnit)
-	router.POST("/upsert", unit.UpsertOneUnit)
-	router.DELETE("/delete", unit.DeleteOneUnit)
+	router.POST("/create/file", unit.CreateUnitWithFile)
+	router.PUT("/update/:_id", unit.UpdateOneUnit)
+	router.POST("/upsert/:_id", unit.UpsertOneUnit)
+	router.DELETE("/delete/:_id", unit.DeleteOneUnit)
 }

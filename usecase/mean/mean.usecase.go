@@ -1,8 +1,9 @@
-package mean
+package mean_usecase
 
 import (
 	mean_domain "clean-architecture/domain/mean"
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
@@ -16,6 +17,29 @@ func NewMeanUseCase(meanRepository mean_domain.IMeanRepository, timeout time.Dur
 		meanRepository: meanRepository,
 		contextTimeout: timeout,
 	}
+}
+func (m *meanUseCase) FindVocabularyIDByWord(ctx context.Context, word string) (primitive.ObjectID, error) {
+	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
+	defer cancel()
+
+	mean, err := m.meanRepository.FindVocabularyIDByWord(ctx, word)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	return mean, err
+}
+
+func (m *meanUseCase) CreateOneByWord(ctx context.Context, mean *mean_domain.Mean) error {
+	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
+	defer cancel()
+	err := m.meanRepository.CreateOneByWord(ctx, mean)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *meanUseCase) FetchMany(ctx context.Context) (mean_domain.Response, error) {

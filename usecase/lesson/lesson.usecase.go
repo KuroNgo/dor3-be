@@ -12,6 +12,13 @@ type lessonUseCase struct {
 	contextTimeout   time.Duration
 }
 
+func NewLessonUseCase(lessonRepository lesson_domain.ILessonRepository, timeout time.Duration) lesson_domain.ILessonUseCase {
+	return &lessonUseCase{
+		lessonRepository: lessonRepository,
+		contextTimeout:   timeout,
+	}
+}
+
 func (l *lessonUseCase) FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error) {
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()
@@ -36,12 +43,6 @@ func (l *lessonUseCase) CreateOneByNameCourse(ctx context.Context, lesson *lesso
 	return nil
 }
 
-func NewLessonUseCase(lessonRepository lesson_domain.ILessonRepository, timeout time.Duration) lesson_domain.ILessonUseCase {
-	return &lessonUseCase{
-		lessonRepository: lessonRepository,
-		contextTimeout:   timeout,
-	}
-}
 func (l *lessonUseCase) FetchByIdCourse(ctx context.Context, idCourse string) (lesson_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()

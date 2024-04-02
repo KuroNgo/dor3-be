@@ -105,33 +105,44 @@ func (c *courseRepository) UpsertOne(ctx context.Context, id string, course *cou
 
 func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error {
 	collectionCourse := c.database.Collection(c.collectionCourse)
-	collectionLesson := c.database.Collection(c.collectionLesson)
 
-	filterLesson := bson.M{"course_id": courseID}
-	// check exists with CountDocuments
-	countFK, err := collectionLesson.CountDocuments(ctx, filterLesson)
-	if err != nil {
-		return err
-	}
-	if countFK > 0 {
-		return errors.New("the course cannot delete")
-	}
-
+	// Convert courseID string to ObjectID
 	objID, err := primitive.ObjectIDFromHex(courseID)
 	if err != nil {
 		return err
 	}
 
-	filter := bson.M{
-		"_id": objID,
-	}
-	count, err := collectionCourse.CountDocuments(ctx, filter)
+	// Check if any lesson is associated with the course
+	countFK, err := c.countLessonsByCourseID(ctx, courseID)
 	if err != nil {
 		return err
 	}
-	if count == 0 {
-		return errors.New(`the course is removed`)
+	if countFK > 0 {
+		return errors.New("the course cannot be deleted because it is associated with lessons")
 	}
-	_, err = collectionCourse.DeleteOne(ctx, filter)
-	return err
+
+	// Delete the course
+	filter := bson.M{"_id": objID}
+	result, err := collectionCourse.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	if result == 0 {
+		return errors.New("the course was not found or already deleted")
+	}
+
+	return nil
+}
+
+// countLessonsByCourseID counts the number of lessons associated with a course.
+func (c *courseRepository) countLessonsByCourseID(ctx context.Context, courseID string) (int64, error) {
+	collectionLesson := c.database.Collection(c.collectionLesson)
+
+	filter := bson.M{"course_id": courseID}
+	count, err := collectionLesson.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }

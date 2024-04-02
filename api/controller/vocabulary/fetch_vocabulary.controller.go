@@ -44,7 +44,7 @@ func (v *VocabularyController) FetchByLesson(ctx *gin.Context) {
 		return
 	}
 
-	vocabulary, err := v.VocabularyUseCase.FetchByWord(ctx, lesson.Lesson)
+	vocabulary, err := v.VocabularyUseCase.FetchByLesson(ctx, lesson.FieldOfIT)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -61,7 +61,10 @@ func (v *VocabularyController) FetchByLesson(ctx *gin.Context) {
 }
 
 func (v *VocabularyController) FetchMany(ctx *gin.Context) {
-	vocabulary, err := v.VocabularyUseCase.FetchMany(ctx)
+	page := ctx.DefaultQuery("page", "1")
+
+	// Truyền giá trị page từ người dùng vào use case
+	vocabulary, err := v.VocabularyUseCase.FetchMany(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -90,7 +93,6 @@ func (v *VocabularyController) FetchByIdUnit(ctx *gin.Context) {
 		return
 	}
 
-	// Nếu không có lỗi và có từ vựng được tìm thấy, trả về dữ liệu thành công
 	ctx.JSON(http.StatusOK, gin.H{
 		"status":     "success",
 		"vocabulary": vocabulary,
