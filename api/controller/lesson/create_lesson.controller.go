@@ -116,6 +116,7 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 }
 
 func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
+	// Parse form
 	err := ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -125,12 +126,14 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 		return
 	}
 
+	// Get uploaded file
 	file, err := ctx.FormFile("files")
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Kiểm tra định dạng file
 	if !file_internal.IsExcel(file.Filename) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "Not an Excel file",
@@ -138,6 +141,7 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 		return
 	}
 
+	// Lưu file vào thư mục tạm
 	err = ctx.SaveUploadedFile(file, file.Filename)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -150,43 +154,63 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 		}
 	}()
 
+	// Đọc dữ liệu từ file Excel
 	result, err := excel.ReadFileForLesson(file.Filename)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	var lessons []lesson_domain.Lesson
-	for _, lesson := range result {
-		courseID, err := l.LessonUseCase.FindCourseIDByCourseName(ctx, lesson.CourseID)
-		if err != nil {
-			ctx.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
+	// Tạo kênh để gửi và nhận lỗi từ goroutine
+	errChan := make(chan error)
+	defer close(errChan)
 
-		l := lesson_domain.Lesson{
-			ID:          primitive.NewObjectID(),
-			CourseID:    courseID,
-			Name:        lesson.Name,
-			Content:     lesson.Content,
-			Level:       lesson.Level,
-			IsCompleted: 0,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-			//WhoUpdates:
-		}
-		lessons = append(lessons, l)
-	}
-
+	// Tạo các bài học từ dữ liệu bằng cách sử dụng goroutine
 	successCount := 0
-	for _, lesson := range lessons {
-		err = l.LessonUseCase.CreateOneByNameCourse(ctx, &lesson)
-		if err != nil {
-			continue
-		}
-		successCount++
+	for _, lesson := range result {
+		go func(lesson file_internal.Lesson) {
+			// Tìm ID của khóa học từ tên khóa học
+			courseID, err := l.LessonUseCase.FindCourseIDByCourseName(ctx, lesson.CourseID)
+			if err != nil {
+				errChan <- fmt.Errorf("failed to find course ID for course '%s': %v", lesson.CourseID, err)
+				return
+			}
+
+			// Tạo bài học
+			le := lesson_domain.Lesson{
+				ID:          primitive.NewObjectID(),
+				CourseID:    courseID,
+				Name:        lesson.Name,
+				Content:     lesson.Content,
+				Level:       lesson.Level,
+				IsCompleted: 0,
+				CreatedAt:   time.Now(),
+				UpdatedAt:   time.Now(),
+				//WhoUpdates:
+			}
+
+			// Tạo bài học trong cơ sở dữ liệu
+			err = l.LessonUseCase.CreateOneByNameCourse(ctx, &le)
+			if err != nil {
+				errChan <- fmt.Errorf("failed to create lesson '%s': %v", le.Name, err)
+				return
+			}
+
+			// Gửi thông báo thành công
+			errChan <- nil
+		}(lesson)
 	}
 
+	// Đợi goroutine kết thúc và xử lý lỗi nếu có
+	for range result {
+		if err := <-errChan; err != nil {
+			fmt.Printf("Error: %v\n", err)
+		} else {
+			successCount++
+		}
+	}
+
+	// Trả về kết quả
 	if successCount == 0 {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to create any lesson",

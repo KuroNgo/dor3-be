@@ -7,32 +7,6 @@ import (
 	"sync"
 )
 
-//func ReadFileForLesson(filename string) ([]file_internal.Lesson, error) {
-//	f, err := excelize.OpenFile(filename)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	sheetList := f.GetSheetList()
-//	if sheetList == nil {
-//		return nil, errors.New("empty sheet name")
-//	}
-//
-//	var lessons []file_internal.Lesson
-//	for i, elementSheet := range sheetList {
-//		l := file_internal.Lesson{
-//			CourseID: "English for IT",
-//			Name:     elementSheet,
-//			Content:  "null",
-//			Level:    i,
-//		}
-//
-//		lessons = append(lessons, l)
-//	}
-//
-//	return lessons, nil
-//}
-
 func ReadFileForLesson(filename string) ([]file_internal.Lesson, error) {
 	f, err := excelize.OpenFile(filename)
 	if err != nil {
@@ -46,7 +20,7 @@ func ReadFileForLesson(filename string) ([]file_internal.Lesson, error) {
 
 	var lessons []file_internal.Lesson
 	var wg sync.WaitGroup
-	var mu sync.Mutex // Mutex để đồng bộ hóa truy cập vào slice lessons
+	var mu sync.Mutex
 
 	for i, elementSheet := range sheetList {
 		wg.Add(1)
