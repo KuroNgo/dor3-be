@@ -5,6 +5,7 @@ import (
 	"clean-architecture/infrastructor/mongo"
 	"context"
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -12,6 +13,28 @@ import (
 type imageRepository struct {
 	database   mongo.Database
 	collection string
+}
+
+func (i *imageRepository) CreateMany(ctx context.Context, images []*image_domain.Image) error {
+	collection := i.database.Collection(i.collection)
+
+	var documents []interface{}
+	for _, image := range images {
+		filter := bson.M{"image_name": image.ImageName, "image_url": image.ImageUrl}
+
+		count, err := collection.CountDocuments(ctx, filter)
+		if err != nil {
+			return err
+		}
+		if count > 0 {
+			return fmt.Errorf("the image with name '%s' and URL '%s' already exists", image.ImageName, image.ImageUrl)
+		}
+
+		documents = append(documents, image)
+	}
+
+	_, err := collection.InsertMany(ctx, documents)
+	return err
 }
 
 func NewImageRepository(db mongo.Database, collection string) image_domain.IImageRepository {

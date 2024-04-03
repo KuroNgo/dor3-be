@@ -47,26 +47,18 @@ func ReadFileForLessonManagementSystem(filename string) ([]file_internal.Final, 
 					VocabularyExample:       row[3],
 					VocabularyFieldOfIT:     elementSheet,
 					VocabularyUnitID:        fmt.Sprintf("Unit%d", unitCount),
+					MeanLessonID:            "English for IT",
+					MeanVocabularyID:        row[0],
+					MeanExplainVie:          row[4],
+					MeanExplainEng:          row[5],
+					MeanExampleVie:          row[6],
+					MeanExampleEng:          row[7],
 				}
 				final = append(final, v)
 
 				if len(final)%maximumUnitCount == 0 {
 					unitCount++
 				}
-			}
-
-			// Handle Mean
-			if len(row) >= 8 {
-				m := file_internal.Final{
-					MeanLessonID:     "English for IT",
-					LessonName:       elementSheet,
-					MeanVocabularyID: row[0],
-					MeanExplainVie:   row[4],
-					MeanExplainEng:   row[5],
-					MeanExampleVie:   row[6],
-					MeanExampleEng:   row[7],
-				}
-				final = append(final, m)
 			}
 		}
 	}

@@ -30,6 +30,7 @@ type IImageRepository interface {
 	FetchMany(ctx context.Context) (Response, error)
 	UpdateOne(ctx context.Context, imageID string, image Image) error
 	CreateOne(ctx context.Context, image *Image) error
+	CreateMany(ctx context.Context, image []*Image) error
 	DeleteOne(ctx context.Context, imageID string) error
 	DeleteMany(ctx context.Context, imageID ...string) error
 }
