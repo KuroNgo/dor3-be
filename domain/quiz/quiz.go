@@ -32,7 +32,7 @@ type Quiz struct {
 }
 
 type Response struct {
-	Quiz []Quiz
+	Quiz []Quiz `bson:"data" json:"data"`
 }
 
 //go:generate mockery --name IQuizRepository

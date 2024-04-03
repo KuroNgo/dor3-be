@@ -5,6 +5,7 @@ import (
 	"clean-architecture/infrastructor/mongo"
 	"context"
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
@@ -17,21 +18,43 @@ type activityRepository struct {
 }
 
 func (a *activityRepository) CreateOne(ctx context.Context, log activity_log_domain.ActivityLog) error {
-	collectionActivity := a.database.Collection(a.collectionActivity)
-	collectionUser := a.database.Collection(a.collectionUser)
-
-	filterUser := bson.M{"_id": log.UserID}
-
-	countUser, err := collectionUser.CountDocuments(ctx, filterUser)
-	if err != nil {
-		return err
-	}
-	if countUser <= 0 {
-		return errors.New("userId do not exist")
+	// Kiểm tra log.UserID
+	if log.UserID == primitive.NilObjectID {
+		return errors.New("userID is empty")
 	}
 
-	_, err = collectionActivity.InsertOne(ctx, log)
-	return err
+	errChan := make(chan error, 2)
+
+	go func() {
+		userFilter := bson.M{"_id": log.UserID}
+		userCount, err := a.database.Collection(a.collectionUser).CountDocuments(ctx, userFilter)
+		if err != nil {
+			errChan <- fmt.Errorf("error checking user existence: %v", err)
+			return
+		}
+		if userCount == 0 {
+			errChan <- errors.New("user does not exist")
+			return
+		}
+		errChan <- nil
+	}()
+
+	go func() {
+		_, err := a.database.Collection(a.collectionActivity).InsertOne(ctx, log)
+		if err != nil {
+			errChan <- fmt.Errorf("error inserting activity: %v", err)
+			return
+		}
+		errChan <- nil
+	}()
+
+	for i := 0; i < 2; i++ {
+		if err := <-errChan; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (a *activityRepository) DeleteOne(ctx context.Context) error {
