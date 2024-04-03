@@ -24,7 +24,7 @@ func (l *LessonController) FetchMany(ctx *gin.Context) {
 }
 
 func (l *LessonController) FetchByIdCourse(ctx *gin.Context) {
-	idCourse := ctx.Param("course_id")
+	idCourse := ctx.Query("course_id")
 	lesson, err := l.LessonUseCase.FetchByIdCourse(ctx, idCourse)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{

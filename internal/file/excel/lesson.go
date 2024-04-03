@@ -4,8 +4,34 @@ import (
 	"clean-architecture/internal/file"
 	"errors"
 	"github.com/xuri/excelize/v2"
-	"strconv"
+	"sync"
 )
+
+//func ReadFileForLesson(filename string) ([]file_internal.Lesson, error) {
+//	f, err := excelize.OpenFile(filename)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	sheetList := f.GetSheetList()
+//	if sheetList == nil {
+//		return nil, errors.New("empty sheet name")
+//	}
+//
+//	var lessons []file_internal.Lesson
+//	for i, elementSheet := range sheetList {
+//		l := file_internal.Lesson{
+//			CourseID: "English for IT",
+//			Name:     elementSheet,
+//			Content:  "null",
+//			Level:    i,
+//		}
+//
+//		lessons = append(lessons, l)
+//	}
+//
+//	return lessons, nil
+//}
 
 func ReadFileForLesson(filename string) ([]file_internal.Lesson, error) {
 	f, err := excelize.OpenFile(filename)
@@ -13,36 +39,34 @@ func ReadFileForLesson(filename string) ([]file_internal.Lesson, error) {
 		return nil, err
 	}
 
-	sheetName := f.GetSheetName(0)
-	if sheetName == "" {
-		return nil, errors.New("empty sheet name")
+	sheetList := f.GetSheetList()
+	if sheetList == nil {
+		return nil, errors.New("no sheets found in the Excel file")
 	}
 
 	var lessons []file_internal.Lesson
-	rows, err := f.GetRows(sheetName)
-	if err != nil {
-		return nil, err
-	}
+	var wg sync.WaitGroup
+	var mu sync.Mutex // Mutex để đồng bộ hóa truy cập vào slice lessons
 
-	for i, row := range rows {
-		if i == 0 {
-			continue
-		}
+	for i, elementSheet := range sheetList {
+		wg.Add(1)
+		go func(sheetName string, level int) {
+			defer wg.Done()
 
-		if len(row) >= 2 {
-			level, err := strconv.Atoi(row[3])
-			if err != nil {
-				continue
-			}
 			l := file_internal.Lesson{
-				CourseID: row[0],
-				Name:     row[1],
-				Content:  row[2],
+				CourseID: "English for IT",
+				Name:     sheetName,
+				Content:  "null",
 				Level:    level,
 			}
+
+			mu.Lock()
 			lessons = append(lessons, l)
-		}
+			mu.Unlock()
+		}(elementSheet, i)
 	}
+
+	wg.Wait()
 
 	return lessons, nil
 }

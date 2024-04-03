@@ -3,6 +3,7 @@ package unit_usecase
 import (
 	unit_domain "clean-architecture/domain/unit"
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
@@ -16,6 +17,30 @@ func NewUnitUseCase(unitRepository unit_domain.IUnitRepository, timeout time.Dur
 		unitRepository: unitRepository,
 		contextTimeout: timeout,
 	}
+}
+
+func (u *unitUseCase) FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
+	data, err := u.unitRepository.FindLessonIDByLessonName(ctx, lessonName)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	return data, err
+}
+
+func (u *unitUseCase) CreateOneByNameLesson(ctx context.Context, unit *unit_domain.Unit) error {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+	err := u.unitRepository.CreateOneByNameLesson(ctx, unit)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (u *unitUseCase) FetchByIdLesson(ctx context.Context, idLesson string) (unit_domain.Response, error) {

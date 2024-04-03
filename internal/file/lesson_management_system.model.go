@@ -24,15 +24,41 @@ type Vocabulary struct {
 	Pronunciation string
 	Example       string
 	FieldOfIT     string
-	LinkURL       string
 	UnitID        string
 }
 
 type Mean struct {
-	VocabularyID string
 	LessonID     string
-	Description  string
-	Example      string
+	VocabularyID string
+	ExplainVie   string
+	ExplainEng   string
+	ExampleVie   string
+	ExampleEng   string
 	Synonym      string
 	Antonym      string
+}
+
+type Final struct {
+	CourseName              string
+	LessonCourseID          string
+	LessonName              string
+	LessonContent           string
+	LessonLevel             int
+	UnitLessonID            string
+	UnitName                string
+	UnitContent             string
+	VocabularyWord          string
+	VocabularyPartOfSpeech  string
+	VocabularyPronunciation string
+	VocabularyExample       string
+	VocabularyFieldOfIT     string
+	VocabularyUnitID        string
+	MeanLessonID            string
+	MeanVocabularyID        string
+	MeanExplainVie          string
+	MeanExplainEng          string
+	MeanExampleVie          string
+	MeanExampleEng          string
+	MeanSynonym             string
+	MeanAntonym             string
 }

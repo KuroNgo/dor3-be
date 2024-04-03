@@ -14,7 +14,6 @@ import (
 )
 
 func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
-	// Lấy user hiện tại đăng nhập
 	currentUser := ctx.MustGet("currentUser")
 
 	user, err := l.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
@@ -53,7 +52,6 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 		return
 	}
 
-	// Nếu có file được tải lên, tiến hành xử lý file
 	file, err = ctx.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -63,7 +61,6 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 		return
 	}
 
-	// Kiểm tra xem file có phải là hình ảnh không
 	if !file_internal.IsImage(file.Filename) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid file format. Only images are allowed.",
@@ -71,7 +68,6 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 		return
 	}
 
-	// Mở file để đọc dữ liệu
 	f, err := file.Open()
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -182,15 +178,25 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 		lessons = append(lessons, l)
 	}
 
+	successCount := 0
 	for _, lesson := range lessons {
 		err = l.LessonUseCase.CreateOneByNameCourse(ctx, &lesson)
 		if err != nil {
-			ctx.JSON(500, gin.H{"error": err.Error()})
 			continue
 		}
+		successCount++
+	}
+
+	if successCount == 0 {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to create any lesson",
+			"message": "Any value have exist in database",
+		})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"status": "success",
+		"status":        "success",
+		"success_count": successCount,
 	})
 }

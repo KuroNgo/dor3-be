@@ -16,7 +16,9 @@ type Input struct {
 
 type IMeanUseCase interface {
 	FetchMany(ctx context.Context) (Response, error)
+	FindVocabularyIDByWord(ctx context.Context, unitName string) (primitive.ObjectID, error)
 	CreateOne(ctx context.Context, mean *Mean, fieldOfIT string) error
+	CreateOneByWord(ctx context.Context, mean *Mean) error
 	UpdateOne(ctx context.Context, meanID string, mean Mean) error
 	UpsertOne(ctx context.Context, id string, mean *Mean) (*Mean, error)
 	DeleteOne(ctx context.Context, meanID string) error

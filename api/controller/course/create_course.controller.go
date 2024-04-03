@@ -2,6 +2,7 @@ package course_controller
 
 import (
 	course_domain "clean-architecture/domain/course"
+	mean_domain "clean-architecture/domain/mean"
 	"clean-architecture/internal"
 	file_internal "clean-architecture/internal/file"
 	"clean-architecture/internal/file/excel"
@@ -107,15 +108,186 @@ func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
 		courses = append(courses, c)
 	}
 
+	successCount := 0
 	for _, course := range courses {
 		err = c.CourseUseCase.CreateOne(ctx, &course)
+		if err != nil {
+			continue
+		}
+		successCount++
+	}
+
+	if successCount == 0 {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to create any course",
+			"message": "Any value have exist in database",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":        "success",
+		"success_count": successCount,
+	})
+}
+
+func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
+	err := ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Error parsing form",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	file, err := ctx.FormFile("files")
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	if !file_internal.IsExcel(file.Filename) {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Not an Excel file",
+		})
+		return
+	}
+
+	err = ctx.SaveUploadedFile(file, file.Filename)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer func() {
+		err := os.Remove(file.Filename)
+		if err != nil {
+			fmt.Printf("Failed to delete temporary file: %v\n", err)
+		}
+	}()
+
+	result, err := excel.ReadFileForLessonManagementSystem(file.Filename)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	//var lessons []lesson_domain.Lesson
+	//for _, lesson := range result {
+	//	courseID, err := c.LessonUseCase.FindCourseIDByCourseName(ctx, lesson.LessonCourseID)
+	//	if err != nil {
+	//		ctx.JSON(500, gin.H{"error": err.Error()})
+	//		return
+	//	}
+	//
+	//	l := lesson_domain.Lesson{
+	//		ID:          primitive.NewObjectID(),
+	//		CourseID:    courseID,
+	//		Name:        lesson.LessonName,
+	//		Content:     lesson.LessonContent,
+	//		Level:       lesson.LessonLevel,
+	//		IsCompleted: 0,
+	//		CreatedAt:   time.Now(),
+	//		UpdatedAt:   time.Now(),
+	//		//WhoUpdates:
+	//	}
+	//	lessons = append(lessons, l)
+	//}
+	//
+	//for _, lesson := range lessons {
+	//	err = c.LessonUseCase.CreateOneByNameCourse(ctx, &lesson)
+	//	if err != nil {
+	//		continue
+	//	}
+	//}
+
+	//var units []unit_domain.Unit
+	//for _, unit := range result {
+	//	lessonID, err := c.UnitUseCase.FindLessonIDByLessonName(ctx, unit.UnitLessonID)
+	//	if err != nil {
+	//		ctx.JSON(500, gin.H{"error": err.Error()})
+	//		return
+	//	}
+	//
+	//	elUnit := unit_domain.Unit{
+	//		ID:         primitive.NewObjectID(),
+	//		LessonID:   lessonID,
+	//		Name:       unit.UnitName,
+	//		ImageURL:   "",
+	//		Content:    "null",
+	//		IsComplete: 0,
+	//		CreatedAt:  time.Now(),
+	//		UpdatedAt:  time.Now(),
+	//		//WhoUpdates: user.FullName,
+	//	}
+	//	units = append(units, elUnit)
+	//}
+	//
+	//for _, unit := range units {
+	//	err = c.UnitUseCase.CreateOneByNameLesson(ctx, &unit)
+	//	if err != nil {
+	//		continue
+	//	}
+	//}
+
+	//var vocabularies []vocabulary_domain.Vocabulary
+	//
+	//for _, vocabulary := range result {
+	//	unitID, err := c.VocabularyUseCase.FindUnitIDByUnitName(ctx, vocabulary.VocabularyUnitID)
+	//	if err != nil {
+	//		ctx.JSON(500, gin.H{"error": err.Error()})
+	//		return
+	//	}
+	//
+	//	v := vocabulary_domain.Vocabulary{
+	//		Id:            primitive.NewObjectID(),
+	//		UnitID:        unitID,
+	//		Word:          vocabulary.VocabularyWord,
+	//		PartOfSpeech:  vocabulary.VocabularyPartOfSpeech,
+	//		Pronunciation: vocabulary.VocabularyPronunciation,
+	//		Example:       vocabulary.VocabularyExample,
+	//		FieldOfIT:     vocabulary.VocabularyFieldOfIT,
+	//		LinkURL:       "",
+	//	}
+	//	vocabularies = append(vocabularies, v)
+	//}
+	//
+	//for _, vocabulary := range vocabularies {
+	//	err = c.VocabularyUseCase.CreateOneByNameUnit(ctx, &vocabulary)
+	//	if err != nil {
+	//		continue
+	//	}
+	//}
+
+	var means []mean_domain.Mean
+	for _, mean := range result {
+		vocabularyID, err := c.MeanUseCase.FindVocabularyIDByWord(ctx, mean.MeanVocabularyID)
+		if err != nil {
+			ctx.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		m := mean_domain.Mean{
+			ID:           primitive.NewObjectID(),
+			VocabularyID: vocabularyID,
+			Description:  mean.MeanExplainEng,
+			Example:      mean.MeanExampleEng,
+			VietSub:      mean.MeanExplainVie,
+			FieldOfIT:    mean.MeanLessonID,
+			SynonymID:    "",
+			AntonymID:    "",
+		}
+		means = append(means, m)
+	}
+
+	for _, mean := range means {
+		err = c.MeanUseCase.CreateOneByWord(ctx, &mean)
 		if err != nil {
 			continue
 		}
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"status":   "success",
-		"metadata": courses,
+		"status": "success",
 	})
 }

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func StructuredLogger(logger *zerolog.Logger, a *activity_) gin.HandlerFunc {
+func StructuredLogger(logger *zerolog.Logger) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		//var db *gorm.DB
 		start := time.Now()

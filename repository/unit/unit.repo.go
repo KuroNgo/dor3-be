@@ -27,6 +27,51 @@ func NewUnitRepository(db mongo.Database, collectionUnit string, collectionLesso
 		collectionVocabulary: collectionVocabulary,
 	}
 }
+func (u *unitRepository) CreateOneByNameLesson(ctx context.Context, unit *unit_domain.Unit) error {
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	collectionLesson := u.database.Collection(u.collectionLesson)
+
+	filter := bson.M{"name": unit.Name, "lesson_id": unit.LessonID}
+
+	filterParent := bson.M{"_id": unit.LessonID}
+	countParent, err := collectionLesson.CountDocuments(ctx, filterParent)
+	if err != nil {
+		return err
+	}
+	if countParent == 0 {
+		return errors.New("parent lesson not found")
+	}
+
+	count, err := collectionUnit.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("the unit name already exists in the lesson")
+	}
+
+	_, err = collectionUnit.InsertOne(ctx, unit)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *unitRepository) FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error) {
+	collectionLesson := u.database.Collection(u.collectionLesson)
+
+	filter := bson.M{"name": lessonName}
+	var data struct {
+		Id primitive.ObjectID `bson:"_id"`
+	}
+
+	err := collectionLesson.FindOne(ctx, filter).Decode(&data)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	return data.Id, nil
+}
 
 func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string) (unit_domain.Response, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
