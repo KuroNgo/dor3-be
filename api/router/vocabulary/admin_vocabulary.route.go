@@ -24,6 +24,7 @@ func AdminVocabularyRoute(env *bootstrap.Database, timeout time.Duration, db mon
 	router := group.Group("/vocabulary")
 	router.POST("/create", vocabulary.CreateOneVocabulary)
 	router.POST("/create/file", vocabulary.CreateVocabularyWithFile)
+	router.POST("create/audio", vocabulary.GenerateVoice)
 	router.PUT("/update/:_id", vocabulary.UpdateOneVocabulary)
 	router.POST("/upsert/:_id", vocabulary.UpsertOneVocabulary)
 	router.DELETE("/delete/:_id", vocabulary.DeleteOneVocabulary)
