@@ -30,6 +30,7 @@ func NewVocabularyRepository(db mongo.Database, collectionVocabulary string, col
 		collectionUnit:       collectionUnit,
 	}
 }
+
 func (v *vocabularyRepository) FindUnitIDByUnitName(ctx context.Context, unitName string) (primitive.ObjectID, error) {
 	collectionUnit := v.database.Collection(v.collectionUnit)
 
@@ -44,6 +45,32 @@ func (v *vocabularyRepository) FindUnitIDByUnitName(ctx context.Context, unitNam
 	}
 
 	return data.Id, nil
+}
+
+func (v *vocabularyRepository) GetAllVocabulary(ctx context.Context) ([]string, error) {
+	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
+
+	var vocabularies []string
+
+	cursor, err := collectionVocabulary.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var result bson.M
+		if err = cursor.Decode(&result); err != nil {
+			return nil, err
+		}
+		word, ok := result["word"].(string)
+		if !ok {
+			return nil, errors.New("failed to parse word from result")
+		}
+		vocabularies = append(vocabularies, word)
+	}
+
+	return vocabularies, nil
 }
 
 func (v *vocabularyRepository) CreateOneByNameUnit(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
@@ -219,6 +246,25 @@ func (v *vocabularyRepository) UpdateOne(ctx context.Context, vocabularyID strin
 
 	_, err = collection.UpdateOne(ctx, filter, update)
 	return err
+}
+
+func (v *vocabularyRepository) UpdateOneAudio(c context.Context, vocabularyID string, linkURL string) error {
+	collection := v.database.Collection(v.collectionVocabulary)
+	objID, err := primitive.ObjectIDFromHex(vocabularyID)
+
+	filter := bson.D{{Key: "_id", Value: objID}}
+	update := bson.M{
+		"$set": bson.M{
+			"linkURL": linkURL,
+		},
+	}
+
+	_, err = collection.UpdateOne(c, filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (v *vocabularyRepository) CreateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
