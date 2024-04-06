@@ -19,6 +19,7 @@ func (l *LessonController) UpsertOneLesson(ctx *gin.Context) {
 		})
 		return
 	}
+
 	lessonID := ctx.Query("_id")
 
 	var lessonInput lesson_domain.Lesson
