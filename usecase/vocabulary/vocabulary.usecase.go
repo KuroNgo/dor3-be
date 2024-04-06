@@ -12,30 +12,6 @@ type vocabularyUseCase struct {
 	contextTimeout       time.Duration
 }
 
-func (v *vocabularyUseCase) FindUnitIDByUnitName(ctx context.Context, unitName string) (primitive.ObjectID, error) {
-	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
-	defer cancel()
-
-	unitID, err := v.vocabularyRepository.FindUnitIDByUnitName(ctx, unitName)
-	if err != nil {
-		return primitive.NilObjectID, err
-	}
-
-	return unitID, err
-}
-
-func (v *vocabularyUseCase) CreateOneByNameUnit(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
-	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
-	defer cancel()
-	err := v.vocabularyRepository.CreateOne(ctx, vocabulary)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func NewVocabularyUseCase(vocabularyRepository vocabulary_domain.IVocabularyRepository, timeout time.Duration) vocabulary_domain.IVocabularyUseCase {
 	return &vocabularyUseCase{
 		vocabularyRepository: vocabularyRepository,
@@ -89,6 +65,54 @@ func (v *vocabularyUseCase) FetchMany(ctx context.Context, page string) (vocabul
 	}
 
 	return vocabulary, err
+}
+
+func (v *vocabularyUseCase) UpdateOneAudio(c context.Context, vocabularyID string, linkURL string) error {
+	ctx, cancel := context.WithTimeout(c, v.contextTimeout)
+	defer cancel()
+
+	err := v.vocabularyRepository.UpdateOneAudio(ctx, vocabularyID, linkURL)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (v *vocabularyUseCase) GetAllVocabulary(ctx context.Context) ([]string, error) {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+
+	vocabulary, err := v.vocabularyRepository.GetAllVocabulary(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return vocabulary, nil
+}
+
+func (v *vocabularyUseCase) FindUnitIDByUnitName(ctx context.Context, unitName string) (primitive.ObjectID, error) {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+
+	unitID, err := v.vocabularyRepository.FindUnitIDByUnitName(ctx, unitName)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	return unitID, err
+}
+
+func (v *vocabularyUseCase) CreateOneByNameUnit(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+	err := v.vocabularyRepository.CreateOne(ctx, vocabulary)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (v *vocabularyUseCase) UpdateOne(ctx context.Context, vocabularyID string, vocabulary vocabulary_domain.Vocabulary) error {

@@ -33,14 +33,15 @@ type Database struct {
 	RefreshTokenMaxAge     int           `mapstructure:"REFRESH_TOKEN_MAXAGE"`
 
 	// implement the Cloudinary
-	CloudinaryCloudName          string `mapstructure:"CLOUDINARY_CLOUD_NAME"`
-	CloudinaryAPIKey             string `mapstructure:"CLOUDINARY_API_KEY"`
-	CloudinaryAPISecret          string `mapstructure:"CLOUDINARY_API_SECRET"`
-	CloudinaryUploadFolderStatic string `mapstructure:"CLOUDINARY_UPLOAD_FOLDER_STATIC"`
-	CloudinaryUploadFolderLesson string `mapstructure:"CLOUDINARY_UPLOAD_FOLDER_LESSON"`
-	CloudinaryUploadFolderQuiz   string `mapstructure:"CLOUDINARY_UPLOAD_FOLDER_QUIZ"`
-	CloudinaryUploadFolderExam   string `mapstructure:"CLOUDINARY_UPLOAD_FOLDER_EXAM"`
-	CloudinaryUploadFolderUser   string `mapstructure:"CLOUDINARY_UPLOAD_FOLDER_USER"`
+	CloudinaryCloudName                   string `mapstructure:"CLOUDINARY_CLOUD_NAME"`
+	CloudinaryAPIKey                      string `mapstructure:"CLOUDINARY_API_KEY"`
+	CloudinaryAPISecret                   string `mapstructure:"CLOUDINARY_API_SECRET"`
+	CloudinaryUploadFolderStatic          string `mapstructure:"CLOUDINARY_UPLOAD_FOLDER_STATIC"`
+	CloudinaryUploadFolderLesson          string `mapstructure:"CLOUDINARY_UPLOAD_FOLDER_LESSON"`
+	CloudinaryUploadFolderQuiz            string `mapstructure:"CLOUDINARY_UPLOAD_FOLDER_QUIZ"`
+	CloudinaryUploadFolderExam            string `mapstructure:"CLOUDINARY_UPLOAD_FOLDER_EXAM"`
+	CloudinaryUploadFolderUser            string `mapstructure:"CLOUDINARY_UPLOAD_FOLDER_USER"`
+	CloudinaryUploadFolderAudioVocabulary string `mapstructure:"CLOUDINARY_UPLOAD_FOLDER_AUDIO_VOCABULARY"`
 
 	// implement the Google Oauth
 	GoogleClientID         string `mapstructure:"GOOGLE_OAUTH_CLIENT_ID"`
