@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
-	"os"
 )
 
 func (q *QuizController) CreateOneQuiz(ctx *gin.Context) {
@@ -27,35 +26,6 @@ func (q *QuizController) CreateOneQuiz(ctx *gin.Context) {
 		})
 		return
 	}
-	// Just filename contains "file" in OS (operating system)
-	file, err := ctx.FormFile("file")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Lưu file vào thư mục tạm thời
-	err = ctx.SaveUploadedFile(file, "./"+file.Filename)
-	if err != nil {
-		ctx.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	//ID := ctx.Query("quiz_id")
-	//quizID, err := primitive.ObjectIDFromHex(ID)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// process in firebase below code
-
-	// Xóa file sau khi đã sử dụng
-	err = os.Remove("./" + file.Filename)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
 
 	quizRes := &quiz_domain.Quiz{
 		ID:            primitive.NewObjectID(),
@@ -64,10 +34,9 @@ func (q *QuizController) CreateOneQuiz(ctx *gin.Context) {
 		CorrectAnswer: quizInput.CorrectAnswer,
 		Explanation:   quizInput.Explanation,
 		QuestionType:  quizInput.QuestionType,
-		Filename:      file.Filename,
 	}
 
-	err = q.QuizUseCase.CreateOne(ctx, quizRes)
+	err := q.QuizUseCase.CreateOne(ctx, quizRes)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -79,4 +48,8 @@ func (q *QuizController) CreateOneQuiz(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
+}
+
+func (q *QuizController) CreateFromFileQuiz(ctx *gin.Context) {
+
 }

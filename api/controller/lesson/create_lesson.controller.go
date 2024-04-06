@@ -116,8 +116,20 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 }
 
 func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser")
+
+	user, err := l.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	var lessonInput lesson_domain.Input
+	if err = ctx.ShouldBindJSON(&lessonInput); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
 	// Parse form
-	err := ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
+	err = ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Error parsing form",
@@ -186,7 +198,7 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 				IsCompleted: 0,
 				CreatedAt:   time.Now(),
 				UpdatedAt:   time.Now(),
-				//WhoUpdates:
+				WhoUpdates:  user.FullName,
 			}
 
 			// Tạo bài học trong cơ sở dữ liệu
