@@ -23,6 +23,12 @@ func (e *exerciseRepository) FetchMany(ctx context.Context, page string) (exerci
 	collectionExercise := e.database.Collection(e.collectionExercise)
 	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
 
+	// Đếm tổng số lượng tài liệu trong collection
+	count, err := collectionExercise.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return exercise_domain.Response{}, err
+	}
+
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
 		return exercise_domain.Response{}, errors.New("invalid page number")
@@ -58,6 +64,7 @@ func (e *exerciseRepository) FetchMany(ctx context.Context, page string) (exerci
 
 	exerciseRes := exercise_domain.Response{
 		Exercise: exercises,
+		Count:    count,
 	}
 
 	return exerciseRes, nil
