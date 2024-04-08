@@ -1,15 +1,14 @@
-package lesson_controller
+package exercise_controller
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-// chỉ admin mới có thể xóa
-func (l *LessonController) DeleteOneLesson(ctx *gin.Context) {
-	lessonID := ctx.Query("_id")
+func (e *ExerciseController) DeleteOneExercise(ctx *gin.Context) {
+	exerciseID := ctx.Query("_id")
 
-	err := l.LessonUseCase.DeleteOne(ctx, lessonID)
+	err := e.ExerciseUseCase.DeleteOne(ctx, exerciseID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

@@ -269,7 +269,10 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 			Word:          vocabulary.VocabularyWord,
 			PartOfSpeech:  vocabulary.VocabularyPartOfSpeech,
 			Pronunciation: vocabulary.VocabularyPronunciation,
-			Example:       vocabulary.VocabularyExample,
+			ExplainEng:    vocabulary.MeanExplainEng,
+			ExplainVie:    vocabulary.MeanExplainVie,
+			ExampleVie:    vocabulary.MeanExampleVie,
+			ExampleEng:    vocabulary.MeanExampleEng,
 			FieldOfIT:     vocabulary.VocabularyFieldOfIT,
 			LinkURL:       "",
 		}

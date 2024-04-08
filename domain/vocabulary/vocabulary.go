@@ -15,7 +15,10 @@ type Vocabulary struct {
 	Word          string             `bson:"word" json:"word"`
 	PartOfSpeech  string             `bson:"part_of_speech" json:"part_of_speech"`
 	Pronunciation string             `bson:"pronunciation" json:"pronunciation"`
-	Example       string             `bson:"example" json:"example"`
+	ExampleVie    string             `bson:"example_vie" json:"example_vie"`
+	ExampleEng    string             `bson:"example_eng" json:"example_eng"`
+	ExplainVie    string             `bson:"explain_vie" json:"explain_vie"`
+	ExplainEng    string             `bson:"explain_eng" json:"explain_eng"`
 	FieldOfIT     string             `bson:"field_of_it" json:"field_of_it"`
 	LinkURL       string             `bson:"link_url" json:"link_url"`
 }

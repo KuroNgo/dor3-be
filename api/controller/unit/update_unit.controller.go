@@ -9,6 +9,14 @@ import (
 )
 
 func (u *UnitController) UpdateOneUnit(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser")
+
+	user, err := u.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	unitID := ctx.Param("_id")
 
 	var unitInput unit_domain.Input
@@ -21,10 +29,11 @@ func (u *UnitController) UpdateOneUnit(ctx *gin.Context) {
 	}
 
 	updateUnit := unit_domain.Unit{
-		LessonID:  unitInput.LessonID,
-		Name:      unitInput.Name,
-		Content:   unitInput.Content,
-		UpdatedAt: time.Now(),
+		LessonID:   unitInput.LessonID,
+		Name:       unitInput.Name,
+		Content:    unitInput.Content,
+		UpdatedAt:  time.Now(),
+		WhoUpdates: user.FullName,
 	}
 
 	unit, err := u.UnitUseCase.UpdateOne(ctx, unitID, updateUnit)

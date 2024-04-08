@@ -12,10 +12,6 @@ type Input struct {
 	// QuestionType can be included checkbox, check radius or write correct answer
 	QuestionType string `bson:"question_type" json:"question_type"`
 	Skill        string `bson:"skill" json:"skill"`
-
-	// admin add metadata of file and system will be found it
-	Filename      string `bson:"filename" json:"filename"`
-	AudioDuration string `bson:"audio_duration" json:"audio_duration"`
 }
 
 //go:generate mockery --name IQuizUseCase

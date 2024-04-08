@@ -59,8 +59,16 @@ func (u *UnitController) CreateOneUnit(ctx *gin.Context) {
 }
 
 func (u *UnitController) CreateUnitWithFile(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser")
+
+	user, err := u.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	// Parse form
-	err := ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
+	err = ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Error parsing form",
@@ -129,7 +137,7 @@ func (u *UnitController) CreateUnitWithFile(ctx *gin.Context) {
 				IsComplete: 0,
 				CreatedAt:  time.Now(),
 				UpdatedAt:  time.Now(),
-				//WhoUpdates: user.FullName,
+				WhoUpdates: user.FullName,
 			}
 
 			// Tạo đơn vị trong cơ sở dữ liệu

@@ -3,7 +3,6 @@ package vocabulary_controller
 import (
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"clean-architecture/internal"
-	"clean-architecture/internal/cloud/cloudinary"
 	file_internal "clean-architecture/internal/file"
 	"clean-architecture/internal/file/excel"
 	"fmt"
@@ -37,7 +36,10 @@ func (v *VocabularyController) CreateOneVocabulary(ctx *gin.Context) {
 		Word:          vocabularyInput.Word,
 		PartOfSpeech:  vocabularyInput.PartOfSpeech,
 		Pronunciation: vocabularyInput.Pronunciation,
-		Example:       vocabularyInput.Example,
+		ExplainVie:    vocabularyInput.ExplainVie,
+		ExampleEng:    vocabularyInput.ExampleEng,
+		ExplainEng:    vocabularyInput.ExplainEng,
+		ExampleVie:    vocabularyInput.ExampleVie,
 		FieldOfIT:     vocabularyInput.FieldOfIT,
 		LinkURL:       vocabularyInput.LinkURL,
 		UnitID:        vocabularyInput.UnitID,
@@ -113,7 +115,10 @@ func (v *VocabularyController) CreateVocabularyWithFile(ctx *gin.Context) {
 			Word:          vocabulary.Word,
 			PartOfSpeech:  vocabulary.PartOfSpeech,
 			Pronunciation: vocabulary.Pronunciation,
-			Example:       vocabulary.Example,
+			ExampleEng:    vocabulary.ExampleEng,
+			ExampleVie:    vocabulary.ExampleVie,
+			ExplainEng:    vocabulary.ExplainEng,
+			ExplainVie:    vocabulary.ExplainVie,
 			FieldOfIT:     vocabulary.FieldOfIT,
 			LinkURL:       "",
 		}
@@ -138,68 +143,68 @@ func (v *VocabularyController) CreateVocabularyWithFile(ctx *gin.Context) {
 	}
 
 	// Tạo audio từ từng
-	vocabulary, err := v.VocabularyUseCase.GetAllVocabulary(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	for _, vocabularyElement := range vocabulary {
-		err = file_internal.CreateTextToSpeech(vocabularyElement)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-	}
-
-	// Lấy danh sách tệp trong thư mục audio
-	dir := "audio"
-	files, err := file_internal.ListFilesInDirectory(dir)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	var vocabularies2 []vocabulary_domain.Vocabulary
-	for _, audioFile := range files {
-		f, err := audioFile.Open()
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Error opening uploaded file",
-			})
-			return
-		}
-
-		if !file_internal.IsMP3(audioFile.Filename) {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "Not an MP3 file",
-			})
-			return
-		}
-
-		filename, ok := ctx.Get("filePath")
-		if !ok {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "filename not found",
-			})
-			return
-		}
-
-		res, err := cloudinary.UploadToCloudinary(f, filename.(string), v.Database.CloudinaryUploadFolderAudioVocabulary)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		vu := vocabulary_domain.Vocabulary{
-			LinkURL: res.AssetID,
-		}
-
-		vocabularies2 = append(vocabularies2, vu)
-		file_internal.DeleteFile(audioFile.Filename)
-	}
+	//vocabulary, err := v.VocabularyUseCase.GetAllVocabulary(ctx)
+	//if err != nil {
+	//	ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	//	return
+	//}
+	//
+	//for _, vocabularyElement := range vocabulary {
+	//	err = file_internal.CreateTextToSpeech(vocabularyElement)
+	//	if err != nil {
+	//		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	//		return
+	//	}
+	//}
+	//
+	//// Lấy danh sách tệp trong thư mục audio
+	//dir := "audio"
+	//files, err := file_internal.ListFilesInDirectory(dir)
+	//if err != nil {
+	//	ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	//	return
+	//}
+	//
+	//var vocabularies2 []vocabulary_domain.Vocabulary
+	//for _, audioFile := range files {
+	//	f, err := audioFile.Open()
+	//	if err != nil {
+	//		ctx.JSON(http.StatusInternalServerError, gin.H{
+	//			"error": "Error opening uploaded file",
+	//		})
+	//		return
+	//	}
+	//
+	//	if !file_internal.IsMP3(audioFile.Filename) {
+	//		ctx.JSON(http.StatusBadRequest, gin.H{
+	//			"error": "Not an MP3 file",
+	//		})
+	//		return
+	//	}
+	//
+	//	filename, ok := ctx.Get("filePath")
+	//	if !ok {
+	//		ctx.JSON(http.StatusBadRequest, gin.H{
+	//			"error": "filename not found",
+	//		})
+	//		return
+	//	}
+	//
+	//	res, err := cloudinary.UploadToCloudinary(f, filename.(string), v.Database.CloudinaryUploadFolderAudioVocabulary)
+	//	if err != nil {
+	//		ctx.JSON(http.StatusInternalServerError, gin.H{
+	//			"error": err.Error(),
+	//		})
+	//		return
+	//	}
+	//
+	//	vu := vocabulary_domain.Vocabulary{
+	//		LinkURL: res.AssetID,
+	//	}
+	//
+	//	vocabularies2 = append(vocabularies2, vu)
+	//	file_internal.DeleteFile(audioFile.Filename)
+	//}
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status":        "success",

@@ -2,11 +2,12 @@ package internal
 
 import (
 	course_domain "clean-architecture/domain/course"
+	exercise_domain "clean-architecture/domain/exercise"
 	lesson_domain "clean-architecture/domain/lesson"
-	mean_domain "clean-architecture/domain/mean"
 	quiz_domain "clean-architecture/domain/quiz"
 	unit_domain "clean-architecture/domain/unit"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gopkg.in/errgo.v2/fmt/errors"
 )
 
@@ -92,7 +93,16 @@ func IsValidVocabulary(vocabulary vocabulary_domain.Input) error {
 		return errors.New("pronunciation cannot be empty")
 	}
 
-	if vocabulary.Example == "" {
+	if vocabulary.ExampleEng == "" {
+		return errors.New("example cannot be empty")
+	}
+	if vocabulary.ExplainVie == "" {
+		return errors.New("example cannot be empty")
+	}
+	if vocabulary.ExampleVie == "" {
+		return errors.New("example cannot be empty")
+	}
+	if vocabulary.ExplainEng == "" {
 		return errors.New("example cannot be empty")
 	}
 
@@ -106,26 +116,22 @@ func IsValidVocabulary(vocabulary vocabulary_domain.Input) error {
 
 	return nil
 }
-func IsValidMean(mean mean_domain.Input) error {
-	if mean.Antonym == "" {
-		return errors.New("word cannot be empty")
-	}
 
-	if mean.Synonym == "" {
-		return errors.New("part of speech cannot be empty")
+func IsValidExercise(exercise exercise_domain.Input) error {
+	if exercise.Options == nil {
+		return errors.New("option cannot be empty")
 	}
-
-	if mean.Description == "" {
-		return errors.New("pronunciation cannot be empty")
+	if exercise.VocabularyID == primitive.NilObjectID {
+		return errors.New("option cannot be empty")
 	}
-
-	if mean.Example == "" {
-		return errors.New("example cannot be empty")
+	if exercise.Title == "" {
+		return errors.New("option cannot be empty")
 	}
-
-	if mean.VocabularyID.IsZero() || mean.VocabularyID.Hex() == "" {
-		return errors.New("field of IT cannot be empty")
+	if exercise.Type == "" {
+		return errors.New("option cannot be empty")
 	}
-
+	if exercise.CorrectAns == "" {
+		return errors.New("option cannot be empty")
+	}
 	return nil
 }

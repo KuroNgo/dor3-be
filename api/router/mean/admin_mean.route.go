@@ -1,4 +1,4 @@
-package mean
+package mean_route
 
 import (
 	mean_controller "clean-architecture/api/controller/mean"
@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// AdminMeanRoute deprecated
 func AdminMeanRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
 	me := mean_repository.NewMeanRepository(db, mean_domain.CollectionMean, vocabulary_domain.CollectionVocabulary)
 	mean := &mean_controller.MeanController{
