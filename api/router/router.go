@@ -5,6 +5,7 @@ import (
 	admin_route "clean-architecture/api/router/admin"
 	audio_route "clean-architecture/api/router/audio"
 	course_route "clean-architecture/api/router/course"
+	exercise_route "clean-architecture/api/router/exercise"
 	image_route "clean-architecture/api/router/image"
 	lesson_route "clean-architecture/api/router/lesson"
 	quiz_route "clean-architecture/api/router/quiz"
@@ -50,7 +51,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 	// All Public APIs
 	user_route.GoogleAuthRoute(env, timeout, db, publicRouter)
 	user_route.UserRouter(env, timeout, db, publicRouter)
-	admin_route.AdminRouter(env, timeout, db, publicRouter)
+	exercise_route.ExerciseRoute(env, timeout, db, publicRouter)
 	user_route.LoginFromRoleRoute(env, timeout, db, publicRouter)
 	audio_route.AudioRoute(env, timeout, db, publicRouter)
 	image_route.ImageRoute(env, timeout, db, publicRouter)
@@ -62,10 +63,12 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 
 	// All Private API
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
+	admin_route.AdminRouter(env, timeout, db, privateRouter)
 	audio_route.AdminAudioRoute(env, timeout, db, privateRouter)
 	image_route.AdminImageRoute(env, timeout, db, privateRouter)
 	course_route.AdminCourseRoute(env, timeout, db, privateRouter)
 	lesson_route.AdminLessonRoute(env, timeout, db, privateRouter)
 	unit_route.AdminUnitRouter(env, timeout, db, privateRouter)
 	vocabulary_route.AdminVocabularyRoute(env, timeout, db, privateRouter)
+	exercise_route.AdminExerciseRoute(env, timeout, db, privateRouter)
 }

@@ -37,12 +37,16 @@ func ReadFileForVocabulary(filename string) ([]file_internal.Vocabulary, error) 
 				continue
 			}
 
-			if unitCount <= maximumUnitCount && len(row) >= 4 {
+			if unitCount <= maximumUnitCount && len(row) >= 8 {
 				v := file_internal.Vocabulary{
 					Word:          row[0],
 					PartOfSpeech:  row[1],
 					Pronunciation: row[2],
 					Example:       row[3],
+					ExplainVie:    row[4],
+					ExplainEng:    row[5],
+					ExampleVie:    row[6],
+					ExampleEng:    row[7],
 					FieldOfIT:     elementSheet,
 					UnitID:        fmt.Sprintf("Unit%d", unitCount),
 				}

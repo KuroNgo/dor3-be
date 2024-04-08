@@ -9,15 +9,20 @@ import (
 )
 
 func (q *QuizController) UpsertOneQuiz(ctx *gin.Context) {
+	// Kiểm tra xác thực người dùng
 	currentUser := ctx.MustGet("currentUser")
 	user, err := q.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error getting user: " + err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Error getting user: " + err.Error(),
+		})
 		return
 	}
 
+	// Lấy ID của quiz (nếu có)
 	quizID := ctx.Query("_id")
 
+	// Bind dữ liệu JSON từ yêu cầu HTTP vào biến quiz
 	var quiz quiz_domain.Input
 	if err := ctx.ShouldBindJSON(&quiz); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -27,6 +32,7 @@ func (q *QuizController) UpsertOneQuiz(ctx *gin.Context) {
 		return
 	}
 
+	// Tạo hoặc cập nhật bài kiểm tra
 	upsertQuiz := quiz_domain.Quiz{
 		Question:      quiz.Question,
 		Options:       quiz.Options,
@@ -45,10 +51,11 @@ func (q *QuizController) UpsertOneQuiz(ctx *gin.Context) {
 		upsertErr = q.QuizUseCase.CreateOne(ctx, &upsertQuiz)
 	}
 
+	// Xử lý lỗi
 	if upsertErr != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
-			"message": "Error upserting quiz: " + upsertErr.Error(),
+			"message": "Error binding JSON: " + err.Error(),
 		})
 		return
 	}

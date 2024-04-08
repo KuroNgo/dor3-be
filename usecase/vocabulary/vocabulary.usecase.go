@@ -143,11 +143,11 @@ func (v *vocabularyUseCase) UpsertOne(ctx context.Context, id string, vocabulary
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	lesson, err := v.vocabularyRepository.UpsertOne(ctx, id, vocabulary)
+	vocabularies, err := v.vocabularyRepository.UpsertOne(ctx, id, vocabulary)
 	if err != nil {
 		return vocabulary_domain.Response{}, err
 	}
-	return lesson, nil
+	return vocabularies, nil
 }
 
 func (v *vocabularyUseCase) DeleteOne(ctx context.Context, vocabularyID string) error {
