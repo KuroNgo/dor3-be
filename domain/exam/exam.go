@@ -1,4 +1,4 @@
-package quiz_domain
+package exam_domain
 
 import (
 	"context"
@@ -7,11 +7,11 @@ import (
 )
 
 const (
-	CollectionQuiz = "quiz"
+	CollectionExam = "exam"
 )
 
-type Quiz struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+type Exam struct {
+	ID            primitive.ObjectID `bson:"_id" json:"_id"`
 	Question      string             `bson:"question" json:"question"`
 	Options       []string           `bson:"options" json:"options"`
 	CorrectAnswer string             `bson:"correct_answer" json:"correct_answer"`
@@ -30,15 +30,14 @@ type Quiz struct {
 }
 
 type Response struct {
-	Quiz []Quiz `bson:"data" json:"data"`
+	Exam  []Exam `bson:"data" json:"data"`
+	Count int64  `bson:"count" json:"count"`
 }
 
-//go:generate mockery --name IQuizRepository
-type IQuizRepository interface {
-	//FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]Response, error)
+type IExamRepository interface {
 	FetchMany(ctx context.Context) (Response, error)
-	UpdateOne(ctx context.Context, quizID string, quiz Quiz) error
-	CreateOne(ctx context.Context, quiz *Quiz) error
-	UpsertOne(c context.Context, id string, quiz *Quiz) (Response, error)
-	DeleteOne(ctx context.Context, quizID string) error
+	UpdateOne(ctx context.Context, examID string, exam Exam) error
+	CreateOne(ctx context.Context, exam *Exam) error
+	UpsertOne(c context.Context, id string, exam *Exam) (Response, error)
+	DeleteOne(ctx context.Context, examID string) error
 }

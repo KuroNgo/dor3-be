@@ -1,4 +1,4 @@
-package user_process
+package user_exam_process_domain
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"

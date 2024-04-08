@@ -39,60 +39,112 @@
 │   └───inspectionProfiles
 ├───api
 │   ├───controller
+│   │   ├───admin
 │   │   ├───audio
+│   │   ├───course
+│   │   ├───exercise
+│   │   ├───image
+│   │   ├───lesson
+│   │   ├───mean
 │   │   ├───quiz
-│   │   └───user
+│   │   ├───unit
+│   │   ├───user
+│   │   └───vocabulary
 │   ├───middleware
 │   └───router
+│       ├───admin
 │       ├───audio
+│       ├───course
+│       ├───exercise
+│       ├───image
+│       ├───lesson
+│       ├───mean
 │       ├───quiz
-│       └───user
+│       ├───unit
+│       ├───user
+│       └───vocabulary
 ├───assets
+├───audio
 ├───bootstrap
 ├───config
 ├───domain
+│   ├───activity_log
 │   ├───admin
 │   ├───audio
 │   │   └───mocks
 │   ├───course
 │   │   └───mocks
+│   ├───exam
+│   ├───exercise
 │   ├───feedback
+│   ├───image
+│   │   └───mocks
 │   ├───lesson
 │   ├───log
+│   ├───mark_vocabulary
+│   ├───mean
+│   ├───permisson
 │   ├───position
 │   ├───quiz
 │   │   └───mocks
 │   ├───role
+│   ├───store
+│   ├───unit
+│   │   └───mocks
 │   ├───user
 │   │   └───mocks
 │   ├───user_attempt
-│   ├───user_process
-│   └───user_quiz_attempt
+│   ├───user_exam_process
+│   ├───user_quiz_attempt
+│   └───vocabulary
+│       └───mocks
 ├───infrastructor
 │   ├───mongo
 │   │   └───mocks
 │   └───redis
 ├───internal
 │   ├───cloud
-│   │   └───firebase
-│   │       └───audio
+│   │   ├───cloudinary
+│   │   ├───firebase
+│   │   │   └───audio
+│   │   └───google
 │   ├───file
+│   │   └───excel
 │   └───oauth2
 │       └───google
 ├───repository
+│   ├───activity
+│   ├───admin
 │   ├───audio
+│   ├───course
+│   ├───exercise
+│   ├───image
+│   ├───lesson
+│   ├───mean
 │   ├───quiz
 │   ├───test
 │   │   ├───admin
 │   │   ├───quiz
 │   │   └───user
-│   └───user
+│   ├───unit
+│   ├───user
+│   └───vocabulary
 └───usecase
+    ├───activity
     ├───admin
     ├───audio
+    ├───course
+    ├───exercise
+    ├───image
+    ├───lesson
+    ├───mean
     ├───quiz
     ├───system
-    └───user
+    ├───test
+    │   └───user
+    ├───unit
+    ├───user
+    └───vocabulary
 ```
 ## Run Programming
 How to run this project?
