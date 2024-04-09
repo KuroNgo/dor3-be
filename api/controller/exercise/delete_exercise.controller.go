@@ -17,7 +17,6 @@ func (e *ExerciseController) DeleteOneExercise(ctx *gin.Context) {
 		return
 	}
 
-	// Trả về mảng dữ liệu dưới dạng JSON
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})

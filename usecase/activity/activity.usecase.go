@@ -11,6 +11,11 @@ type activityUseCase struct {
 	contextTimeout     time.Duration
 }
 
+func (a *activityUseCase) DeleteOneByTime(ctx context.Context, time time.Duration) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewActivityUseCase(activityRepository activity_log_domain.IActivityRepository, timeout time.Duration) activity_log_domain.IActivityUseCase {
 	return &activityUseCase{
 		activityRepository: activityRepository,
@@ -30,7 +35,7 @@ func (a *activityUseCase) CreateOne(ctx context.Context, log activity_log_domain
 	return nil
 }
 
-func (a *activityUseCase) DeleteOne(ctx context.Context) error {
+func (a *activityUseCase) DeleteOne(ctx context.Context, logID string) error {
 	//TODO implement me
 	panic("implement me")
 }

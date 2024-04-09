@@ -7,8 +7,8 @@ import (
 
 func (e *ExerciseController) FetchMany(ctx *gin.Context) {
 	page := ctx.DefaultQuery("page", "1")
-	
-	lesson, err := e.ExerciseUseCase.FetchMany(ctx, page)
+
+	exercise, err := e.ExerciseUseCase.FetchMany(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -19,8 +19,6 @@ func (e *ExerciseController) FetchMany(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
-		"data": gin.H{
-			"lesson": lesson,
-		},
+		"data":   exercise,
 	})
 }

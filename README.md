@@ -1,9 +1,9 @@
 ## CLEAN ARCHRITECTURE
 #### Reference Resource: [github clean-architecture](https://github.com/amitshekhariitbhu/go-backend-clean-architecture/tree/main/mongo)
-![Workflow](./assets/button-view-api-docs.png)
+![Workflow](assets/images/button-view-api-docs.png)
 
 # Overall 
-![Workflow](./assets/CleanArchitecture.jpg)
+![Workflow](assets/images/CleanArchitecture.jpg)
 ## Entities: 
     Domain and Repository in Entities
 - Directories like domain and repository may contain components related to the core Entities in Clean Architecture. 
