@@ -17,6 +17,11 @@ type activityRepository struct {
 	collectionUser     string
 }
 
+func (a *activityRepository) DeleteOneByTime(ctx context.Context, time time.Duration) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (a *activityRepository) CreateOne(ctx context.Context, log activity_log_domain.ActivityLog) error {
 	// Kiểm tra log.UserID
 	if log.UserID == primitive.NilObjectID {
@@ -57,7 +62,7 @@ func (a *activityRepository) CreateOne(ctx context.Context, log activity_log_dom
 	return nil
 }
 
-func (a *activityRepository) DeleteOne(ctx context.Context) error {
+func (a *activityRepository) DeleteOne(ctx context.Context, logID string) error {
 	collectionActivity := a.database.Collection(a.collectionActivity)
 
 	timeThreshold := time.Now().AddDate(0, 0, -30)
