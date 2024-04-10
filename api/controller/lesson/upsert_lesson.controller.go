@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Deprecated: UpsertOneLesson
 func (l *LessonController) UpsertOneLesson(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
 
@@ -40,7 +41,7 @@ func (l *LessonController) UpsertOneLesson(ctx *gin.Context) {
 		WhoUpdates: user.FullName,
 	}
 
-	lessRes, err := l.LessonUseCase.UpsertOne(ctx, lessonID, &upsertLesson)
+	lessonRes, err := l.LessonUseCase.UpsertOne(ctx, lessonID, &upsertLesson)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -51,6 +52,6 @@ func (l *LessonController) UpsertOneLesson(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
-		"data":   lessRes,
+		"data":   lessonRes,
 	})
 }

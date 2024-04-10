@@ -23,7 +23,7 @@ type Unit struct {
 }
 
 type Response struct {
-	Unit []Unit `bson:"data" json:"data"`
+	Unit []Unit
 }
 
 //go:generate mockery --name IUnitRepository

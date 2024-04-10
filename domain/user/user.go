@@ -32,7 +32,7 @@ type Response struct {
 }
 
 type ResponseIndividual struct {
-	ResponseIndividual User   `bson:"data" json:"data"`
+	ResponseIndividual User
 	StatusCode         int    `bson:"status_code" json:"status_code"`
 	AccessToken        string `bson:"access_token" json:"access_token"`
 }

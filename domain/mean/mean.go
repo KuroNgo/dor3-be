@@ -21,7 +21,7 @@ type Mean struct {
 }
 
 type Response struct {
-	Mean []Mean `bson:"data" json:"data"`
+	Mean []Mean
 }
 
 type IMeanRepository interface {

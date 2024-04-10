@@ -28,9 +28,7 @@ func (v *VocabularyController) FetchByWord(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
-		"data": gin.H{
-			"word": vocabulary,
-		},
+		"data":   vocabulary,
 	})
 }
 

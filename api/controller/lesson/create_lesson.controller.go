@@ -109,7 +109,6 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 		return
 	}
 
-	// Trả về kết quả thành công nếu không có lỗi xảy ra
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})

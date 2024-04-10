@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Deprecated: UpsertOneQuiz
 func (q *QuizController) UpsertOneQuiz(ctx *gin.Context) {
 	// Kiểm tra xác thực người dùng
 	currentUser := ctx.MustGet("currentUser")
@@ -44,15 +45,13 @@ func (q *QuizController) UpsertOneQuiz(ctx *gin.Context) {
 	}
 
 	var quizRes quiz_domain.Response
-	var upsertErr error
 	if quizID != "" {
-		quizRes, upsertErr = q.QuizUseCase.UpsertOne(ctx, quizID, &upsertQuiz)
+		quizRes, err = q.QuizUseCase.UpsertOne(ctx, quizID, &upsertQuiz)
 	} else {
-		upsertErr = q.QuizUseCase.CreateOne(ctx, &upsertQuiz)
+		err = q.QuizUseCase.CreateOne(ctx, &upsertQuiz)
 	}
 
-	// Xử lý lỗi
-	if upsertErr != nil {
+	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": "Error binding JSON: " + err.Error(),
@@ -60,5 +59,8 @@ func (q *QuizController) UpsertOneQuiz(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"status": "success", "data": quizRes})
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data":   quizRes,
+	})
 }

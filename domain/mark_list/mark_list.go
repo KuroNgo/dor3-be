@@ -1,4 +1,4 @@
-package markList_repository
+package markList_domain
 
 import (
 	"context"
@@ -6,8 +6,13 @@ import (
 	"time"
 )
 
+const (
+	CollectionMarkList = "mark_list"
+)
+
 type MarkList struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	UserID      primitive.ObjectID `bson:"user_id" json:"user_id"`
 	NameList    string             `bson:"name_list" json:"name_list"`
 	Description string             `bson:"description" json:"description"`
 	CreatedAt   time.Time          `bson:"created_at" json:"created_at"`
@@ -15,7 +20,7 @@ type MarkList struct {
 }
 
 type Response struct {
-	MarkList []MarkList `bson:"data" json:"data"`
+	MarkList []MarkList
 }
 
 type IMarkListRepository interface {
