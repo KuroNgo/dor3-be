@@ -8,6 +8,7 @@ import (
 	exercise_route "clean-architecture/api/router/exercise"
 	image_route "clean-architecture/api/router/image"
 	lesson_route "clean-architecture/api/router/lesson"
+	mark_list_route "clean-architecture/api/router/mark_list"
 	quiz_route "clean-architecture/api/router/quiz"
 	unit_route "clean-architecture/api/router/unit"
 	user_route "clean-architecture/api/router/user"
@@ -62,6 +63,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 	vocabulary_route.VocabularyRoute(env, timeout, db, publicRouter)
 
 	// All Private API
+	mark_list_route.MarkListRoute(env, timeout, db, privateRouter)
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
 	admin_route.AdminRouter(env, timeout, db, privateRouter)
 	audio_route.AdminAudioRoute(env, timeout, db, privateRouter)

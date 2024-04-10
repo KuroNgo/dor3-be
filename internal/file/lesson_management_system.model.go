@@ -31,6 +31,17 @@ type Vocabulary struct {
 	UnitID        string
 }
 
+type Mean struct {
+	LessonID     string
+	VocabularyID string
+	ExplainVie   string
+	ExplainEng   string
+	ExampleVie   string
+	ExampleEng   string
+	Synonym      string
+	Antonym      string
+}
+
 type Final struct {
 	CourseName              string
 	LessonCourseID          string
