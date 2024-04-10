@@ -1,23 +1,14 @@
 package vocabulary_controller
 
 import (
-	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 func (v *VocabularyController) FetchByWord(ctx *gin.Context) {
-	var word vocabulary_domain.FetchByWordInput
+	word := ctx.Query("word")
 
-	if err := ctx.ShouldBindJSON(&word); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"message": err.Error(),
-		})
-		return
-	}
-
-	vocabulary, err := v.VocabularyUseCase.FetchByWord(ctx, word.Word)
+	vocabulary, err := v.VocabularyUseCase.FetchByWord(ctx, word)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -33,16 +24,9 @@ func (v *VocabularyController) FetchByWord(ctx *gin.Context) {
 }
 
 func (v *VocabularyController) FetchByLesson(ctx *gin.Context) {
-	var lesson vocabulary_domain.FetchByLessonInput
-	if err := ctx.ShouldBindJSON(&lesson); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"message": err.Error(),
-		})
-		return
-	}
+	lesson := ctx.Query("lesson")
 
-	vocabulary, err := v.VocabularyUseCase.FetchByLesson(ctx, lesson.FieldOfIT)
+	vocabulary, err := v.VocabularyUseCase.FetchByLesson(ctx, lesson)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
