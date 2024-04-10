@@ -1,4 +1,4 @@
-package markList_repository
+package markList_domain
 
 import (
 	"context"
