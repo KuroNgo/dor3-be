@@ -166,6 +166,11 @@ func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) (vo
 	return vocabularyRes, nil
 }
 
+func (v *vocabularyRepository) FetchByWord2(ctx context.Context, word string) (vocabulary_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (v *vocabularyRepository) FetchByLesson(ctx context.Context, lessonName string) (vocabulary_domain.Response, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 

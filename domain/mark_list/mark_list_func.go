@@ -8,7 +8,7 @@ type Input struct {
 }
 
 type IMarkListUseCase interface {
-	FetchMany(ctx context.Context) (Response, error)
+	FetchManyByUserID(ctx context.Context, userId string) (Response, error)
 	UpdateOne(ctx context.Context, markListID string, markList MarkList) error
 	CreateOne(ctx context.Context, markList *MarkList) error
 	UpsertOne(c context.Context, id string, markList *MarkList) (Response, error)

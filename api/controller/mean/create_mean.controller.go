@@ -11,6 +11,7 @@ import (
 	"os"
 )
 
+// Deprecated: CreateMeanWithFile
 func (m *MeanController) CreateMeanWithFile(ctx *gin.Context) {
 	err := ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
 	if err != nil {

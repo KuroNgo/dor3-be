@@ -24,7 +24,7 @@ func (v *VocabularyController) FetchByWord(ctx *gin.Context) {
 }
 
 func (v *VocabularyController) FetchByLesson(ctx *gin.Context) {
-	lesson := ctx.Query("lesson")
+	lesson := ctx.Query("field_of_it")
 
 	vocabulary, err := v.VocabularyUseCase.FetchByLesson(ctx, lesson)
 	if err != nil {

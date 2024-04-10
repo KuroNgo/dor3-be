@@ -16,6 +16,49 @@ type markListRepository struct {
 	collectionMarkList string
 }
 
+func NewListRepository(db mongo.Database, collectionMarkList string) mark_list_domain.IMarkListRepository {
+	return &markListRepository{
+		database:           db,
+		collectionMarkList: collectionMarkList,
+	}
+}
+
+func (m *markListRepository) FetchManyByUserID(ctx context.Context, userID string) (mark_list_domain.Response, error) {
+	collectionMarkList := m.database.Collection(m.collectionMarkList)
+
+	idUser, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return mark_list_domain.Response{}, err
+	}
+
+	filter := bson.M{"user_id": idUser}
+	cursor, err := collectionMarkList.Find(ctx, filter)
+	if err != nil {
+		return mark_list_domain.Response{}, err
+	}
+	defer cursor.Close(ctx)
+
+	var markLists []mark_list_domain.MarkList
+
+	for cursor.Next(ctx) {
+		var markList mark_list_domain.MarkList
+		if err = cursor.Decode(&markList); err != nil {
+			return mark_list_domain.Response{}, err
+		}
+
+		// Gắn CourseID vào bài học
+		markList.UserID = idUser
+
+		markLists = append(markLists, markList)
+	}
+
+	response := mark_list_domain.Response{
+		MarkList: markLists,
+	}
+
+	return response, nil
+}
+
 func (m *markListRepository) FetchMany(ctx context.Context) (mark_list_domain.Response, error) {
 	collectionMarkList := m.database.Collection(m.collectionMarkList)
 
@@ -52,6 +95,7 @@ func (m *markListRepository) UpdateOne(ctx context.Context, markListID string, m
 	update := bson.D{{Key: "$set", Value: doc}}
 
 	_, err = collectionMarkList.UpdateOne(ctx, filter, update)
+
 	return err
 }
 
@@ -98,6 +142,7 @@ func (m *markListRepository) UpsertOne(ctx context.Context, id string, markList 
 
 func (m *markListRepository) DeleteOne(ctx context.Context, markListID string) error {
 	collectionMarkList := m.database.Collection(m.collectionMarkList)
+	collectionMarkVocabulary := m.database.Collection(m.collectionMarkList)
 
 	// Convert courseID string to ObjectID
 	objID, err := primitive.ObjectIDFromHex(markListID)
@@ -105,14 +150,18 @@ func (m *markListRepository) DeleteOne(ctx context.Context, markListID string) e
 		return err
 	}
 
-	// Check if any lesson is associated with the course
-	//countFK, err := m.countLessonsByCourseID(ctx, courseID)
-	//if err != nil {
-	//	return err
-	//}
-	//if countFK > 0 {
-	//	return errors.New("the course cannot be deleted because it is associated with lessons")
-	//}
+	filterChildren := bson.M{
+		"mark_list_id": markListID,
+	}
+
+	//Check if any lesson is associated with the course
+	countFK, err := collectionMarkVocabulary.CountDocuments(ctx, filterChildren)
+	if err != nil {
+		return err
+	}
+	if countFK > 0 {
+		return errors.New("the mark list cannot be deleted because it is associated with mark vocabulary")
+	}
 
 	// Delete the mark list
 	filter := bson.M{"_id": objID}
@@ -122,7 +171,7 @@ func (m *markListRepository) DeleteOne(ctx context.Context, markListID string) e
 	}
 
 	if result == 0 {
-		return errors.New("the course was not found or already deleted")
+		return errors.New("the mark list was not found or already deleted")
 	}
 
 	return nil
@@ -138,11 +187,4 @@ func (m *markListRepository) countMarkVocabularyByMarkListID(ctx context.Context
 		return 0, err
 	}
 	return count, nil
-}
-
-func NewExerciseRepository(db mongo.Database, collectionMarkList string) mark_list_domain.IMarkListRepository {
-	return &markListRepository{
-		database:           db,
-		collectionMarkList: collectionMarkList,
-	}
 }

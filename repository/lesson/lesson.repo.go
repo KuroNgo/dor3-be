@@ -19,22 +19,6 @@ type lessonRepository struct {
 	collectionUnit   string
 }
 
-func (l *lessonRepository) FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error) {
-	collectionCourse := l.database.Collection(l.collectionCourse)
-
-	filter := bson.M{"name": courseName}
-	var data struct {
-		Id primitive.ObjectID `bson:"_id"`
-	}
-
-	err := collectionCourse.FindOne(ctx, filter).Decode(&data)
-	if err != nil {
-		return primitive.NilObjectID, err
-	}
-
-	return data.Id, nil
-}
-
 func NewLessonRepository(db mongo.Database, collectionLesson string, collectionCourse string, collectionUnit string) lesson_domain.ILessonRepository {
 	return &lessonRepository{
 		database:         db,
@@ -43,6 +27,7 @@ func NewLessonRepository(db mongo.Database, collectionLesson string, collectionC
 		collectionUnit:   collectionUnit,
 	}
 }
+
 func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string) (lesson_domain.Response, error) {
 	collectionLesson := l.database.Collection(l.collectionLesson)
 
@@ -77,6 +62,22 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string)
 		Lesson: lessons,
 	}
 	return response, nil
+}
+
+func (l *lessonRepository) FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error) {
+	collectionCourse := l.database.Collection(l.collectionCourse)
+
+	filter := bson.M{"name": courseName}
+	var data struct {
+		Id primitive.ObjectID `bson:"_id"`
+	}
+
+	err := collectionCourse.FindOne(ctx, filter).Decode(&data)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	return data.Id, nil
 }
 
 func (l *lessonRepository) UpdateComplete(ctx context.Context, lessonID string, lesson lesson_domain.Lesson) error {
