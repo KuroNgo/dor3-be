@@ -25,8 +25,8 @@ type Exercise struct {
 }
 
 type Response struct {
-	Exercise []Exercise `bson:"data" json:"data"`
-	Count    int64      `bson:"count" json:"count"`
+	Exercise []Exercise
+	Count    int64 `bson:"count" json:"count"`
 }
 
 type IExerciseRepository interface {

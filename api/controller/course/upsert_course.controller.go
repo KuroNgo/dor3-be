@@ -8,6 +8,7 @@ import (
 )
 
 // UpsertOneQuiz in this method, system can not need to check valid
+// Deprecated: UpsertOneQuiz
 func (c *CourseController) UpsertOneQuiz(ctx *gin.Context) {
 	courseID := ctx.Query("_id")
 

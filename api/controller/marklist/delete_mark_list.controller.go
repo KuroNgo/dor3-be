@@ -1,15 +1,15 @@
-package lesson_controller
+package marklist_controller
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-// DeleteOneLesson chỉ admin mới có thể xóa
-func (l *LessonController) DeleteOneLesson(ctx *gin.Context) {
-	lessonID := ctx.Query("_id")
+// DeleteOneMarkList chỉ user mới có thể xóa
+func (m *MarkListController) DeleteOneMarkList(ctx *gin.Context) {
+	markListID := ctx.Query("_id")
 
-	err := l.LessonUseCase.DeleteOne(ctx, lessonID)
+	err := m.MarkListUseCase.DeleteOne(ctx, markListID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

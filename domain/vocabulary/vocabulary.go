@@ -24,7 +24,7 @@ type Vocabulary struct {
 }
 
 type Response struct {
-	Vocabulary []Vocabulary `bson:"data" json:"data"`
+	Vocabulary []Vocabulary
 }
 
 //go:generate mockery --name IVocabularyRepository

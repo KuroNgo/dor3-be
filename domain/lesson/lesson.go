@@ -24,7 +24,7 @@ type Lesson struct {
 }
 
 type Response struct {
-	Lesson []Lesson `json:"data" bson:"data"`
+	Lesson []Lesson
 }
 
 //go:generate mockery --name ILessonRepository

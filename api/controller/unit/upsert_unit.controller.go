@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Deprecated: UpsertOneUnit
 func (u *UnitController) UpsertOneUnit(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
 

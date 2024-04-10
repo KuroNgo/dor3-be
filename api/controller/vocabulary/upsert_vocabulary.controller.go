@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// Deprecated: UpsertOneVocabulary
 func (v *VocabularyController) UpsertOneVocabulary(ctx *gin.Context) {
 	vocabularyID := ctx.Query("_id")
 

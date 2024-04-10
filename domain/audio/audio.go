@@ -19,8 +19,8 @@ type Audio struct {
 }
 
 type Response struct {
-	Audio []Audio `json:"data"`
-	Count int64   `json:"count"`
+	Audio []Audio
+	Count int64 `json:"count"`
 }
 
 //go:generate mockery --name IAudioRepository
