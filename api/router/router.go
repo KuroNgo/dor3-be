@@ -63,7 +63,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 	vocabulary_route.VocabularyRoute(env, timeout, db, publicRouter)
 
 	// All Private API
-	mark_list_route.MarkListRoute(env, timeout, db, privateRouter)
+	mark_list_route.MarkListRoute(env, timeout, db, publicRouter)
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
 	admin_route.AdminRouter(env, timeout, db, privateRouter)
 	audio_route.AdminAudioRoute(env, timeout, db, privateRouter)
