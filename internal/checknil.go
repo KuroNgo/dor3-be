@@ -118,9 +118,9 @@ func IsValidVocabulary(vocabulary vocabulary_domain.Input) error {
 }
 
 func IsValidExercise(exercise exercise_domain.Input) error {
-	if exercise.Options == nil {
-		return errors.New("option cannot be empty")
-	}
+	//if exercise.Options == nil {
+	//	return errors.New("option cannot be empty")
+	//}
 	if exercise.VocabularyID == primitive.NilObjectID {
 		return errors.New("option cannot be empty")
 	}

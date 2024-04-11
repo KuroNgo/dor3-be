@@ -8,7 +8,7 @@ import (
 )
 
 func (u *UserController) GetMail(ctx *gin.Context) {
-	err := google.SendEmail("2011423@dlu.edu.vn", subject_const.SignInTheFirstTime, subject_const.ContentTitle4)
+	err := google.SendEmail("maiquangdinh.it.work@gmail.com", subject_const.SignInTheFirstTime, subject_const.ContentTitle4)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 			"status":  "fail",

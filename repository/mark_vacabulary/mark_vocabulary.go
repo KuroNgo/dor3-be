@@ -99,24 +99,13 @@ func (m *markVocabularyRepository) CreateOne(ctx context.Context, markVocabulary
 	collectionMarkList := m.database.Collection(m.collectionMarkList)
 	collectionVocabulary := m.database.Collection(m.collectionVocabulary)
 
-	filter := bson.M{"mark_list_id": markVocabulary.MarkListID, "mark_vocabulary_id": markVocabulary.MarkListID}
-
-	// check exists with CountDocuments
-	count, err := collectionMarkVocabulary.CountDocuments(ctx, filter)
-	if err != nil {
-		return err
-	}
-	if count > 0 {
-		return errors.New("the vocabulary in mark list did exist")
-	}
-
 	filterMarkListReference := bson.M{"_id": markVocabulary.MarkListID}
 	countMarkListParent, err := collectionMarkList.CountDocuments(ctx, filterMarkListReference)
 	if err != nil {
 		return err
 	}
 	if countMarkListParent == 0 {
-		return errors.New("the mark list do not exists")
+		return errors.New("the mark list does not exist")
 	}
 
 	filterMarkVocabularyReference := bson.M{"_id": markVocabulary.VocabularyID}
@@ -125,9 +114,19 @@ func (m *markVocabularyRepository) CreateOne(ctx context.Context, markVocabulary
 		return err
 	}
 	if countMarkVocabularyParent == 0 {
-		return errors.New("the vocabulary do not exists")
+		return errors.New("the vocabulary does not exist")
 	}
 
+	filter := bson.M{"mark_list_id": markVocabulary.MarkListID, "vocabulary_id": markVocabulary.VocabularyID}
+	count, err := collectionMarkVocabulary.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("the mark vocabulary already exists")
+	}
+
+	// Thực hiện tạo mới mark vocabulary
 	_, err = collectionMarkVocabulary.InsertOne(ctx, markVocabulary)
 	return err
 }

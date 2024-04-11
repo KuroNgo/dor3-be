@@ -1,6 +1,7 @@
 package user_exam_process_domain
 
 import (
+	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
@@ -15,5 +16,11 @@ type UserProcessAuto struct {
 	CompletedDate time.Time          `bson:"completed_date" json:"completed_date"`
 }
 
-type IUserProcessUseCase interface {
+type IUserExamProcessUseCase interface {
+	FetchMany(ctx context.Context) (Response, error)
+	FetchByIdLesson(ctx context.Context, idLesson string) (Response, error)
+	CreateOne(ctx context.Context, userProcess *UserExamProcess) error
+	UpdateOne(ctx context.Context, userProcessID string, userProcess UserExamProcess) error
+	UpsertOne(ctx context.Context, userProcessID string, userProcess *UserExamProcess) (Response, error)
+	DeleteOne(ctx context.Context, userProcessID string) error
 }

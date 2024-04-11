@@ -43,6 +43,7 @@ func (v *VocabularyController) CreateOneVocabulary(ctx *gin.Context) {
 		FieldOfIT:     vocabularyInput.FieldOfIT,
 		LinkURL:       vocabularyInput.LinkURL,
 		UnitID:        vocabularyInput.UnitID,
+		IsFavourite:   0,
 	}
 
 	err := v.VocabularyUseCase.CreateOne(ctx, vocabularyRes)
@@ -121,6 +122,7 @@ func (v *VocabularyController) CreateVocabularyWithFile(ctx *gin.Context) {
 			ExplainVie:    vocabulary.ExplainVie,
 			FieldOfIT:     vocabulary.FieldOfIT,
 			LinkURL:       "",
+			IsFavourite:   0,
 		}
 		vocabularies = append(vocabularies, v)
 	}

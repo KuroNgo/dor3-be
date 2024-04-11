@@ -272,6 +272,25 @@ func (v *vocabularyRepository) UpdateOneAudio(c context.Context, vocabularyID st
 	return nil
 }
 
+func (v *vocabularyRepository) UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error {
+	collection := v.database.Collection(v.collectionVocabulary)
+	objID, err := primitive.ObjectIDFromHex(vocabularyID)
+
+	filter := bson.D{{Key: "_id", Value: objID}}
+	update := bson.M{
+		"$set": bson.M{
+			"is_favourite": isFavourite,
+		},
+	}
+
+	_, err = collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (v *vocabularyRepository) CreateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)

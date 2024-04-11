@@ -79,6 +79,18 @@ func (v *vocabularyUseCase) UpdateOneAudio(c context.Context, vocabularyID strin
 	return nil
 }
 
+func (v *vocabularyUseCase) UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+
+	err := v.vocabularyRepository.UpdateIsFavourite(ctx, vocabularyID, isFavourite)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (v *vocabularyUseCase) GetAllVocabulary(ctx context.Context) ([]string, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()

@@ -11,11 +11,12 @@ const (
 )
 
 type Exercise struct {
-	Id         primitive.ObjectID `bson:"_id" json:"_id"`
-	Vocabulary primitive.ObjectID `bson:"vocabulary" json:"vocabulary"`
-	Title      string             `bson:"title" json:"title"`
-	Content    string             `bson:"content" json:"content"`
-	Type       string             `bson:"type" json:"type"` // Loại bài tập: ví dụ: trắc nghiệm, điền từ, sắp xếp câu, v.v.
+	Id           primitive.ObjectID `bson:"_id" json:"_id"`
+	UnitID       primitive.ObjectID `bson:"unit_id" json:"unit_id"`
+	VocabularyID primitive.ObjectID `bson:"vocabulary" json:"vocabulary"`
+	Title        string             `bson:"title" json:"title"`
+	Content      string             `bson:"content" json:"content"`
+	//Type         string             `bson:"type" json:"type"` // Loại bài tập: ví dụ: trắc nghiệm, điền từ, sắp xếp câu, v.v.
 	//Options    []string           `bson:"options" json:"options"`         // Các lựa chọn cho bài tập trắc nghiệm, nếu có
 	CorrectAns string    `bson:"correct_ans" json:"correct_ans"` // Đáp án đúng cho bài tập, nếu có
 	BlankIndex int       `bson:"blank_index" json:"blank_index"` // Chỉ số của từ cần điền vào câu, nếu là loại bài tập điền từ
