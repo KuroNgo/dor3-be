@@ -119,7 +119,7 @@ func (m *markVocabularyRepository) CreateOne(ctx context.Context, markVocabulary
 		return errors.New("the mark list do not exists")
 	}
 
-	filterMarkVocabularyReference := bson.M{"_id": markVocabulary.MarkVocabularyID}
+	filterMarkVocabularyReference := bson.M{"_id": markVocabulary.VocabularyID}
 	countMarkVocabularyParent, err := collectionVocabulary.CountDocuments(ctx, filterMarkVocabularyReference)
 	if err != nil {
 		return err

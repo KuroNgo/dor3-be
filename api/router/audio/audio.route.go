@@ -19,6 +19,5 @@ func AudioRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Databas
 	}
 
 	router := group.Group("/audio")
-	// riêng audio thì giành cho cả 2 phiá
 	router.GET("/fetch", audio.FetchManyAudio)
 }
