@@ -1,7 +1,7 @@
 package vocabulary_controller
 
 import (
-	file_internal "clean-architecture/internal/file"
+	"clean-architecture/internal/cloud/google"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -20,7 +20,7 @@ func (v *VocabularyController) GenerateVoice(ctx *gin.Context) {
 		return
 	}
 
-	_ = file_internal.CreateTextToSpeech(wordInput.Vocabulary)
+	_ = google.CreateTextToSpeech(wordInput.Vocabulary)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status":  "success",

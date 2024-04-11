@@ -18,6 +18,7 @@ require (
 )
 
 require (
+	github.com/MakMoinee/go-mith v1.2.10 // indirect
 	github.com/RoaringBitmap/roaring v0.4.23 // indirect
 	github.com/aws/aws-sdk-go v1.51.15 // indirect
 	github.com/blevesearch/bleve v1.0.14 // indirect
@@ -102,6 +103,8 @@ require (
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
+	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
