@@ -21,6 +21,7 @@ type Vocabulary struct {
 	ExplainEng    string             `bson:"explain_eng" json:"explain_eng"`
 	FieldOfIT     string             `bson:"field_of_it" json:"field_of_it"`
 	LinkURL       string             `bson:"link_url" json:"link_url"`
+	IsFavourite   int                `bson:"is_favourite" json:"is_favourite"`
 }
 
 type Response struct {
@@ -40,6 +41,7 @@ type IVocabularyRepository interface {
 	CreateOne(ctx context.Context, vocabulary *Vocabulary) error
 	CreateOneByNameUnit(ctx context.Context, vocabulary *Vocabulary) error
 	UpsertOne(c context.Context, id string, vocabulary *Vocabulary) (Response, error)
+	UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error
 	UpdateOneAudio(c context.Context, vocabularyID string, linkURL string) error
 	DeleteOne(ctx context.Context, vocabularyID string) error
 }

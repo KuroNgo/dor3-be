@@ -12,6 +12,8 @@ const (
 
 type Quiz struct {
 	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	UnitID        primitive.ObjectID `bson:"unit_id" json:"unit_id"`
+	Vocabulary    primitive.ObjectID `bson:"vocabulary" json:"vocabulary"`
 	Question      string             `bson:"question" json:"question"`
 	Options       []string           `bson:"options" json:"options"`
 	CorrectAnswer string             `bson:"correct_answer" json:"correct_answer"`

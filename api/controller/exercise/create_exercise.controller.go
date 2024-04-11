@@ -37,7 +37,7 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 		Title:      exerciseInput.Title,
 		Content:    exerciseInput.Content,
 		Type:       exerciseInput.Type,
-		Options:    exerciseInput.Options,
+		//Options:    exerciseInput.Options,
 		CorrectAns: exerciseInput.CorrectAns,
 		BlankIndex: exerciseInput.BlankIndex,
 		CreatedAt:  time.Now(),

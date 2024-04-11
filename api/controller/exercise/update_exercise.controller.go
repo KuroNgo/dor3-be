@@ -36,7 +36,7 @@ func (e *ExerciseController) UpdateOneExercise(ctx *gin.Context) {
 		Title:      exerciseInput.Title,
 		Content:    exerciseInput.Content,
 		Type:       exerciseInput.Type,
-		Options:    exerciseInput.Options,
+		//Options:    exerciseInput.Options,
 		CorrectAns: exerciseInput.CorrectAns,
 		BlankIndex: exerciseInput.BlankIndex,
 		UpdatedAt:  time.Now(),

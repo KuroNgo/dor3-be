@@ -12,6 +12,8 @@ const (
 
 type Exam struct {
 	ID            primitive.ObjectID `bson:"_id" json:"_id"`
+	UnitID        primitive.ObjectID `bson:"unit_id" json:"unit_id"`
+	VocabularyID  primitive.ObjectID `bson:"vocabulary" json:"vocabulary"`
 	Question      string             `bson:"question" json:"question"`
 	Options       []string           `bson:"options" json:"options"`
 	CorrectAnswer string             `bson:"correct_answer" json:"correct_answer"`
