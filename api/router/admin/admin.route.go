@@ -20,9 +20,9 @@ func AdminRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Databa
 		Database:     env,
 	}
 
-	router := group.Group("/admin")
+	router := group.Group("")
 	router.POST("/signup", admin.SignUp)
-	router.GET("/info", middleware.DeserializeUser(), admin.GetMe)
+	router.GET("/get-me", middleware.DeserializeUser(), admin.GetMe)
 	router.GET("/refresh", admin.RefreshToken)
 	router.GET("/logout", middleware.DeserializeUser(), admin.Logout)
 }

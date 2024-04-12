@@ -16,6 +16,11 @@ type quizRepository struct {
 	collection string
 }
 
+func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewQuizRepository(db mongo.Database, collection string) quiz_domain.IQuizRepository {
 	return &quizRepository{
 		database:   db,

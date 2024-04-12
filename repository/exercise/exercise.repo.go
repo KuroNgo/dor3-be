@@ -19,6 +19,11 @@ type exerciseRepository struct {
 	collectionExercise   string
 }
 
+func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string) (exercise_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (e *exerciseRepository) FetchMany(ctx context.Context, page string) (exercise_domain.Response, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
 	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
@@ -58,7 +63,7 @@ func (e *exerciseRepository) FetchMany(ctx context.Context, page string) (exerci
 			return exercise_domain.Response{}, err
 		}
 
-		exercise.Vocabulary = vocabulary.Id
+		exercise.VocabularyID = vocabulary.Id
 		exercises = append(exercises, exercise)
 	}
 
@@ -86,8 +91,8 @@ func (e *exerciseRepository) CreateOne(ctx context.Context, exercise *exercise_d
 	collectionExercise := e.database.Collection(e.collectionExercise)
 	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
 
-	filter := bson.M{"content": exercise.Content, "vocabulary_id": exercise.Vocabulary}
-	filterReference := bson.M{"_id": exercise.Vocabulary}
+	filter := bson.M{"content": exercise.Content, "vocabulary_id": exercise.VocabularyID}
+	filterReference := bson.M{"_id": exercise.VocabularyID}
 
 	countParent, err := collectionVocabulary.CountDocuments(ctx, filterReference)
 	if err != nil {
@@ -115,7 +120,7 @@ func (e *exerciseRepository) UpsertOne(ctx context.Context, id string, exercise 
 	collectionExercise := e.database.Collection(e.collectionExercise)
 	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
 
-	filterReference := bson.M{"_id": exercise.Vocabulary}
+	filterReference := bson.M{"_id": exercise.VocabularyID}
 	count, err := collectionVocabulary.CountDocuments(ctx, filterReference)
 	if err != nil {
 		return exercise_domain.Response{}, err

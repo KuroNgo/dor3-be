@@ -12,7 +12,7 @@ import (
 func (a *AdminController) SignUp(ctx *gin.Context) {
 	var admin admin_domain.SignUp
 	if err := ctx.ShouldBindJSON(&admin); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": err.Error()},
 		)
@@ -20,7 +20,7 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 	}
 
 	if !internal.EmailValid(admin.Email) {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": "Email Invalid !",
 		})
@@ -28,7 +28,7 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 	}
 	// Bên phía client sẽ phải so sánh password thêm một lần nữa đã đúng chưa
 	if !internal.PasswordStrong(admin.Password) {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số !",
 		})
@@ -38,7 +38,7 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 	// Băm mật khẩu
 	hashedPassword, err := internal.HashPassword(admin.Password)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": err.Error()},
 		)
@@ -65,7 +65,7 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 	// thực hiện đăng ký người dùng
 	err = a.AdminUseCase.CreateOne(ctx, newAdmin)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": err.Error()},
 		)
@@ -73,7 +73,7 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 	}
 
 	// Trả về phản hồi thành công
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
 }

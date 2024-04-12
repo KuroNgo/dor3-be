@@ -8,14 +8,14 @@ import (
 func (a *AudioController) FetchManyAudio(ctx *gin.Context) {
 	audio, err := a.AudioUseCase.FetchMany(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": err.Error(),
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
 		"status": "success",
 		"data":   audio,
 	})

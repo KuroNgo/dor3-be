@@ -1,14 +1,14 @@
-package exercise_controller
+package activity_controller
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func (e *ExerciseController) FetchMany(ctx *gin.Context) {
+func (a *ActivityController) FetchManyActivity(ctx *gin.Context) {
 	page := ctx.DefaultQuery("page", "1")
 
-	exercise, err := e.ExerciseUseCase.FetchMany(ctx, page)
+	activity, err := a.ActivityUseCase.FetchMany(ctx, page)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -18,7 +18,7 @@ func (e *ExerciseController) FetchMany(ctx *gin.Context) {
 	}
 
 	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
-		"status": "success",
-		"data":   exercise,
+		"status":       "success",
+		"activity_log": activity,
 	})
 }

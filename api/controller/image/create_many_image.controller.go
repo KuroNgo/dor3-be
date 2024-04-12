@@ -14,7 +14,7 @@ import (
 func (im *ImageController) CreateManyImageForLesson(ctx *gin.Context) {
 	err := ctx.Request.ParseMultipartForm(10 << 20) // 10 MB max size
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error":   "Error parsing form",
 			"message": err.Error(),
 		})
@@ -23,7 +23,7 @@ func (im *ImageController) CreateManyImageForLesson(ctx *gin.Context) {
 
 	form, err := ctx.MultipartForm()
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Error parsing form",
 		})
 		return
@@ -77,7 +77,7 @@ func (im *ImageController) CreateManyImageForLesson(ctx *gin.Context) {
 	// Xử lý các lỗi trả về từ các Goroutine
 	for range files {
 		if err := <-errChan; err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 				"error": "Error processing file",
 			})
 			return
@@ -85,7 +85,7 @@ func (im *ImageController) CreateManyImageForLesson(ctx *gin.Context) {
 	}
 
 	// Trả về thông báo thành công nếu không có lỗi
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
 		"success": "Files uploaded successfully",
 	})
 }
@@ -93,7 +93,7 @@ func (im *ImageController) CreateManyImageForLesson(ctx *gin.Context) {
 func (im *ImageController) CreateManyImageForExam(ctx *gin.Context) {
 	err := ctx.Request.ParseMultipartForm(10 << 20) // 10 MB max size
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error":   "Error parsing form",
 			"message": err.Error(),
 		})
@@ -102,7 +102,7 @@ func (im *ImageController) CreateManyImageForExam(ctx *gin.Context) {
 
 	form, err := ctx.MultipartForm()
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Error parsing form",
 		})
 		return
@@ -153,7 +153,7 @@ func (im *ImageController) CreateManyImageForExam(ctx *gin.Context) {
 	// Xử lý các lỗi trả về từ các Goroutine
 	for range files {
 		if err := <-errChan; err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 				"error": "Error processing file",
 			})
 			return
@@ -169,7 +169,7 @@ func (im *ImageController) CreateManyImageForExam(ctx *gin.Context) {
 func (im *ImageController) CreateManyImageForUser(ctx *gin.Context) {
 	err := ctx.Request.ParseMultipartForm(10 << 20) // 10 MB max size
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error":   "Error parsing form",
 			"message": err.Error(),
 		})
@@ -178,7 +178,7 @@ func (im *ImageController) CreateManyImageForUser(ctx *gin.Context) {
 
 	form, err := ctx.MultipartForm()
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Error parsing form",
 		})
 		return
@@ -242,7 +242,7 @@ func (im *ImageController) CreateManyImageForUser(ctx *gin.Context) {
 func (im *ImageController) CreateManyImageForQuiz(ctx *gin.Context) {
 	err := ctx.Request.ParseMultipartForm(10 << 20) // 10MB max size
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
 			"error":   "Error parsing form",
 		})
@@ -251,7 +251,7 @@ func (im *ImageController) CreateManyImageForQuiz(ctx *gin.Context) {
 
 	form, err := ctx.MultipartForm()
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
 			"error":   "Error parsing form",
 		})
@@ -301,13 +301,13 @@ func (im *ImageController) CreateManyImageForQuiz(ctx *gin.Context) {
 	// Xử lý các lỗi trả về từ các Goroutine
 	for range files {
 		if err := <-errChan; err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 				"error": "Error processing file",
 			})
 			return
 		}
 	}
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
 		"success": "Files uploaded successfully",
 	})
 
@@ -316,7 +316,7 @@ func (im *ImageController) CreateManyImageForQuiz(ctx *gin.Context) {
 func (im *ImageController) CreateManyImageForStatic(ctx *gin.Context) {
 	err := ctx.Request.ParseMultipartForm(10 << 20) // 10 MB max size
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
 			"error":   "Error parsing form",
 		})
@@ -325,7 +325,7 @@ func (im *ImageController) CreateManyImageForStatic(ctx *gin.Context) {
 
 	form, err := ctx.MultipartForm()
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Error parsing form",
 		})
 		return
@@ -372,14 +372,14 @@ func (im *ImageController) CreateManyImageForStatic(ctx *gin.Context) {
 	// Xử lý các lỗi trả về từ các Goroutine
 	for range files {
 		if err := <-errChan; err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 				"error": "Error processing file",
 			})
 			return
 		}
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
 		"success": "Files uploaded successfully",
 	})
 

@@ -50,8 +50,9 @@ func (l *LoginFromRoleController) Login2(ctx *gin.Context) {
 		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
 
 		ctx.JSON(http.StatusOK, gin.H{
-			"status":  "success",
-			"message": "Login successful with admin role",
+			"status":       "success",
+			"message":      "Login successful with admin role",
+			"access_token": accessToken,
 		})
 		return
 	}
@@ -83,8 +84,9 @@ func (l *LoginFromRoleController) Login2(ctx *gin.Context) {
 		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
 
 		ctx.JSON(http.StatusOK, gin.H{
-			"status":  "success",
-			"message": "Login successful with user role",
+			"status":       "success",
+			"message":      "Login successful with user role",
+			"access_token": accessToken,
 		})
 		return
 	}

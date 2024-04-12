@@ -54,18 +54,6 @@ func (e *exerciseUseCase) CreateOne(ctx context.Context, exercise *exercise_doma
 	return nil
 }
 
-func (e *exerciseUseCase) UpsertOne(ctx context.Context, id string, exercise *exercise_domain.Exercise) (exercise_domain.Response, error) {
-	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
-	defer cancel()
-
-	exercises, err := e.exerciseRepository.UpsertOne(ctx, id, exercise)
-	if err != nil {
-		return exercise_domain.Response{}, err
-	}
-
-	return exercises, nil
-}
-
 func (e *exerciseUseCase) DeleteOne(ctx context.Context, exerciseID string) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
