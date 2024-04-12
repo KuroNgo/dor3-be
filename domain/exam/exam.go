@@ -12,8 +12,9 @@ const (
 
 type Exam struct {
 	ID            primitive.ObjectID `bson:"_id" json:"_id"`
+	LessonID      primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 	UnitID        primitive.ObjectID `bson:"unit_id" json:"unit_id"`
-	VocabularyID  primitive.ObjectID `bson:"vocabulary" json:"vocabulary"`
+	VocabularyID  primitive.ObjectID `bson:"vocabulary_id" json:"vocabulary_id"`
 	Question      string             `bson:"question" json:"question"`
 	Options       []string           `bson:"options" json:"options"`
 	CorrectAnswer string             `bson:"correct_answer" json:"correct_answer"`
@@ -38,8 +39,8 @@ type Response struct {
 
 type IExamRepository interface {
 	FetchMany(ctx context.Context) (Response, error)
+	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
 	UpdateOne(ctx context.Context, examID string, exam Exam) error
 	CreateOne(ctx context.Context, exam *Exam) error
-	UpsertOne(c context.Context, id string, exam *Exam) (Response, error)
 	DeleteOne(ctx context.Context, examID string) error
 }

@@ -10,14 +10,14 @@ func (e *ExerciseController) DeleteOneExercise(ctx *gin.Context) {
 
 	err := e.ExerciseUseCase.DeleteOne(ctx, exerciseID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"message": err.Error(),
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
 }

@@ -5,16 +5,16 @@ import (
 	"clean-architecture/infrastructor/mongo"
 	"context"
 	"errors"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"strconv"
 	"time"
 )
 
 type activityRepository struct {
 	database           mongo.Database
 	collectionActivity string
-	collectionUser     string
 }
 
 func (a *activityRepository) DeleteOneByTime(ctx context.Context, time time.Duration) error {
@@ -23,42 +23,19 @@ func (a *activityRepository) DeleteOneByTime(ctx context.Context, time time.Dura
 }
 
 func (a *activityRepository) CreateOne(ctx context.Context, log activity_log_domain.ActivityLog) error {
-	// Kiểm tra log.UserID
-	if log.UserID == primitive.NilObjectID {
-		return errors.New("userID is empty")
+	collectionActivity := a.database.Collection(a.collectionActivity)
+	filter := bson.M{"activity_time": log.ActivityTime}
+
+	// check exists with CountDocuments
+	count, err := collectionActivity.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
 	}
 
-	errChan := make(chan error, 2)
-
-	go func() {
-		userFilter := bson.M{"_id": log.UserID}
-		userCount, err := a.database.Collection(a.collectionUser).CountDocuments(ctx, userFilter)
-		if err != nil {
-			errChan <- fmt.Errorf("error checking user existence: %v", err)
-			return
-		}
-		if userCount == 0 {
-			errChan <- errors.New("user does not exist")
-			return
-		}
-		errChan <- nil
-	}()
-
-	go func() {
-		_, err := a.database.Collection(a.collectionActivity).InsertOne(ctx, log)
-		if err != nil {
-			errChan <- fmt.Errorf("error inserting activity: %v", err)
-			return
-		}
-		errChan <- nil
-	}()
-
-	for i := 0; i < 2; i++ {
-		if err := <-errChan; err != nil {
-			return err
-		}
+	if count > 0 {
+		return errors.New("warning")
 	}
-
+	_, err = collectionActivity.InsertOne(ctx, log)
 	return nil
 }
 
@@ -101,20 +78,49 @@ func (a *activityRepository) DeleteOne(ctx context.Context, logID string) error 
 	return nil
 }
 
-func (a *activityRepository) FetchMany(ctx context.Context) ([]activity_log_domain.ActivityLog, error) {
+func (a *activityRepository) FetchMany(ctx context.Context, page string) (activity_log_domain.Response, error) {
+	collection := a.database.Collection(a.collectionActivity)
+
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return activity_log_domain.Response{}, errors.New("invalid page number")
+	}
+	perPage := 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+	cursor, err := collection.Find(ctx, bson.D{}, findOptions)
+
+	if err != nil {
+		return activity_log_domain.Response{}, err
+	}
+	defer cursor.Close(ctx)
+
+	var activities []activity_log_domain.ActivityLog
+	for cursor.Next(ctx) {
+		var activity activity_log_domain.ActivityLog
+
+		if err = cursor.Decode(&activity); err != nil {
+			return activity_log_domain.Response{}, err
+		}
+
+		// Thêm activity vào slice activities
+		activities = append(activities, activity)
+	}
+
+	activityRes := activity_log_domain.Response{
+		ActivityLog: activities,
+	}
+	return activityRes, nil
+}
+
+func (a *activityRepository) FetchByUserName(ctx context.Context, username string) (activity_log_domain.Response, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a *activityRepository) FetchByUserName(ctx context.Context, username string) (activity_log_domain.ActivityLog, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func NewActivityRepository(db mongo.Database, collectionActivity string, collectionUser string) activity_log_domain.IActivityUseCase {
+func NewActivityRepository(db mongo.Database, collectionActivity string, collectionUser string) activity_log_domain.IActivityRepository {
 	return &activityRepository{
 		database:           db,
 		collectionActivity: collectionActivity,
-		collectionUser:     collectionUser,
 	}
 }

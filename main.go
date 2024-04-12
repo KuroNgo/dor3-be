@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+
 	app := bootstrap.App()
 
 	env := app.Env
@@ -20,8 +21,10 @@ func main() {
 	_gin := gin.Default()
 
 	router.SetUp(env, timeout, db, _gin)
+
 	err := _gin.Run(env.ServerAddress)
 	if err != nil {
 		return
 	}
+
 }

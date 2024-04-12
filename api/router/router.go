@@ -2,6 +2,7 @@ package router
 
 import (
 	"clean-architecture/api/middleware"
+	activity_log_route "clean-architecture/api/router/activity_log"
 	admin_route "clean-architecture/api/router/admin"
 	audio_route "clean-architecture/api/router/audio"
 	course_route "clean-architecture/api/router/course"
@@ -23,7 +24,7 @@ import (
 )
 
 func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gin *gin.Engine) {
-
+	value := activity_log_route.ActivityRoute(env, timeout, db)
 	publicRouter := gin.Group("/api/")
 	privateRouter := gin.Group("/api/admin")
 
@@ -34,7 +35,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 		middleware.Recover(),
 		gzip.Gzip(gzip.DefaultCompression,
 			gzip.WithExcludedPaths([]string{",*"})),
-		middleware.StructuredLogger(&log.Logger),
+		middleware.StructuredLogger(&log.Logger, value),
 	)
 
 	privateRouter.Use(
@@ -44,7 +45,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 		gzip.Gzip(gzip.DefaultCompression,
 			gzip.WithExcludedPaths([]string{",*"})),
 		middleware.DeserializeUser(),
-		middleware.StructuredLogger(&log.Logger),
+		middleware.StructuredLogger(&log.Logger, value),
 	)
 
 	// This is a CORS method for check IP validation
@@ -62,10 +63,11 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gi
 	lesson_route.LessonRoute(env, timeout, db, publicRouter)
 	unit_route.UnitRouter(env, timeout, db, publicRouter)
 	vocabulary_route.VocabularyRoute(env, timeout, db, publicRouter)
-
-	// All Private API
 	mark_vocabulary_route.MarkVocabularyRoute(env, timeout, db, publicRouter)
 	mark_list_route.MarkListRoute(env, timeout, db, publicRouter)
+
+	// All Private API
+	activity_log_route.AdminActivityRoute(env, timeout, db, privateRouter)
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
 	admin_route.AdminRouter(env, timeout, db, privateRouter)
 	audio_route.AdminAudioRoute(env, timeout, db, privateRouter)

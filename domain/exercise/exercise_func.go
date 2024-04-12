@@ -19,6 +19,5 @@ type IExerciseUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	UpdateOne(ctx context.Context, exerciseID string, exercise Exercise) error
 	CreateOne(ctx context.Context, exercise *Exercise) error
-	UpsertOne(ctx context.Context, id string, exercise *Exercise) (Response, error)
 	DeleteOne(ctx context.Context, exerciseID string) error
 }

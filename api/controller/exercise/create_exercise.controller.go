@@ -16,7 +16,7 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 
 	var exerciseInput exercise_domain.Input
 	if err := ctx.ShouldBindJSON(&exerciseInput); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"status": "error",
 			"error":  err.Error(),
 		})
@@ -24,7 +24,7 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 	}
 
 	if err := internal.IsValidExercise(exerciseInput); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": err.Error(),
 		})
@@ -32,11 +32,11 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 	}
 
 	exerciseRes := &exercise_domain.Exercise{
-		Id:         primitive.NewObjectID(),
-		Vocabulary: exerciseInput.VocabularyID,
-		Title:      exerciseInput.Title,
-		Content:    exerciseInput.Content,
-		Type:       exerciseInput.Type,
+		Id:           primitive.NewObjectID(),
+		VocabularyID: exerciseInput.VocabularyID,
+		Title:        exerciseInput.Title,
+		Content:      exerciseInput.Content,
+		//Type:         exerciseInput.Type,
 		//Options:    exerciseInput.Options,
 		CorrectAns: exerciseInput.CorrectAns,
 		BlankIndex: exerciseInput.BlankIndex,
@@ -54,7 +54,7 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
 }

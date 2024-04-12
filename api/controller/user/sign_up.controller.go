@@ -4,6 +4,8 @@ import (
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal"
 	"clean-architecture/internal/cloud/cloudinary"
+	"clean-architecture/internal/cloud/google"
+	subject_const "clean-architecture/internal/cloud/google/const"
 	file_internal "clean-architecture/internal/file"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -53,6 +55,7 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 	user.Password = internal.Santize(user.Password)
 	user.Email = internal.Santize(user.Email)
 	file, err := ctx.FormFile("file")
+
 	if err != nil {
 		newUser := user_domain.User{
 			ID:       primitive.NewObjectID(),
@@ -76,6 +79,12 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 				"status":  "error",
 				"message": err.Error()},
 			)
+			return
+		}
+
+		// Thêm công việc cron để gửi email nhắc nhở
+		err = google.SendEmail(user.Email, subject_const.SignInTheFirstTime, subject_const.ContentTitle2)
+		if err != nil {
 			return
 		}
 
@@ -146,6 +155,19 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 			"status":  "error",
 			"message": err.Error()},
 		)
+		return
+	}
+
+	// add cron job
+	err = google.Cron.AddFunc("0h0m1s", func() {
+		err = google.SendEmail(user.Email, subject_const.SignInTheFirstTime, subject_const.ContentTitle2)
+		if err != nil {
+			return
+		}
+	})
+	google.Cron.Start()
+
+	if err != nil {
 		return
 	}
 

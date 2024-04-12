@@ -12,8 +12,15 @@ type activityUseCase struct {
 }
 
 func (a *activityUseCase) DeleteOneByTime(ctx context.Context, time time.Duration) error {
-	//TODO implement me
-	panic("implement me")
+	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
+	defer cancel()
+
+	err := a.activityRepository.DeleteOneByTime(ctx, time)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func NewActivityUseCase(activityRepository activity_log_domain.IActivityRepository, timeout time.Duration) activity_log_domain.IActivityUseCase {
@@ -36,16 +43,37 @@ func (a *activityUseCase) CreateOne(ctx context.Context, log activity_log_domain
 }
 
 func (a *activityUseCase) DeleteOne(ctx context.Context, logID string) error {
-	//TODO implement me
-	panic("implement me")
+	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
+	defer cancel()
+
+	err := a.activityRepository.DeleteOne(ctx, logID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (a *activityUseCase) FetchMany(ctx context.Context) ([]activity_log_domain.ActivityLog, error) {
-	//TODO implement me
-	panic("implement me")
+func (a *activityUseCase) FetchMany(ctx context.Context, page string) (activity_log_domain.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
+	defer cancel()
+
+	log, err := a.activityRepository.FetchMany(ctx, page)
+	if err != nil {
+		return activity_log_domain.Response{}, err
+	}
+
+	return log, nil
 }
 
-func (a *activityUseCase) FetchByUserName(ctx context.Context, username string) (activity_log_domain.ActivityLog, error) {
-	//TODO implement me
-	panic("implement me")
+func (a *activityUseCase) FetchByUserName(ctx context.Context, username string) (activity_log_domain.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
+	defer cancel()
+
+	log, err := a.activityRepository.FetchByUserName(ctx, username)
+	if err != nil {
+		return activity_log_domain.Response{}, err
+	}
+
+	return log, nil
 }

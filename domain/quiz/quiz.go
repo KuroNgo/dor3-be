@@ -12,8 +12,9 @@ const (
 
 type Quiz struct {
 	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	LessonID      primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 	UnitID        primitive.ObjectID `bson:"unit_id" json:"unit_id"`
-	Vocabulary    primitive.ObjectID `bson:"vocabulary" json:"vocabulary"`
+	VocabularyID  primitive.ObjectID `bson:"vocabulary" json:"vocabulary"`
 	Question      string             `bson:"question" json:"question"`
 	Options       []string           `bson:"options" json:"options"`
 	CorrectAnswer string             `bson:"correct_answer" json:"correct_answer"`
@@ -38,10 +39,9 @@ type Response struct {
 
 //go:generate mockery --name IQuizRepository
 type IQuizRepository interface {
-	//FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]Response, error)
 	FetchMany(ctx context.Context) (Response, error)
+	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
 	UpdateOne(ctx context.Context, quizID string, quiz Quiz) error
 	CreateOne(ctx context.Context, quiz *Quiz) error
-	UpsertOne(c context.Context, id string, quiz *Quiz) (Response, error)
 	DeleteOne(ctx context.Context, quizID string) error
 }
