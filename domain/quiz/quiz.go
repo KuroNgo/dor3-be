@@ -42,6 +42,7 @@ type IQuizRepository interface {
 	FetchMany(ctx context.Context) (Response, error)
 	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
 	UpdateOne(ctx context.Context, quizID string, quiz Quiz) error
+	UpdateCompleted(ctx context.Context, quizID string, isComplete int) error
 	CreateOne(ctx context.Context, quiz *Quiz) error
 	DeleteOne(ctx context.Context, quizID string) error
 }

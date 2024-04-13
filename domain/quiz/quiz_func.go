@@ -17,8 +17,10 @@ type Input struct {
 //go:generate mockery --name IQuizUseCase
 type IQuizUseCase interface {
 	FetchMany(ctx context.Context) (Response, error)
-	//FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]Response, error)
+	FetchManyByLessonID(ctx context.Context, unitID string) (Response, error)
+	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
 	UpdateOne(ctx context.Context, quizID string, quiz Quiz) error
+	UpdateCompleted(ctx context.Context, quizID string, isComplete int) error
 	CreateOne(ctx context.Context, quiz *Quiz) error
 	DeleteOne(ctx context.Context, quizID string) error
 }

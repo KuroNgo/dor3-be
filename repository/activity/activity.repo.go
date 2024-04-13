@@ -113,11 +113,6 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	return activityRes, nil
 }
 
-func (a *activityRepository) FetchByUserName(ctx context.Context, username string) (activity_log_domain.Response, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewActivityRepository(db mongo.Database, collectionActivity string, collectionUser string) activity_log_domain.IActivityRepository {
 	return &activityRepository{
 		database:           db,

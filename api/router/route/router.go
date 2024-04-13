@@ -1,4 +1,4 @@
-package router
+package route
 
 import (
 	"clean-architecture/api/middleware"

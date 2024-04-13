@@ -13,9 +13,7 @@ const (
 type UserExerciseProcess struct {
 	ID            primitive.ObjectID `bson:"_id" json:"_id"`
 	UserID        primitive.ObjectID `bson:"user_id" json:"user_id"`
-	LessonID      primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
-	UnitID        primitive.ObjectID `bson:"unit_id" json:"unit_id"`
-	QuizID        primitive.ObjectID `bson:"quiz_id" json:"quiz_id"`
+	ExerciseID    primitive.ObjectID `bson:"exercise_id" json:"exercise_id"`
 	Score         int64              `bson:"score" json:"score"`
 	ProcessStatus int                `bson:"process_status" json:"process_status"`
 	CompletedDate time.Time          `bson:"completed_date" json:"completed_date"`

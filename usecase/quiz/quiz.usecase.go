@@ -11,6 +11,21 @@ type quizUseCase struct {
 	contextTimeout time.Duration
 }
 
+func (q *quizUseCase) FetchManyByLessonID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (q *quizUseCase) FetchManyByUnitID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (q *quizUseCase) UpdateCompleted(ctx context.Context, quizID string, isComplete int) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewQuizUseCase(quizRepository quiz_domain.IQuizRepository, timeout time.Duration) quiz_domain.IQuizUseCase {
 	return &quizUseCase{
 		quizRepository: quizRepository,

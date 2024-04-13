@@ -1,7 +1,7 @@
 package main
 
 import (
-	"clean-architecture/api/router"
+	"clean-architecture/api/router/route"
 	"clean-architecture/bootstrap"
 	"github.com/gin-gonic/gin"
 	"time"
@@ -20,7 +20,7 @@ func main() {
 
 	_gin := gin.Default()
 
-	router.SetUp(env, timeout, db, _gin)
+	route.SetUp(env, timeout, db, _gin)
 
 	err := _gin.Run(env.ServerAddress)
 	if err != nil {

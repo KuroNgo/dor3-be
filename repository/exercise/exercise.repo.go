@@ -15,8 +15,20 @@ import (
 
 type exerciseRepository struct {
 	database             mongo.Database
+	collectionLesson     string
+	collectionUnit       string
 	collectionVocabulary string
 	collectionExercise   string
+}
+
+func (e *exerciseRepository) FetchManyByLessonID(ctx context.Context, unitID string) (exercise_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *exerciseRepository) UpdateCompleted(ctx context.Context, exerciseID string, isComplete int) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string) (exercise_domain.Response, error) {
