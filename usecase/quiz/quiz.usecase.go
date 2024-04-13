@@ -12,18 +12,39 @@ type quizUseCase struct {
 }
 
 func (q *quizUseCase) FetchManyByLessonID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
-	//TODO implement me
-	panic("implement me")
+	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
+	defer cancel()
+
+	quiz, err := q.quizRepository.FetchManyByLessonID(ctx, unitID)
+	if err != nil {
+		return quiz_domain.Response{}, err
+	}
+
+	return quiz, nil
 }
 
 func (q *quizUseCase) FetchManyByUnitID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
-	//TODO implement me
-	panic("implement me")
+	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
+	defer cancel()
+
+	quiz, err := q.quizRepository.FetchManyByUnitID(ctx, unitID)
+	if err != nil {
+		return quiz_domain.Response{}, err
+	}
+
+	return quiz, nil
 }
 
 func (q *quizUseCase) UpdateCompleted(ctx context.Context, quizID string, isComplete int) error {
-	//TODO implement me
-	panic("implement me")
+	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
+	defer cancel()
+
+	err := q.quizRepository.UpdateCompleted(ctx, quizID, isComplete)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func NewQuizUseCase(quizRepository quiz_domain.IQuizRepository, timeout time.Duration) quiz_domain.IQuizUseCase {
@@ -42,7 +63,7 @@ func (q *quizUseCase) FetchMany(ctx context.Context) (quiz_domain.Response, erro
 		return quiz_domain.Response{}, err
 	}
 
-	return quiz, err
+	return quiz, nil
 }
 
 func (q *quizUseCase) UpdateOne(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
@@ -54,7 +75,7 @@ func (q *quizUseCase) UpdateOne(ctx context.Context, quizID string, quiz quiz_do
 		return err
 	}
 
-	return err
+	return nil
 }
 
 func (q *quizUseCase) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) error {
@@ -78,5 +99,5 @@ func (q *quizUseCase) DeleteOne(ctx context.Context, quizID string) error {
 		return err
 	}
 
-	return err
+	return nil
 }

@@ -1,13 +1,13 @@
-package exam
+package exam_controller
 
 import (
 	"clean-architecture/bootstrap"
-	exercise_domain "clean-architecture/domain/exercise"
+	exam_domain "clean-architecture/domain/exam"
 	user_domain "clean-architecture/domain/user"
 )
 
-type ExamController struct {
-	ExamUseCase exercise_domain.IExerciseUseCase
+type ExamsController struct {
+	ExamUseCase exam_domain.IExamUseCase
 	UserUseCase user_domain.IUserUseCase
 	Database    *bootstrap.Database
 }

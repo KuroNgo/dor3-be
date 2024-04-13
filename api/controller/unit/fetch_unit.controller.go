@@ -6,7 +6,9 @@ import (
 )
 
 func (u *UnitController) FetchMany(ctx *gin.Context) {
-	unit, err := u.UnitUseCase.FetchMany(ctx)
+	page := ctx.DefaultQuery("page", "1")
+
+	unit, err := u.UnitUseCase.FetchMany(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

@@ -1,4 +1,4 @@
-package route
+package router
 
 import (
 	"clean-architecture/api/middleware"
@@ -20,11 +20,13 @@ import (
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
+	mongo_driven "go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
 func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gin *gin.Engine) {
-	value := activity_log_route.ActivityRoute(env, timeout, db)
+	var dbMongo mongo_driven.Database
+	value := activity_log_route.ActivityRouteV2(env, timeout, dbMongo)
 	publicRouter := gin.Group("/api/")
 	privateRouter := gin.Group("/api/admin")
 
