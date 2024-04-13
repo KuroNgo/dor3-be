@@ -1,7 +1,6 @@
 package lesson_repository
 
 import (
-	course_domain "clean-architecture/domain/course"
 	lesson_domain "clean-architecture/domain/lesson"
 	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
@@ -87,7 +86,6 @@ func (l *lessonRepository) UpdateComplete(ctx context.Context, lessonID string, 
 
 func (l *lessonRepository) FetchMany(ctx context.Context) (lesson_domain.Response, error) {
 	collectionLesson := l.database.Collection(l.collectionLesson)
-	collectionCourse := l.database.Collection(l.collectionCourse)
 
 	cursor, err := collectionLesson.Find(ctx, bson.D{})
 	if err != nil {
@@ -107,19 +105,9 @@ func (l *lessonRepository) FetchMany(ctx context.Context) (lesson_domain.Respons
 			return lesson_domain.Response{}, err
 		}
 
-		var course course_domain.Course
-		err = collectionCourse.FindOne(ctx, bson.M{"_id": lesson.CourseID}).Decode(&course)
-		if err != nil {
-			return lesson_domain.Response{}, err
-		}
-
-		// Gắn tên của course vào lesson
-		lesson.CourseID = course.Id
-
 		// Thêm lesson vào slice lessons
 		lessons = append(lessons, lesson)
 	}
-	err = cursor.All(ctx, &lessons)
 	lessonRes := lesson_domain.Response{
 		Lesson: lessons,
 	}

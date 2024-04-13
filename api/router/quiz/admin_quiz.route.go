@@ -3,8 +3,11 @@ package quiz_route
 import (
 	quiz_controller "clean-architecture/api/controller/quiz"
 	"clean-architecture/bootstrap"
+	lesson_domain "clean-architecture/domain/lesson"
 	quiz_domain "clean-architecture/domain/quiz"
+	unit_domain "clean-architecture/domain/unit"
 	user_domain "clean-architecture/domain/user"
+	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"clean-architecture/infrastructor/mongo"
 	quiz_repository "clean-architecture/repository/quiz"
 	user_repository "clean-architecture/repository/user"
@@ -15,7 +18,7 @@ import (
 )
 
 func AdminQuizRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
-	qu := quiz_repository.NewQuizRepository(db, quiz_domain.CollectionQuiz)
+	qu := quiz_repository.NewQuizRepository(db, quiz_domain.CollectionQuiz, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
 
 	quiz := &quiz_controller.QuizController{

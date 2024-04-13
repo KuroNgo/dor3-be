@@ -65,15 +65,3 @@ func (a *activityUseCase) FetchMany(ctx context.Context, page string) (activity_
 
 	return log, nil
 }
-
-func (a *activityUseCase) FetchByUserName(ctx context.Context, username string) (activity_log_domain.Response, error) {
-	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
-	defer cancel()
-
-	log, err := a.activityRepository.FetchByUserName(ctx, username)
-	if err != nil {
-		return activity_log_domain.Response{}, err
-	}
-
-	return log, nil
-}

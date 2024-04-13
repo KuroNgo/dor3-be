@@ -32,5 +32,8 @@ type IActivityRepository interface {
 	DeleteOne(ctx context.Context, logID string) error
 	DeleteOneByTime(ctx context.Context, time time.Duration) error
 	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchByUserName(ctx context.Context, username string) (Response, error)
+}
+
+type IActivityRepositoryV2 interface {
+	CreateOne(ctx context.Context, log ActivityLog) error
 }

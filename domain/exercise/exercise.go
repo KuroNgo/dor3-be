@@ -35,8 +35,10 @@ type Response struct {
 
 type IExerciseRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
+	FetchManyByLessonID(ctx context.Context, unitID string) (Response, error)
 	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
 	UpdateOne(ctx context.Context, exerciseID string, exercise Exercise) error
+	UpdateCompleted(ctx context.Context, exerciseID string, isComplete int) error
 	CreateOne(ctx context.Context, exercise *Exercise) error
 	DeleteOne(ctx context.Context, exerciseID string) error
 }

@@ -1,7 +1,6 @@
 package unit_repo
 
 import (
-	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
 	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
@@ -179,7 +178,6 @@ func (u *unitRepository) CheckLessonComplete(ctx context.Context, lessonID strin
 
 func (u *unitRepository) FetchMany(ctx context.Context) (unit_domain.Response, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
-	collectionLesson := u.database.Collection(u.collectionLesson)
 
 	cursor, err := collectionUnit.Find(ctx, bson.D{})
 	if err != nil {
@@ -199,19 +197,9 @@ func (u *unitRepository) FetchMany(ctx context.Context) (unit_domain.Response, e
 			return unit_domain.Response{}, err
 		}
 
-		var lesson lesson_domain.Lesson
-		err := collectionLesson.FindOne(ctx, bson.M{"_id": unit.LessonID}).Decode(&lesson)
-		if err != nil {
-			return unit_domain.Response{}, err
-		}
-
-		// Gắn tên của course vào lesson
-		unit.LessonID = lesson.ID
-
 		// Thêm lesson vào slice lessons
 		units = append(units, unit)
 	}
-	err = cursor.All(ctx, &units)
 	unitRes := unit_domain.Response{
 		Unit: units,
 	}

@@ -8,24 +8,82 @@ import (
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type quizRepository struct {
-	database   mongo.Database
-	collection string
+	database             mongo.Database
+	collectionLesson     string
+	collectionUnit       string
+	collectionVocabulary string
+	collectionQuiz       string
 }
 
-func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
+func NewQuizRepository(db mongo.Database, collectionQuiz string, collectionLesson string, collectionUnit string, collectionVocabulary string) quiz_domain.IQuizRepository {
+	return &quizRepository{
+		database:             db,
+		collectionQuiz:       collectionQuiz,
+		collectionLesson:     collectionLesson,
+		collectionUnit:       collectionUnit,
+		collectionVocabulary: collectionVocabulary,
+	}
+}
+func (q *quizRepository) FetchManyByLessonID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func NewQuizRepository(db mongo.Database, collection string) quiz_domain.IQuizRepository {
-	return &quizRepository{
-		database:   db,
-		collection: collection,
+func (q *quizRepository) UpdateCompleted(ctx context.Context, quizID string, isComplete int) error {
+	collection := q.database.Collection(q.collectionUnit)
+	objID, err := primitive.ObjectIDFromHex(quizID)
+	if err != nil {
+		return err
 	}
+
+	filter := bson.D{{Key: "_id", Value: objID}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "is_complete", Value: isComplete},
+	}}}
+
+	_, err = collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
+	collectionQuiz := q.database.Collection(q.collectionQuiz)
+
+	idLesson2, err := primitive.ObjectIDFromHex(unitID)
+	if err != nil {
+		return quiz_domain.Response{}, err
+	}
+
+	filter := bson.M{"lesson_id": idLesson2}
+	cursor, err := collectionQuiz.Find(ctx, filter)
+	if err != nil {
+		return quiz_domain.Response{}, err
+	}
+	defer cursor.Close(ctx)
+
+	var quizs []quiz_domain.Quiz
+	for cursor.Next(ctx) {
+		var quiz quiz_domain.Quiz
+		if err := cursor.Decode(&quiz); err != nil {
+			return quiz_domain.Response{}, err
+		}
+
+		// Gắn LessonID vào đơn vị
+		quiz.LessonID = idLesson2
+
+		quizs = append(quizs, quiz)
+	}
+
+	response := quiz_domain.Response{
+		Quiz: quizs,
+	}
+	return response, nil
 }
 
 func (q *quizRepository) FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]quiz_domain.Response, error) {
@@ -34,9 +92,9 @@ func (q *quizRepository) FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]q
 }
 
 func (q *quizRepository) FetchMany(ctx context.Context) (quiz_domain.Response, error) {
-	collection := q.database.Collection(q.collection)
+	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
-	cursor, err := collection.Find(ctx, bson.D{})
+	cursor, err := collectionQuiz.Find(ctx, bson.D{})
 	if err != nil {
 		return quiz_domain.Response{}, err
 	}
@@ -58,23 +116,23 @@ func (q *quizRepository) FetchMany(ctx context.Context) (quiz_domain.Response, e
 }
 
 func (q *quizRepository) UpdateOne(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
-	collection := q.database.Collection(q.collection)
+	collectionQuiz := q.database.Collection(q.collectionQuiz)
 	doc, err := internal.ToDoc(quiz)
 	objID, err := primitive.ObjectIDFromHex(quizID)
 
 	filter := bson.D{{Key: "_id", Value: objID}}
 	update := bson.D{{Key: "$set", Value: doc}}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
+	_, err = collectionQuiz.UpdateOne(ctx, filter, update)
 	return err
 }
 
 func (q *quizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) error {
-	collection := q.database.Collection(q.collection)
+	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
 	filter := bson.M{"question": quiz.Question}
 	// check exists with Count Documents
-	count, err := collection.CountDocuments(ctx, filter)
+	count, err := collectionQuiz.CountDocuments(ctx, filter)
 	if err != nil {
 		return err
 	}
@@ -82,12 +140,12 @@ func (q *quizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) 
 		return errors.New("the question did exist")
 	}
 
-	_, err = collection.InsertOne(ctx, quiz)
+	_, err = collectionQuiz.InsertOne(ctx, quiz)
 	return err
 }
 
 func (q *quizRepository) DeleteOne(ctx context.Context, quizID string) error {
-	collection := q.database.Collection(q.collection)
+	collectionQuiz := q.database.Collection(q.collectionQuiz)
 	objID, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
 		return err
@@ -96,36 +154,13 @@ func (q *quizRepository) DeleteOne(ctx context.Context, quizID string) error {
 	filter := bson.M{
 		"_id": objID,
 	}
-	count, err := collection.CountDocuments(ctx, filter)
+	count, err := collectionQuiz.CountDocuments(ctx, filter)
 	if err != nil {
 		return err
 	}
 	if count == 0 {
 		return errors.New(`the quiz is removed`)
 	}
-	_, err = collection.DeleteOne(ctx, filter)
+	_, err = collectionQuiz.DeleteOne(ctx, filter)
 	return err
-}
-
-func (q *quizRepository) UpsertOne(c context.Context, id string, quiz *quiz_domain.Quiz) (quiz_domain.Response, error) {
-	collection := q.database.Collection(q.collection)
-	doc, err := internal.ToDoc(quiz)
-
-	idHex, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return quiz_domain.Response{}, err
-	}
-
-	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(1)
-	query := bson.D{{Key: "_id", Value: idHex}}
-	update := bson.D{{Key: "$set", Value: doc}}
-	res := collection.FindOneAndUpdate(c, query, update, opts)
-
-	var updatedPost quiz_domain.Response
-
-	if err := res.Decode(&updatedPost); err != nil {
-		return quiz_domain.Response{}, errors.New("no post with that Id exists")
-	}
-
-	return updatedPost, nil
 }

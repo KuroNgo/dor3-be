@@ -13,8 +13,9 @@ type Input struct {
 
 type IExamUseCase interface {
 	FetchMany(ctx context.Context) (Response, error)
+	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
 	UpdateOne(ctx context.Context, examID string, exam Exam) error
 	CreateOne(ctx context.Context, exam *Exam) error
-	UpsertOne(c context.Context, id string, exam *Exam) (Response, error)
+	UpdateCompleted(ctx context.Context, examID string, isComplete int) error
 	DeleteOne(ctx context.Context, examID string) error
 }
