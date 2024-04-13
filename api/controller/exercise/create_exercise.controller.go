@@ -16,7 +16,7 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 
 	var exerciseInput exercise_domain.Input
 	if err := ctx.ShouldBindJSON(&exerciseInput); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status": "error",
 			"error":  err.Error(),
 		})
@@ -24,7 +24,7 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 	}
 
 	if err := internal.IsValidExercise(exerciseInput); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": err.Error(),
 		})
@@ -54,7 +54,7 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 		return
 	}
 
-	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
 }

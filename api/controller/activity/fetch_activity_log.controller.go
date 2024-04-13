@@ -10,14 +10,14 @@ func (a *ActivityController) FetchManyActivity(ctx *gin.Context) {
 
 	activity, err := a.ActivityUseCase.FetchMany(ctx, page)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"message": err.Error(),
 		})
 		return
 	}
 
-	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"status":       "success",
 		"activity_log": activity,
 	})

@@ -2,7 +2,6 @@ package user_controller
 
 import (
 	"clean-architecture/internal"
-	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -11,28 +10,27 @@ import (
 func (u *UserController) GetMe(ctx *gin.Context) {
 	cookie, err := ctx.Cookie("access_token")
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "fail",
-			"message": "You are not login!",
+			"message": "You are not logged in!",
 		})
 		return
 	}
 
 	sub, err := internal.ValidateToken(cookie, u.Database.AccessTokenPublicKey)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+		ctx.JSON(http.StatusForbidden, gin.H{
 			"status":  "fail",
-			"message": err.Error(),
+			"message": "Failed to validate token: " + err.Error(),
 		})
 		return
 	}
-	result, err := u.UserUseCase.GetByID(ctx, fmt.Sprint(sub))
-	resultString, err := json.Marshal(result)
 
+	result, err := u.UserUseCase.GetByID(ctx, fmt.Sprint(sub))
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+		ctx.JSON(http.StatusForbidden, gin.H{
 			"status":  "fail",
-			"message": string(resultString) + "the user belonging to this token no logger exists",
+			"message": "Failed to get user data: " + err.Error(),
 		})
 		return
 	}
