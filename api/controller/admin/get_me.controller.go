@@ -2,7 +2,6 @@ package admin_controller
 
 import (
 	"clean-architecture/internal"
-	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -26,13 +25,12 @@ func (a *AdminController) GetMe(ctx *gin.Context) {
 		})
 		return
 	}
-	result, err := a.AdminUseCase.GetByID(ctx, fmt.Sprint(sub))
-	resultString, err := json.Marshal(result)
 
+	result, err := a.AdminUseCase.GetByID(ctx, fmt.Sprint(sub))
 	if err != nil {
 		ctx.JSON(http.StatusForbidden, gin.H{
 			"status":  "fail",
-			"message": string(resultString) + "the user belonging to this token no logger exists",
+			"message": "Failed to get user data: " + err.Error(),
 		})
 		return
 	}
