@@ -13,7 +13,7 @@ func (im *ImageController) CreateOneImageStatic(ctx *gin.Context) {
 	// Parse form
 	err := ctx.Request.ParseMultipartForm(4 << 20) // 8MB max size
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Error parsing form",
 			"message": err.Error(),
 		})
@@ -23,20 +23,20 @@ func (im *ImageController) CreateOneImageStatic(ctx *gin.Context) {
 	// Lấy file từ form
 	file, err := ctx.FormFile("files")
 	if err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		ctx.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
 	f, err := file.Open()
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Error opening uploaded file",
 		})
 		return
 	}
 
 	if !file_internal.IsImage(file.Filename) {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -44,14 +44,14 @@ func (im *ImageController) CreateOneImageStatic(ctx *gin.Context) {
 
 	filename, ok := ctx.Get("filePath")
 	if !ok {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "filename not found",
 		})
 	}
 
 	result, err := cloudinary.UploadToCloudinary(f, filename.(string), im.Database.CloudinaryUploadFolderStatic)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -70,13 +70,13 @@ func (im *ImageController) CreateOneImageStatic(ctx *gin.Context) {
 	// save data in database
 	err = im.ImageUseCase.CreateOne(ctx, metadata)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
 }
@@ -85,7 +85,7 @@ func (im *ImageController) CreateOneImageLesson(ctx *gin.Context) {
 	// Parse form
 	err := ctx.Request.ParseMultipartForm(4 << 20) // 4 MB max size
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
 			"error":   "Error parsing form",
 		})
@@ -95,20 +95,20 @@ func (im *ImageController) CreateOneImageLesson(ctx *gin.Context) {
 	// Lấy file từ form
 	file, err := ctx.FormFile("files")
 	if err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		ctx.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
 	f, err := file.Open()
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Error opening uploaded file",
 		})
 		return
 	}
 
 	if !file_internal.IsImage(file.Filename) {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -116,14 +116,14 @@ func (im *ImageController) CreateOneImageLesson(ctx *gin.Context) {
 
 	filename, ok := ctx.Get("filePath")
 	if !ok {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "filename not found",
 		})
 	}
 
 	result, err := cloudinary.UploadToCloudinary(f, filename.(string), im.Database.CloudinaryUploadFolderLesson)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -142,13 +142,13 @@ func (im *ImageController) CreateOneImageLesson(ctx *gin.Context) {
 	// save data in database
 	err = im.ImageUseCase.CreateOne(ctx, metadata)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
 }
@@ -157,7 +157,7 @@ func (im *ImageController) CreateOneImageUser(ctx *gin.Context) {
 	// Parse form
 	err := ctx.Request.ParseMultipartForm(4 << 20) // 4 MB max size
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Error parsing form",
 			"message": err.Error(),
 		})
@@ -167,20 +167,20 @@ func (im *ImageController) CreateOneImageUser(ctx *gin.Context) {
 	// Lấy file từ form
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		ctx.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
 	f, err := file.Open()
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Error opening uploaded file",
 		})
 		return
 	}
 
 	if !file_internal.IsImage(file.Filename) {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -188,14 +188,14 @@ func (im *ImageController) CreateOneImageUser(ctx *gin.Context) {
 
 	filename, ok := ctx.Get("filePath")
 	if !ok {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "filename not found",
 		})
 	}
 
 	result, err := cloudinary.UploadToCloudinary(f, filename.(string), im.Database.CloudinaryUploadFolderUser)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -214,13 +214,13 @@ func (im *ImageController) CreateOneImageUser(ctx *gin.Context) {
 	// save data in database
 	err = im.ImageUseCase.CreateOne(ctx, metadata)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
 }
@@ -229,7 +229,7 @@ func (im *ImageController) CreateOneImageExam(ctx *gin.Context) {
 	// Parse form
 	err := ctx.Request.ParseMultipartForm(4 << 20) // 4 MB max size
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Error parsing form",
 			"message": err.Error(),
 		})
@@ -239,20 +239,20 @@ func (im *ImageController) CreateOneImageExam(ctx *gin.Context) {
 	// Lấy file từ form
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		ctx.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
 	f, err := file.Open()
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Error opening uploaded file",
 		})
 		return
 	}
 
 	if !file_internal.IsImage(file.Filename) {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -260,14 +260,14 @@ func (im *ImageController) CreateOneImageExam(ctx *gin.Context) {
 
 	filename, ok := ctx.Get("filePath")
 	if !ok {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "filename not found",
 		})
 	}
 
 	result, err := cloudinary.UploadToCloudinary(f, filename.(string), im.Database.CloudinaryUploadFolderExam)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -286,13 +286,13 @@ func (im *ImageController) CreateOneImageExam(ctx *gin.Context) {
 	// save data in database
 	err = im.ImageUseCase.CreateOne(ctx, metadata)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
 }
@@ -301,7 +301,7 @@ func (im *ImageController) CreateOneImageQuiz(ctx *gin.Context) {
 	// Parse form
 	err := ctx.Request.ParseMultipartForm(4 << 20) // 4 MB max size
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Error parsing form",
 			"message": err.Error(),
 		})
@@ -311,20 +311,20 @@ func (im *ImageController) CreateOneImageQuiz(ctx *gin.Context) {
 	// Lấy file từ form
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+		ctx.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
 	f, err := file.Open()
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Error opening uploaded file",
 		})
 		return
 	}
 
 	if !file_internal.IsImage(file.Filename) {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -332,14 +332,14 @@ func (im *ImageController) CreateOneImageQuiz(ctx *gin.Context) {
 
 	filename, ok := ctx.Get("filePath")
 	if !ok {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "filename not found",
 		})
 	}
 
 	result, err := cloudinary.UploadToCloudinary(f, filename.(string), im.Database.CloudinaryUploadFolderQuiz)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -358,13 +358,13 @@ func (im *ImageController) CreateOneImageQuiz(ctx *gin.Context) {
 	// save data in database
 	err = im.ImageUseCase.CreateOne(ctx, metadata)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
 }
