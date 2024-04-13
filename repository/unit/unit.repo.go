@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"strconv"
 )
 
 type unitRepository struct {
@@ -176,10 +177,18 @@ func (u *unitRepository) CheckLessonComplete(ctx context.Context, lessonID strin
 	return true, nil
 }
 
-func (u *unitRepository) FetchMany(ctx context.Context) (unit_domain.Response, error) {
+func (u *unitRepository) FetchMany(ctx context.Context, page string) (unit_domain.Response, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 
-	cursor, err := collectionUnit.Find(ctx, bson.D{})
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return unit_domain.Response{}, errors.New("invalid page number")
+	}
+	perPage := 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	cursor, err := collectionUnit.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
 		return unit_domain.Response{}, err
 	}
@@ -200,6 +209,7 @@ func (u *unitRepository) FetchMany(ctx context.Context) (unit_domain.Response, e
 		// Thêm lesson vào slice lessons
 		units = append(units, unit)
 	}
+
 	unitRes := unit_domain.Response{
 		Unit: units,
 	}

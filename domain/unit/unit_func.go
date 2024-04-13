@@ -20,7 +20,7 @@ type Update struct {
 
 //go:generate mockery --name IUnitUseCase
 type IUnitUseCase interface {
-	FetchMany(ctx context.Context) (Response, error)
+	FetchMany(ctx context.Context, page string) (Response, error)
 	FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error)
 	FetchByIdLesson(ctx context.Context, idLesson string) (Response, error)
 	CreateOne(ctx context.Context, unit *Unit) error

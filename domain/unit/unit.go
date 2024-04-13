@@ -28,7 +28,7 @@ type Response struct {
 
 //go:generate mockery --name IUnitRepository
 type IUnitRepository interface {
-	FetchMany(ctx context.Context) (Response, error)
+	FetchMany(ctx context.Context, page string) (Response, error)
 	FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error)
 	FetchByIdLesson(ctx context.Context, idLesson string) (Response, error)
 	CreateOne(ctx context.Context, unit *Unit) error

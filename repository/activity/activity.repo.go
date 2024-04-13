@@ -88,8 +88,8 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	perPage := 7
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
-	cursor, err := collection.Find(ctx, bson.D{}, findOptions)
 
+	cursor, err := collection.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
 		return activity_log_domain.Response{}, err
 	}
@@ -98,8 +98,7 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	var activities []activity_log_domain.ActivityLog
 	for cursor.Next(ctx) {
 		var activity activity_log_domain.ActivityLog
-
-		if err = cursor.Decode(&activity); err != nil {
+		if err := cursor.Decode(&activity); err != nil {
 			return activity_log_domain.Response{}, err
 		}
 

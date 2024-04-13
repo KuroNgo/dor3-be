@@ -67,11 +67,11 @@ func (u *unitUseCase) UpdateComplete(ctx context.Context, update unit_domain.Upd
 	return nil
 }
 
-func (u *unitUseCase) FetchMany(ctx context.Context) (unit_domain.Response, error) {
+func (u *unitUseCase) FetchMany(ctx context.Context, page string) (unit_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
-	unit, err := u.unitRepository.FetchMany(ctx)
+	unit, err := u.unitRepository.FetchMany(ctx, page)
 	if err != nil {
 		return unit_domain.Response{}, err
 	}

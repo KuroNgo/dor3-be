@@ -8,6 +8,8 @@ import (
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"strconv"
 )
 
 type examRepository struct {
@@ -28,10 +30,18 @@ func NewExamRepository(db mongo.Database, collectionExam string, collectionLesso
 	}
 }
 
-func (e *examRepository) FetchMany(ctx context.Context) (exam_domain.Response, error) {
+func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domain.Response, error) {
 	collectionExam := e.database.Collection(e.collectionExam)
 
-	cursor, err := collectionExam.Find(ctx, bson.D{})
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return exam_domain.Response{}, errors.New("invalid page number")
+	}
+	perPage := 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	cursor, err := collectionExam.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
 		return exam_domain.Response{}, err
 	}
