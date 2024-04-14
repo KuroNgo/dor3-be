@@ -2,13 +2,12 @@ package exam_question_domain
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Input struct {
-	ExamID  primitive.ObjectID `bson:"exam_id" json:"exam_id"`
-	Content string             `bson:"content" json:"content"`
-	Type    string             `bson:"type" json:"type"`
+	Content string `bson:"content" json:"content"`
+	Type    string `bson:"type" json:"type"`
+	Level   int    `bson:"level" json:"level"`
 }
 
 type IExamQuestionUseCase interface {

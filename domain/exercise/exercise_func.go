@@ -9,10 +9,10 @@ type Input struct {
 	VocabularyID primitive.ObjectID `bson:"vocabulary_id" json:"vocabulary_id"`
 	Title        string             `bson:"title" json:"title"`
 	Content      string             `bson:"content" json:"content"`
-	Type         string             `bson:"type" json:"type"` // Loại bài tập: ví dụ: trắc nghiệm, điền từ, sắp xếp câu, v.v.
-	//Options      []string           `bson:"options" json:"options"`         // Các lựa chọn cho bài tập trắc nghiệm, nếu có
-	CorrectAns string `bson:"correct_ans" json:"correct_ans"` // Đáp án đúng cho bài tập, nếu có
-	BlankIndex int    `bson:"blank_index" json:"blank_index"` // Chỉ số của từ cần điền vào câu, nếu là loại bài tập điền từ
+	Type         string             `bson:"type" json:"type"`               // Loại bài tập: ví dụ: trắc nghiệm, điền từ, sắp xếp câu, v.v.
+	Options      []string           `bson:"options" json:"options"`         // Các lựa chọn cho bài tập trắc nghiệm, nếu có
+	CorrectAns   []string           `bson:"correct_ans" json:"correct_ans"` // Đáp án đúng cho bài tập, nếu có
+	BlankIndex   []int              `bson:"blank_index" json:"blank_index"` // Chỉ số của từ cần điền vào câu, nếu là loại bài tập điền từ
 }
 
 type IExerciseUseCase interface {

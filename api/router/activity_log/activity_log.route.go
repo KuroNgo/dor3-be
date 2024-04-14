@@ -4,7 +4,6 @@ import (
 	activity_controller "clean-architecture/api/controller/activity"
 	"clean-architecture/bootstrap"
 	activity_log_domain "clean-architecture/domain/activity_log"
-	user_domain "clean-architecture/domain/user"
 	activity_repository "clean-architecture/repository/activity"
 	activity_usecase "clean-architecture/usecase/activity"
 	"github.com/gin-gonic/gin"
@@ -13,7 +12,7 @@ import (
 )
 
 func ActivityRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database) *activity_controller.ActivityController {
-	ac := activity_repository.NewActivityRepository(db, activity_log_domain.CollectionActivityLog, user_domain.CollectionUser)
+	ac := activity_repository.NewActivityRepository(db, activity_log_domain.CollectionActivityLog)
 	activity := &activity_controller.ActivityController{
 		ActivityUseCase: activity_usecase.NewActivityUseCase(ac, timeout),
 		Database:        env,
@@ -23,7 +22,7 @@ func ActivityRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Dat
 }
 
 func AdminActivityRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	ac := activity_repository.NewActivityRepository(db, activity_log_domain.CollectionActivityLog, user_domain.CollectionUser)
+	ac := activity_repository.NewActivityRepository(db, activity_log_domain.CollectionActivityLog)
 	activity := &activity_controller.ActivityController{
 		ActivityUseCase: activity_usecase.NewActivityUseCase(ac, timeout),
 		Database:        env,

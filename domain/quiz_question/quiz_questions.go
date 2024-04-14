@@ -1,4 +1,4 @@
-package exam_question_domain
+package quiz_question
 
 import (
 	"context"
@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	CollectionExamQuestion = "exam_question"
+	CollectionQuizQuestion = "quiz_question"
 )
 
-type ExamQuestion struct {
+type QuizQuestion struct {
 	ID     primitive.ObjectID `bson:"_id" json:"_id"`
-	ExamID primitive.ObjectID `bson:"exam_id" json:"exam_id"`
+	QuizID primitive.ObjectID `bson:"exam_id" json:"exam_id"`
 
 	Content string `bson:"content" json:"content"`
 	Type    string `bson:"type" json:"type"`
@@ -28,13 +28,13 @@ type ExamQuestion struct {
 }
 
 type Response struct {
-	ExamQuestion []ExamQuestion
+	QuizQuestion []QuizQuestion
 }
 
-type IExamQuestionRepository interface {
+type IQuizQuestionRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchManyByExamID(ctx context.Context, examID string) (Response, error)
-	UpdateOne(ctx context.Context, examQuestionID string, examQuestion ExamQuestion) error
-	CreateOne(ctx context.Context, examQuestion *ExamQuestion) error
-	DeleteOne(ctx context.Context, examID string) error
+	FetchManyByExamID(ctx context.Context, quizID string) (Response, error)
+	UpdateOne(ctx context.Context, quizQuestionID string, quizQuestion QuizQuestion) error
+	CreateOne(ctx context.Context, quizQuestion *QuizQuestion) error
+	DeleteOne(ctx context.Context, quizID string) error
 }
