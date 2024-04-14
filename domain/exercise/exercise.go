@@ -15,12 +15,16 @@ type Exercise struct {
 	LessonID     primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 	UnitID       primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 	VocabularyID primitive.ObjectID `bson:"vocabulary" json:"vocabulary"`
-	Title        string             `bson:"title" json:"title"`
-	Content      string             `bson:"content" json:"content"`
-	Type         string             `bson:"type" json:"type"`               // Loại bài tập: ví dụ: trắc nghiệm, điền từ, sắp xếp câu, v.v.
-	Options      []string           `bson:"options" json:"options"`         // Các lựa chọn cho bài tập trắc nghiệm, nếu có
-	CorrectAns   string             `bson:"correct_ans" json:"correct_ans"` // Đáp án đúng cho bài tập, nếu có
-	BlankIndex   int                `bson:"blank_index" json:"blank_index"` // Chỉ số của từ cần điền vào câu, nếu là loại bài tập điền từ
+
+	Title       string        `bson:"title" json:"title"`
+	Description string        `bson:"description" json:"description"`
+	Duration    time.Duration `bson:"duration" json:"duration"`
+
+	Content    string   `bson:"content" json:"content"`
+	Type       string   `bson:"type" json:"type"`               // Loại bài tập: ví dụ: trắc nghiệm, điền từ, sắp xếp câu, v.v.
+	Options    []string `bson:"options" json:"options"`         // Các lựa chọn cho bài tập trắc nghiệm, nếu có
+	CorrectAns []string `bson:"correct_ans" json:"correct_ans"` // Đáp án đúng cho bài tập, nếu có
+	BlankIndex []int    `bson:"blank_index" json:"blank_index"` // Chỉ số của từ cần điền vào câu, nếu là loại bài tập điền từ
 
 	IsComplete int       `bson:"is_complete" json:"is_complete"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`

@@ -1,0 +1,34 @@
+package exercise_options
+
+import (
+	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
+)
+
+const (
+	CollectionExerciseOptions = "exercise_options"
+)
+
+type ExerciseOptions struct {
+	ID         primitive.ObjectID `bson:"_id" json:"_id"`
+	QuestionID primitive.ObjectID `bson:"question_id" json:"question_id"`
+
+	Content    string `bson:"content" json:"content"`
+	BlankIndex int    `bson:"blank_index" json:"blank_index"` // Chỉ số của từ cần điền vào câu, nếu là loại bài tập điền từ
+
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdateAt  time.Time `bson:"update_at" json:"update_at"`
+	WhoUpdate string    `bson:"who_update" json:"who_update"`
+}
+
+type Response struct {
+	ExerciseOptions []ExerciseOptions
+}
+
+type IExamOptionRepository interface {
+	FetchManyByQuestionID(ctx context.Context, questionID string) (Response, error)
+	UpdateOne(ctx context.Context, exerciseOptionsID string, exerciseOptions ExerciseOptions) error
+	CreateOne(ctx context.Context, exerciseOptions *ExerciseOptions) error
+	DeleteOne(ctx context.Context, optionsID string) error
+}

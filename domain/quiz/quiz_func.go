@@ -1,23 +1,19 @@
 package quiz_domain
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type Input struct {
-	Question      string   `bson:"question" json:"question"`
-	Options       []string `bson:"options" json:"options"`
-	CorrectAnswer string   `bson:"correct_answer" json:"correct_answer"`
-	Explanation   string   `bson:"explanation" json:"explanation"`
-	Level         int      `bson:"level" json:"level"`
-
-	// QuestionType can be included checkbox, check radius or write correct answer
-	QuestionType string `bson:"question_type" json:"question_type"`
-	Skill        string `bson:"skill" json:"skill"`
+	Title       string        `bson:"title" json:"title"`
+	Description string        `bson:"description" json:"description"`
+	Duration    time.Duration `bson:"duration" json:"duration"`
 }
 
 //go:generate mockery --name IQuizUseCase
 type IQuizUseCase interface {
 	FetchMany(ctx context.Context) (Response, error)
-	FetchManyByLessonID(ctx context.Context, unitID string) (Response, error)
 	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
 	UpdateOne(ctx context.Context, quizID string, quiz Quiz) error
 	UpdateCompleted(ctx context.Context, quizID string, isComplete int) error

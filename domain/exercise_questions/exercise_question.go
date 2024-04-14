@@ -1,4 +1,4 @@
-package exam_question_domain
+package exercise_questions
 
 import (
 	"context"
@@ -7,16 +7,15 @@ import (
 )
 
 const (
-	CollectionExamQuestion = "exam_question"
+	CollectionExerciseQuestion = "exercise_question"
 )
 
-type ExamQuestion struct {
-	ID     primitive.ObjectID `bson:"_id" json:"_id"`
-	ExamID primitive.ObjectID `bson:"exam_id" json:"exam_id"`
+type ExerciseQuestion struct {
+	ID         primitive.ObjectID `bson:"_id" json:"_id"`
+	ExerciseID primitive.ObjectID `bson:"exam_id" json:"exam_id"`
 
 	Content string `bson:"content" json:"content"`
 	Type    string `bson:"type" json:"type"`
-	Level   int    `bson:"level" json:"level"`
 
 	// admin add metadata of file and system will be found it
 	Filename      string `bson:"filename" json:"filename"`
@@ -28,13 +27,13 @@ type ExamQuestion struct {
 }
 
 type Response struct {
-	ExamQuestion []ExamQuestion
+	ExerciseQuestion []ExerciseQuestion
 }
 
-type IExamQuestionRepository interface {
+type IExerciseQuestionRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchManyByExamID(ctx context.Context, examID string) (Response, error)
-	UpdateOne(ctx context.Context, examQuestionID string, examQuestion ExamQuestion) error
-	CreateOne(ctx context.Context, examQuestion *ExamQuestion) error
-	DeleteOne(ctx context.Context, examID string) error
+	FetchManyByExamID(ctx context.Context, exerciseID string) (Response, error)
+	UpdateOne(ctx context.Context, exerciseQuestionID string, exerciseQuestion ExerciseQuestion) error
+	CreateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) error
+	DeleteOne(ctx context.Context, exerciseID string) error
 }
