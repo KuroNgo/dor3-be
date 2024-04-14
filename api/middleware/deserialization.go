@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"clean-architecture/bootstrap"
+	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -31,7 +31,7 @@ func DeserializeUser() gin.HandlerFunc {
 			return
 		}
 
-		app := bootstrap.App()
+		app := mongo.App()
 		env := app.Env
 
 		sub, err := internal.ValidateToken(accessToken, env.AccessTokenPublicKey)
