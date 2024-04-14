@@ -3,22 +3,22 @@ package admin_repository
 import (
 	admin_domain "clean-architecture/domain/admin"
 	user_domain "clean-architecture/domain/user"
-	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type adminRepository struct {
-	database        mongo.Database
+	database        *mongo.Database
 	collectionAdmin string
 	collectionUser  string
 }
 
-func NewAdminRepository(db mongo.Database, collectionAdmin string, collectionUser string) admin_domain.IAdminRepository {
+func NewAdminRepository(db *mongo.Database, collectionAdmin string, collectionUser string) admin_domain.IAdminRepository {
 	return &adminRepository{
 		database:        db,
 		collectionAdmin: collectionAdmin,

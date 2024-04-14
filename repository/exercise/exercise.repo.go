@@ -3,22 +3,30 @@ package exercise_repository
 import (
 	exercise_domain "clean-architecture/domain/exercise"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
-	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
 )
 
 type exerciseRepository struct {
-	database             mongo.Database
+	database             *mongo.Database
 	collectionLesson     string
 	collectionUnit       string
 	collectionVocabulary string
 	collectionExercise   string
+}
+
+func NewExerciseRepository(db *mongo.Database, collectionVocabulary string, collectionExercise string) exercise_domain.IExerciseRepository {
+	return &exerciseRepository{
+		database:             db,
+		collectionVocabulary: collectionVocabulary,
+		collectionExercise:   collectionExercise,
+	}
 }
 
 func (e *exerciseRepository) FetchManyByLessonID(ctx context.Context, unitID string) (exercise_domain.Response, error) {
@@ -183,12 +191,4 @@ func (e *exerciseRepository) DeleteOne(ctx context.Context, exerciseID string) e
 
 	_, err = collectionExercise.DeleteOne(ctx, filter)
 	return err
-}
-
-func NewExerciseRepository(db mongo.Database, collectionVocabulary string, collectionExercise string) exercise_domain.IExerciseRepository {
-	return &exerciseRepository{
-		database:             db,
-		collectionVocabulary: collectionVocabulary,
-		collectionExercise:   collectionExercise,
-	}
 }

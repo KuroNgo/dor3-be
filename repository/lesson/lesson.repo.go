@@ -2,23 +2,23 @@ package lesson_repository
 
 import (
 	lesson_domain "clean-architecture/domain/lesson"
-	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type lessonRepository struct {
-	database         mongo.Database
+	database         *mongo.Database
 	collectionLesson string
 	collectionCourse string
 	collectionUnit   string
 }
 
-func NewLessonRepository(db mongo.Database, collectionLesson string, collectionCourse string, collectionUnit string) lesson_domain.ILessonRepository {
+func NewLessonRepository(db *mongo.Database, collectionLesson string, collectionCourse string, collectionUnit string) lesson_domain.ILessonRepository {
 	return &lessonRepository{
 		database:         db,
 		collectionLesson: collectionLesson,
@@ -91,12 +91,6 @@ func (l *lessonRepository) FetchMany(ctx context.Context) (lesson_domain.Respons
 	if err != nil {
 		return lesson_domain.Response{}, err
 	}
-	defer func(cursor mongo.Cursor, ctx context.Context) {
-		err = cursor.Close(ctx)
-		if err != nil {
-
-		}
-	}(cursor, ctx)
 
 	var lessons []lesson_domain.Lesson
 	for cursor.Next(ctx) {

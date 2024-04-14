@@ -2,23 +2,23 @@ package quiz_repository
 
 import (
 	quiz_domain "clean-architecture/domain/quiz"
-	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type quizRepository struct {
-	database             mongo.Database
+	database             *mongo.Database
 	collectionLesson     string
 	collectionUnit       string
 	collectionVocabulary string
 	collectionQuiz       string
 }
 
-func NewQuizRepository(db mongo.Database, collectionQuiz string, collectionLesson string, collectionUnit string, collectionVocabulary string) quiz_domain.IQuizRepository {
+func NewQuizRepository(db *mongo.Database, collectionQuiz string, collectionLesson string, collectionUnit string, collectionVocabulary string) quiz_domain.IQuizRepository {
 	return &quizRepository{
 		database:             db,
 		collectionQuiz:       collectionQuiz,

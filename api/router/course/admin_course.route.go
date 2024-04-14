@@ -10,7 +10,6 @@ import (
 	unit_domain "clean-architecture/domain/unit"
 	user_domain "clean-architecture/domain/user"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
-	"clean-architecture/infrastructor/mongo"
 	course_repository "clean-architecture/repository/course"
 	lesson_repository "clean-architecture/repository/lesson"
 	unit_repo "clean-architecture/repository/unit"
@@ -22,10 +21,11 @@ import (
 	usecase "clean-architecture/usecase/user"
 	vocabulary_usecase "clean-architecture/usecase/vocabulary"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
-func AdminCourseRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
+func AdminCourseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	co := course_repository.NewCourseRepository(db, course_domain.CollectionCourse, lesson_domain.CollectionLesson)
 	le := lesson_repository.NewLessonRepository(db, lesson_domain.CollectionLesson, course_domain.CollectionCourse, unit_domain.CollectionUnit)
 	un := unit_repo.NewUnitRepository(db, unit_domain.CollectionUnit, lesson_domain.CollectionLesson, vocabulary_domain.CollectionVocabulary)

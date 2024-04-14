@@ -2,11 +2,11 @@ package exam_result
 
 import (
 	exam_result_domain "clean-architecture/domain/exam_result"
-	"clean-architecture/infrastructor/mongo"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
 )

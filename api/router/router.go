@@ -16,17 +16,17 @@ import (
 	user_route "clean-architecture/api/router/user"
 	vocabulary_route "clean-architecture/api/router/vocabulary"
 	"clean-architecture/bootstrap"
-	"clean-architecture/infrastructor/mongo"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
-	mongo_driven "go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
-func SetUp(env *bootstrap.Database, timeout time.Duration, db mongo.Database, gin *gin.Engine) {
-	var dbMongo mongo_driven.Database
-	value := activity_log_route.ActivityRouteV2(env, timeout, dbMongo)
+func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, gin *gin.Engine) {
+	//var dbMongo mongo_driven.Database
+	value := activity_log_route.ActivityRoute(env, timeout, db)
+
 	publicRouter := gin.Group("/api/")
 	privateRouter := gin.Group("/api/admin")
 

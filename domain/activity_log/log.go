@@ -21,6 +21,7 @@ type ActivityLog struct {
 	Latency      string             `json:"latency" bson:"latency"`
 	Error        string             `json:"error" bson:"error"`
 	ActivityTime time.Time          `json:"activity_time" bson:"activity_time"`
+	ExpireAt     time.Time          `json:"expire_at" bson:"expire_at"`
 }
 
 type Response struct {
@@ -28,9 +29,6 @@ type Response struct {
 }
 
 type IActivityRepository interface {
-	FetchMany(ctx context.Context, page string) (Response, error)
-}
-
-type IActivityRepositoryV2 interface {
 	CreateOne(ctx context.Context, log ActivityLog) error
+	FetchMany(ctx context.Context, page string) (Response, error)
 }

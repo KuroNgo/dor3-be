@@ -5,14 +5,14 @@ import (
 	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
 	user_domain "clean-architecture/domain/user"
-	"clean-architecture/infrastructor/mongo"
 	user_repository "clean-architecture/repository/user"
 	usecase "clean-architecture/usecase/user"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
-func UserRouter(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
+func UserRouter(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
 	user := &user_controller.UserController{
 		UserUseCase: usecase.NewUserUseCase(ur, timeout),

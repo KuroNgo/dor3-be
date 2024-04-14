@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func StructuredLogger(logger *zerolog.Logger, activity *activity_controller.ActivityControllerV2) gin.HandlerFunc {
+func StructuredLogger(logger *zerolog.Logger, activity *activity_controller.ActivityController) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		start := time.Now()
 		path := ctx.Request.URL.Path
@@ -24,6 +24,10 @@ func StructuredLogger(logger *zerolog.Logger, activity *activity_controller.Acti
 			ClientIP:  ctx.ClientIP(),
 			Method:    ctx.Request.Method,
 		}
+
+		expireDuration := 30 * 24 * time.Hour
+		currentTime := time.Now()
+		expireValue := currentTime.Add(expireDuration)
 
 		if ctx.Writer.Status() >= 500 || ctx.Errors != nil || param.Method == "DELETE" {
 			param.Latency = time.Since(start).Truncate(time.Millisecond)
@@ -49,6 +53,7 @@ func StructuredLogger(logger *zerolog.Logger, activity *activity_controller.Acti
 				Latency:      param.Latency.String(),
 				Error:        param.ErrorMessage,
 				ActivityTime: param.TimeStamp,
+				ExpireAt:     expireValue,
 			}
 
 			err := activity.ActivityUseCase.CreateOne(ctx, newLog)

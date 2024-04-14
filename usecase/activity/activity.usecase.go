@@ -11,18 +11,6 @@ type activityUseCase struct {
 	contextTimeout     time.Duration
 }
 
-func (a *activityUseCase) DeleteOneByTime(ctx context.Context, time time.Duration) error {
-	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
-	defer cancel()
-
-	err := a.activityRepository.DeleteOneByTime(ctx, time)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func NewActivityUseCase(activityRepository activity_log_domain.IActivityRepository, timeout time.Duration) activity_log_domain.IActivityUseCase {
 	return &activityUseCase{
 		activityRepository: activityRepository,
@@ -35,18 +23,6 @@ func (a *activityUseCase) CreateOne(ctx context.Context, log activity_log_domain
 	defer cancel()
 
 	err := a.activityRepository.CreateOne(ctx, log)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (a *activityUseCase) DeleteOne(ctx context.Context, logID string) error {
-	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
-	defer cancel()
-
-	err := a.activityRepository.DeleteOne(ctx, logID)
 	if err != nil {
 		return err
 	}

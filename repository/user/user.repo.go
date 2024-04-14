@@ -2,18 +2,25 @@ package user
 
 import (
 	"clean-architecture/domain/user"
-	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type userRepository struct {
-	database   mongo.Database
+	database   *mongo.Database
 	collection string
+}
+
+func NewUserRepository(db *mongo.Database, collection string) user_domain.IUserRepository {
+	return &userRepository{
+		database:   db,
+		collection: collection,
+	}
 }
 
 func (u *userRepository) UpdateImage(c context.Context, userID string, imageURL string) error {
@@ -28,12 +35,6 @@ func (u *userRepository) UpdateImage(c context.Context, userID string, imageURL 
 	return err
 }
 
-func NewUserRepository(db mongo.Database, collection string) user_domain.IUserRepository {
-	return &userRepository{
-		database:   db,
-		collection: collection,
-	}
-}
 func (u *userRepository) Update(ctx context.Context, userID string, user user_domain.User) error {
 	collection := u.database.Collection(u.collection)
 	doc, err := internal.ToDoc(user)

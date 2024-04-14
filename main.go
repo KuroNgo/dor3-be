@@ -13,7 +13,7 @@ func main() {
 
 	env := app.Env
 
-	db := app.Mongo.Database(env.DBName)
+	db := app.MongoDB.Database(env.DBName)
 	defer app.CloseDBConnection()
 
 	timeout := time.Duration(env.ContextTimeout) * time.Second
