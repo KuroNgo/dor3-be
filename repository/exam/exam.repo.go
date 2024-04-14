@@ -57,12 +57,11 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domai
 		exams = append(exams, exam)
 	}
 
-	err = cursor.All(ctx, &exams)
 	examRes := exam_domain.Response{
 		Exam: exams,
 	}
 
-	return examRes, err
+	return examRes, nil
 }
 
 func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string) (exam_domain.Response, error) {
@@ -118,16 +117,6 @@ func (e *examRepository) CreateOne(ctx context.Context, exam *exam_domain.Exam) 
 	collectionUnit := e.database.Collection(e.collectionUnit)
 	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
 
-	filter := bson.M{"question": exam.Question}
-	// check exists with CountDocuments
-	count, err := collectionExam.CountDocuments(ctx, filter)
-	if err != nil {
-		return err
-	}
-	if count > 0 {
-		return errors.New("the lesson name did exist")
-	}
-
 	filterLessonID := bson.M{"_id": exam.LessonID}
 	countLessonID, err := collectionLesson.CountDocuments(ctx, filterLessonID)
 	if err != nil {
@@ -156,13 +145,23 @@ func (e *examRepository) CreateOne(ctx context.Context, exam *exam_domain.Exam) 
 		return errors.New("the vocabulary ID do not exist")
 	}
 
-	_, err = collectionLesson.InsertOne(ctx, exam)
+	_, err = collectionExam.InsertOne(ctx, exam)
 	return nil
 }
 
 func (e *examRepository) UpdateCompleted(ctx context.Context, examID string, isComplete int) error {
-	//TODO implement me
-	panic("implement me")
+	collection := e.database.Collection(e.collectionExam)
+
+	objID, err := primitive.ObjectIDFromHex(examID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.D{{Key: "_id", Value: objID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "is_complete", Value: isComplete}}}}
+
+	_, err = collection.UpdateOne(ctx, filter, update)
+	return err
 }
 
 func (e *examRepository) DeleteOne(ctx context.Context, examID string) error {

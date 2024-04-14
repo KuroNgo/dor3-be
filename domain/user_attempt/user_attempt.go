@@ -1,9 +1,13 @@
-package user_attempt
+package user_attempt_domain
 
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
+)
+
+const (
+	CollectionUserAttempt = "user_attempt"
 )
 
 type UserProcess struct {
@@ -29,5 +33,5 @@ type Response struct {
 type IUserProcessRepository interface {
 	FetchManyByUserID(c context.Context) (Response, error)
 	CreateOneByUserID(c context.Context, userID string) error
-	DeleteOneByUserID(c context.Context, userID string) error
+	DeleteAllByUserID(c context.Context, userID string) error
 }

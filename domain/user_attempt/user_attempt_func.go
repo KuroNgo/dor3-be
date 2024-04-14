@@ -1,4 +1,4 @@
-package user_attempt
+package user_attempt_domain
 
 import "context"
 

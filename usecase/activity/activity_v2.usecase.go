@@ -18,7 +18,7 @@ func NewActivityUseCaseV2(activityRepository activity_log_domain.IActivityReposi
 	}
 }
 
-func (a activityUseCaseV2) CreateOne(ctx context.Context, log activity_log_domain.ActivityLog) error {
+func (a *activityUseCaseV2) CreateOne(ctx context.Context, log activity_log_domain.ActivityLog) error {
 	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
 	defer cancel()
 
