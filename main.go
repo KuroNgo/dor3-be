@@ -2,14 +2,14 @@ package main
 
 import (
 	"clean-architecture/api/router"
-	"clean-architecture/bootstrap"
+	"clean-architecture/infrastructor/mongo"
 	"github.com/gin-gonic/gin"
 	"time"
 )
 
 func main() {
 
-	app := bootstrap.App()
+	app := mongo.App()
 
 	env := app.Env
 

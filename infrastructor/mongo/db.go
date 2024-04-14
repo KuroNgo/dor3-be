@@ -1,6 +1,7 @@
-package bootstrap
+package mongo
 
 import (
+	"clean-architecture/bootstrap"
 	"context"
 	"fmt"
 	mongo_driven "go.mongodb.org/mongo-driver/mongo"
@@ -10,40 +11,7 @@ import (
 	"time"
 )
 
-//	func NewMongoDatabase(env *Database) mongo.Client {
-//		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-//		defer cancel()
-//
-//		dbHost := env.DBHost
-//		dbPort := env.DBPort
-//		dbUser := env.DBUser
-//		dbPass := env.DBPassword
-//
-//		mongodbURI := fmt.Sprintf("mongodb+srv://%s:%s@cluster0.ykpyhgp.mongodb.net/?authMechanism=SCRAM-SHA-1", dbUser, dbPass)
-//
-//		if dbUser == "" || dbPass == "" {
-//			mongodbURI = fmt.Sprintf("mongodb://%s:%s", dbHost, dbPort)
-//		}
-//
-//		client, err := mongo.NewClient(mongodbURI)
-//		if err != nil {
-//			log.Fatal(err)
-//		}
-//
-//		err = client.Connect(ctx)
-//		if err != nil {
-//			log.Fatal(err)
-//		}
-//
-//		err = client.Ping(ctx)
-//		if err != nil {
-//			log.Fatal(err)
-//		}
-//
-//		return client
-//	}
-
-func NewMongoDatabase(env *Database) *mongo_driven.Client {
+func NewMongoDatabase(env *bootstrap.Database) *mongo_driven.Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
