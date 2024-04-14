@@ -2,22 +2,22 @@ package course_repository
 
 import (
 	course_domain "clean-architecture/domain/course"
-	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type courseRepository struct {
-	database         mongo.Database
+	database         *mongo.Database
 	collectionCourse string
 	collectionLesson string
 }
 
-func NewCourseRepository(db mongo.Database, collectionCourse string, collectionLesson string) course_domain.ICourseRepository {
+func NewCourseRepository(db *mongo.Database, collectionCourse string, collectionLesson string) course_domain.ICourseRepository {
 	return &courseRepository{
 		database:         db,
 		collectionCourse: collectionCourse,
@@ -128,7 +128,7 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 		return err
 	}
 
-	if result == 0 {
+	if result == nil {
 		return errors.New("the course was not found or already deleted")
 	}
 

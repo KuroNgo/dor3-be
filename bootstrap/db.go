@@ -1,14 +1,49 @@
 package bootstrap
 
 import (
-	"clean-architecture/infrastructor/mongo"
 	"context"
 	"fmt"
+	mongo_driven "go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
 	"time"
 )
 
-func NewMongoDatabase(env *Database) mongo.Client {
+//	func NewMongoDatabase(env *Database) mongo.Client {
+//		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+//		defer cancel()
+//
+//		dbHost := env.DBHost
+//		dbPort := env.DBPort
+//		dbUser := env.DBUser
+//		dbPass := env.DBPassword
+//
+//		mongodbURI := fmt.Sprintf("mongodb+srv://%s:%s@cluster0.ykpyhgp.mongodb.net/?authMechanism=SCRAM-SHA-1", dbUser, dbPass)
+//
+//		if dbUser == "" || dbPass == "" {
+//			mongodbURI = fmt.Sprintf("mongodb://%s:%s", dbHost, dbPort)
+//		}
+//
+//		client, err := mongo.NewClient(mongodbURI)
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//
+//		err = client.Connect(ctx)
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//
+//		err = client.Ping(ctx)
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//
+//		return client
+//	}
+
+func NewMongoDatabase(env *Database) *mongo_driven.Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -23,29 +58,21 @@ func NewMongoDatabase(env *Database) mongo.Client {
 		mongodbURI = fmt.Sprintf("mongodb://%s:%s", dbHost, dbPort)
 	}
 
-	client, err := mongo.NewClient(mongodbURI)
+	mongoCon := options.Client().ApplyURI(mongodbURI)
+	client, err := mongo_driven.Connect(ctx, mongoCon)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("error while connecting with mongo", err)
 	}
 
-	err = client.Connect(ctx)
+	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = client.Ping(ctx)
-	if err != nil {
-		log.Fatal(err)
+		log.Fatal("error while trying to ping mongo", err)
 	}
 
 	return client
 }
 
-func CloseMongoDBConnection(client mongo.Client) {
-	if client == nil {
-		return
-	}
-
+func CloseMongoDBConnection(client *mongo_driven.Client) {
 	err := client.Disconnect(context.TODO())
 	if err != nil {
 		log.Fatal(err)

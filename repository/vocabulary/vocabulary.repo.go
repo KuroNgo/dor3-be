@@ -3,25 +3,25 @@ package vocabulary_repository
 import (
 	unit_domain "clean-architecture/domain/unit"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
-	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
 )
 
 type vocabularyRepository struct {
-	database             mongo.Database
+	database             *mongo.Database
 	collectionVocabulary string
 	collectionMean       string
 	collectionMark       string
 	collectionUnit       string
 }
 
-func NewVocabularyRepository(db mongo.Database, collectionVocabulary string, collectionMean string, collectionMark string, collectionUnit string) vocabulary_domain.IVocabularyRepository {
+func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, collectionMean string, collectionMark string, collectionUnit string) vocabulary_domain.IVocabularyRepository {
 	return &vocabularyRepository{
 		database:             db,
 		collectionVocabulary: collectionVocabulary,

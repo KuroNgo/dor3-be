@@ -7,14 +7,14 @@ import (
 	mean_domain "clean-architecture/domain/mean"
 	unit_domain "clean-architecture/domain/unit"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
-	"clean-architecture/infrastructor/mongo"
 	vocabulary_repository "clean-architecture/repository/vocabulary"
 	vocabulary_usecase "clean-architecture/usecase/vocabulary"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
-func VocabularyRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
+func VocabularyRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	vo := vocabulary_repository.NewVocabularyRepository(db, vocabulary_domain.CollectionVocabulary, mean_domain.CollectionMean,
 		mark_domain.CollectionMark, unit_domain.CollectionUnit)
 	vocabulary := &vocabulary_controller.VocabularyController{

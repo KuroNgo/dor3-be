@@ -6,16 +6,16 @@ import (
 	"clean-architecture/bootstrap"
 	mark_list_domain "clean-architecture/domain/mark_list"
 	user_domain "clean-architecture/domain/user"
-	"clean-architecture/infrastructor/mongo"
 	mark_list_repository "clean-architecture/repository/mark_list"
 	user_repository "clean-architecture/repository/user"
 	mark_list_usecase "clean-architecture/usecase/mark_list"
 	usecase "clean-architecture/usecase/user"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
-func MarkListRoute(env *bootstrap.Database, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
+func MarkListRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	ma := mark_list_repository.NewListRepository(db, mark_list_domain.CollectionMarkList)
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
 

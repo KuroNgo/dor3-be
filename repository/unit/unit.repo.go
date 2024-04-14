@@ -2,24 +2,24 @@ package unit_repo
 
 import (
 	unit_domain "clean-architecture/domain/unit"
-	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
 )
 
 type unitRepository struct {
-	database             mongo.Database
+	database             *mongo.Database
 	collectionUnit       string
 	collectionLesson     string
 	collectionVocabulary string
 }
 
-func NewUnitRepository(db mongo.Database, collectionUnit string, collectionLesson string, collectionVocabulary string) unit_domain.IUnitRepository {
+func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLesson string, collectionVocabulary string) unit_domain.IUnitRepository {
 	return &unitRepository{
 		database:             db,
 		collectionUnit:       collectionUnit,
@@ -192,12 +192,6 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) (unit_domai
 	if err != nil {
 		return unit_domain.Response{}, err
 	}
-	defer func(cursor mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
-		if err != nil {
-
-		}
-	}(cursor, ctx)
 
 	var units []unit_domain.Unit
 	for cursor.Next(ctx) {

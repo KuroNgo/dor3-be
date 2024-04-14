@@ -2,9 +2,9 @@ package user_attempt
 
 import (
 	"clean-architecture/domain/user_attempt"
-	"clean-architecture/infrastructor/mongo"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type userAttemptRepository struct {

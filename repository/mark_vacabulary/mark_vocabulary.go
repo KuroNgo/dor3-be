@@ -2,22 +2,22 @@ package mark_vacabulary_repository
 
 import (
 	mark_vocabulary_domain "clean-architecture/domain/mark_vocabulary"
-	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type markVocabularyRepository struct {
-	database                 mongo.Database
+	database                 *mongo.Database
 	collectionMarkList       string
 	collectionVocabulary     string
 	collectionMarkVocabulary string
 }
 
-func NewMarkVocabularyRepository(db mongo.Database, collectionMarkList string, collectionVocabulary string, collectionMarkVocabulary string) mark_vocabulary_domain.IMarkToFavouriteRepository {
+func NewMarkVocabularyRepository(db *mongo.Database, collectionMarkList string, collectionVocabulary string, collectionMarkVocabulary string) mark_vocabulary_domain.IMarkToFavouriteRepository {
 	return &markVocabularyRepository{
 		database:                 db,
 		collectionMarkList:       collectionMarkList,

@@ -2,19 +2,19 @@ package audio_repository
 
 import (
 	audio_domain "clean-architecture/domain/audio"
-	"clean-architecture/infrastructor/mongo"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type audioRepository struct {
-	database   mongo.Database
+	database   *mongo.Database
 	collection string
 }
 
-func NewAudioRepository(db mongo.Database, collection string) audio_domain.IAudioRepository {
+func NewAudioRepository(db *mongo.Database, collection string) audio_domain.IAudioRepository {
 	return &audioRepository{
 		database:   db,
 		collection: collection,
@@ -35,12 +35,6 @@ func (a *audioRepository) FetchMany(ctx context.Context) (audio_domain.Response,
 	if err != nil {
 		return audio_domain.Response{}, err
 	}
-	defer func(cursor mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
-		if err != nil {
-
-		}
-	}(cursor, ctx)
 
 	var audio []audio_domain.Audio
 

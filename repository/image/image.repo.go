@@ -2,16 +2,16 @@ package image_repository
 
 import (
 	image_domain "clean-architecture/domain/image"
-	"clean-architecture/infrastructor/mongo"
 	"context"
 	"errors"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type imageRepository struct {
-	database   mongo.Database
+	database   *mongo.Database
 	collection string
 }
 
@@ -37,7 +37,7 @@ func (i *imageRepository) CreateMany(ctx context.Context, images []*image_domain
 	return err
 }
 
-func NewImageRepository(db mongo.Database, collection string) image_domain.IImageRepository {
+func NewImageRepository(db *mongo.Database, collection string) image_domain.IImageRepository {
 	return &imageRepository{
 		database:   db,
 		collection: collection,

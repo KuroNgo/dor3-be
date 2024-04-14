@@ -2,21 +2,21 @@ package mark_list_repository
 
 import (
 	mark_list_domain "clean-architecture/domain/mark_list"
-	"clean-architecture/infrastructor/mongo"
 	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type markListRepository struct {
-	database           mongo.Database
+	database           *mongo.Database
 	collectionMarkList string
 }
 
-func NewListRepository(db mongo.Database, collectionMarkList string) mark_list_domain.IMarkListRepository {
+func NewListRepository(db *mongo.Database, collectionMarkList string) mark_list_domain.IMarkListRepository {
 	return &markListRepository{
 		database:           db,
 		collectionMarkList: collectionMarkList,
@@ -170,7 +170,7 @@ func (m *markListRepository) DeleteOne(ctx context.Context, markListID string) e
 		return err
 	}
 
-	if result == 0 {
+	if result == nil {
 		return errors.New("the mark list was not found or already deleted")
 	}
 
