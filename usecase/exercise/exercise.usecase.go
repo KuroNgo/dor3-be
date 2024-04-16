@@ -17,6 +17,7 @@ func NewExerciseUseCase(exerciseRepository exercise_domain.IExerciseRepository, 
 		contextTimeout:     timeout,
 	}
 }
+
 func (e *exerciseUseCase) FetchManyByLessonID(ctx context.Context, unitID string) (exercise_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()

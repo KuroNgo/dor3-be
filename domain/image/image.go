@@ -28,9 +28,9 @@ type Response struct {
 type IImageRepository interface {
 	GetURLByName(ctx context.Context, name string) (Image, error)
 	FetchMany(ctx context.Context) (Response, error)
-	UpdateOne(ctx context.Context, imageID string, image Image) error
+
 	CreateOne(ctx context.Context, image *Image) error
-	CreateMany(ctx context.Context, image []*Image) error
+	UpdateOne(ctx context.Context, imageID string, image Image) error
+
 	DeleteOne(ctx context.Context, imageID string) error
-	DeleteMany(ctx context.Context, imageID ...string) error
 }

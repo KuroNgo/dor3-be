@@ -27,7 +27,7 @@ type Response struct {
 
 type IExamOptionRepository interface {
 	FetchManyByQuestionID(ctx context.Context, questionID string) (Response, error)
-	UpdateOne(ctx context.Context, examOptionsID string, examOptions ExamOptions) error
 	CreateOne(ctx context.Context, examOptions *ExamOptions) error
+	UpdateOne(ctx context.Context, examOptionsID string, examOptions ExamOptions) error
 	DeleteOne(ctx context.Context, optionsID string) error
 }

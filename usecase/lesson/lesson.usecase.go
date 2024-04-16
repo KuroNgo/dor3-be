@@ -56,8 +56,15 @@ func (l *lessonUseCase) FetchByIdCourse(ctx context.Context, idCourse string) (l
 }
 
 func (l *lessonUseCase) UpdateComplete(ctx context.Context, lessonID string, lesson lesson_domain.Lesson) error {
-	//TODO implement me
-	panic("implement me")
+	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
+	defer cancel()
+
+	err := l.lessonRepository.UpdateComplete(ctx, lessonID, lesson)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 func (l *lessonUseCase) FetchMany(ctx context.Context) (lesson_domain.Response, error) {
@@ -94,17 +101,6 @@ func (l *lessonUseCase) CreateOne(ctx context.Context, lesson *lesson_domain.Les
 	}
 
 	return nil
-}
-
-func (l *lessonUseCase) UpsertOne(ctx context.Context, id string, lesson *lesson_domain.Lesson) (*lesson_domain.Lesson, error) {
-	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
-	defer cancel()
-
-	lesson, err := l.lessonRepository.UpsertOne(ctx, id, lesson)
-	if err != nil {
-		return nil, err
-	}
-	return lesson, nil
 }
 
 func (l *lessonUseCase) DeleteOne(ctx context.Context, lessonID string) error {

@@ -42,13 +42,13 @@ func (a *adminUseCase) Login(c context.Context, request admin_domain.SignIn) (*a
 	return quiz, err
 }
 
-func (a *adminUseCase) FetchMany(ctx context.Context) ([]admin_domain.Admin, error) {
+func (a *adminUseCase) FetchMany(ctx context.Context) (admin_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
 	defer cancel()
 
 	quiz, err := a.adminRepository.FetchMany(ctx)
 	if err != nil {
-		return nil, err
+		return admin_domain.Response{}, err
 	}
 
 	return quiz, err

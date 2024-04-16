@@ -24,7 +24,7 @@ func DeserializeUser() gin.HandlerFunc {
 		}
 
 		if accessToken == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status":  "fail",
 				"message": "You are not logged in",
 			})
@@ -38,7 +38,7 @@ func DeserializeUser() gin.HandlerFunc {
 
 		if err != nil {
 			fmt.Println("The err is: ", err)
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"status":  "fail",
 				"message": err.Error(),
 			})

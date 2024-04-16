@@ -23,10 +23,14 @@ type Admin struct {
 	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
+type Response struct {
+	Admin []Admin
+}
+
 type IAdminRepository interface {
 	Login(c context.Context, request SignIn) (*Admin, error)
 	GetByID(c context.Context, id string) (*Admin, error)
-	FetchMany(ctx context.Context) ([]Admin, error)
+	FetchMany(ctx context.Context) (Response, error)
 	GetByEmail(ctx context.Context, username string) (*Admin, error)
 	CreateOne(ctx context.Context, admin Admin) error
 	UpdateOne(ctx context.Context, adminID string, admin Admin) error

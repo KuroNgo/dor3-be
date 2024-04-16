@@ -83,7 +83,10 @@ func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string) (
 
 	filter := bson.M{"lesson_id": idLesson2}
 
-	cursor, err := collectionUnit.Find(ctx, filter)
+	// Thêm sắp xếp theo level
+	setSort := options.Find().SetSort(bson.D{{"level", 1}})
+
+	cursor, err := collectionUnit.Find(ctx, filter, setSort)
 	if err != nil {
 		return unit_domain.Response{}, err
 	}
@@ -111,18 +114,14 @@ func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string) (
 
 func (u *unitRepository) UpdateComplete(ctx context.Context, updateData unit_domain.Update) error {
 	collection := u.database.Collection(u.collectionUnit)
-	objID, err := primitive.ObjectIDFromHex(updateData.UnitID)
-	if err != nil {
-		return err
-	}
 
-	filter := bson.D{{Key: "_id", Value: objID}}
+	filter := bson.D{{Key: "_id", Value: updateData.UnitID}}
 	update := bson.D{{Key: "$set", Value: bson.D{
 		{Key: "is_complete", Value: updateData.IsComplete},
 		{Key: "who_updates", Value: updateData.WhoUpdate},
 	}}}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
+	_, err := collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
@@ -133,13 +132,12 @@ func (u *unitRepository) UpdateComplete(ctx context.Context, updateData unit_dom
 	}
 
 	lessonCollection := u.database.Collection(u.collectionLesson)
-	lessonObjID, err := primitive.ObjectIDFromHex(updateData.LessonID)
 	if err != nil {
 		return err
 	}
 
 	lessonUpdate := bson.D{{Key: "$set", Value: bson.D{{Key: "is_complete", Value: isLessonComplete}}}}
-	lessonFilter := bson.D{{Key: "_id", Value: lessonObjID}}
+	lessonFilter := bson.D{{Key: "_id", Value: updateData.LessonID}}
 	_, err = lessonCollection.UpdateOne(ctx, lessonFilter, lessonUpdate)
 	if err != nil {
 		return err
@@ -148,12 +146,10 @@ func (u *unitRepository) UpdateComplete(ctx context.Context, updateData unit_dom
 	return nil
 }
 
-func (u *unitRepository) CheckLessonComplete(ctx context.Context, lessonID string) (bool, error) {
+func (u *unitRepository) CheckLessonComplete(ctx context.Context, lessonID primitive.ObjectID) (bool, error) {
 	collection := u.database.Collection(u.collectionUnit)
 
-	lessonID2, _ := primitive.ObjectIDFromHex(lessonID)
-
-	cursor, err := collection.Find(ctx, bson.D{{Key: "lesson_id", Value: lessonID2}})
+	cursor, err := collection.Find(ctx, bson.D{{Key: "lesson_id", Value: lessonID}})
 	if err != nil {
 		return false, err
 	}
@@ -186,7 +182,7 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) (unit_domai
 	}
 	perPage := 7
 	skip := (pageNumber - 1) * perPage
-	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip)).SetSort(bson.D{{"level", 1}})
 
 	cursor, err := collectionUnit.Find(ctx, bson.D{}, findOptions)
 	if err != nil {

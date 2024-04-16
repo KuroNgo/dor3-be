@@ -45,7 +45,8 @@ func ReadFileForUnit(filename string) ([]file_internal.Unit, error) {
 				if len(row) >= 2 {
 					u := file_internal.Unit{
 						LessonID: elementSheet,
-						Name:     fmt.Sprintf("Unit%d", unitCount),
+						Name:     fmt.Sprintf("Unit %d", unitCount),
+						Level:    unitCount,
 					}
 					units = append(units, u)
 				}

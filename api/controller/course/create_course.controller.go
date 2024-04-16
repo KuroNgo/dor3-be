@@ -3,7 +3,6 @@ package course_controller
 import (
 	course_domain "clean-architecture/domain/course"
 	lesson_domain "clean-architecture/domain/lesson"
-	mean_domain "clean-architecture/domain/mean"
 	unit_domain "clean-architecture/domain/unit"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"clean-architecture/internal"
@@ -208,7 +207,6 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 			ID:          primitive.NewObjectID(),
 			CourseID:    courseID,
 			Name:        lesson.LessonName,
-			Content:     lesson.LessonContent,
 			Level:       lesson.LessonLevel,
 			IsCompleted: 0,
 			CreatedAt:   time.Now(),
@@ -238,7 +236,6 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 			LessonID:   lessonID,
 			Name:       unit.UnitName,
 			ImageURL:   "",
-			Content:    "null",
 			IsComplete: 0,
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
@@ -257,7 +254,7 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 	var vocabularies []vocabulary_domain.Vocabulary
 
 	for _, vocabulary := range result {
-		unitID, err := c.VocabularyUseCase.FindUnitIDByUnitName(ctx, vocabulary.VocabularyUnitID)
+		unitID, err := c.VocabularyUseCase.FindUnitIDByUnitLevel(ctx, vocabulary.VocabularyUnitLevel)
 		if err != nil {
 			ctx.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -281,34 +278,6 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 
 	for _, vocabulary := range vocabularies {
 		err = c.VocabularyUseCase.CreateOneByNameUnit(ctx, &vocabulary)
-		if err != nil {
-			continue
-		}
-	}
-
-	var means []mean_domain.Mean
-	for _, mean := range result {
-		vocabularyID, err := c.MeanUseCase.FindVocabularyIDByWord(ctx, mean.MeanVocabularyID)
-		if err != nil {
-			ctx.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-
-		m := mean_domain.Mean{
-			ID:           primitive.NewObjectID(),
-			VocabularyID: vocabularyID,
-			Description:  mean.MeanExplainEng,
-			Example:      mean.MeanExampleEng,
-			VietSub:      mean.MeanExplainVie,
-			FieldOfIT:    mean.MeanLessonID,
-			SynonymID:    "",
-			AntonymID:    "",
-		}
-		means = append(means, m)
-	}
-
-	for _, mean := range means {
-		err = c.MeanUseCase.CreateOneByWord(ctx, &mean)
 		if err != nil {
 			continue
 		}

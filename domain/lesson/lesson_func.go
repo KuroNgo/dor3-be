@@ -26,10 +26,11 @@ type ILessonUseCase interface {
 	FetchMany(ctx context.Context) (Response, error)
 	FetchByIdCourse(ctx context.Context, idCourse string) (Response, error)
 	FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error)
-	UpdateOne(ctx context.Context, lessonID string, lesson Lesson) error
+
 	CreateOne(ctx context.Context, lesson *Lesson) error
 	CreateOneByNameCourse(ctx context.Context, lesson *Lesson) error
-	UpsertOne(ctx context.Context, id string, lesson *Lesson) (*Lesson, error)
+
+	UpdateOne(ctx context.Context, lessonID string, lesson Lesson) error
 	DeleteOne(ctx context.Context, lessonID string) error
 
 	// UpdateComplete automation

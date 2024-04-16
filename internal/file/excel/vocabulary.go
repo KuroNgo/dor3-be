@@ -3,7 +3,6 @@ package excel
 import (
 	file_internal "clean-architecture/internal/file"
 	"errors"
-	"fmt"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -48,7 +47,7 @@ func ReadFileForVocabulary(filename string) ([]file_internal.Vocabulary, error) 
 					ExampleVie:    row[6],
 					ExampleEng:    row[7],
 					FieldOfIT:     elementSheet,
-					UnitID:        fmt.Sprintf("Unit%d", unitCount),
+					UnitLevel:     unitCount,
 				}
 				vocabularies = append(vocabularies, v)
 

@@ -8,14 +8,13 @@ type Course struct {
 type Lesson struct {
 	CourseID string
 	Name     string
-	Content  string
 	Level    int
 }
 
 type Unit struct {
 	LessonID string
 	Name     string
-	Content  string
+	Level    int
 }
 
 type Vocabulary struct {
@@ -28,35 +27,22 @@ type Vocabulary struct {
 	ExplainEng    string
 	ExampleVie    string
 	ExampleEng    string
-	UnitID        string
-}
-
-type Mean struct {
-	LessonID     string
-	VocabularyID string
-	ExplainVie   string
-	ExplainEng   string
-	ExampleVie   string
-	ExampleEng   string
-	Synonym      string
-	Antonym      string
+	UnitLevel     int
 }
 
 type Final struct {
 	CourseName              string
 	LessonCourseID          string
 	LessonName              string
-	LessonContent           string
 	LessonLevel             int
 	UnitLessonID            string
 	UnitName                string
-	UnitContent             string
 	VocabularyWord          string
 	VocabularyPartOfSpeech  string
 	VocabularyPronunciation string
 	VocabularyExample       string
 	VocabularyFieldOfIT     string
-	VocabularyUnitID        string
+	VocabularyUnitLevel     int
 	MeanLessonID            string
 	MeanVocabularyID        string
 	MeanExplainVie          string

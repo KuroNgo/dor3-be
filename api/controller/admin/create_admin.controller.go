@@ -26,6 +26,7 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 		})
 		return
 	}
+
 	// Bên phía client sẽ phải so sánh password thêm một lần nữa đã đúng chưa
 	if !internal.PasswordStrong(admin.Password) {
 		ctx.JSON(http.StatusBadRequest, gin.H{

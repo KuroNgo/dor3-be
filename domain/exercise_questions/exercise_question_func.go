@@ -1,4 +1,4 @@
-package exercise_questions
+package exercise_questions_domain
 
 import (
 	"context"
@@ -14,6 +14,7 @@ type Input struct {
 type IExerciseQuestionUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchManyByExamID(ctx context.Context, exerciseID string) (Response, error)
+
 	UpdateOne(ctx context.Context, exerciseQuestionID string, exerciseQuestion ExerciseQuestion) error
 	CreateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) error
 	DeleteOne(ctx context.Context, exerciseID string) error

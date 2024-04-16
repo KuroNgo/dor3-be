@@ -30,7 +30,6 @@ func ReadFileForLesson(filename string) ([]file_internal.Lesson, error) {
 			l := file_internal.Lesson{
 				CourseID: "English for IT",
 				Name:     sheetName,
-				Content:  "null",
 				Level:    level,
 			}
 

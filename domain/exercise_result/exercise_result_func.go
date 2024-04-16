@@ -1,4 +1,4 @@
-package exercise_result
+package exercise_result_domain
 
 import "context"
 

@@ -38,7 +38,7 @@ func (u *UnitController) CreateOneUnit(ctx *gin.Context) {
 		ID:         primitive.NewObjectID(),
 		LessonID:   unitInput.LessonID,
 		Name:       unitInput.Name,
-		Content:    unitInput.Content,
+		Level:      unitInput.Level,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 		WhoUpdates: user.FullName,
@@ -60,8 +60,7 @@ func (u *UnitController) CreateOneUnit(ctx *gin.Context) {
 
 func (u *UnitController) CreateUnitWithFile(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-
-	user, err := u.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	user, err := u.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -133,7 +132,7 @@ func (u *UnitController) CreateUnitWithFile(ctx *gin.Context) {
 				LessonID:   lessonID,
 				Name:       unit.Name,
 				ImageURL:   "",
-				Content:    "null",
+				Level:      unit.Level,
 				IsComplete: 0,
 				CreatedAt:  time.Now(),
 				UpdatedAt:  time.Now(),

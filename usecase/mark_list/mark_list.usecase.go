@@ -47,18 +47,6 @@ func (m *markListUseCase) CreateOne(ctx context.Context, markList *markList_doma
 	return nil
 }
 
-func (m *markListUseCase) UpsertOne(c context.Context, id string, markList *markList_domain.MarkList) (markList_domain.Response, error) {
-	ctx, cancel := context.WithTimeout(c, m.contextTimeout)
-	defer cancel()
-
-	markLists, err := m.markListRepository.UpsertOne(ctx, id, markList)
-	if err != nil {
-		return markList_domain.Response{}, err
-	}
-
-	return markLists, nil
-}
-
 func (m *markListUseCase) DeleteOne(ctx context.Context, markListID string) error {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()

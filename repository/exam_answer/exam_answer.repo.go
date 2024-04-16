@@ -88,14 +88,14 @@ func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_a
 }
 
 func (e *examAnswerRepository) DeleteOne(ctx context.Context, examID string) error {
-	collectionExam := e.database.Collection(e.collectionAnswer)
+	collectionAnswer := e.database.Collection(e.collectionAnswer)
 	objID, err := primitive.ObjectIDFromHex(examID)
 	if err != nil {
 		return err
 	}
 
 	filter := bson.M{"_id": objID}
-	count, err := collectionExam.CountDocuments(ctx, filter)
+	count, err := collectionAnswer.CountDocuments(ctx, filter)
 	if err != nil {
 		return err
 	}
@@ -103,6 +103,6 @@ func (e *examAnswerRepository) DeleteOne(ctx context.Context, examID string) err
 		return errors.New(`exam answer is removed`)
 	}
 
-	_, err = collectionExam.DeleteOne(ctx, filter)
+	_, err = collectionAnswer.DeleteOne(ctx, filter)
 	return err
 }

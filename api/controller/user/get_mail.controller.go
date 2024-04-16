@@ -11,7 +11,7 @@ func (u *UserController) GetMail(ctx *gin.Context) {
 	err := google.SendEmail("maiquangdinh.it.work@gmail.com", subject_const.SignInTheFirstTime, subject_const.ContentTitle2)
 
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+		ctx.JSON(http.StatusForbidden, gin.H{
 			"status":  "fail",
 			"message": err.Error(),
 		})

@@ -111,7 +111,7 @@ func (e *exerciseRepository) CreateOne(ctx context.Context, exercise *exercise_d
 	collectionExercise := e.database.Collection(e.collectionExercise)
 	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
 
-	filter := bson.M{"content": exercise.Content, "vocabulary_id": exercise.VocabularyID}
+	filter := bson.M{"content": exercise.Title, "vocabulary_id": exercise.VocabularyID}
 	filterReference := bson.M{"_id": exercise.VocabularyID}
 
 	countParent, err := collectionVocabulary.CountDocuments(ctx, filterReference)

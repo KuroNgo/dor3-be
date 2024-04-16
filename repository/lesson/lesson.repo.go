@@ -80,8 +80,19 @@ func (l *lessonRepository) FindCourseIDByCourseName(ctx context.Context, courseN
 }
 
 func (l *lessonRepository) UpdateComplete(ctx context.Context, lessonID string, lesson lesson_domain.Lesson) error {
-	//TODO implement me
-	panic("implement me")
+	collection := l.database.Collection(l.collectionUnit)
+
+	filter := bson.D{{Key: "_id", Value: lessonID}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "is_complete", Value: lesson.IsCompleted},
+		{Key: "who_updates", Value: lesson.WhoUpdates},
+	}}}
+
+	_, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (l *lessonRepository) FetchMany(ctx context.Context) (lesson_domain.Response, error) {

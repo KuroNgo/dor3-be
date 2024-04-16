@@ -9,6 +9,7 @@ type Input struct {
 	Word          string             `bson:"word" json:"word"`
 	PartOfSpeech  string             `bson:"part_of_speech" json:"part_of_speech"`
 	Pronunciation string             `bson:"pronunciation" json:"pronunciation"`
+	Mean          string             `bson:"mean" json:"mean"`
 	ExampleVie    string             `bson:"example_vie" json:"example_vie"`
 	ExampleEng    string             `bson:"example_eng" json:"example_eng"`
 	ExplainVie    string             `bson:"explain_vie" json:"explain_vie"`
@@ -29,16 +30,21 @@ type FetchByLessonInput struct {
 //go:generate mockery --name IVocabularyUseCase
 type IVocabularyUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
-	GetAllVocabulary(ctx context.Context) ([]string, error)
 	FetchByIdUnit(ctx context.Context, idUnit string) (Response, error)
-	FindUnitIDByUnitName(ctx context.Context, unitName string) (primitive.ObjectID, error)
+	FindUnitIDByUnitLevel(ctx context.Context, unitLevel int) (primitive.ObjectID, error)
 	FetchByWord(ctx context.Context, word string) (Response, error)
 	FetchByLesson(ctx context.Context, lessonName string) (Response, error)
+
+	GetAllVocabulary(ctx context.Context) ([]string, error)
+	GetLatestVocabulary(ctx context.Context) ([]string, error)
+	GetLatestVocabularyBatch(ctx context.Context) (Response, error)
+
 	UpdateOne(ctx context.Context, vocabularyID string, vocabulary Vocabulary) error
 	UpdateOneAudio(c context.Context, vocabularyID string, linkURL string) error
 	UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error
+
 	CreateOne(ctx context.Context, vocabulary *Vocabulary) error
 	CreateOneByNameUnit(ctx context.Context, vocabulary *Vocabulary) error
-	UpsertOne(c context.Context, id string, vocabulary *Vocabulary) (Response, error)
+
 	DeleteOne(ctx context.Context, vocabularyID string) error
 }

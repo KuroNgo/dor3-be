@@ -1,4 +1,4 @@
-package exercise_answer
+package exercise_answer_domain
 
 import (
 	"context"
@@ -16,7 +16,7 @@ type ExerciseAnswer struct {
 	QuestionID primitive.ObjectID `bson:"question_id" json:"question_id"`
 
 	Content    string `bson:"content" json:"content"`
-	BlankIndex int    `bson:"blank_index" json:"blank_index"` // Chỉ số của từ cần điền vào câu, nếu là loại bài tập điền từ
+	BlankIndex int    `bson:"blank_index" json:"blank_index"`
 
 	SubmittedAt time.Time `bson:"submitted_at" json:"submitted_at"`
 }

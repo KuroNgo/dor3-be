@@ -11,8 +11,17 @@ import (
 
 func (e *ExamsController) CreateOneExam(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-
 	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+
+	lessonID := ctx.Query("lesson_id")
+	idLesson, _ := primitive.ObjectIDFromHex(lessonID)
+
+	UnitID := ctx.Query("unit_id")
+	idUnit, _ := primitive.ObjectIDFromHex(UnitID)
+
+	VocabularyID := ctx.Query("vocabulary_id")
+	idVocabulary, _ := primitive.ObjectIDFromHex(VocabularyID)
+
 	var examInput exam_domain.Input
 	if err := ctx.ShouldBindJSON(&examInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -23,19 +32,18 @@ func (e *ExamsController) CreateOneExam(ctx *gin.Context) {
 	}
 
 	exam := exam_domain.Exam{
-		ID:            primitive.NewObjectID(),
-		LessonID:      examInput.LessonID,
-		UnitID:        examInput.UnitID,
-		VocabularyID:  examInput.VocabularyID,
-		Question:      examInput.Question,
-		Options:       examInput.Options,
-		CorrectAnswer: examInput.CorrectAnswer,
-		Explanation:   examInput.Explanation,
-		QuestionType:  examInput.QuestionType,
-		Level:         examInput.Level,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-		WhoUpdates:    user.FullName,
+		ID:           primitive.NewObjectID(),
+		LessonID:     idLesson,
+		UnitID:       idUnit,
+		VocabularyID: idVocabulary,
+
+		Title:       examInput.Title,
+		Description: examInput.Description,
+		Duration:    examInput.Duration,
+
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+		WhoUpdates: user.FullName,
 	}
 
 	err = e.ExamUseCase.CreateOne(ctx, &exam)

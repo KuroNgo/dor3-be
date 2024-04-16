@@ -38,15 +38,10 @@ func (q *QuizController) CreateOneQuiz(ctx *gin.Context) {
 	}
 
 	quizRes := &quiz_domain.Quiz{
-		ID:            primitive.NewObjectID(),
-		Question:      quizInput.Question,
-		Options:       quizInput.Options,
-		CorrectAnswer: quizInput.CorrectAnswer,
-		Explanation:   quizInput.Explanation,
-		QuestionType:  quizInput.QuestionType,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-		WhoUpdates:    user.FullName,
+		ID:         primitive.NewObjectID(),
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+		WhoUpdates: user.FullName,
 	}
 
 	err = q.QuizUseCase.CreateOne(ctx, quizRes)

@@ -130,7 +130,8 @@ func (q *quizRepository) UpdateOne(ctx context.Context, quizID string, quiz quiz
 func (q *quizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) error {
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
-	filter := bson.M{"question": quiz.Question}
+	filter := bson.M{"lesson_id": quiz.LessonID}
+
 	// check exists with Count Documents
 	count, err := collectionQuiz.CountDocuments(ctx, filter)
 	if err != nil {
