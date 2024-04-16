@@ -117,15 +117,7 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
 
-	user, err := l.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
-	var lessonInput lesson_domain.Input
-	if err = ctx.ShouldBindJSON(&lessonInput); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"message": err.Error(),
-		})
-		return
-	}
+	user, err := l.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 
 	// Parse form
 	err = ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
@@ -192,7 +184,6 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 				ID:          primitive.NewObjectID(),
 				CourseID:    courseID,
 				Name:        lesson.Name,
-				Content:     lesson.Content,
 				Level:       lesson.Level,
 				IsCompleted: 0,
 				CreatedAt:   time.Now(),

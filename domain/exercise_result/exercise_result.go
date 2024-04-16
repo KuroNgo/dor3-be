@@ -1,4 +1,4 @@
-package exercise_result
+package exercise_result_domain
 
 import (
 	"context"
@@ -27,6 +27,7 @@ type Response struct {
 type IExerciseResultRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchManyByExamID(ctx context.Context, exerciseID string) (Response, error)
+
 	CreateOne(ctx context.Context, exerciseResult *ExerciseResult) error
 	DeleteOne(ctx context.Context, exerciseResultID string) error
 }

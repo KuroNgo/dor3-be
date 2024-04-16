@@ -14,7 +14,6 @@ func StructuredLogger(logger *zerolog.Logger, activity *activity_controller.Acti
 	return func(ctx *gin.Context) {
 		start := time.Now()
 		path := ctx.Request.URL.Path
-		//raw := ctx.
 
 		ctx.Next()
 
@@ -59,7 +58,7 @@ func StructuredLogger(logger *zerolog.Logger, activity *activity_controller.Acti
 			err := activity.ActivityUseCase.CreateOne(ctx, newLog)
 			if err != nil {
 				logger.Error().Err(err).Msg("Failed to create activity log")
-				ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"status": "error",
 					"error":  "Failed to create activity log",
 				})

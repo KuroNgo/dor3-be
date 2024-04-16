@@ -23,5 +23,4 @@ func UnitRouter(env *bootstrap.Database, timeout time.Duration, db *mongo.Databa
 	router := group.Group("/unit")
 	router.GET("/fetch", unit.FetchMany)
 	router.GET("/fetch/:lesson", unit.FetchByIdLesson)
-	router.PATCH("/update/complete/:_id", unit.UpdateCompletedByIdUnit) // automation
 }

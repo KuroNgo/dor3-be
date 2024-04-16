@@ -12,6 +12,5 @@ type ICourseUseCase interface {
 	FetchMany(ctx context.Context) (Response, error)
 	UpdateOne(ctx context.Context, courseID string, course Course) error
 	CreateOne(ctx context.Context, course *Course) error
-	UpsertOne(ctx context.Context, id string, course *Course) (*Response, error)
 	DeleteOne(ctx context.Context, courseID string) error
 }

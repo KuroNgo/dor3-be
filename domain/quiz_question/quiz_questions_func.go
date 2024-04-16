@@ -1,4 +1,4 @@
-package quiz_question
+package quiz_question_domain
 
 import (
 	"context"

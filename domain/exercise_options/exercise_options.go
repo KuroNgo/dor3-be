@@ -1,4 +1,4 @@
-package exercise_options
+package exercise_options_domain
 
 import (
 	"context"
@@ -15,7 +15,7 @@ type ExerciseOptions struct {
 	QuestionID primitive.ObjectID `bson:"question_id" json:"question_id"`
 
 	Content    string `bson:"content" json:"content"`
-	BlankIndex int    `bson:"blank_index" json:"blank_index"` // Chỉ số của từ cần điền vào câu, nếu là loại bài tập điền từ
+	BlankIndex int    `bson:"blank_index" json:"blank_index"`
 
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 	UpdateAt  time.Time `bson:"update_at" json:"update_at"`
@@ -26,7 +26,7 @@ type Response struct {
 	ExerciseOptions []ExerciseOptions
 }
 
-type IExamOptionRepository interface {
+type IExerciseOptionRepository interface {
 	FetchManyByQuestionID(ctx context.Context, questionID string) (Response, error)
 	UpdateOne(ctx context.Context, exerciseOptionsID string, exerciseOptions ExerciseOptions) error
 	CreateOne(ctx context.Context, exerciseOptions *ExerciseOptions) error

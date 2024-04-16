@@ -11,6 +11,13 @@ type examQuestionUseCase struct {
 	contextTimeout         time.Duration
 }
 
+func NewExamQuestionUseCase(examQuestionRepository exam_question_domain.IExamQuestionRepository, timeout time.Duration) exam_question_domain.IExamQuestionUseCase {
+	return &examQuestionUseCase{
+		examQuestionRepository: examQuestionRepository,
+		contextTimeout:         timeout,
+	}
+}
+
 func (e *examQuestionUseCase) FetchMany(ctx context.Context, page string) (exam_question_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
@@ -69,11 +76,4 @@ func (e *examQuestionUseCase) DeleteOne(ctx context.Context, examID string) erro
 	}
 
 	return nil
-}
-
-func NewExamQuestionUseCase(examQuestionRepository exam_question_domain.IExamQuestionRepository, timeout time.Duration) exam_question_domain.IExamQuestionUseCase {
-	return &examQuestionUseCase{
-		examQuestionRepository: examQuestionRepository,
-		contextTimeout:         timeout,
-	}
 }

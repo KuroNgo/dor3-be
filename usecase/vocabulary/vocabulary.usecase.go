@@ -12,6 +12,23 @@ type vocabularyUseCase struct {
 	contextTimeout       time.Duration
 }
 
+func (v *vocabularyUseCase) GetLatestVocabulary(ctx context.Context) ([]string, error) {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+
+	vocabulary, err := v.vocabularyRepository.GetLatestVocabulary(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return vocabulary, err
+}
+
+func (v *vocabularyUseCase) GetLatestVocabularyBatch(ctx context.Context) (vocabulary_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewVocabularyUseCase(vocabularyRepository vocabulary_domain.IVocabularyRepository, timeout time.Duration) vocabulary_domain.IVocabularyUseCase {
 	return &vocabularyUseCase{
 		vocabularyRepository: vocabularyRepository,
@@ -103,11 +120,11 @@ func (v *vocabularyUseCase) GetAllVocabulary(ctx context.Context) ([]string, err
 	return vocabulary, nil
 }
 
-func (v *vocabularyUseCase) FindUnitIDByUnitName(ctx context.Context, unitName string) (primitive.ObjectID, error) {
+func (v *vocabularyUseCase) FindUnitIDByUnitLevel(ctx context.Context, unitLevel int) (primitive.ObjectID, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	unitID, err := v.vocabularyRepository.FindUnitIDByUnitName(ctx, unitName)
+	unitID, err := v.vocabularyRepository.FindUnitIDByUnitLevel(ctx, unitLevel)
 	if err != nil {
 		return primitive.NilObjectID, err
 	}
@@ -149,17 +166,6 @@ func (v *vocabularyUseCase) CreateOne(ctx context.Context, vocabulary *vocabular
 	}
 
 	return nil
-}
-
-func (v *vocabularyUseCase) UpsertOne(ctx context.Context, id string, vocabulary *vocabulary_domain.Vocabulary) (vocabulary_domain.Response, error) {
-	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
-	defer cancel()
-
-	vocabularies, err := v.vocabularyRepository.UpsertOne(ctx, id, vocabulary)
-	if err != nil {
-		return vocabulary_domain.Response{}, err
-	}
-	return vocabularies, nil
 }
 
 func (v *vocabularyUseCase) DeleteOne(ctx context.Context, vocabularyID string) error {

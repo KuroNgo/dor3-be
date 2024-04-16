@@ -11,18 +11,6 @@ type imageUseCase struct {
 	contextTimeout  time.Duration
 }
 
-func (i *imageUseCase) CreateMany(ctx context.Context, image []*image_domain.Image) error {
-	ctx, cancel := context.WithTimeout(ctx, i.contextTimeout)
-	defer cancel()
-	err := i.imageRepository.CreateMany(ctx, image)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func NewImageUseCase(imageRepository image_domain.IImageRepository, timeout time.Duration) image_domain.IImageUseCase {
 	return &imageUseCase{
 		imageRepository: imageRepository,
@@ -82,18 +70,6 @@ func (i *imageUseCase) DeleteOne(ctx context.Context, imageID string) error {
 	defer cancel()
 
 	err := i.imageRepository.DeleteOne(ctx, imageID)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
-func (i *imageUseCase) DeleteMany(ctx context.Context, imageID ...string) error {
-	ctx, cancel := context.WithTimeout(ctx, i.contextTimeout)
-	defer cancel()
-
-	err := i.imageRepository.DeleteMany(ctx, imageID...)
 	if err != nil {
 		return err
 	}

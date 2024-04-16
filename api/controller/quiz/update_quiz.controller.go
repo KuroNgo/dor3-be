@@ -30,13 +30,8 @@ func (q *QuizController) UpdateOneQuiz(ctx *gin.Context) {
 	}
 
 	updateQuiz := quiz_domain.Quiz{
-		Question:      quiz.Question,
-		Options:       quiz.Options,
-		CorrectAnswer: quiz.CorrectAnswer,
-		Explanation:   quiz.Explanation,
-		QuestionType:  quiz.QuestionType,
-		WhoUpdates:    user.FullName,
-		UpdatedAt:     time.Now(),
+		WhoUpdates: user.FullName,
+		UpdatedAt:  time.Now(),
 	}
 
 	err = q.QuizUseCase.UpdateOne(ctx, quizID, updateQuiz)

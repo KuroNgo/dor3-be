@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
 type adminRepository struct {
@@ -40,24 +41,33 @@ func (a *adminRepository) GetByID(c context.Context, id string) (*admin_domain.A
 	return &admin, err
 }
 
-func (a *adminRepository) FetchMany(c context.Context) ([]admin_domain.Admin, error) {
+func (a *adminRepository) FetchMany(c context.Context) (admin_domain.Response, error) {
 	collection := a.database.Collection(a.collectionAdmin)
 
 	opts := options.Find().SetProjection(bson.D{{Key: "password", Value: 0}})
 	cursor, err := collection.Find(c, bson.D{}, opts)
-
 	if err != nil {
-		return nil, err
+		return admin_domain.Response{}, err
 	}
 
-	var admin []admin_domain.Admin
+	var admins []admin_domain.Admin
+	for cursor.Next(c) {
+		var admin admin_domain.Admin
+		if err = cursor.Decode(&admin); err != nil {
+			return admin_domain.Response{}, err
+		}
 
-	err = cursor.All(c, &admin)
-	if admin == nil {
-		return []admin_domain.Admin{}, err
+		admin.CreatedAt = admin.CreatedAt.Add(7 + time.Hour)
+		admin.UpdatedAt = admin.UpdatedAt.Add(7 + time.Hour)
+
+		// Thêm lesson vào slice lessons
+		admins = append(admins, admin)
+	}
+	adminRes := admin_domain.Response{
+		Admin: admins,
 	}
 
-	return admin, err
+	return adminRes, err
 }
 
 func (a *adminRepository) GetByEmail(c context.Context, username string) (*admin_domain.Admin, error) {

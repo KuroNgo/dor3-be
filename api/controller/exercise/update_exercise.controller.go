@@ -4,6 +4,7 @@ import (
 	exercise_domain "clean-architecture/domain/exercise"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"time"
 )
@@ -21,6 +22,14 @@ func (e *ExerciseController) UpdateOneExercise(ctx *gin.Context) {
 	}
 
 	exerciseID := ctx.Query("_id")
+	lessonID := ctx.Query("lesson_id")
+	idLesson, err := primitive.ObjectIDFromHex(lessonID)
+
+	unitID := ctx.Query("unit_id")
+	idUnit, err := primitive.ObjectIDFromHex(unitID)
+
+	vocabularyID := ctx.Query("vocabulary_id")
+	idVocabulary, err := primitive.ObjectIDFromHex(vocabularyID)
 
 	var exerciseInput exercise_domain.Input
 	if err := ctx.ShouldBindJSON(&exerciseInput); err != nil {
@@ -32,13 +41,14 @@ func (e *ExerciseController) UpdateOneExercise(ctx *gin.Context) {
 	}
 
 	updateExercise := exercise_domain.Exercise{
-		VocabularyID: exerciseInput.VocabularyID,
-		Title:        exerciseInput.Title,
-		Content:      exerciseInput.Content,
-		//Type:         exerciseInput.Type,
-		//Options:    exerciseInput.Options,
-		CorrectAns: exerciseInput.CorrectAns,
-		BlankIndex: exerciseInput.BlankIndex,
+		LessonID:     idLesson,
+		UnitID:       idUnit,
+		VocabularyID: idVocabulary,
+
+		Title:       exerciseInput.Title,
+		Description: exerciseInput.Description,
+		Duration:    exerciseInput.Duration,
+
 		UpdatedAt:  time.Now(),
 		WhoUpdates: user.FullName,
 	}

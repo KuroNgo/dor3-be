@@ -4,7 +4,6 @@ import (
 	"clean-architecture/api/middleware"
 	activity_log_route "clean-architecture/api/router/activity_log"
 	admin_route "clean-architecture/api/router/admin"
-	audio_route "clean-architecture/api/router/audio"
 	course_route "clean-architecture/api/router/course"
 	exercise_route "clean-architecture/api/router/exercise"
 	image_route "clean-architecture/api/router/image"
@@ -58,7 +57,6 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	user_route.UserRouter(env, timeout, db, publicRouter)
 	exercise_route.ExerciseRoute(env, timeout, db, publicRouter)
 	user_route.LoginFromRoleRoute(env, timeout, db, publicRouter)
-	audio_route.AudioRoute(env, timeout, db, publicRouter)
 	image_route.ImageRoute(env, timeout, db, publicRouter)
 	quiz_route.QuizRouter(env, timeout, db, publicRouter)
 	course_route.CourseRoute(env, timeout, db, publicRouter)
@@ -72,7 +70,6 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	activity_log_route.AdminActivityRoute(env, timeout, db, privateRouter)
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
 	admin_route.AdminRouter(env, timeout, db, privateRouter)
-	audio_route.AdminAudioRoute(env, timeout, db, privateRouter)
 	image_route.AdminImageRoute(env, timeout, db, privateRouter)
 	course_route.AdminCourseRoute(env, timeout, db, privateRouter)
 	lesson_route.AdminLessonRoute(env, timeout, db, privateRouter)

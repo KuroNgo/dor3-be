@@ -1,4 +1,4 @@
-package exercise_options
+package exercise_options_domain
 
 import "context"
 
@@ -7,7 +7,7 @@ type Input struct {
 	BlankIndex int    `bson:"blank_index" json:"blank_index"` // Chỉ số của từ cần điền vào câu, nếu là loại bài tập điền từ
 }
 
-type IExamOptionUseCase interface {
+type IExerciseOptionUseCase interface {
 	FetchManyByQuestionID(ctx context.Context, questionID string) (Response, error)
 	UpdateOne(ctx context.Context, exerciseOptionsID string, exerciseOptions ExerciseOptions) error
 	CreateOne(ctx context.Context, exerciseOptions *ExerciseOptions) error

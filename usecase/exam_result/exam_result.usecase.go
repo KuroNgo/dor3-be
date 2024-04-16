@@ -11,6 +11,34 @@ type examResultUseCase struct {
 	contextTimeout       time.Duration
 }
 
+func (e *examResultUseCase) GetResultsByUserIDAndExamID(ctx context.Context, userID string, examID string) (exam_result_domain.ExamResult, error) {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	data, err := e.examResultRepository.GetResultsByUserIDAndExamID(ctx, userID, examID)
+	if err != nil {
+		return exam_result_domain.ExamResult{}, err
+	}
+
+	return data, nil
+}
+
+func (e *examResultUseCase) CalculateScore(ctx context.Context, correctAnswers, totalQuestions int) int {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	value := e.examResultRepository.CalculateScore(ctx, correctAnswers, totalQuestions)
+	return value
+}
+
+func (e *examResultUseCase) CalculatePercentage(ctx context.Context, correctAnswers, totalQuestions int) float64 {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	value := e.examResultRepository.CalculatePercentage(ctx, correctAnswers, totalQuestions)
+	return value
+}
+
 func NewExamResultUseCase(examResultRepository exam_result_domain.IExamResultRepository, timeout time.Duration) exam_result_domain.IExamResultUseCase {
 	return &examResultUseCase{
 		examResultRepository: examResultRepository,

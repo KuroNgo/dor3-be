@@ -4,12 +4,22 @@ import (
 	exam_domain "clean-architecture/domain/exam"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"time"
 )
 
 func (e *ExamsController) UpdateOneExam(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
+
+	lessonID := ctx.Query("lesson_id")
+	idLesson, _ := primitive.ObjectIDFromHex(lessonID)
+
+	UnitID := ctx.Query("unit_id")
+	idUnit, _ := primitive.ObjectIDFromHex(UnitID)
+
+	VocabularyID := ctx.Query("vocabulary_id")
+	idVocabulary, _ := primitive.ObjectIDFromHex(VocabularyID)
 
 	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
 	examID := ctx.Query("_id")
@@ -24,18 +34,17 @@ func (e *ExamsController) UpdateOneExam(ctx *gin.Context) {
 	}
 
 	exam := exam_domain.Exam{
-		LessonID:      examInput.LessonID,
-		UnitID:        examInput.UnitID,
-		VocabularyID:  examInput.VocabularyID,
-		Question:      examInput.Question,
-		Options:       examInput.Options,
-		CorrectAnswer: examInput.CorrectAnswer,
-		Explanation:   examInput.Explanation,
-		QuestionType:  examInput.QuestionType,
-		Level:         examInput.Level,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-		WhoUpdates:    user.FullName,
+		LessonID:     idLesson,
+		UnitID:       idUnit,
+		VocabularyID: idVocabulary,
+
+		Title:       examInput.Title,
+		Description: examInput.Description,
+		Duration:    examInput.Duration,
+
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+		WhoUpdates: user.FullName,
 	}
 
 	err = e.ExamUseCase.UpdateOne(ctx, examID, exam)

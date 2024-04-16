@@ -1,4 +1,4 @@
-package quiz_options
+package quiz_options_domain
 
 import (
 	"context"

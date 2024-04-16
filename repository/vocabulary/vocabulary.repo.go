@@ -16,25 +16,23 @@ import (
 type vocabularyRepository struct {
 	database             *mongo.Database
 	collectionVocabulary string
-	collectionMean       string
 	collectionMark       string
 	collectionUnit       string
 }
 
-func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, collectionMean string, collectionMark string, collectionUnit string) vocabulary_domain.IVocabularyRepository {
+func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, collectionMark string, collectionUnit string) vocabulary_domain.IVocabularyRepository {
 	return &vocabularyRepository{
 		database:             db,
 		collectionVocabulary: collectionVocabulary,
-		collectionMean:       collectionMean,
 		collectionMark:       collectionMark,
 		collectionUnit:       collectionUnit,
 	}
 }
 
-func (v *vocabularyRepository) FindUnitIDByUnitName(ctx context.Context, unitName string) (primitive.ObjectID, error) {
+func (v *vocabularyRepository) FindUnitIDByUnitLevel(ctx context.Context, unitLevel int) (primitive.ObjectID, error) {
 	collectionUnit := v.database.Collection(v.collectionUnit)
 
-	filter := bson.M{"name": unitName}
+	filter := bson.M{"level": unitLevel}
 	var data struct {
 		Id primitive.ObjectID `bson:"_id"`
 	}
@@ -45,6 +43,68 @@ func (v *vocabularyRepository) FindUnitIDByUnitName(ctx context.Context, unitNam
 	}
 
 	return data.Id, nil
+}
+
+func (v *vocabularyRepository) GetLatestVocabulary(ctx context.Context) ([]string, error) {
+	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
+
+	var vocabularies []string
+
+	cursor, err := collectionVocabulary.Find(ctx, bson.D{}, options.Find().SetSort(bson.D{{"_id", -1}}))
+	if err != nil {
+		return nil, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
+
+	for cursor.Next(ctx) {
+		var result bson.M
+		if err = cursor.Decode(&result); err != nil {
+			return nil, err
+		}
+		word, ok := result["word"].(string)
+		if !ok {
+			return nil, errors.New("failed to parse word from result")
+		}
+		vocabularies = append(vocabularies, word)
+	}
+
+	return vocabularies, nil
+}
+
+func (v *vocabularyRepository) GetLatestVocabularyBatch(ctx context.Context) (vocabulary_domain.Response, error) {
+	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
+
+	var vocabularies []vocabulary_domain.Vocabulary
+
+	cursor, err := collectionVocabulary.Find(ctx, bson.D{}, options.Find().SetSort(bson.D{{"_id", -1}}))
+	if err != nil {
+		return vocabulary_domain.Response{}, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
+
+	for cursor.Next(ctx) {
+		var vocabulary vocabulary_domain.Vocabulary
+		if err = cursor.Decode(&vocabulary); err != nil {
+			return vocabulary_domain.Response{}, err
+		}
+		vocabularies = append(vocabularies, vocabulary)
+	}
+
+	response := vocabulary_domain.Response{
+		Vocabulary: vocabularies,
+	}
+
+	return response, nil
 }
 
 func (v *vocabularyRepository) GetAllVocabulary(ctx context.Context) ([]string, error) {
@@ -356,7 +416,6 @@ func (v *vocabularyRepository) UpsertOne(ctx context.Context, id string, vocabul
 
 func (v *vocabularyRepository) DeleteOne(ctx context.Context, vocabularyID string) error {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
-	collectionMean := v.database.Collection(v.collectionMean)
 	collectionMark := v.database.Collection(v.collectionMark)
 
 	objID, err := primitive.ObjectIDFromHex(vocabularyID)
@@ -370,13 +429,6 @@ func (v *vocabularyRepository) DeleteOne(ctx context.Context, vocabularyID strin
 
 	filterChild := bson.M{
 		"vocabulary_id": objID,
-	}
-	countChildMean, err := collectionMean.CountDocuments(ctx, filterChild)
-	if err != nil {
-		return err
-	}
-	if countChildMean > 0 {
-		return errors.New(`lesson cannot remove`)
 	}
 
 	countChildMark, err := collectionMark.CountDocuments(ctx, filterChild)

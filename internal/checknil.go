@@ -7,29 +7,20 @@ import (
 	quiz_domain "clean-architecture/domain/quiz"
 	unit_domain "clean-architecture/domain/unit"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gopkg.in/errgo.v2/fmt/errors"
 )
 
 func IsValidQuiz(quiz quiz_domain.Input) error {
-	if quiz.Question == "" {
-		return errors.New("question cannot be empty")
-	}
-	if len(quiz.Options) == 0 {
-		return errors.New("options cannot be empty")
+	if quiz.Title == "" {
+		return errors.New("title cannot be empty")
 	}
 
-	if quiz.CorrectAnswer == "" {
-		return errors.New("correct answer cannot be empty")
+	if quiz.Description == "" {
+		return errors.New("description cannot be empty")
 	}
 
-	if quiz.Explanation == "" {
-		return errors.New("explanation cannot be empty")
-	}
-
-	if quiz.QuestionType == "" {
-		return errors.New("question type cannot be empty")
-
+	if quiz.Duration == 0 {
+		return errors.New("time duration cannot be empty")
 	}
 	return nil
 }
@@ -74,9 +65,6 @@ func IsValidUnit(unit unit_domain.Input) error {
 		return errors.New("name cannot be empty")
 	}
 
-	if unit.Content == "" {
-		return errors.New("content cannot be empty")
-	}
 	return nil
 }
 
@@ -118,19 +106,7 @@ func IsValidVocabulary(vocabulary vocabulary_domain.Input) error {
 }
 
 func IsValidExercise(exercise exercise_domain.Input) error {
-	//if exercise.Options == nil {
-	//	return errors.New("option cannot be empty")
-	//}
-	if exercise.VocabularyID == primitive.NilObjectID {
-		return errors.New("option cannot be empty")
-	}
 	if exercise.Title == "" {
-		return errors.New("option cannot be empty")
-	}
-	if exercise.Type == "" {
-		return errors.New("option cannot be empty")
-	}
-	if exercise.CorrectAns == "" {
 		return errors.New("option cannot be empty")
 	}
 	return nil

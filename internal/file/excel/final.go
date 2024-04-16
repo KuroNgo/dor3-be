@@ -3,7 +3,6 @@ package excel
 import (
 	file_internal "clean-architecture/internal/file"
 	"errors"
-	"fmt"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -40,13 +39,12 @@ func ReadFileForLessonManagementSystem(filename string) ([]file_internal.Final, 
 					LessonCourseID:          "English for IT",
 					LessonName:              elementSheet,
 					LessonLevel:             i,
-					LessonContent:           "",
 					VocabularyWord:          row[0],
 					VocabularyPartOfSpeech:  row[1],
 					VocabularyPronunciation: row[2],
 					VocabularyExample:       row[3],
 					VocabularyFieldOfIT:     elementSheet,
-					VocabularyUnitID:        fmt.Sprintf("Unit%d", unitCount),
+					VocabularyUnitLevel:     unitCount,
 					MeanLessonID:            "English for IT",
 					MeanVocabularyID:        row[0],
 					MeanExplainVie:          row[4],

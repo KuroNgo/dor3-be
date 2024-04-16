@@ -1,4 +1,4 @@
-package exercise_questions
+package exercise_questions_domain
 
 import (
 	"context"
@@ -16,6 +16,7 @@ type ExerciseQuestion struct {
 
 	Content string `bson:"content" json:"content"`
 	Type    string `bson:"type" json:"type"`
+	Level   int    `bson:"level" json:"level"`
 
 	// admin add metadata of file and system will be found it
 	Filename      string `bson:"filename" json:"filename"`
@@ -33,6 +34,7 @@ type Response struct {
 type IExerciseQuestionRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchManyByExamID(ctx context.Context, exerciseID string) (Response, error)
+
 	UpdateOne(ctx context.Context, exerciseQuestionID string, exerciseQuestion ExerciseQuestion) error
 	CreateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) error
 	DeleteOne(ctx context.Context, exerciseID string) error

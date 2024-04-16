@@ -63,10 +63,10 @@ func NewEnv() *Database {
 		log.Fatal("Environment can't be loaded: ", err)
 	}
 
-	if env.AppEnv == "development" {
-		log.Println("The App is running in development env")
-	} else {
-		log.Println("The App is running in deployment env")
-	}
+	//if env.AppEnv == "development" {
+	//	log.Println("The App is running in development env")
+	//} else {
+	//	log.Println("The App is running in deployment env")
+	//}
 	return &env
 }

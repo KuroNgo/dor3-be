@@ -26,7 +26,7 @@ func NewActivityRepository(db *mongo.Database, collectionActivity string) activi
 func (a *activityRepository) CreateOne(ctx context.Context, log activity_log_domain.ActivityLog) error {
 	collectionActivity := a.database.Collection(a.collectionActivity)
 
-	now := time.Now().UTC()
+	now := time.Now()
 	tomorrow := now.Add(24 * 30 * time.Hour)
 	expireTime := time.Date(tomorrow.Year(), tomorrow.Month(), tomorrow.Day(), 0, 0, 0, 0, time.UTC)
 
@@ -68,6 +68,8 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 		if err := cursor.Decode(&activity); err != nil {
 			return activity_log_domain.Response{}, err
 		}
+
+		activity.ActivityTime = activity.ActivityTime.Add(7 * time.Hour)
 
 		// Thêm activity vào slice activities
 		activities = append(activities, activity)

@@ -6,7 +6,6 @@ import (
 	course_domain "clean-architecture/domain/course"
 	lesson_domain "clean-architecture/domain/lesson"
 	mark_domain "clean-architecture/domain/mark_vocabulary"
-	mean_domain "clean-architecture/domain/mean"
 	unit_domain "clean-architecture/domain/unit"
 	user_domain "clean-architecture/domain/user"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
@@ -29,7 +28,7 @@ func AdminCourseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.
 	co := course_repository.NewCourseRepository(db, course_domain.CollectionCourse, lesson_domain.CollectionLesson)
 	le := lesson_repository.NewLessonRepository(db, lesson_domain.CollectionLesson, course_domain.CollectionCourse, unit_domain.CollectionUnit)
 	un := unit_repo.NewUnitRepository(db, unit_domain.CollectionUnit, lesson_domain.CollectionLesson, vocabulary_domain.CollectionVocabulary)
-	vo := vocabulary_repository.NewVocabularyRepository(db, vocabulary_domain.CollectionVocabulary, mean_domain.CollectionMean, mark_domain.CollectionMark, unit_domain.CollectionUnit)
+	vo := vocabulary_repository.NewVocabularyRepository(db, vocabulary_domain.CollectionVocabulary, mark_domain.CollectionMark, unit_domain.CollectionUnit)
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
 
 	course := &course_controller.CourseController{
@@ -46,6 +45,5 @@ func AdminCourseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.
 	router.POST("/create/file", course.CreateCourseWithFile)
 	router.POST("/create/file/final", course.CreateLessonManagementWithFile)
 	router.PUT("/update/:_id", course.UpdateCourse)
-	router.POST("/upsert/:_id", course.UpsertOneQuiz)
 	router.DELETE("/delete/:_id", course.DeleteCourse)
 }

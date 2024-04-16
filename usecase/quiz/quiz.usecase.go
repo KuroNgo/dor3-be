@@ -11,18 +11,6 @@ type quizUseCase struct {
 	contextTimeout time.Duration
 }
 
-func (q *quizUseCase) FetchManyByLessonID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
-	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
-	defer cancel()
-
-	quiz, err := q.quizRepository.FetchManyByLessonID(ctx, unitID)
-	if err != nil {
-		return quiz_domain.Response{}, err
-	}
-
-	return quiz, nil
-}
-
 func (q *quizUseCase) FetchManyByUnitID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()

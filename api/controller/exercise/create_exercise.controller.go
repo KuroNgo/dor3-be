@@ -14,6 +14,15 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
 	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
 
+	lessonID := ctx.Query("lesson_id")
+	idLesson, err := primitive.ObjectIDFromHex(lessonID)
+
+	unitID := ctx.Query("unit_id")
+	idUnit, err := primitive.ObjectIDFromHex(unitID)
+
+	vocabularyID := ctx.Query("vocabulary_id")
+	idVocabulary, err := primitive.ObjectIDFromHex(vocabularyID)
+
 	var exerciseInput exercise_domain.Input
 	if err := ctx.ShouldBindJSON(&exerciseInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -33,13 +42,14 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 
 	exerciseRes := &exercise_domain.Exercise{
 		Id:           primitive.NewObjectID(),
-		VocabularyID: exerciseInput.VocabularyID,
-		Title:        exerciseInput.Title,
-		Content:      exerciseInput.Content,
-		//Type:         exerciseInput.Type,
-		//Options:    exerciseInput.Options,
-		CorrectAns: exerciseInput.CorrectAns,
-		BlankIndex: exerciseInput.BlankIndex,
+		LessonID:     idLesson,
+		UnitID:       idUnit,
+		VocabularyID: idVocabulary,
+
+		Title:       exerciseInput.Title,
+		Description: exerciseInput.Description,
+		Duration:    exerciseInput.Duration,
+
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 		WhoUpdates: user.FullName,
