@@ -1,14 +1,25 @@
 package unit_controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 func (u *UnitController) DeleteOneUnit(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser")
+	admin, err := u.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": admin.FullName + " You are not authorized to perform this action!",
+		})
+		return
+	}
+
 	lessonID := ctx.Query("_id")
 
-	err := u.UnitUseCase.DeleteOne(ctx, lessonID)
+	err = u.UnitUseCase.DeleteOne(ctx, lessonID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

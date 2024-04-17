@@ -15,7 +15,14 @@ import (
 
 func (u *UnitController) CreateOneUnit(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-	user, err := u.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	admin, err := u.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
 
 	var unitInput unit_domain.Input
 	if err := ctx.ShouldBindJSON(&unitInput); err != nil {
@@ -41,7 +48,7 @@ func (u *UnitController) CreateOneUnit(ctx *gin.Context) {
 		Level:      unitInput.Level,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
-		WhoUpdates: user.FullName,
+		WhoUpdates: admin.FullName,
 	}
 
 	err = u.UnitUseCase.CreateOne(ctx, unitRes)

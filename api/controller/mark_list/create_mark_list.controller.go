@@ -14,7 +14,7 @@ func (m *MarkListController) CreateOneMarkList(ctx *gin.Context) {
 	if err != nil || user == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
-			"message": user.FullName + " You are not authorized to perform this action!",
+			"message": "You are not authorized to perform this action!",
 		})
 		return
 	}

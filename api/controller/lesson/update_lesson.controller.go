@@ -10,11 +10,11 @@ import (
 
 func (l *LessonController) UpdateOneLesson(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-	admin, err := l.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	admin, err := l.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"status":  "error",
-			"message": err.Error(),
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
 		})
 		return
 	}
