@@ -120,16 +120,25 @@ func (l *lessonRepository) FetchMany(ctx context.Context) (lesson_domain.Respons
 	return lessonRes, err
 }
 
-func (l *lessonRepository) UpdateOne(ctx context.Context, lessonID string, lesson lesson_domain.Lesson) error {
+func (l *lessonRepository) UpdateOne(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {
 	collection := l.database.Collection(l.collectionLesson)
-	doc, err := internal.ToDoc(lesson)
-	objID, err := primitive.ObjectIDFromHex(lessonID)
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: doc}}
+	filter := bson.M{"_id": lesson.ID}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
+	update := bson.M{
+		"$set": bson.M{
+			"name":    lesson.Name,
+			"content": lesson.Content,
+			"image":   lesson.ImageURL,
+		},
+	}
+
+	data, err := collection.UpdateOne(ctx, filter, &update)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, err
 }
 
 func (l *lessonRepository) CreateOne(ctx context.Context, lesson *lesson_domain.Lesson) error {

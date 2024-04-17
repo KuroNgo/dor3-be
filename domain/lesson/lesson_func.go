@@ -3,9 +3,11 @@ package lesson_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Input struct {
+	ID       primitive.ObjectID `bson:"_id" json:"_id"`
 	CourseID primitive.ObjectID `bson:"course_id" json:"course_id"`
 	Name     string             `bson:"name" json:"name"`
 	Content  string             `bson:"content" json:"content"`
@@ -14,6 +16,7 @@ type Input struct {
 }
 
 type Update struct {
+	ID       primitive.ObjectID `bson:"_id" json:"_id"`
 	CourseID primitive.ObjectID `bson:"course_id" json:"course_id"`
 	Name     string             `bson:"name" json:"name"`
 	Content  string             `bson:"content" json:"content"`
@@ -30,7 +33,7 @@ type ILessonUseCase interface {
 	CreateOne(ctx context.Context, lesson *Lesson) error
 	CreateOneByNameCourse(ctx context.Context, lesson *Lesson) error
 
-	UpdateOne(ctx context.Context, lessonID string, lesson Lesson) error
+	UpdateOne(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, lessonID string) error
 
 	// UpdateComplete automation

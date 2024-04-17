@@ -4,6 +4,7 @@ import (
 	lesson_domain "clean-architecture/domain/lesson"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -79,16 +80,16 @@ func (l *lessonUseCase) FetchMany(ctx context.Context) (lesson_domain.Response, 
 	return lesson, err
 }
 
-func (l *lessonUseCase) UpdateOne(ctx context.Context, lessonID string, lesson lesson_domain.Lesson) error {
+func (l *lessonUseCase) UpdateOne(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()
 
-	err := l.lessonRepository.UpdateOne(ctx, lessonID, lesson)
+	data, err := l.lessonRepository.UpdateOne(ctx, lesson)
 	if err != nil {
-		return err
+		return data, err
 	}
 
-	return err
+	return data, err
 }
 
 func (l *lessonUseCase) CreateOne(ctx context.Context, lesson *lesson_domain.Lesson) error {
