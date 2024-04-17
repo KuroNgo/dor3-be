@@ -47,7 +47,7 @@ func (l *LoginFromRoleController) Login2(ctx *gin.Context) {
 
 		ctx.SetCookie("access_token", accessToken, l.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
 		ctx.SetCookie("refresh_token", refreshToken, l.Database.RefreshTokenMaxAge*60, "/", "localhost", false, true)
-		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
+		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":       "success",
@@ -81,7 +81,7 @@ func (l *LoginFromRoleController) Login2(ctx *gin.Context) {
 
 		ctx.SetCookie("access_token", accessToken, l.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
 		ctx.SetCookie("refresh_token", refreshToken, l.Database.RefreshTokenMaxAge*60, "/", "localhost", false, true)
-		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
+		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":       "success",

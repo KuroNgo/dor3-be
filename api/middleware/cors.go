@@ -43,8 +43,8 @@ func CORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		c.Header("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, Access-Control-Request-Method")
-		c.Header("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization,Content-Type,Content-Length,Accept-Encoding,X-CSRF-Token,Authorization,accept,origin,Cache-Control,X-Requested-With")
+		c.Header("Access-Control-Allow-Methods", "GET, PUT, POST, PATCH, DELETE, OPTIONS")
 		c.Header("Access-Control-Max-Age", "86400") // 24 giờ
 
 		if c.Request.Method == "OPTIONS" {
@@ -58,7 +58,7 @@ func CORS() gin.HandlerFunc {
 
 func OptionMessage(c *gin.Context) {
 	c.Header("Access-Control-Allow-Origin", "http://localhost:3000")
-	c.Header("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE, OPTIONS")
+	c.Header("Access-Control-Allow-Methods", "GET, PUT, PATCH, POST, DELETE, OPTIONS")
 	c.Header("Access-Control-Max-Age", "86400") // 24 giờ
 
 	if c.Request.Method == "OPTIONS" {

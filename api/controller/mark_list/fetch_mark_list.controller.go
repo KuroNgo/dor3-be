@@ -7,7 +7,7 @@ import (
 )
 
 func (m *MarkListController) FetchManyMarkListByUserID(ctx *gin.Context) {
-	currentUser := ctx.MustGet("access_token")
+	currentUser := ctx.MustGet("currentUser")
 	user, err := m.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
 
 	markList, err := m.MarkListUseCase.FetchManyByUserID(ctx, fmt.Sprint(user.ID))
