@@ -3,6 +3,7 @@ package course_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -26,7 +27,7 @@ type Response struct {
 //go:generate mockery --name ICourseRepository
 type ICourseRepository interface {
 	FetchMany(ctx context.Context) (Response, error)
-	UpdateOne(ctx context.Context, courseID string, course Course) error
+	UpdateOne(ctx context.Context, course Course) (*mongo.UpdateResult, error)
 	CreateOne(ctx context.Context, course *Course) error
 	DeleteOne(ctx context.Context, courseID string) error
 }

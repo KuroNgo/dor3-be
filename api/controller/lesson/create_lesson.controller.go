@@ -15,8 +15,15 @@ import (
 
 func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
+	admin, err := l.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
 
-	user, err := l.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
 	var lessonInput lesson_domain.Input
 	if err = ctx.ShouldBindJSON(&lessonInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -36,7 +43,7 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 			Level:      lessonInput.Level,
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
-			WhoUpdates: user.FullName,
+			WhoUpdates: admin.FullName,
 		}
 		err = l.LessonUseCase.CreateOne(ctx, lessonRes)
 		if err != nil {
@@ -97,7 +104,7 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 		Level:      lessonInput.Level,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
-		WhoUpdates: user.FullName,
+		WhoUpdates: admin.FullName,
 	}
 
 	err = l.LessonUseCase.CreateOne(ctx, lessonRes)
@@ -116,8 +123,14 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 
 func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-
-	user, err := l.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	admin, err := l.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
 
 	// Parse form
 	err = ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
@@ -144,31 +157,27 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 		return
 	}
 
-	// Lưu file vào thư mục tạm
 	err = ctx.SaveUploadedFile(file, file.Filename)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save temporary file"})
 		return
 	}
 	defer func() {
 		err := os.Remove(file.Filename)
 		if err != nil {
-			fmt.Printf("Failed to delete temporary file: %v\n", err)
+			fmt.Printf("Error: Failed to delete temporary file: %v\n", err)
 		}
 	}()
 
-	// Đọc dữ liệu từ file Excel
 	result, err := excel.ReadFileForLesson(file.Filename)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read data from Excel file: " + err.Error()})
 		return
 	}
 
-	// Tạo kênh để gửi và nhận lỗi từ goroutine
 	errChan := make(chan error)
 	defer close(errChan)
 
-	// Tạo các bài học từ dữ liệu bằng cách sử dụng goroutine
 	successCount := 0
 	for _, lesson := range result {
 		go func(lesson file_internal.Lesson) {
@@ -188,7 +197,7 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 				IsCompleted: 0,
 				CreatedAt:   time.Now(),
 				UpdatedAt:   time.Now(),
-				WhoUpdates:  user.FullName,
+				WhoUpdates:  admin.FullName,
 			}
 
 			// Tạo bài học trong cơ sở dữ liệu
@@ -205,15 +214,13 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 
 	// Đợi goroutine kết thúc và xử lý lỗi nếu có
 	for range result {
-		if err := <-errChan; err != nil {
-			fmt.Printf("Error: %v\n", err)
-		} else {
+		if err := <-errChan; err == nil {
 			successCount++
 		}
 	}
 
 	// Trả về kết quả
-	if successCount == 0 {
+	if successCount > 0 {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to create any lesson",
 			"message": "Any value have exist in database",

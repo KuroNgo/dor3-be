@@ -10,7 +10,7 @@ import (
 
 func (l *LessonController) UpdateOneLesson(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-	user, err := l.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	admin, err := l.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "error",
@@ -35,7 +35,7 @@ func (l *LessonController) UpdateOneLesson(ctx *gin.Context) {
 		Name:       lessonInput.Name,
 		Content:    lessonInput.Content,
 		UpdatedAt:  time.Now(),
-		WhoUpdates: user.FullName,
+		WhoUpdates: admin.FullName,
 	}
 
 	data, err := l.LessonUseCase.UpdateOne(ctx, &updateLesson)

@@ -6,7 +6,6 @@ import (
 	course_domain "clean-architecture/domain/course"
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
-	user_domain "clean-architecture/domain/user"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 )
 
@@ -15,7 +14,7 @@ type CourseController struct {
 	LessonUseCase     lesson_domain.ILessonUseCase
 	UnitUseCase       unit_domain.IUnitUseCase
 	VocabularyUseCase vocabulary_domain.IVocabularyUseCase
-	UserUseCase       user_domain.IUserUseCase
-	AdminUseCase      admin_domain.IAdminUseCase
-	Database          *bootstrap.Database
+
+	AdminUseCase admin_domain.IAdminUseCase
+	Database     *bootstrap.Database
 }
