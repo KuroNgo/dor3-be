@@ -7,6 +7,7 @@ import (
 )
 
 type Input struct {
+	Id            primitive.ObjectID `bson:"_id" json:"_id"`
 	Word          string             `bson:"word" json:"word"`
 	PartOfSpeech  string             `bson:"part_of_speech" json:"part_of_speech"`
 	Pronunciation string             `bson:"pronunciation" json:"pronunciation"`

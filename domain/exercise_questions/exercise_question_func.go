@@ -7,6 +7,7 @@ import (
 )
 
 type Input struct {
+	ID         primitive.ObjectID `bson:"_id" json:"_id"`
 	ExerciseID primitive.ObjectID `bson:"exercise_id" json:"exercise_id"`
 	Content    string             `bson:"content" json:"content"`
 	Type       string             `bson:"type" json:"type"`

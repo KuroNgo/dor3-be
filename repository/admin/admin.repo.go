@@ -132,7 +132,7 @@ func (a *adminRepository) UpdateOne(ctx context.Context, admin *admin_domain.Adm
 		},
 	}
 
-	data, err := collection.UpdateOne(ctx, filter, update)
+	data, err := collection.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return nil, err
 	}

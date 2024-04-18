@@ -12,15 +12,6 @@ type courseUseCase struct {
 	contextTimeout   time.Duration
 }
 
-func (c *courseUseCase) CountCourse(ctx context.Context) int64 {
-	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
-	defer cancel()
-
-	num := c.courseRepository.CountCourse(ctx)
-
-	return num
-}
-
 func NewCourseUseCase(courseRepository course_domain.ICourseRepository, timeout time.Duration) course_domain.ICourseUseCase {
 	return &courseUseCase{
 		courseRepository: courseRepository,
@@ -40,18 +31,6 @@ func (c *courseUseCase) FetchMany(ctx context.Context) (course_domain.Response, 
 	return course, err
 }
 
-func (c *courseUseCase) UpdateOne(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {
-	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
-	defer cancel()
-
-	data, err := c.courseRepository.UpdateOne(ctx, course)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
 func (c *courseUseCase) CreateOne(ctx context.Context, course *course_domain.Course) error {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
@@ -64,6 +43,18 @@ func (c *courseUseCase) CreateOne(ctx context.Context, course *course_domain.Cou
 	return nil
 }
 
+func (c *courseUseCase) UpdateOne(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {
+	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
+	defer cancel()
+
+	data, err := c.courseRepository.UpdateOne(ctx, course)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
 func (c *courseUseCase) DeleteOne(ctx context.Context, courseID string) error {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
@@ -74,4 +65,13 @@ func (c *courseUseCase) DeleteOne(ctx context.Context, courseID string) error {
 	}
 
 	return err
+}
+
+func (c *courseUseCase) CountCourse(ctx context.Context) int64 {
+	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
+	defer cancel()
+
+	num := c.courseRepository.CountCourse(ctx)
+
+	return num
 }

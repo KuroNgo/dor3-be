@@ -2,14 +2,18 @@ package exercise_domain
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
 type Input struct {
-	Title       string        `bson:"title" json:"title"`
-	Description string        `bson:"description" json:"description"`
-	Duration    time.Duration `bson:"duration" json:"duration"`
+	LessonID     primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
+	UnitID       primitive.ObjectID `bson:"unit_id" json:"unit_id"`
+	VocabularyID primitive.ObjectID `bson:"vocabulary" json:"vocabulary"`
+	Title        string             `bson:"title" json:"title"`
+	Description  string             `bson:"description" json:"description"`
+	Duration     time.Duration      `bson:"duration" json:"duration"`
 }
 
 type IExerciseUseCase interface {

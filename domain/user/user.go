@@ -28,8 +28,8 @@ type User struct {
 }
 
 type Response struct {
-	User  []User `bson:"user" json:"user"`
 	Count int64  `bson:"count" json:"count"`
+	User  []User `bson:"user" json:"user"`
 }
 
 type ResponseIndividual struct {

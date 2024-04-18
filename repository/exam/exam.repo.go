@@ -12,14 +12,14 @@ import (
 )
 
 type examRepository struct {
-	database             mongo.Database
+	database             *mongo.Database
 	collectionLesson     string
 	collectionUnit       string
 	collectionVocabulary string
 	collectionExam       string
 }
 
-func NewExamRepository(db mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionVocabulary string) exam_domain.IExamRepository {
+func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionVocabulary string) exam_domain.IExamRepository {
 	return &examRepository{
 		database:             db,
 		collectionExam:       collectionExam,
@@ -110,7 +110,7 @@ func (e *examRepository) UpdateOne(ctx context.Context, exam *exam_domain.Exam) 
 		},
 	}
 
-	data, err := collection.UpdateOne(ctx, filter, update)
+	data, err := collection.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return nil, err
 	}

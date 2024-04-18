@@ -31,19 +31,16 @@ func (q *quizRepository) FetchManyByLessonID(ctx context.Context, unitID string)
 	panic("implement me")
 }
 
-func (q *quizRepository) UpdateCompleted(ctx context.Context, quizID string, isComplete int) error {
+func (q *quizRepository) UpdateCompleted(ctx context.Context, quiz *quiz_domain.Quiz) error {
 	collection := q.database.Collection(q.collectionUnit)
-	objID, err := primitive.ObjectIDFromHex(quizID)
-	if err != nil {
-		return err
-	}
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: bson.D{
-		{Key: "is_complete", Value: isComplete},
-	}}}
+	filter := bson.D{{Key: "_id", Value: quiz.ID}}
+	update := bson.M{"$set": bson.M{
+		"is_complete": quiz.IsComplete,
+		"who_updates": quiz.WhoUpdates,
+	}}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
+	_, err := collection.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return err
 	}

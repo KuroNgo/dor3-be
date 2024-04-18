@@ -2,13 +2,16 @@ package feedback_domain
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
 type Input struct {
-	Title         string    `bson:"title" json:"title"`
-	Content       string    `bson:"content" json:"content"`
-	SubmittedDate time.Time `bson:"submitted_date" json:"submitted_date"`
+	ID            primitive.ObjectID `bson:"_id" json:"_id"`
+	UserID        primitive.ObjectID `bson:"user_id" json:"user_id"`
+	Title         string             `bson:"title" json:"title"`
+	Content       string             `bson:"content" json:"content"`
+	SubmittedDate time.Time          `bson:"submitted_date" json:"submitted_date"`
 }
 
 type IFeedbackUseCase interface {

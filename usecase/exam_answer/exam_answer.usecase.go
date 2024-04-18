@@ -11,6 +11,18 @@ type examAnswerUseCase struct {
 	contextTimeout       time.Duration
 }
 
+func (e *examAnswerUseCase) DeleteAll(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	err := e.examAnswerRepository.DeleteAll(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func NewExamAnswerUseCase(examAnswerRepository exam_answer_domain.IExamAnswerRepository, timeout time.Duration) exam_answer_domain.IExamAnswerUseCase {
 	return &examAnswerUseCase{
 		examAnswerRepository: examAnswerRepository,

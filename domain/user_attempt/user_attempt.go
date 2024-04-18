@@ -23,11 +23,11 @@ type UserProcess struct {
 }
 
 type Response struct {
-	UserProcess                []UserProcess
 	StudyTime                  time.Time `bson:"study_time" json:"study_time"`
 	TotalNumberOfLessonLearned int16     `bson:"total_number_of_lesson_learned" json:"total_number_of_lesson_learned"`
 	TotalScore                 int64     `bson:"total_score" json:"total_score"`
 	AverageScore               int8      `bson:"average_score" json:"average_score"`
+	UserProcess                []UserProcess
 }
 
 type IUserProcessRepository interface {

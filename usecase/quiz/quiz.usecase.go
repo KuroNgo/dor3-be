@@ -12,6 +12,13 @@ type quizUseCase struct {
 	contextTimeout time.Duration
 }
 
+func NewQuizUseCase(quizRepository quiz_domain.IQuizRepository, timeout time.Duration) quiz_domain.IQuizUseCase {
+	return &quizUseCase{
+		quizRepository: quizRepository,
+		contextTimeout: timeout,
+	}
+}
+
 func (q *quizUseCase) FetchManyByUnitID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
@@ -24,23 +31,16 @@ func (q *quizUseCase) FetchManyByUnitID(ctx context.Context, unitID string) (qui
 	return quiz, nil
 }
 
-func (q *quizUseCase) UpdateCompleted(ctx context.Context, quizID string, isComplete int) error {
+func (q *quizUseCase) UpdateCompleted(ctx context.Context, quiz *quiz_domain.Quiz) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	err := q.quizRepository.UpdateCompleted(ctx, quizID, isComplete)
+	err := q.quizRepository.UpdateCompleted(ctx, quiz)
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func NewQuizUseCase(quizRepository quiz_domain.IQuizRepository, timeout time.Duration) quiz_domain.IQuizUseCase {
-	return &quizUseCase{
-		quizRepository: quizRepository,
-		contextTimeout: timeout,
-	}
 }
 
 func (q *quizUseCase) FetchMany(ctx context.Context) (quiz_domain.Response, error) {

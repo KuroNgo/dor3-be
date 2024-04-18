@@ -62,7 +62,7 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.
 		},
 	}
 
-	data, err := collectionCourse.UpdateOne(ctx, filter, update)
+	data, err := collectionCourse.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return nil, err
 	}

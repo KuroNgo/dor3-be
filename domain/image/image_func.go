@@ -2,10 +2,12 @@ package image_domain
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Input struct {
-	ImageName string `bson:"image_name" json:"image_name"`
+	Id        primitive.ObjectID `bson:"_id" json:"_id"`
+	ImageName string             `bson:"image_name" json:"image_name"`
 }
 
 //go:generate mockery --name IImageUseCase

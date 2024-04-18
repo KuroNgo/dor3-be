@@ -5,6 +5,7 @@ import (
 	activity_log_route "clean-architecture/api/router/activity_log"
 	admin_route "clean-architecture/api/router/admin"
 	course_route "clean-architecture/api/router/course"
+	exam_route "clean-architecture/api/router/exam"
 	exercise_route "clean-architecture/api/router/exercise"
 	image_route "clean-architecture/api/router/image"
 	lesson_route "clean-architecture/api/router/lesson"
@@ -23,7 +24,6 @@ import (
 )
 
 func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, gin *gin.Engine) {
-	//var dbMongo mongo_driven.Database
 	value := activity_log_route.ActivityRoute(env, timeout, db)
 
 	publicRouter := gin.Group("/api/")
@@ -55,6 +55,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	// All Public APIs
 	user_route.GoogleAuthRoute(env, timeout, db, publicRouter)
 	user_route.UserRouter(env, timeout, db, publicRouter)
+	exam_route.ExamRoute(env, timeout, db, publicRouter)
 	exercise_route.ExerciseRoute(env, timeout, db, publicRouter)
 	user_route.LoginFromRoleRoute(env, timeout, db, publicRouter)
 	image_route.ImageRoute(env, timeout, db, publicRouter)
@@ -68,6 +69,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 
 	// All Private API
 	activity_log_route.AdminActivityRoute(env, timeout, db, privateRouter)
+	exam_route.AdminExamRoute(env, timeout, db, privateRouter)
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
 	admin_route.AdminRouter(env, timeout, db, privateRouter)
 	image_route.AdminImageRoute(env, timeout, db, privateRouter)

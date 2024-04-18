@@ -45,6 +45,6 @@ func AdminCourseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.
 	router.POST("/create", course.CreateOneCourse)
 	router.POST("/create/file", course.CreateCourseWithFile)
 	router.POST("/create/file/final", course.CreateLessonManagementWithFile)
-	router.PUT("/update", course.UpdateCourse)
+	router.PATCH("/update", course.UpdateCourse)
 	router.DELETE("/delete/:_id", course.DeleteCourse)
 }

@@ -2,12 +2,15 @@ package markList_domain
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Input struct {
-	NameList    string `bson:"name_list" json:"name_list"`
-	Description string `bson:"description" json:"description"`
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	UserID      primitive.ObjectID `bson:"user_id" json:"user_id"`
+	NameList    string             `bson:"name_list" json:"name_list"`
+	Description string             `bson:"description" json:"description"`
 }
 
 type IMarkListUseCase interface {

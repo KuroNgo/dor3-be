@@ -2,11 +2,14 @@ package exam_options_domain
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Input struct {
-	Content string `bson:"content" json:"content"`
+	ID         primitive.ObjectID `bson:"_id" json:"_id"`
+	QuestionID primitive.ObjectID `bson:"question_id" json:"question_id"`
+	Content    string             `bson:"content" json:"content"`
 }
 
 type IExamOptionsUseCase interface {

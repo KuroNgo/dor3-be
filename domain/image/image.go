@@ -19,9 +19,9 @@ type Image struct {
 }
 
 type Response struct {
-	Image []Image
 	Count int64 `json:"count"`
 	Size  int64 `json:"size(KB)"`
+	Image []Image
 }
 
 //go:generate mockery --name IImageRepository

@@ -19,8 +19,8 @@ type Feedback struct {
 }
 
 type Response struct {
-	Feedback []Feedback
 	Count    int `bson:"count" json:"count"`
+	Feedback []Feedback
 }
 
 type IFeedbackRepository interface {

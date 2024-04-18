@@ -4,25 +4,20 @@ import (
 	exam_domain "clean-architecture/domain/exam"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"time"
 )
 
 func (e *ExamsController) UpdateOneExam(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-
-	lessonID := ctx.Query("lesson_id")
-	idLesson, _ := primitive.ObjectIDFromHex(lessonID)
-
-	UnitID := ctx.Query("unit_id")
-	idUnit, _ := primitive.ObjectIDFromHex(UnitID)
-
-	VocabularyID := ctx.Query("vocabulary_id")
-	idVocabulary, _ := primitive.ObjectIDFromHex(VocabularyID)
-
-	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
-	examID := ctx.Query("_id")
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
 
 	var examInput exam_domain.Input
 	if err := ctx.ShouldBindJSON(&examInput); err != nil {
@@ -34,9 +29,10 @@ func (e *ExamsController) UpdateOneExam(ctx *gin.Context) {
 	}
 
 	exam := exam_domain.Exam{
-		LessonID:     idLesson,
-		UnitID:       idUnit,
-		VocabularyID: idVocabulary,
+		ID:           examInput.ID,
+		LessonID:     examInput.LessonID,
+		UnitID:       examInput.UnitID,
+		VocabularyID: examInput.VocabularyID,
 
 		Title:       examInput.Title,
 		Description: examInput.Description,
@@ -44,10 +40,10 @@ func (e *ExamsController) UpdateOneExam(ctx *gin.Context) {
 
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
-		WhoUpdates: user.FullName,
+		WhoUpdates: admin.FullName,
 	}
 
-	err = e.ExamUseCase.UpdateOne(ctx, examID, exam)
+	_, err = e.ExamUseCase.UpdateOne(ctx, &exam)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

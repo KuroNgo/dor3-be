@@ -16,6 +16,17 @@ type examAnswerRepository struct {
 	collectionAnswer   string
 }
 
+func (e *examAnswerRepository) DeleteAll(ctx context.Context) error {
+	collectionAnswer := e.database.Collection(e.collectionAnswer)
+
+	_, err := collectionAnswer.DeleteMany(ctx, bson.M{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func NewExamAnswerRepository(db mongo.Database, collectionQuestion string, collectionAnswer string) exam_answer_domain.IExamAnswerRepository {
 	return &examAnswerRepository{
 		database:           db,
@@ -65,7 +76,7 @@ func (e *examAnswerRepository) UpdateOne(ctx context.Context, examAnswerID strin
 	filter := bson.D{{Key: "_id", Value: objID}}
 	update := bson.D{{Key: "$set", Value: doc}}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
+	_, err = collection.UpdateOne(ctx, filter, &update)
 	return err
 }
 

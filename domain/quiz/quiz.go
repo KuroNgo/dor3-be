@@ -28,8 +28,8 @@ type Quiz struct {
 }
 
 type Response struct {
-	Quiz  []Quiz
 	Count int64 `bson:"count" json:"count"`
+	Quiz  []Quiz
 }
 
 //go:generate mockery --name IQuizRepository
@@ -38,7 +38,7 @@ type IQuizRepository interface {
 	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
 
 	UpdateOne(ctx context.Context, quiz *Quiz) (*mongo.UpdateResult, error)
-	UpdateCompleted(ctx context.Context, quizID string, isComplete int) error
+	UpdateCompleted(ctx context.Context, quiz *Quiz) error
 
 	CreateOne(ctx context.Context, quiz *Quiz) error
 	DeleteOne(ctx context.Context, quizID string) error

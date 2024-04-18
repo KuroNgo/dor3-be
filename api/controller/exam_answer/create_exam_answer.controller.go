@@ -11,13 +11,17 @@ import (
 
 func (e *ExamAnswerController) CreateOneExam(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-	userID, _ := primitive.ObjectIDFromHex(fmt.Sprintf("%s", currentUser))
-
-	questionID := ctx.Query("question_id")
-	idQuestion, _ := primitive.ObjectIDFromHex(fmt.Sprintf("%s", questionID))
+	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
 
 	var answerInput exam_answer_domain.Input
-	if err := ctx.ShouldBindJSON(&answerInput); err != nil {
+	if err = ctx.ShouldBindJSON(&answerInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status": "error",
 			"error":  err.Error(),
@@ -27,13 +31,13 @@ func (e *ExamAnswerController) CreateOneExam(ctx *gin.Context) {
 
 	exam := exam_answer_domain.ExamAnswer{
 		ID:          primitive.NewObjectID(),
-		UserID:      userID,
-		QuestionID:  idQuestion,
+		UserID:      user.ID,
+		QuestionID:  answerInput.QuestionID,
 		Content:     answerInput.Content,
 		SubmittedAt: time.Now(),
 	}
 
-	err := e.ExamAnswerUseCase.CreateOne(ctx, &exam)
+	err = e.ExamAnswerUseCase.CreateOne(ctx, &exam)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
