@@ -19,7 +19,6 @@ type MarkToFavourite struct {
 type Response struct {
 	MarkToFavourite []MarkToFavourite
 	CountMarkList   int64 `json:"count_mark_list"`
-	CountUser       int64 `json:"count_user"`
 }
 
 type IMarkToFavouriteRepository interface {

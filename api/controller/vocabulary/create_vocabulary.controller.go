@@ -15,8 +15,17 @@ import (
 )
 
 func (v *VocabularyController) CreateOneVocabulary(ctx *gin.Context) {
-	var vocabularyInput vocabulary_domain.Input
+	currentUser := ctx.MustGet("currentUser")
+	admin, err := v.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
 
+	var vocabularyInput vocabulary_domain.Input
 	if err := ctx.ShouldBindJSON(&vocabularyInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -47,9 +56,10 @@ func (v *VocabularyController) CreateOneVocabulary(ctx *gin.Context) {
 		LinkURL:       vocabularyInput.LinkURL,
 		UnitID:        vocabularyInput.UnitID,
 		IsFavourite:   0,
+		WhoUpdates:    admin.FullName,
 	}
 
-	err := v.VocabularyUseCase.CreateOne(ctx, vocabularyRes)
+	err = v.VocabularyUseCase.CreateOne(ctx, vocabularyRes)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -65,9 +75,12 @@ func (v *VocabularyController) CreateOneVocabulary(ctx *gin.Context) {
 
 func (v *VocabularyController) CreateVocabularyWithFileInAdmin(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-	user, err := v.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	admin, err := v.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
 		return
 	}
 
@@ -134,7 +147,7 @@ func (v *VocabularyController) CreateVocabularyWithFileInAdmin(ctx *gin.Context)
 			FieldOfIT:     vocabulary.FieldOfIT,
 			LinkURL:       "",
 			IsFavourite:   0,
-			WhoUpdates:    user.FullName,
+			WhoUpdates:    admin.FullName,
 		}
 		vocabularies = append(vocabularies, v)
 	}
@@ -164,9 +177,12 @@ func (v *VocabularyController) CreateVocabularyWithFileInAdmin(ctx *gin.Context)
 
 func (v *VocabularyController) CreateVocabularyWithFileInUser(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-	user, err := v.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	admin, err := v.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
 		return
 	}
 
@@ -233,7 +249,7 @@ func (v *VocabularyController) CreateVocabularyWithFileInUser(ctx *gin.Context) 
 			FieldOfIT:     vocabulary.FieldOfIT,
 			LinkURL:       "",
 			IsFavourite:   0,
-			WhoUpdates:    user.FullName,
+			WhoUpdates:    admin.FullName,
 		}
 		vocabularies = append(vocabularies, v)
 	}
@@ -262,6 +278,16 @@ func (v *VocabularyController) CreateVocabularyWithFileInUser(ctx *gin.Context) 
 }
 
 func (v *VocabularyController) CreateAudio(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser")
+	admin, err := v.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
 	data, err := v.VocabularyUseCase.GetAllVocabulary(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -278,6 +304,16 @@ func (v *VocabularyController) CreateAudio(ctx *gin.Context) {
 }
 
 func (v *VocabularyController) CreateAudioLatest(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser")
+	admin, err := v.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
 	data, err := v.VocabularyUseCase.GetLatestVocabulary(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -294,6 +330,16 @@ func (v *VocabularyController) CreateAudioLatest(ctx *gin.Context) {
 }
 
 func (v *VocabularyController) UploadAudioToCloudinary(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser")
+	admin, err := v.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
 	// Lấy danh sách tệp trong thư mục audio
 	dir := "audio"
 	files, err := google.ListFilesInDirectory(dir)

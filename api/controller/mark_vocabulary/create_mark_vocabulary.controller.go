@@ -19,17 +19,23 @@ func (m *MarkVocabularyController) CreateOneMarkVocabulary(ctx *gin.Context) {
 		return
 	}
 
-	markListID := ctx.Query("mark_list_id")
-	markListData, err := primitive.ObjectIDFromHex(markListID)
+	var input mark_vocabulary_domain.Input
+	if err = ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
 
-	vocabularyID := ctx.Query("vocabulary_id")
-	vocabularyData, err := primitive.ObjectIDFromHex(vocabularyID)
+	markListID, err := primitive.ObjectIDFromHex(input.MarkListID)
+	vocabularyID, err := primitive.ObjectIDFromHex(input.VocabularyID)
 
 	markVocabularyReq := mark_vocabulary_domain.MarkToFavourite{
 		ID:           primitive.NewObjectID(),
 		UserId:       user.ID,
-		MarkListID:   markListData,
-		VocabularyID: vocabularyData,
+		MarkListID:   markListID,
+		VocabularyID: vocabularyID,
 	}
 
 	err = m.MarkVocabularyUseCase.CreateOne(ctx, &markVocabularyReq)
@@ -41,7 +47,7 @@ func (m *MarkVocabularyController) CreateOneMarkVocabulary(ctx *gin.Context) {
 		return
 	}
 
-	err = m.VocabularyUseCase.UpdateIsFavourite(ctx, vocabularyID, 1)
+	err = m.VocabularyUseCase.UpdateIsFavourite(ctx, input.VocabularyID, 1)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Error create mark vocabulary",

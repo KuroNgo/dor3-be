@@ -3,6 +3,7 @@ package mark_list_usecase
 import (
 	markList_domain "clean-architecture/domain/mark_list"
 	"context"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -23,16 +24,16 @@ func (m *markListUseCase) FetchManyByUserID(ctx context.Context, userId string) 
 	return markList, err
 }
 
-func (m *markListUseCase) UpdateOne(ctx context.Context, markListID string, markList markList_domain.MarkList) error {
+func (m *markListUseCase) UpdateOne(ctx context.Context, markList *markList_domain.MarkList) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()
 
-	err := m.markListRepository.UpdateOne(ctx, markListID, markList)
+	data, err := m.markListRepository.UpdateOne(ctx, markList)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return data, nil
 }
 
 func (m *markListUseCase) CreateOne(ctx context.Context, markList *markList_domain.MarkList) error {

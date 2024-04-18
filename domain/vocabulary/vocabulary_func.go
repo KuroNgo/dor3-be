@@ -3,6 +3,7 @@ package vocabulary_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Input struct {
@@ -39,7 +40,7 @@ type IVocabularyUseCase interface {
 	GetLatestVocabulary(ctx context.Context) ([]string, error)
 	GetLatestVocabularyBatch(ctx context.Context) (Response, error)
 
-	UpdateOne(ctx context.Context, vocabularyID string, vocabulary Vocabulary) error
+	UpdateOne(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
 	UpdateOneAudio(c context.Context, vocabularyID string, linkURL string) error
 	UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error
 

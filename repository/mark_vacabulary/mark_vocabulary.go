@@ -34,23 +34,12 @@ func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Co
 	if err != nil {
 		return mark_vocabulary_domain.Response{}, err
 	}
-	userIDObjID, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return mark_vocabulary_domain.Response{}, err
-	}
 
 	// Tạo các bộ lọc
 	filterMarkList := bson.D{{Key: "mark_list_id", Value: markListObjID}}
-	filterUser := bson.D{{Key: "user_id", Value: userIDObjID}}
 
 	// Đếm số lượng mark vocabulary
 	countMarkList, err := collectionMarkVocabulary.CountDocuments(ctx, filterMarkList)
-	if err != nil {
-		return mark_vocabulary_domain.Response{}, err
-	}
-
-	// Đếm số lượng mark vocabulary của người dùng
-	countUser, err := collectionMarkVocabulary.CountDocuments(ctx, filterUser)
 	if err != nil {
 		return mark_vocabulary_domain.Response{}, err
 	}
@@ -77,7 +66,6 @@ func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Co
 	response := mark_vocabulary_domain.Response{
 		MarkToFavourite: markVocabularies,
 		CountMarkList:   countMarkList,
-		CountUser:       countUser,
 	}
 	return response, nil
 }

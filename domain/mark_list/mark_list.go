@@ -3,6 +3,7 @@ package markList_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -27,6 +28,6 @@ type IMarkListRepository interface {
 	FetchManyByUserID(ctx context.Context, userId string) (Response, error)
 
 	CreateOne(ctx context.Context, markList *MarkList) error
-	UpdateOne(ctx context.Context, markListID string, markList MarkList) error
+	UpdateOne(ctx context.Context, markList *MarkList) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, markListID string) error
 }

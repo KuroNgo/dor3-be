@@ -11,7 +11,7 @@ import (
 func (l *LessonController) UpdateOneLesson(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
 	admin, err := l.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
-	if err != nil {
+	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
 			"message": "You are not authorized to perform this action!",
@@ -29,9 +29,8 @@ func (l *LessonController) UpdateOneLesson(ctx *gin.Context) {
 	}
 
 	updateLesson := lesson_domain.Lesson{
-		ID:       lessonInput.ID,
-		CourseID: lessonInput.CourseID,
-
+		ID:         lessonInput.ID,
+		CourseID:   lessonInput.CourseID,
 		Name:       lessonInput.Name,
 		Content:    lessonInput.Content,
 		UpdatedAt:  time.Now(),

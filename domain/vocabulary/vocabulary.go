@@ -3,6 +3,7 @@ package vocabulary_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const (
@@ -22,6 +23,7 @@ type Vocabulary struct {
 	ExplainEng    string             `bson:"explain_eng" json:"explain_eng"`
 	FieldOfIT     string             `bson:"field_of_it" json:"field_of_it"`
 	LinkURL       string             `bson:"link_url" json:"link_url"`
+	ImageURL      string             `bson:"image_url" json:"image_url"`
 	IsFavourite   int                `bson:"is_favourite" json:"is_favourite"`
 	WhoUpdates    string             `bson:"who_updates" json:"who_updates"`
 }
@@ -45,7 +47,7 @@ type IVocabularyRepository interface {
 	CreateOne(ctx context.Context, vocabulary *Vocabulary) error
 	CreateOneByNameUnit(ctx context.Context, vocabulary *Vocabulary) error
 
-	UpdateOne(ctx context.Context, vocabularyID string, vocabulary Vocabulary) error
+	UpdateOne(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
 	UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error
 	UpdateOneAudio(c context.Context, vocabularyID string, linkURL string) error
 

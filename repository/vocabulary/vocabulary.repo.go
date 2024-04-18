@@ -301,16 +301,30 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 	return vocabularyRes, nil
 }
 
-func (v *vocabularyRepository) UpdateOne(ctx context.Context, vocabularyID string, vocabulary vocabulary_domain.Vocabulary) error {
+func (v *vocabularyRepository) UpdateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
 	collection := v.database.Collection(v.collectionVocabulary)
-	doc, err := internal.ToDoc(vocabulary)
-	objID, err := primitive.ObjectIDFromHex(vocabularyID)
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: doc}}
+	filter := bson.M{"_id": vocabulary.Id}
+	update := bson.M{
+		"$set": bson.M{
+			"word":           vocabulary.Word,
+			"part_of_speech": vocabulary.PartOfSpeech,
+			"mean":           vocabulary.Mean,
+			"pronunciation":  vocabulary.Pronunciation,
+			"example_vie":    vocabulary.ExampleVie,
+			"example_eng":    vocabulary.ExampleEng,
+			"explain_vie":    vocabulary.ExplainVie,
+			"explain_eng":    vocabulary.ExplainEng,
+			"field_of_it":    vocabulary.FieldOfIT,
+		},
+	}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
+	data, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, err
 }
 
 func (v *vocabularyRepository) UpdateOneAudio(c context.Context, vocabularyID string, linkURL string) error {

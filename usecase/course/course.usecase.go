@@ -12,6 +12,15 @@ type courseUseCase struct {
 	contextTimeout   time.Duration
 }
 
+func (c *courseUseCase) CountCourse(ctx context.Context) int64 {
+	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
+	defer cancel()
+
+	num := c.courseRepository.CountCourse(ctx)
+
+	return num
+}
+
 func NewCourseUseCase(courseRepository course_domain.ICourseRepository, timeout time.Duration) course_domain.ICourseUseCase {
 	return &courseUseCase{
 		courseRepository: courseRepository,

@@ -21,7 +21,7 @@ import (
 func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
 	admin, err := c.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
-	if err != nil {
+	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
 			"message": "You are not authorized to perform this action!",
@@ -72,7 +72,7 @@ func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
 func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
 	admin, err := c.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
-	if err != nil {
+	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
 			"message": "You are not authorized to perform this action!",
@@ -178,7 +178,7 @@ func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
 func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
 	admin, err := c.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
-	if err != nil {
+	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
 			"message": "You are not authorized to perform this action!",
