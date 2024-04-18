@@ -3,6 +3,7 @@ package exercise_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -38,7 +39,7 @@ type IExerciseRepository interface {
 
 	CreateOne(ctx context.Context, exercise *Exercise) error
 
-	UpdateOne(ctx context.Context, exerciseID string, exercise Exercise) error
+	UpdateOne(ctx context.Context, exercise *Exercise) (*mongo.UpdateResult, error)
 	UpdateCompleted(ctx context.Context, exerciseID string, isComplete int) error
 
 	DeleteOne(ctx context.Context, exerciseID string) error

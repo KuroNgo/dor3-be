@@ -2,6 +2,7 @@ package exam_question_domain
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Input struct {
@@ -15,6 +16,6 @@ type IExamQuestionUseCase interface {
 	FetchManyByExamID(ctx context.Context, examID string) (Response, error)
 
 	CreateOne(ctx context.Context, examQuestion *ExamQuestion) error
-	UpdateOne(ctx context.Context, examQuestionID string, examQuestion ExamQuestion) error
+	UpdateOne(ctx context.Context, examQuestion *ExamQuestion) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, examID string) error
 }

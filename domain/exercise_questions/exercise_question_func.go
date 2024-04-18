@@ -3,6 +3,7 @@ package exercise_questions_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Input struct {
@@ -15,7 +16,7 @@ type IExerciseQuestionUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchManyByExamID(ctx context.Context, exerciseID string) (Response, error)
 
-	UpdateOne(ctx context.Context, exerciseQuestionID string, exerciseQuestion ExerciseQuestion) error
+	UpdateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) (*mongo.UpdateResult, error)
 	CreateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) error
 	DeleteOne(ctx context.Context, exerciseID string) error
 }

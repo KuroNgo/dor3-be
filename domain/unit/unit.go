@@ -3,6 +3,7 @@ package unit_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -35,7 +36,7 @@ type IUnitRepository interface {
 	CreateOne(ctx context.Context, unit *Unit) error
 	CreateOneByNameLesson(ctx context.Context, unit *Unit) error
 
-	UpdateOne(ctx context.Context, unitID string, unit Unit) error
+	UpdateOne(ctx context.Context, unit *Unit) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, unitID string) error
 
 	// UpdateComplete automation

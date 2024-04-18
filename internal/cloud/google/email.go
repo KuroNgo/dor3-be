@@ -97,14 +97,16 @@ func ParseTemplateDir(dir string) (*template.Template, error) {
 func SendEmail(data *EmailData, templateName string) error {
 	var body bytes.Buffer
 
-	template, err := ParseTemplateDir("templates")
+	templated, err := ParseTemplateDir("templates")
 	if err != nil {
 		log.Fatal("Could not parse template", err)
 	}
 
-	template = template.Lookup(templateName)
-	template.Execute(&body, &data)
-	fmt.Println(template.Name())
+	templates := templated.Lookup(templateName)
+	err = templates.Execute(&body, &data)
+	if err != nil {
+		return err
+	}
 
 	m := gomail.NewMessage()
 

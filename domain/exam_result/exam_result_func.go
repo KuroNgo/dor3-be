@@ -18,6 +18,7 @@ type IExamResultUseCase interface {
 	GetResultsByUserIDAndExamID(ctx context.Context, userID string, examID string) (ExamResult, error)
 
 	CreateOne(ctx context.Context, examResult *ExamResult) error
+	UpdateStatus(ctx context.Context, examResultID string, status *int) error
 	DeleteOne(ctx context.Context, examResultID string) error
 
 	CalculateScore(ctx context.Context, correctAnswers, totalQuestions int) int

@@ -2,6 +2,7 @@ package quiz_domain
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -16,7 +17,7 @@ type IQuizUseCase interface {
 	FetchMany(ctx context.Context) (Response, error)
 	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
 
-	UpdateOne(ctx context.Context, quizID string, quiz Quiz) error
+	UpdateOne(ctx context.Context, quiz *Quiz) (*mongo.UpdateResult, error)
 	UpdateCompleted(ctx context.Context, quizID string, isComplete int) error
 
 	CreateOne(ctx context.Context, quiz *Quiz) error

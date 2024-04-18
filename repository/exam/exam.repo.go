@@ -2,7 +2,6 @@ package exam_repository
 
 import (
 	exam_domain "clean-architecture/domain/exam"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -99,16 +98,24 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string) (
 	return response, nil
 }
 
-func (e *examRepository) UpdateOne(ctx context.Context, examID string, exam exam_domain.Exam) error {
+func (e *examRepository) UpdateOne(ctx context.Context, exam *exam_domain.Exam) (*mongo.UpdateResult, error) {
 	collection := e.database.Collection(e.collectionExam)
-	doc, err := internal.ToDoc(exam)
-	objID, err := primitive.ObjectIDFromHex(examID)
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: doc}}
+	filter := bson.M{"_id": exam.ID}
+	update := bson.M{
+		"$set": bson.M{
+			"description": exam.Description,
+			"title":       exam.Title,
+			"duration":    exam.Duration,
+		},
+	}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
+	data, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, err
 }
 
 func (e *examRepository) CreateOne(ctx context.Context, exam *exam_domain.Exam) error {

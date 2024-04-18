@@ -14,6 +14,6 @@ type IImageUseCase interface {
 	FetchMany(ctx context.Context) (Response, error)
 
 	CreateOne(ctx context.Context, image *Image) error
-	UpdateOne(ctx context.Context, imageID string, image Image) error
+	UpdateOne(ctx context.Context, imageID string, image *Image) error
 	DeleteOne(ctx context.Context, imageID string) error
 }
