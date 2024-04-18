@@ -19,7 +19,6 @@ func (m *MarkListController) UpdateOneMarkList(ctx *gin.Context) {
 		return
 	}
 
-	markListID := ctx.Query("_id")
 	var markListInput mark_list_domain.Input
 	if err = ctx.ShouldBindJSON(&markListInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -36,7 +35,7 @@ func (m *MarkListController) UpdateOneMarkList(ctx *gin.Context) {
 		WhoCreated:  user.FullName,
 	}
 
-	err = m.MarkListUseCase.UpdateOne(ctx, markListID, markListReq)
+	data, err := m.MarkListUseCase.UpdateOne(ctx, &markListReq)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -47,5 +46,6 @@ func (m *MarkListController) UpdateOneMarkList(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
+		"data":   data,
 	})
 }

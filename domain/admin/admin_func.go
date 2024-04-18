@@ -30,12 +30,14 @@ type ResetPasswordInput struct {
 }
 
 type IAdminUseCase interface {
-	Login(c context.Context, request SignIn) (*Admin, error)
 	GetByID(ctx context.Context, id string) (*Admin, error)
 	FetchMany(ctx context.Context) (Response, error)
 	GetByEmail(ctx context.Context, email string) (*Admin, error)
+
+	Login(c context.Context, request SignIn) (*Admin, error)
 	CreateOne(ctx context.Context, admin Admin) error
 	UpdateOne(ctx context.Context, admin *Admin) (*mongo.UpdateResult, error)
+
 	DeleteOne(ctx context.Context, adminID string) error
 	UpsertOne(ctx context.Context, email string, admin *Admin) error
 }

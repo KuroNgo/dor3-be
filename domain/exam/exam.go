@@ -27,8 +27,8 @@ type Exam struct {
 }
 
 type Response struct {
-	Exam  []Exam
 	Count int64 `bson:"count" json:"count"`
+	Exam  []Exam
 }
 
 type IExamRepository interface {

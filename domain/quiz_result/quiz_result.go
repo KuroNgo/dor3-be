@@ -21,8 +21,8 @@ type QuizResult struct {
 }
 
 type Response struct {
-	QuizResult []QuizResult
 	TotalScore int16 `bson:"total_score" json:"total_score"`
+	QuizResult []QuizResult
 }
 
 type IQuizResultRepository interface {

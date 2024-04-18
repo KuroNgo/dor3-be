@@ -19,14 +19,15 @@ type Feedback struct {
 }
 
 type Response struct {
-	Feedback []Feedback
 	Count    int `bson:"count" json:"count"`
+	Feedback []Feedback
 }
 
 type IFeedbackRepository interface {
 	FetchMany(ctx context.Context) (Response, error)
 	FetchByUserID(ctx context.Context, userID string) (Response, error)
 	FetchBySubmittedDate(ctx context.Context, userID string) (Response, error)
+
 	CreateOneByUser(ctx context.Context, feedback *Feedback) error
 	DeleteOneByAdmin(ctx context.Context, feedbackID string) error
 }

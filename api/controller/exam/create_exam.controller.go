@@ -11,16 +11,14 @@ import (
 
 func (e *ExamsController) CreateOneExam(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
-
-	lessonID := ctx.Query("lesson_id")
-	idLesson, _ := primitive.ObjectIDFromHex(lessonID)
-
-	UnitID := ctx.Query("unit_id")
-	idUnit, _ := primitive.ObjectIDFromHex(UnitID)
-
-	VocabularyID := ctx.Query("vocabulary_id")
-	idVocabulary, _ := primitive.ObjectIDFromHex(VocabularyID)
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
 
 	var examInput exam_domain.Input
 	if err := ctx.ShouldBindJSON(&examInput); err != nil {
@@ -33,9 +31,9 @@ func (e *ExamsController) CreateOneExam(ctx *gin.Context) {
 
 	exam := exam_domain.Exam{
 		ID:           primitive.NewObjectID(),
-		LessonID:     idLesson,
-		UnitID:       idUnit,
-		VocabularyID: idVocabulary,
+		LessonID:     examInput.LessonID,
+		UnitID:       examInput.UnitID,
+		VocabularyID: examInput.VocabularyID,
 
 		Title:       examInput.Title,
 		Description: examInput.Description,
@@ -43,7 +41,7 @@ func (e *ExamsController) CreateOneExam(ctx *gin.Context) {
 
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
-		WhoUpdates: user.FullName,
+		WhoUpdates: admin.FullName,
 	}
 
 	err = e.ExamUseCase.CreateOne(ctx, &exam)

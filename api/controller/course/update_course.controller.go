@@ -37,7 +37,7 @@ func (c *CourseController) UpdateCourse(ctx *gin.Context) {
 		WhoUpdated:  admin.FullName,
 	}
 
-	data, err := c.CourseUseCase.UpdateOne(ctx, updateCourse)
+	data, err := c.CourseUseCase.UpdateOne(ctx, &updateCourse)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

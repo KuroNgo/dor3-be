@@ -3,6 +3,7 @@ package user_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -27,8 +28,8 @@ type User struct {
 }
 
 type Response struct {
-	User  []User `bson:"user" json:"user"`
 	Count int64  `bson:"count" json:"count"`
+	User  []User `bson:"user" json:"user"`
 }
 
 type ResponseIndividual struct {
@@ -45,7 +46,7 @@ type IUserRepository interface {
 	GetByEmail(c context.Context, email string) (*User, error)
 	GetByID(c context.Context, id string) (*User, error)
 	Create(c context.Context, user User) error
-	Update(ctx context.Context, userID string, user User) error
+	Update(ctx context.Context, user *User) (*mongo.UpdateResult, error)
 	UpsertOne(c context.Context, email string, user *User) (*User, error)
 	UpdateImage(c context.Context, userID string, imageURL string) error
 }

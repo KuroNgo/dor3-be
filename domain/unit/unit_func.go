@@ -3,9 +3,11 @@ package unit_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Input struct {
+	ID       primitive.ObjectID `bson:"_id" json:"_id"`
 	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 	Name     string             `bson:"name" json:"name"`
 	Level    int                `bson:"level" json:"level"`
@@ -27,7 +29,7 @@ type IUnitUseCase interface {
 	CreateOne(ctx context.Context, unit *Unit) error
 	CreateOneByNameLesson(ctx context.Context, unit *Unit) error
 
-	UpdateOne(ctx context.Context, unitID string, unit Unit) error
+	UpdateOne(ctx context.Context, unit *Unit) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, unitID string) error
 
 	// UpdateComplete automation

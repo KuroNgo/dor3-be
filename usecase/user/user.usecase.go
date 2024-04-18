@@ -3,6 +3,7 @@ package user_usecase
 import (
 	user_domain "clean-architecture/domain/user"
 	"context"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -90,22 +91,22 @@ func (u *userUseCase) GetByID(c context.Context, id string) (*user_domain.User, 
 	return user, err
 }
 
-func (u *userUseCase) Update(ctx context.Context, userID string, user user_domain.User) error {
+func (u *userUseCase) Update(ctx context.Context, user *user_domain.User) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
-	err := u.userRepository.Update(ctx, userID, user)
+	data, err := u.userRepository.Update(ctx, user)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return data, nil
 }
 
-func (u *userUseCase) Delete(ctx context.Context, userID string, user user_domain.User) error {
+func (u *userUseCase) Delete(ctx context.Context, userID string) error {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
-	err := u.userRepository.Update(ctx, userID, user)
+	err := u.userRepository.DeleteOne(ctx, userID)
 
 	if err != nil {
 		return err

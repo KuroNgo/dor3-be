@@ -95,16 +95,27 @@ func (e *exerciseRepository) FetchMany(ctx context.Context, page string) (exerci
 	return exerciseRes, nil
 }
 
-func (e *exerciseRepository) UpdateOne(ctx context.Context, exerciseID string, exercise exercise_domain.Exercise) error {
+func (e *exerciseRepository) UpdateOne(ctx context.Context, exercise *exercise_domain.Exercise) (*mongo.UpdateResult, error) {
 	collection := e.database.Collection(e.collectionExercise)
-	doc, err := internal.ToDoc(exercise)
-	objID, err := primitive.ObjectIDFromHex(exerciseID)
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: doc}}
+	filter := bson.D{{Key: "_id", Value: exercise.Id}}
+	update := bson.M{
+		"$set": bson.M{
+			"lesson_id":  exercise.LessonID,
+			"unit_id":    exercise.UnitID,
+			"vocabulary": exercise.VocabularyID,
+			"title":      exercise.Title,
+			"duration":   exercise.Duration,
+			"update_at":  exercise.UpdatedAt,
+			"who_update": exercise.WhoUpdates,
+		},
+	}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
+	data, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 func (e *exerciseRepository) CreateOne(ctx context.Context, exercise *exercise_domain.Exercise) error {

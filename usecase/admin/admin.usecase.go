@@ -3,6 +3,7 @@ package admin_usecase
 import (
 	admin_domain "clean-architecture/domain/admin"
 	"context"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -78,16 +79,16 @@ func (a *adminUseCase) CreateOne(ctx context.Context, admin admin_domain.Admin) 
 	return err
 }
 
-func (a *adminUseCase) UpdateOne(ctx context.Context, adminID string, admin admin_domain.Admin) error {
+func (a *adminUseCase) UpdateOne(ctx context.Context, admin *admin_domain.Admin) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
 	defer cancel()
 
-	err := a.adminRepository.UpdateOne(ctx, adminID, admin)
+	data, err := a.adminRepository.UpdateOne(ctx, admin)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return err
+	return data, err
 }
 
 func (a *adminUseCase) DeleteOne(ctx context.Context, adminID string) error {

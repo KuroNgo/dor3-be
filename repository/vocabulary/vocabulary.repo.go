@@ -319,7 +319,7 @@ func (v *vocabularyRepository) UpdateOne(ctx context.Context, vocabulary *vocabu
 		},
 	}
 
-	data, err := collection.UpdateOne(ctx, filter, update)
+	data, err := collection.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return nil, err
 	}

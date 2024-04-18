@@ -86,7 +86,7 @@ func (l *lessonRepository) UpdateComplete(ctx context.Context, lessonID string, 
 		{Key: "who_updates", Value: lesson.WhoUpdates},
 	}}}
 
-	_, err := collection.UpdateOne(ctx, filter, update)
+	_, err := collection.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return err
 	}

@@ -12,7 +12,7 @@ func (c *CourseController) DeleteCourse(ctx *gin.Context) {
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
-			"message": admin.FullName + "You are not authorized to perform this action!",
+			"message": "You are not authorized to perform this action!",
 		})
 		return
 	}

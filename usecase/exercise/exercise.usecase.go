@@ -3,6 +3,7 @@ package exercise_usecase
 import (
 	exercise_domain "clean-architecture/domain/exercise"
 	"context"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -66,16 +67,15 @@ func (e *exerciseUseCase) FetchMany(ctx context.Context, page string) (exercise_
 	return vocabulary, err
 }
 
-func (e *exerciseUseCase) UpdateOne(ctx context.Context, exerciseID string, exercise exercise_domain.Exercise) error {
+func (e *exerciseUseCase) UpdateOne(ctx context.Context, exercise *exercise_domain.Exercise) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.exerciseRepository.UpdateOne(ctx, exerciseID, exercise)
+	data, err := e.exerciseRepository.UpdateOne(ctx, exercise)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	return nil
+	return data, nil
 }
 
 func (e *exerciseUseCase) CreateOne(ctx context.Context, exercise *exercise_domain.Exercise) error {

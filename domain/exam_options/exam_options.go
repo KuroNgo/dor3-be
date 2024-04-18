@@ -3,6 +3,7 @@ package exam_options_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -28,6 +29,6 @@ type Response struct {
 type IExamOptionRepository interface {
 	FetchManyByQuestionID(ctx context.Context, questionID string) (Response, error)
 	CreateOne(ctx context.Context, examOptions *ExamOptions) error
-	UpdateOne(ctx context.Context, examOptionsID string, examOptions ExamOptions) error
+	UpdateOne(ctx context.Context, examOptions *ExamOptions) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, optionsID string) error
 }

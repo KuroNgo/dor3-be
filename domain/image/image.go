@@ -19,9 +19,9 @@ type Image struct {
 }
 
 type Response struct {
-	Image []Image
 	Count int64 `json:"count"`
 	Size  int64 `json:"size(KB)"`
+	Image []Image
 }
 
 //go:generate mockery --name IImageRepository
@@ -30,7 +30,7 @@ type IImageRepository interface {
 	FetchMany(ctx context.Context) (Response, error)
 
 	CreateOne(ctx context.Context, image *Image) error
-	UpdateOne(ctx context.Context, imageID string, image Image) error
+	UpdateOne(ctx context.Context, imageID string, image *Image) error
 
 	DeleteOne(ctx context.Context, imageID string) error
 }

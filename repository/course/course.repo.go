@@ -49,7 +49,7 @@ func (c *courseRepository) FetchMany(ctx context.Context) (course_domain.Respons
 	return courseRes, err
 }
 
-func (c *courseRepository) UpdateOne(ctx context.Context, course course_domain.Course) (*mongo.UpdateResult, error) {
+func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
 	filter := bson.D{{Key: "_id", Value: course.Id}}
@@ -57,10 +57,12 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course course_domain.C
 		"$set": bson.M{
 			"name":        course.Name,
 			"description": course.Description,
+			"updated_at":  course.UpdatedAt,
+			"who_updated": course.WhoUpdated,
 		},
 	}
 
-	data, err := collectionCourse.UpdateOne(ctx, filter, update)
+	data, err := collectionCourse.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return nil, err
 	}

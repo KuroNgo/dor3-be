@@ -174,18 +174,17 @@ func (e *examResultRepository) CreateOne(ctx context.Context, examResult *exam_r
 	return nil
 }
 
-func (e *examResultRepository) UpdateStatus(ctx context.Context, examResultID string, status int) error {
+func (e *examResultRepository) UpdateStatus(ctx context.Context, examResultID string, status *int) error {
 	collection := e.database.Collection(e.collectionExamResult)
-	objID, err := primitive.ObjectIDFromHex(examResultID)
 
-	filter := bson.D{{Key: "_id", Value: objID}}
+	filter := bson.D{{Key: "_id", Value: examResultID}}
 	update := bson.M{
 		"$set": bson.M{
 			"status": status,
 		},
 	}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
+	_, err := collection.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return err
 	}

@@ -27,7 +27,7 @@ type Response struct {
 //go:generate mockery --name ICourseRepository
 type ICourseRepository interface {
 	FetchMany(ctx context.Context) (Response, error)
-	UpdateOne(ctx context.Context, course Course) (*mongo.UpdateResult, error)
+	UpdateOne(ctx context.Context, course *Course) (*mongo.UpdateResult, error)
 	CreateOne(ctx context.Context, course *Course) error
 	DeleteOne(ctx context.Context, courseID string) error
 	CountCourse(ctx context.Context) int64
