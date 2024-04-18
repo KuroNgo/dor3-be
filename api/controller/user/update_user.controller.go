@@ -60,7 +60,7 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 			Specialize: userInput.Specialize,
 		}
 
-		err = u.UserUseCase.Update(ctx, fmt.Sprint(result.ID), userResponse)
+		_, err = u.UserUseCase.Update(ctx, &userResponse)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",
@@ -125,7 +125,7 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 		Specialize: userInput.Specialize,
 	}
 
-	err = u.UserUseCase.Update(ctx, fmt.Sprint(result.ID), userResponse)
+	_, err = u.UserUseCase.Update(ctx, &userResponse)
 	if err != nil {
 		ctx.JSON(http.StatusForbidden, gin.H{
 			"status":  "fail",

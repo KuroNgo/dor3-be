@@ -4,6 +4,7 @@ import (
 	unit_domain "clean-architecture/domain/unit"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -79,16 +80,15 @@ func (u *unitUseCase) CreateOneByNameLesson(ctx context.Context, unit *unit_doma
 	return nil
 }
 
-func (u *unitUseCase) UpdateOne(ctx context.Context, unitID string, unit unit_domain.Unit) error {
+func (u *unitUseCase) UpdateOne(ctx context.Context, unit *unit_domain.Unit) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
-	err := u.unitRepository.UpdateOne(ctx, unitID, unit)
+	data, err := u.unitRepository.UpdateOne(ctx, unit)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	return nil
+	return data, nil
 }
 
 func (u *unitUseCase) UpdateComplete(ctx context.Context, update unit_domain.Update) error {

@@ -21,7 +21,6 @@ func (e *ExerciseController) UpdateOneExercise(ctx *gin.Context) {
 		return
 	}
 
-	exerciseID := ctx.Query("_id")
 	lessonID := ctx.Query("lesson_id")
 	idLesson, err := primitive.ObjectIDFromHex(lessonID)
 
@@ -53,7 +52,7 @@ func (e *ExerciseController) UpdateOneExercise(ctx *gin.Context) {
 		WhoUpdates: user.FullName,
 	}
 
-	err = e.ExerciseUseCase.UpdateOne(ctx, exerciseID, updateExercise)
+	data, err := e.ExerciseUseCase.UpdateOne(ctx, &updateExercise)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -64,6 +63,7 @@ func (e *ExerciseController) UpdateOneExercise(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
+		"data":   data,
 	})
 
 }

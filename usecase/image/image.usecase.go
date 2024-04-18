@@ -41,7 +41,7 @@ func (i *imageUseCase) FetchMany(ctx context.Context) (image_domain.Response, er
 	return quiz, err
 }
 
-func (i *imageUseCase) UpdateOne(ctx context.Context, imageID string, image image_domain.Image) error {
+func (i *imageUseCase) UpdateOne(ctx context.Context, imageID string, image *image_domain.Image) error {
 	ctx, cancel := context.WithTimeout(ctx, i.contextTimeout)
 	defer cancel()
 

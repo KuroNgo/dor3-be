@@ -2,7 +2,6 @@ package exam_options_repository
 
 import (
 	exam_options_domain "clean-architecture/domain/exam_options"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -57,16 +56,24 @@ func (e *examOptionsRepository) FetchManyByQuestionID(ctx context.Context, quest
 	return response, nil
 }
 
-func (e *examOptionsRepository) UpdateOne(ctx context.Context, examOptionsID string, examOptions exam_options_domain.ExamOptions) error {
+func (e *examOptionsRepository) UpdateOne(ctx context.Context, examOptions *exam_options_domain.ExamOptions) (*mongo.UpdateResult, error) {
 	collection := e.database.Collection(e.collectionQuestion)
-	doc, err := internal.ToDoc(examOptions)
-	objID, err := primitive.ObjectIDFromHex(examOptionsID)
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: doc}}
+	filter := bson.D{{Key: "_id", Value: examOptions.ID}}
+	update := bson.M{
+		"$set": bson.M{
+			"question_id": examOptions.QuestionID,
+			"content":     examOptions.Content,
+			"update_at":   examOptions.UpdateAt,
+			"who_update":  examOptions.WhoUpdate,
+		},
+	}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
+	data, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 func (e *examOptionsRepository) CreateOne(ctx context.Context, examOptions *exam_options_domain.ExamOptions) error {

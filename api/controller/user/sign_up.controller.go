@@ -4,8 +4,6 @@ import (
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal"
 	"clean-architecture/internal/cloud/cloudinary"
-	"clean-architecture/internal/cloud/google"
-	subject_const "clean-architecture/internal/cloud/google/const"
 	file_internal "clean-architecture/internal/file"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -83,10 +81,10 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 		}
 
 		// Thêm công việc cron để gửi email nhắc nhở
-		err = google.SendEmail(user.Email, subject_const.SignInTheFirstTime, subject_const.ContentTitle2)
-		if err != nil {
-			return
-		}
+		//err = google.SendEmail(user.Email, subject_const.SignInTheFirstTime, subject_const.ContentTitle2)
+		//if err != nil {
+		//	return
+		//}
 
 		// Trả về phản hồi thành công
 		ctx.JSON(http.StatusOK, gin.H{
@@ -159,17 +157,17 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 	}
 
 	// add cron job
-	err = google.Cron.AddFunc("0h0m1s", func() {
-		err = google.SendEmail(user.Email, subject_const.SignInTheFirstTime, subject_const.ContentTitle2)
-		if err != nil {
-			return
-		}
-	})
-	google.Cron.Start()
+	//err = google.Cron.AddFunc("0h0m1s", func() {
+	//	err = google.SendEmail(user.Email, subject_const.SignInTheFirstTime, subject_const.ContentTitle2)
+	//	if err != nil {
+	//		return
+	//	}
+	//})
+	//google.Cron.Start()
 
-	if err != nil {
-		return
-	}
+	//if err != nil {
+	//	return
+	//}
 
 	// Trả về phản hồi thành công
 	ctx.JSON(http.StatusOK, gin.H{

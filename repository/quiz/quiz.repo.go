@@ -2,7 +2,6 @@ package quiz_repository
 
 import (
 	quiz_domain "clean-architecture/domain/quiz"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -115,16 +114,17 @@ func (q *quizRepository) FetchMany(ctx context.Context) (quiz_domain.Response, e
 	return quizRes, nil
 }
 
-func (q *quizRepository) UpdateOne(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
+func (q *quizRepository) UpdateOne(ctx context.Context, quiz *quiz_domain.Quiz) (*mongo.UpdateResult, error) {
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
-	doc, err := internal.ToDoc(quiz)
-	objID, err := primitive.ObjectIDFromHex(quizID)
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: doc}}
+	filter := bson.D{{Key: "_id", Value: quiz.ID}}
+	update := bson.M{"$set": quiz}
 
-	_, err = collectionQuiz.UpdateOne(ctx, filter, update)
-	return err
+	data, err := collectionQuiz.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 func (q *quizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) error {

@@ -15,6 +15,13 @@ type imageRepository struct {
 	collection string
 }
 
+func NewImageRepository(db *mongo.Database, collection string) image_domain.IImageRepository {
+	return &imageRepository{
+		database:   db,
+		collection: collection,
+	}
+}
+
 func (i *imageRepository) CreateMany(ctx context.Context, images []*image_domain.Image) error {
 	collection := i.database.Collection(i.collection)
 
@@ -37,12 +44,6 @@ func (i *imageRepository) CreateMany(ctx context.Context, images []*image_domain
 	return err
 }
 
-func NewImageRepository(db *mongo.Database, collection string) image_domain.IImageRepository {
-	return &imageRepository{
-		database:   db,
-		collection: collection,
-	}
-}
 func (i *imageRepository) GetURLByName(ctx context.Context, name string) (image_domain.Image, error) {
 	collection := i.database.Collection(i.collection)
 	var image image_domain.Image
@@ -92,15 +93,18 @@ func (i *imageRepository) FetchMany(ctx context.Context) (image_domain.Response,
 	return response, err
 }
 
-func (i *imageRepository) UpdateOne(ctx context.Context, imageID string, image image_domain.Image) error {
+func (i *imageRepository) UpdateOne(ctx context.Context, imageID string, updatedImage *image_domain.Image) error {
 	collection := i.database.Collection(i.collection)
-	objID, err := primitive.ObjectIDFromHex(imageID)
 
-	filter := bson.M{"_id": objID}
-	update := bson.M{"$set": bson.M{}}
+	filter := bson.M{"_id": imageID}
+	update := bson.M{"$set": updatedImage}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
+	_, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to update image: %w", err)
+	}
+
+	return nil
 }
 
 func (i *imageRepository) CreateOne(ctx context.Context, image *image_domain.Image) error {

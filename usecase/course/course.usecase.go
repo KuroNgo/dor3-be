@@ -40,7 +40,7 @@ func (c *courseUseCase) FetchMany(ctx context.Context) (course_domain.Response, 
 	return course, err
 }
 
-func (c *courseUseCase) UpdateOne(ctx context.Context, course course_domain.Course) (*mongo.UpdateResult, error) {
+func (c *courseUseCase) UpdateOne(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
 

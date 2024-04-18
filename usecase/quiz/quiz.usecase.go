@@ -3,6 +3,7 @@ package quiz_usecase
 import (
 	quiz_domain "clean-architecture/domain/quiz"
 	"context"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -54,16 +55,15 @@ func (q *quizUseCase) FetchMany(ctx context.Context) (quiz_domain.Response, erro
 	return quiz, nil
 }
 
-func (q *quizUseCase) UpdateOne(ctx context.Context, quizID string, quiz quiz_domain.Quiz) error {
+func (q *quizUseCase) UpdateOne(ctx context.Context, quiz *quiz_domain.Quiz) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	err := q.quizRepository.UpdateOne(ctx, quizID, quiz)
+	data, err := q.quizRepository.UpdateOne(ctx, quiz)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	return nil
+	return data, nil
 }
 
 func (q *quizUseCase) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) error {

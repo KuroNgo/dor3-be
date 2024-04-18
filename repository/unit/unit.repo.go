@@ -2,7 +2,6 @@ package unit_repo
 
 import (
 	unit_domain "clean-architecture/domain/unit"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -236,50 +235,17 @@ func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) 
 	return nil
 }
 
-func (u *unitRepository) UpdateOne(ctx context.Context, unitID string, unit unit_domain.Unit) error {
+func (u *unitRepository) UpdateOne(ctx context.Context, unit *unit_domain.Unit) (*mongo.UpdateResult, error) {
 	collection := u.database.Collection(u.collectionUnit)
-	doc, err := internal.ToDoc(unit)
-	objID, err := primitive.ObjectIDFromHex(unitID)
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: doc}}
+	filter := bson.D{{Key: "_id", Value: unit.ID}}
+	update := bson.M{"$set": unit}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
-}
-
-func (u *unitRepository) UpsertOne(ctx context.Context, id string, unit *unit_domain.Unit) (unit_domain.Response, error) {
-	collectionUnit := u.database.Collection(u.collectionUnit)
-	collectionLesson := u.database.Collection(u.collectionLesson)
-
-	filterReference := bson.M{"_id": unit.LessonID}
-	count, err := collectionLesson.CountDocuments(ctx, filterReference)
+	data, err := collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return unit_domain.Response{}, err
+		return nil, err
 	}
-
-	if count == 0 {
-		return unit_domain.Response{}, errors.New("the course ID do not exist")
-	}
-
-	doc, err := internal.ToDoc(unit)
-
-	idHex, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return unit_domain.Response{}, err
-	}
-
-	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(1)
-	query := bson.D{{Key: "_id", Value: idHex}}
-	update := bson.D{{Key: "$set", Value: doc}}
-	res := collectionUnit.FindOneAndUpdate(ctx, query, update, opts)
-
-	var updatePost unit_domain.Response
-	if err := res.Decode(&updatePost); err != nil {
-		return unit_domain.Response{}, err
-	}
-
-	return updatePost, nil
+	return data, nil
 }
 
 func (u *unitRepository) DeleteOne(ctx context.Context, unitID string) error {

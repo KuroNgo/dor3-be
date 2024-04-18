@@ -18,8 +18,6 @@ func (q *QuizController) UpdateOneQuiz(ctx *gin.Context) {
 		return
 	}
 
-	quizID := ctx.Query("_id")
-
 	var quiz quiz_domain.Input
 	if err := ctx.ShouldBindJSON(&quiz); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -34,7 +32,7 @@ func (q *QuizController) UpdateOneQuiz(ctx *gin.Context) {
 		UpdatedAt:  time.Now(),
 	}
 
-	err = q.QuizUseCase.UpdateOne(ctx, quizID, updateQuiz)
+	_, err = q.QuizUseCase.UpdateOne(ctx, &updateQuiz)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

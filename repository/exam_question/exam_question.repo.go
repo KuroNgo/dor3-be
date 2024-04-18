@@ -2,7 +2,6 @@ package exam_question
 
 import (
 	exam_question_domain "clean-architecture/domain/exam_question"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -90,16 +89,27 @@ func (e *examQuestionRepository) FetchManyByExamID(ctx context.Context, examID s
 	return questionsRes, nil
 }
 
-func (e *examQuestionRepository) UpdateOne(ctx context.Context, examQuestionID string, examQuestion exam_question_domain.ExamQuestion) error {
+func (e *examQuestionRepository) UpdateOne(ctx context.Context, examQuestion *exam_question_domain.ExamQuestion) (*mongo.UpdateResult, error) {
 	collection := e.database.Collection(e.collectionQuestion)
-	doc, err := internal.ToDoc(examQuestion)
-	objID, err := primitive.ObjectIDFromHex(examQuestionID)
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: doc}}
+	filter := bson.D{{Key: "_id", Value: examQuestion.ID}}
+	update := bson.M{
+		"$set": bson.M{
+			"exam_id":        examQuestion.ExamID,
+			"content":        examQuestion.Content,
+			"level":          examQuestion.Level,
+			"filename":       examQuestion.Filename,
+			"audio_duration": examQuestion.AudioDuration,
+			"update_at":      examQuestion.UpdateAt,
+			"who_update":     examQuestion.WhoUpdate,
+		},
+	}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
+	data, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 func (e *examQuestionRepository) CreateOne(ctx context.Context, examQuestion *exam_question_domain.ExamQuestion) error {

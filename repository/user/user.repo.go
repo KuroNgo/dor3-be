@@ -35,16 +35,17 @@ func (u *userRepository) UpdateImage(c context.Context, userID string, imageURL 
 	return err
 }
 
-func (u *userRepository) Update(ctx context.Context, userID string, user user_domain.User) error {
+func (u *userRepository) Update(ctx context.Context, user *user_domain.User) (*mongo.UpdateResult, error) {
 	collection := u.database.Collection(u.collection)
-	doc, err := internal.ToDoc(user)
-	objID, err := primitive.ObjectIDFromHex(userID)
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: doc}}
+	filter := bson.D{{Key: "_id", Value: user.ID}}
+	update := bson.M{"$set": user}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
+	data, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 func (u *userRepository) Create(c context.Context, user user_domain.User) error {

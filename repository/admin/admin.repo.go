@@ -19,6 +19,11 @@ type adminRepository struct {
 	collectionUser  string
 }
 
+func (a *adminRepository) ChangeEmail(ctx context.Context, email string) (*mongo.UpdateResult, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewAdminRepository(db *mongo.Database, collectionAdmin string, collectionUser string) admin_domain.IAdminRepository {
 	return &adminRepository{
 		database:        db,
