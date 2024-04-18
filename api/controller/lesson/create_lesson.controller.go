@@ -10,13 +10,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
 func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
 	admin, err := l.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
-	if err != nil {
+	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
 			"message": "You are not authorized to perform this action!",
@@ -24,23 +25,21 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 		return
 	}
 
-	var lessonInput lesson_domain.Input
-	if err = ctx.ShouldBindJSON(&lessonInput); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"message": err.Error(),
-		})
-		return
-	}
+	courseID, _ := primitive.ObjectIDFromHex("660b8a0c2aef1f3a28265523")
+
+	name := ctx.Request.FormValue("name")
+	content := ctx.Request.FormValue("content")
+	le := ctx.Request.FormValue("level")
+	level, _ := strconv.Atoi(le)
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		lessonRes := &lesson_domain.Lesson{
 			ID:         primitive.NewObjectID(),
-			CourseID:   lessonInput.CourseID,
-			Name:       lessonInput.Name,
-			Content:    lessonInput.Content,
-			Level:      lessonInput.Level,
+			CourseID:   courseID,
+			Name:       name,
+			Content:    content,
+			Level:      level,
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
 			WhoUpdates: admin.FullName,
@@ -59,7 +58,6 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 		return
 	}
 
-	file, err = ctx.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Error parsing form",
@@ -85,8 +83,7 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 	defer f.Close()
 
 	// Tải file lên Cloudinary
-	filename, _ := ctx.Get("filePath")
-	result, err := cloudinary.UploadToCloudinary(f, filename.(string), l.Database.CloudinaryUploadFolderUser)
+	result, err := cloudinary.UploadToCloudinary(f, file.Filename, l.Database.CloudinaryUploadFolderUser)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -97,11 +94,132 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 	// Tạo bài học với thông tin hình ảnh từ Cloudinary
 	lessonRes := &lesson_domain.Lesson{
 		ID:         primitive.NewObjectID(),
-		CourseID:   lessonInput.CourseID,
+		CourseID:   courseID,
 		ImageURL:   result.ImageURL,
-		Name:       lessonInput.Name,
-		Content:    lessonInput.Content,
-		Level:      lessonInput.Level,
+		Name:       name,
+		Content:    content,
+		Level:      level,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+		WhoUpdates: admin.FullName,
+	}
+
+	err = l.LessonUseCase.CreateOne(ctx, lessonRes)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+	})
+}
+
+func (l *LessonController) CreateOneLessonNotImage(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser")
+	admin, err := l.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
+	courseID, _ := primitive.ObjectIDFromHex("660b8a0c2aef1f3a28265523")
+
+	name := ctx.Request.FormValue("name")
+	content := ctx.Request.FormValue("content")
+	le := ctx.Request.FormValue("level")
+	level, _ := strconv.Atoi(le)
+
+	lessonRes := &lesson_domain.Lesson{
+		ID:         primitive.NewObjectID(),
+		CourseID:   courseID,
+		Name:       name,
+		Content:    content,
+		Level:      level,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+		WhoUpdates: admin.FullName,
+	}
+	err = l.LessonUseCase.CreateOne(ctx, lessonRes)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+	})
+}
+
+func (l *LessonController) CreateOneLessonHaveImage(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser")
+	admin, err := l.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
+	courseID, _ := primitive.ObjectIDFromHex("660b8a0c2aef1f3a28265523")
+
+	name := ctx.Request.FormValue("name")
+	content := ctx.Request.FormValue("content")
+	le := ctx.Request.FormValue("level")
+	level, _ := strconv.Atoi(le)
+
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Error parsing form",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	if !file_internal.IsImage(file.Filename) {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid file format. Only images are allowed.",
+		})
+		return
+	}
+
+	f, err := file.Open()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Error opening uploaded file",
+		})
+		return
+	}
+	defer f.Close()
+
+	// Tải file lên Cloudinary
+	result, err := cloudinary.UploadToCloudinary(f, file.Filename, l.Database.CloudinaryUploadFolderUser)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Tạo bài học với thông tin hình ảnh từ Cloudinary
+	lessonRes := &lesson_domain.Lesson{
+		ID:         primitive.NewObjectID(),
+		CourseID:   courseID,
+		ImageURL:   result.ImageURL,
+		Name:       name,
+		Content:    content,
+		Level:      level,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 		WhoUpdates: admin.FullName,
@@ -124,7 +242,7 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
 	admin, err := l.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
-	if err != nil {
+	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
 			"message": "You are not authorized to perform this action!",

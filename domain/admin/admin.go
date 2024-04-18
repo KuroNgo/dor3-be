@@ -3,6 +3,7 @@ package admin_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -33,7 +34,8 @@ type IAdminRepository interface {
 	FetchMany(ctx context.Context) (Response, error)
 	GetByEmail(ctx context.Context, username string) (*Admin, error)
 	CreateOne(ctx context.Context, admin Admin) error
-	UpdateOne(ctx context.Context, adminID string, admin Admin) error
+	UpdateOne(ctx context.Context, admin *Admin) (*mongo.UpdateResult, error)
+	ChangeEmail(ctx context.Context, email string) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, adminID string) error
 	UpsertOne(ctx context.Context, email string, admin *Admin) error
 }

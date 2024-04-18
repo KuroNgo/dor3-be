@@ -4,6 +4,7 @@ import (
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -144,16 +145,16 @@ func (v *vocabularyUseCase) CreateOneByNameUnit(ctx context.Context, vocabulary 
 	return nil
 }
 
-func (v *vocabularyUseCase) UpdateOne(ctx context.Context, vocabularyID string, vocabulary vocabulary_domain.Vocabulary) error {
+func (v *vocabularyUseCase) UpdateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	err := v.vocabularyRepository.UpdateOne(ctx, vocabularyID, vocabulary)
+	data, err := v.vocabularyRepository.UpdateOne(ctx, vocabulary)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return err
+	return data, err
 }
 
 func (v *vocabularyUseCase) CreateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {

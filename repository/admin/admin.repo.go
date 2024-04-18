@@ -113,16 +113,25 @@ func (a *adminRepository) CreateOne(c context.Context, admin admin_domain.Admin)
 	return err
 }
 
-func (a *adminRepository) UpdateOne(ctx context.Context, adminID string, admin admin_domain.Admin) error {
+func (a *adminRepository) UpdateOne(ctx context.Context, admin *admin_domain.Admin) (*mongo.UpdateResult, error) {
 	collection := a.database.Collection(a.collectionAdmin)
-	doc, err := internal.ToDoc(admin)
-	objID, err := primitive.ObjectIDFromHex(adminID)
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: doc}}
+	filter := bson.M{"_id": admin.Id}
+	update := bson.M{
+		"$set": bson.M{
+			"full_name":  admin.FullName,
+			"address":    admin.Address,
+			"phone":      admin.Phone,
+			"updated_at": admin.UpdatedAt,
+			"avatar":     admin.Avatar,
+		},
+	}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
+	data, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return data, err
 }
 
 func (a *adminRepository) DeleteOne(ctx context.Context, adminID string) error {

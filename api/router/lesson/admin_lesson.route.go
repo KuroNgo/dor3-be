@@ -29,6 +29,8 @@ func AdminLessonRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.
 
 	router := group.Group("/lesson")
 	router.POST("/create", lesson.CreateOneLesson)
+	router.POST("/create/0/image", lesson.CreateOneLessonNotImage)
+	router.POST("/create/1/image", lesson.CreateOneLessonHaveImage)
 	router.POST("/create/file", lesson.CreateLessonWithFile)
 	router.PATCH("/update", lesson.UpdateOneLesson)
 	router.DELETE("/delete/:_id", lesson.DeleteOneLesson)

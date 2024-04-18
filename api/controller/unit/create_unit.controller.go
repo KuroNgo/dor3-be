@@ -16,7 +16,7 @@ import (
 func (u *UnitController) CreateOneUnit(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
 	admin, err := u.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
-	if err != nil {
+	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
 			"message": "You are not authorized to perform this action!",

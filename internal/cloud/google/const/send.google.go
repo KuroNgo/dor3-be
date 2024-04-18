@@ -18,4 +18,9 @@ const (
 	From = "From"
 	To   = "To"
 	Bcc  = "Bcc"
+
+	Body = "text/plain"
+
+	SMTP_Host = "smtp.gmail.com"
+	SMTP_PORT = 587
 )

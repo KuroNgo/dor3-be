@@ -85,6 +85,19 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 	return err
 }
 
+func (c *courseRepository) CountCourse(ctx context.Context) int64 {
+	collectionCourse := c.database.Collection(c.collectionCourse)
+
+	filter := bson.D{}
+
+	count, err := collectionCourse.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0
+	}
+
+	return count
+}
+
 func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error {
 	collectionCourse := c.database.Collection(c.collectionCourse)
 

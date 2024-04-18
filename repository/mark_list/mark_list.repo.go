@@ -85,18 +85,23 @@ func (m *markListRepository) FetchMany(ctx context.Context) (mark_list_domain.Re
 	return courseRes, err
 }
 
-func (m *markListRepository) UpdateOne(ctx context.Context, markListID string, markList mark_list_domain.MarkList) error {
+func (m *markListRepository) UpdateOne(ctx context.Context, markList *mark_list_domain.MarkList) (*mongo.UpdateResult, error) {
 	collectionMarkList := m.database.Collection(m.collectionMarkList)
 
-	doc, err := internal.ToDoc(markList)
-	objID, err := primitive.ObjectIDFromHex(markListID)
+	filter := bson.M{"_id": markList.ID}
+	update := bson.M{
+		"$set": bson.M{
+			"name_list":   markList.NameList,
+			"description": markList.Description,
+		},
+	}
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: doc}}
+	data, err := collectionMarkList.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
 
-	_, err = collectionMarkList.UpdateOne(ctx, filter, update)
-
-	return err
+	return data, err
 }
 
 func (m *markListRepository) CreateOne(ctx context.Context, markList *mark_list_domain.MarkList) error {
