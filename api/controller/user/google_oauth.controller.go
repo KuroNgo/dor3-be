@@ -17,7 +17,6 @@ type GoogleAuthController struct {
 }
 
 func (auth *GoogleAuthController) GoogleLoginWithUser(ctx *gin.Context) {
-
 	code := ctx.Query("code")
 
 	pathUrl := "/"

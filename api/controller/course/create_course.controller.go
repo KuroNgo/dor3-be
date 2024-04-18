@@ -19,6 +19,16 @@ import (
 )
 
 func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser")
+	admin, err := c.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
 	var courseInput course_domain.Input
 	if err := ctx.ShouldBindJSON(&courseInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -42,9 +52,10 @@ func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
 		Description: courseInput.Description,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
+		WhoUpdated:  admin.FullName,
 	}
 
-	err := c.CourseUseCase.CreateOne(ctx, course)
+	err = c.CourseUseCase.CreateOne(ctx, course)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -59,7 +70,17 @@ func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
 }
 
 func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
-	err := ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
+	currentUser := ctx.MustGet("currentUser")
+	admin, err := c.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
+	err = ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Error parsing form",
@@ -107,7 +128,7 @@ func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
 			Name:        course.Name,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
-			//WhoUpdated:
+			WhoUpdated:  admin.FullName,
 		}
 		courses = append(courses, c)
 	}
@@ -155,7 +176,17 @@ func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
 }
 
 func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
-	err := ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
+	currentUser := ctx.MustGet("currentUser")
+	admin, err := c.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
+	err = ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Error parsing form",
@@ -211,7 +242,7 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 			IsCompleted: 0,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
-			//WhoUpdates:
+			WhoUpdates:  admin.FullName,
 		}
 		lessons = append(lessons, l)
 	}

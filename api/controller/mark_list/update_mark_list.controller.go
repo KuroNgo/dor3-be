@@ -10,11 +10,11 @@ import (
 // UpdateOneMarkList update one mark list for user
 func (m *MarkListController) UpdateOneMarkList(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-	user, err := m.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"message": err.Error(),
+	user, err := m.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": user.FullName + "You are not authorized to perform this action!",
 		})
 		return
 	}

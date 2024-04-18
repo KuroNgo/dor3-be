@@ -7,7 +7,6 @@ import (
 )
 
 const (
-	maximumUnitCount  = 10
 	maximumVocabulary = 5
 )
 
@@ -36,7 +35,7 @@ func ReadFileForVocabulary(filename string) ([]file_internal.Vocabulary, error) 
 				continue
 			}
 
-			if unitCount <= maximumUnitCount && len(row) >= 8 {
+			if len(row) >= 8 {
 				v := file_internal.Vocabulary{
 					Word:          row[0],
 					PartOfSpeech:  row[1],

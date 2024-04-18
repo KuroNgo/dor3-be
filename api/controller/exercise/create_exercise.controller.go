@@ -12,7 +12,14 @@ import (
 
 func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
 
 	lessonID := ctx.Query("lesson_id")
 	idLesson, err := primitive.ObjectIDFromHex(lessonID)
@@ -52,7 +59,7 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
-		WhoUpdates: user.FullName,
+		WhoUpdates: admin.FullName,
 	}
 
 	err = e.ExerciseUseCase.CreateOne(ctx, exerciseRes)

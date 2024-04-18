@@ -42,10 +42,6 @@ func IsValidLesson(lesson lesson_domain.Input) error {
 		return errors.New("name lesson cannot be empty")
 	}
 
-	if lesson.CourseID.Hex() == "" || lesson.CourseID.IsZero() {
-		return errors.New("name lesson cannot be empty or data null")
-	}
-
 	if lesson.Level == 0 {
 		return errors.New("level cannot be empty")
 	}

@@ -2,13 +2,11 @@ package lesson_repository
 
 import (
 	lesson_domain "clean-architecture/domain/lesson"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type lessonRepository struct {
@@ -120,16 +118,25 @@ func (l *lessonRepository) FetchMany(ctx context.Context) (lesson_domain.Respons
 	return lessonRes, err
 }
 
-func (l *lessonRepository) UpdateOne(ctx context.Context, lessonID string, lesson lesson_domain.Lesson) error {
+func (l *lessonRepository) UpdateOne(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {
 	collection := l.database.Collection(l.collectionLesson)
-	doc, err := internal.ToDoc(lesson)
-	objID, err := primitive.ObjectIDFromHex(lessonID)
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: doc}}
+	filter := bson.M{"_id": lesson.ID}
 
-	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
+	update := bson.M{
+		"$set": bson.M{
+			"name":    lesson.Name,
+			"content": lesson.Content,
+			"image":   lesson.ImageURL,
+		},
+	}
+
+	data, err := collection.UpdateOne(ctx, filter, &update)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, err
 }
 
 func (l *lessonRepository) CreateOne(ctx context.Context, lesson *lesson_domain.Lesson) error {
@@ -175,40 +182,6 @@ func (l *lessonRepository) CreateOneByNameCourse(ctx context.Context, lesson *le
 
 	_, err = collectionLesson.InsertOne(ctx, lesson)
 	return nil
-}
-
-func (l *lessonRepository) UpsertOne(ctx context.Context, id string, lesson *lesson_domain.Lesson) (*lesson_domain.Lesson, error) {
-	collectionLesson := l.database.Collection(l.collectionLesson)
-	collectionCourse := l.database.Collection(l.collectionCourse)
-
-	filterReference := bson.M{"_id": lesson.CourseID}
-	count, err := collectionCourse.CountDocuments(ctx, filterReference)
-	if err != nil {
-		return nil, err
-	}
-
-	if count <= 0 {
-		return nil, errors.New("the course ID do not exist")
-	}
-
-	doc, err := internal.ToDoc(lesson)
-
-	idHex, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, err
-	}
-
-	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(1)
-	query := bson.D{{Key: "_id", Value: idHex}}
-	update := bson.D{{Key: "$set", Value: doc}}
-	res := collectionLesson.FindOneAndUpdate(ctx, query, update, opts)
-
-	var updatePost *lesson_domain.Lesson
-	if err := res.Decode(&updatePost); err != nil {
-		return nil, err
-	}
-
-	return updatePost, nil
 }
 
 func (l *lessonRepository) DeleteOne(ctx context.Context, lessonID string) error {

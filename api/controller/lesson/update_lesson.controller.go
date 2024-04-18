@@ -10,17 +10,14 @@ import (
 
 func (l *LessonController) UpdateOneLesson(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-
-	user, err := l.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	admin, err := l.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"message": err.Error(),
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
 		})
 		return
 	}
-
-	lessonID := ctx.Query("_id")
 
 	var lessonInput lesson_domain.Input
 	if err := ctx.ShouldBindJSON(&lessonInput); err != nil {
@@ -32,14 +29,16 @@ func (l *LessonController) UpdateOneLesson(ctx *gin.Context) {
 	}
 
 	updateLesson := lesson_domain.Lesson{
-		CourseID:   lessonInput.CourseID,
+		ID:       lessonInput.ID,
+		CourseID: lessonInput.CourseID,
+
 		Name:       lessonInput.Name,
 		Content:    lessonInput.Content,
 		UpdatedAt:  time.Now(),
-		WhoUpdates: user.FullName,
+		WhoUpdates: admin.FullName,
 	}
 
-	err = l.LessonUseCase.UpdateOne(ctx, lessonID, updateLesson)
+	data, err := l.LessonUseCase.UpdateOne(ctx, &updateLesson)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -50,5 +49,6 @@ func (l *LessonController) UpdateOneLesson(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
+		"result": data,
 	})
 }

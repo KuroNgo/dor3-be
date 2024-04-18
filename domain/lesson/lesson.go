@@ -3,6 +3,7 @@ package lesson_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -36,7 +37,7 @@ type ILessonRepository interface {
 	CreateOne(ctx context.Context, lesson *Lesson) error
 	CreateOneByNameCourse(ctx context.Context, lesson *Lesson) error
 
-	UpdateOne(ctx context.Context, lessonID string, lesson Lesson) error
+	UpdateOne(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, lessonID string) error
 
 	// UpdateComplete automation
