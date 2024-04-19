@@ -39,68 +39,100 @@
 │   └───inspectionProfiles
 ├───api
 │   ├───controller
+│   │   ├───activity
 │   │   ├───admin
-│   │   ├───audio
 │   │   ├───course
+│   │   ├───exam
+│   │   ├───exam_answer
+│   │   ├───exam_options
+│   │   ├───exam_question
+│   │   ├───exam_result
 │   │   ├───exercise
+│   │   ├───exercise_answer
+│   │   ├───exercise_options
+│   │   ├───exercise_quesiton
+│   │   ├───exercise_result
+│   │   ├───feedback
 │   │   ├───image
 │   │   ├───lesson
-│   │   ├───mean
+│   │   ├───mark_list
+│   │   ├───mark_vocabulary
 │   │   ├───quiz
+│   │   ├───quiz_answer
+│   │   ├───quiz_options
+│   │   ├───quiz_question
+│   │   ├───quiz_result
 │   │   ├───unit
 │   │   ├───user
+│   │   ├───user_attempt
 │   │   └───vocabulary
 │   ├───middleware
 │   └───router
+│       ├───activity_log
 │       ├───admin
-│       ├───audio
 │       ├───course
+│       ├───exam
+│       ├───exam_answer
+│       ├───exam_options
+│       ├───exam_question
+│       ├───exam_result
 │       ├───exercise
+│       ├───exercise_answer
+│       ├───exercise_options
+│       ├───exercise_question
+│       ├───exercise_result
+│       ├───feedback
 │       ├───image
 │       ├───lesson
-│       ├───mean
+│       ├───mark_list
+│       ├───mark_vocabulary
 │       ├───quiz
+│       ├───quiz_answer
+│       ├───quiz_options
+│       ├───quiz_question
+│       ├───quiz_result
 │       ├───unit
 │       ├───user
+│       ├───user_attempt
+│       ├───user_exam_attempt
+│       ├───user_exercise_attempt
+│       ├───user_quiz_attempt
 │       └───vocabulary
 ├───assets
-├───audio
+│   └───images
 ├───bootstrap
 ├───config
 ├───domain
 │   ├───activity_log
 │   ├───admin
-│   ├───audio
-│   │   └───mocks
+│   ├───config_system
 │   ├───course
-│   │   └───mocks
 │   ├───exam
+│   ├───exam_answer
+│   ├───exam_options
+│   ├───exam_question
+│   ├───exam_result
 │   ├───exercise
+│   ├───exercise_answer
+│   ├───exercise_options
+│   ├───exercise_questions
+│   ├───exercise_result
 │   ├───feedback
 │   ├───image
-│   │   └───mocks
 │   ├───lesson
-│   ├───log
+│   ├───mark_list
 │   ├───mark_vocabulary
-│   ├───mean
-│   ├───permisson
-│   ├───position
 │   ├───quiz
-│   │   └───mocks
-│   ├───role
-│   ├───store
+│   ├───quiz_answer
+│   ├───quiz_options
+│   ├───quiz_question
+│   ├───quiz_result
 │   ├───unit
-│   │   └───mocks
 │   ├───user
-│   │   └───mocks
 │   ├───user_attempt
-│   ├───user_exam_process
-│   ├───user_quiz_attempt
 │   └───vocabulary
-│       └───mocks
 ├───infrastructor
 │   ├───mongo
-│   │   └───mocks
 │   └───redis
 ├───internal
 │   ├───cloud
@@ -108,6 +140,7 @@
 │   │   ├───firebase
 │   │   │   └───audio
 │   │   └───google
+│   │       └───const
 │   ├───file
 │   │   └───excel
 │   └───oauth2
@@ -115,35 +148,61 @@
 ├───repository
 │   ├───activity
 │   ├───admin
-│   ├───audio
 │   ├───course
+│   ├───exam
+│   ├───exam_answer
+│   ├───exam_options
+│   ├───exam_question
+│   ├───exam_result
 │   ├───exercise
+│   ├───exercise_answer
+│   ├───exercise_options
+│   ├───exercise_question
+│   ├───exercise_result
+│   ├───feedback
 │   ├───image
 │   ├───lesson
-│   ├───mean
+│   ├───mark_list
+│   ├───mark_vacabulary
 │   ├───quiz
-│   ├───test
-│   │   ├───admin
-│   │   ├───quiz
-│   │   └───user
+│   ├───quiz_answer
+│   ├───quiz_options
+│   ├───quiz_question
+│   ├───quiz_result
 │   ├───unit
 │   ├───user
+│   ├───user_attempt
 │   └───vocabulary
+├───templates
 └───usecase
     ├───activity
     ├───admin
-    ├───audio
     ├───course
+    ├───exam
+    ├───exam_answer
+    ├───exam_options
+    ├───exam_question
+    ├───exam_result
     ├───exercise
+    ├───exercise_answer
+    ├───exercise_options
+    ├───exercise_question
+    ├───exercise_result
+    ├───feedback
     ├───image
     ├───lesson
+    ├───mark_list
+    ├───mark_vocabulary
     ├───mean
     ├───quiz
+    ├───quiz_answer
+    ├───quiz_options
+    ├───quiz_question
+    ├───quiz_result
     ├───system
-    ├───test
-    │   └───user
     ├───unit
     ├───user
+    ├───user_attempt
     └───vocabulary
 ```
 ## Run Programming
