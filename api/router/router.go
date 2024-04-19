@@ -39,6 +39,14 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 		middleware.StructuredLogger(&log.Logger, value),
 	)
 
+	//test cro
+	//config := cors.DefaultConfig()
+	//config.AllowOrigins = []string{"http://localhost:3000"}
+	// config.AllowOrigins = []string{"http://google.com", "http://facebook.com"}
+	// config.AllowAllOrigins = true
+
+	//publicRouter.Use(cors.New(config))
+
 	privateRouter.Use(
 		middleware.CORS(),
 		//middleware.RateLimiter(),

@@ -1,125 +1,49 @@
-package google
+package google_utils
 
 import (
-	"bytes"
-	"clean-architecture/bootstrap"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
+	"github.com/golang-jwt/jwt/v4"
 	"net/http"
-	"net/url"
 	"time"
 )
 
-var (
-	Database *bootstrap.Database
-)
-
-// GetGoogleOauthToken Retrieve the OAuth2 Access Token
-func GetGoogleOauthToken(code string) (*OauthToken, error) {
-	const rootURL = "https://oauth2.googleapis.com/token"
-
-	values := url.Values{}
-	// grant_type is the type of grant being requested, which is typically authorization_code
-	values.Add("grant_type", "authorization_code")
-
-	// the authorization code obtained from the authorization endpoint
-	values.Add("code", code)
-
-	// FIXME: the secret associated with the client ID
-	values.Add("client_id", Database.GoogleClientID)
-	values.Add("client_secret", Database.GoogleClientSecret)
-
-	// the authorized callback URL registered with the client
-	values.Add("redirect_uri", Database.GoogleOAuthRedirectUrl)
-
-	query := values.Encode()
-
-	req, err := http.NewRequest("POST", rootURL, bytes.NewBufferString(query))
+func GetUserInfo(accessToken string) (map[string]interface{}, error) {
+	userInfoEndpoint := "https://www.googleapis.com/oauth2/v2/userinfo"
+	resp, err := http.Get(fmt.Sprintf("%s?access_token=%s", userInfoEndpoint, accessToken))
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	client := http.Client{
-		Timeout: time.Second * 30,
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
+	var userInfo map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
 		return nil, err
 	}
 
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.New("could not retrieve token")
-	}
-
-	var resBody bytes.Buffer
-	_, err = io.Copy(&resBody, res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var GoogleOauthTokenRes map[string]interface{}
-
-	if err := json.Unmarshal(resBody.Bytes(), &GoogleOauthTokenRes); err != nil {
-		return nil, err
-	}
-
-	tokenBody := &OauthToken{
-		AccessToken: GoogleOauthTokenRes["access_token"].(string),
-		IDToken:     GoogleOauthTokenRes["id_token"].(string),
-	}
-
-	return tokenBody, nil
+	return userInfo, nil
 }
 
-// GetGoogleUser Get the Google User's Account Information
-func GetGoogleUser(accessToken string, idToken string) (*UserResult, error) {
-	rootUrl := fmt.Sprintf("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=%s", accessToken)
+// Function to sign a JWT with user information
+func SignJWT(userInfo map[string]interface{}) (string, error) {
+	// Customize the claims as needed
+	claims := jwt.MapClaims{
+		"sub":            userInfo["id"],
+		"name":           userInfo["name"],
+		"email":          userInfo["email"],
+		"picture":        userInfo["picture"],
+		"verified_email": userInfo["verified_email"],
+		"locale":         userInfo["locale"],
+		"iss":            "FEIT | Fluent English for IT",
+		"exp":            time.Now().Add(time.Hour * 24 * 30).Unix(), // 30 days
+		// Add other claims as needed
+	}
 
-	req, err := http.NewRequest("GET", rootUrl, nil)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, err := token.SignedString([]byte("your-secret-key")) // Replace with your actual secret key
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", idToken))
-
-	client := http.Client{
-		Timeout: time.Second * 30,
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.New("could not retrieve user")
-	}
-
-	var resBody bytes.Buffer
-	_, err = io.Copy(&resBody, res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var GoogleUserRes map[string]interface{}
-
-	if err := json.Unmarshal(resBody.Bytes(), &GoogleUserRes); err != nil {
-		return nil, err
-	}
-
-	userBody := &UserResult{
-		Id:              GoogleUserRes["id"].(string),
-		Email:           GoogleUserRes["email"].(string),
-		IsVerifiedEmail: GoogleUserRes["verified_email"].(bool),
-		Name:            GoogleUserRes["name"].(string),
-		GivenName:       GoogleUserRes["given_name"].(string),
-		Picture:         GoogleUserRes["picture"].(string),
-		Locale:          GoogleUserRes["locale"].(string),
-	}
-
-	return userBody, nil
+	return signedToken, nil
 }
