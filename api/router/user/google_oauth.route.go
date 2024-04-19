@@ -18,7 +18,7 @@ func GoogleAuthRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.D
 		Database:          env,
 	}
 
-	router := group.Group("/sessions/oauth")
-	router.GET("/google", ga.GoogleLoginWithUser)
+	router := group.Group("/auth")
+	router.GET("/google/callback", ga.GoogleLoginWithUser)
 
 }

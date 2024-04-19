@@ -4,9 +4,13 @@ import (
 	"clean-architecture/bootstrap"
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal"
+	google_utils "clean-architecture/internal/oauth2/google"
+	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"net/http"
 	"time"
 )
@@ -16,68 +20,67 @@ type GoogleAuthController struct {
 	Database          *bootstrap.Database
 }
 
-func (auth *GoogleAuthController) GoogleLoginWithUser(ctx *gin.Context) {
-	code := ctx.Query("code")
-
-	pathUrl := "/"
-
-	if ctx.Query("state") != "" {
-		pathUrl = ctx.Query("state")
+func (auth *GoogleAuthController) GoogleLoginWithUser(c *gin.Context) {
+	var googleOauthConfig = &oauth2.Config{}
+	googleOauthConfig = &oauth2.Config{
+		ClientID:     auth.Database.GoogleClientID,
+		ClientSecret: auth.Database.GoogleClientSecret,
+		RedirectURL:  auth.Database.GoogleOAuthRedirectUrl,
+		Scopes:       []string{"profile", "email"}, // Adjust scopes as needed
+		Endpoint:     google.Endpoint,
 	}
 
-	if code == "" {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"status":  "fail",
-			"message": "Authorization code not provided!",
-		})
-		return
-	}
-
-	// Use the code get the id and access tokens
-	tokenRes, err := auth.GoogleAuthUseCase.GetGoogleOauthToken(code)
-
+	code := c.Query("code")
+	token, err := googleOauthConfig.Exchange(context.Background(), code)
 	if err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{
-			"status":  "fail",
-			"message": err.Error(),
-		})
+		fmt.Println("Error exchanging code: " + err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	user, err := auth.GoogleAuthUseCase.GetGoogleUser(tokenRes.AccessToken, tokenRes.IDToken)
+	userInfo, err := google_utils.GetUserInfo(token.AccessToken)
 	if err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{
-			"status":  "fail",
-			"message": err.Error(),
-		})
+		fmt.Println("Error getting user info: " + err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	createdAt := time.Now()
+	// Giả sử userInfo là một map[string]interface{}
+	email := userInfo["email"].(string)
+	fullName := userInfo["name"].(string)
+	avatarURL := userInfo["picture"].(string)
+	verifiedEmail := userInfo["verified_email"].(bool)
 	resBody := &user_domain.User{
 		ID:        primitive.NewObjectID(),
-		Email:     user.Email,
-		FullName:  user.Name,
-		AvatarURL: user.Picture,
+		Email:     email,
+		FullName:  fullName,
+		AvatarURL: avatarURL,
 		Provider:  "google",
 		Role:      "user",
-		Verified:  true,
-		CreatedAt: createdAt,
-		UpdatedAt: createdAt,
+		Verified:  verifiedEmail,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
-	updatedUser, err := auth.GoogleAuthUseCase.UpsertUser(ctx, user.Email, resBody)
+	updatedUser, err := auth.GoogleAuthUseCase.UpsertUser(c, resBody.Email, resBody)
 	if err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{
+		c.JSON(http.StatusBadGateway, gin.H{
 			"status":  "fail",
 			"message": err.Error(),
 		})
+		return
+	}
+
+	signedToken, err := google_utils.SignJWT(userInfo)
+	if err != nil {
+		fmt.Println("Error signing token: " + err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	accessToken, err := internal.CreateToken(auth.Database.AccessTokenExpiresIn, updatedUser.ID.Hex(), auth.Database.AccessTokenPrivateKey)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  "fail",
 			"message": err.Error(),
 		})
@@ -86,16 +89,16 @@ func (auth *GoogleAuthController) GoogleLoginWithUser(ctx *gin.Context) {
 
 	refreshToken, err := internal.CreateToken(auth.Database.RefreshTokenExpiresIn, updatedUser.ID.Hex(), auth.Database.RefreshTokenPrivateKey)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  "fail",
 			"message": err.Error(),
 		})
 		return
 	}
 
-	ctx.SetCookie("access_token", accessToken, auth.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
-	ctx.SetCookie("refresh_token", refreshToken, auth.Database.RefreshTokenMaxAge*60, "/", "localhost", false, true)
-	ctx.SetCookie("logged_in", "true", auth.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
+	c.SetCookie("access_token", accessToken, auth.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
+	c.SetCookie("refresh_token", refreshToken, auth.Database.RefreshTokenMaxAge*60, "/", "localhost", false, true)
+	c.SetCookie("logged_in", "true", auth.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
 
-	ctx.Redirect(http.StatusTemporaryRedirect, fmt.Sprint(auth.Database.ClientOrigin, pathUrl))
+	c.JSON(http.StatusOK, gin.H{"token": signedToken})
 }

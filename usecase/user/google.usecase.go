@@ -2,7 +2,6 @@ package user_usecase
 
 import (
 	user_domain "clean-architecture/domain/user"
-	"clean-architecture/internal/oauth2/google"
 	"context"
 	"time"
 )
@@ -23,12 +22,4 @@ func (g *googleUseCase) UpsertUser(c context.Context, email string, user *user_d
 	ctx, cancel := context.WithTimeout(c, g.contextTimeout)
 	defer cancel()
 	return g.userRepository.UpsertOne(ctx, email, user)
-}
-
-func (g *googleUseCase) GetGoogleOauthToken(code string) (*google.OauthToken, error) {
-	return google.GetGoogleOauthToken(code)
-}
-
-func (g *googleUseCase) GetGoogleUser(accessToken string, idToken string) (*google.UserResult, error) {
-	return google.GetGoogleUser(accessToken, idToken)
 }
