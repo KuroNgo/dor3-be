@@ -3,6 +3,7 @@ package exercise_result_domain
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -18,7 +19,14 @@ type Input struct {
 
 type IExerciseResultUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchManyByExamID(ctx context.Context, exerciseID string) (Response, error)
+	FetchManyByExamID(ctx context.Context, userID string) (Response, error)
+
+	GetResultsByUserIDAndExamID(ctx context.Context, userID string, exerciseID string) (ExerciseResult, error)
+
 	CreateOne(ctx context.Context, exerciseResult *ExerciseResult) error
+	UpdateStatus(ctx context.Context, exerciseResultID string, status int) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, exerciseResultID string) error
+
+	CalculateScore(ctx context.Context, correctAnswers, totalQuestions int) int
+	CalculatePercentage(ctx context.Context, correctAnswers, totalQuestions int) float64
 }

@@ -23,19 +23,30 @@ func NewExerciseAnswerRepository(db mongo.Database, collectionQuestion string, c
 	}
 }
 
-func (e *exerciseAnswerRepository) FetchManyByQuestionID(ctx context.Context, questionID string) (exercise_answer_domain.Response, error) {
+func (e *exerciseAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (exercise_answer_domain.Response, error) {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
+
 	idQuestion, err := primitive.ObjectIDFromHex(questionID)
 	if err != nil {
 		return exercise_answer_domain.Response{}, err
 	}
 
-	filter := bson.M{"question_id": idQuestion}
+	idUser, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return exercise_answer_domain.Response{}, err
+	}
+
+	filter := bson.M{"question_id": idQuestion, "user_id": idUser}
 	cursor, err := collectionAnswer.Find(ctx, filter)
 	if err != nil {
 		return exercise_answer_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	var answers []exercise_answer_domain.ExerciseAnswer
 	for cursor.Next(ctx) {

@@ -1,4 +1,4 @@
-package exam_answer
+package exam_answer_controller
 
 import (
 	"fmt"

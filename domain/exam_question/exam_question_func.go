@@ -10,9 +10,10 @@ type Input struct {
 	ID           primitive.ObjectID `bson:"_id" json:"_id"`
 	ExamID       primitive.ObjectID `bson:"exam_id" json:"exam_id"`
 	VocabularyID primitive.ObjectID `bson:"vocabulary_id" json:"vocabulary_id"`
-	Content      string             `bson:"content" json:"content"`
-	Type         string             `bson:"type" json:"type"`
-	Level        int                `bson:"level" json:"level"`
+
+	Content string `bson:"content" json:"content"`
+	Type    string `bson:"type" json:"type"`
+	Level   int    `bson:"level" json:"level"`
 }
 
 type IExamQuestionUseCase interface {

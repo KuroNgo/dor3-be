@@ -11,7 +11,15 @@ import (
 )
 
 func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
-	currentUser := ctx.MustGet("currentUser")
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+
 	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
