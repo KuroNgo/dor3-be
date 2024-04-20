@@ -1,4 +1,4 @@
-package exam_answer
+package exam_answer_controller
 
 import (
 	exam_answer_domain "clean-architecture/domain/exam_answer"

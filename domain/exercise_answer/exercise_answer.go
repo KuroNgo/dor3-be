@@ -26,7 +26,7 @@ type Response struct {
 }
 
 type IExerciseAnswerRepository interface {
-	FetchManyByQuestionID(ctx context.Context, questionID string) (Response, error)
+	FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (Response, error)
 	CreateOne(ctx context.Context, exerciseAnswer *ExerciseAnswer) error
 	DeleteOne(ctx context.Context, exerciseID string) error
 }

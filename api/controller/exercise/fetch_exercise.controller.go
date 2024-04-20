@@ -6,6 +6,14 @@ import (
 )
 
 func (e *ExerciseController) FetchMany(ctx *gin.Context) {
+	_, err := ctx.Cookie("access_token")
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not login!",
+		})
+		return
+	}
 	page := ctx.DefaultQuery("page", "1")
 
 	exercise, err := e.ExerciseUseCase.FetchMany(ctx, page)
