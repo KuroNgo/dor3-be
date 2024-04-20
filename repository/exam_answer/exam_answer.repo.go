@@ -11,13 +11,13 @@ import (
 )
 
 type examAnswerRepository struct {
-	database           mongo.Database
+	database           *mongo.Database
 	collectionQuestion string
 	collectionAnswer   string
 	collectionExam     string
 }
 
-func NewExamAnswerRepository(db mongo.Database, collectionQuestion string, collectionAnswer string, collectionExam string) exam_answer_domain.IExamAnswerRepository {
+func NewExamAnswerRepository(db *mongo.Database, collectionQuestion string, collectionAnswer string, collectionExam string) exam_answer_domain.IExamAnswerRepository {
 	return &examAnswerRepository{
 		database:           db,
 		collectionQuestion: collectionQuestion,
