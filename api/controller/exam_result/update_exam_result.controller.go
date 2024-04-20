@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (e *ExamResultController) DeleteOneExam(ctx *gin.Context) {
+func (e *ExamResultController) UpdateComplete(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -24,8 +24,9 @@ func (e *ExamResultController) DeleteOneExam(ctx *gin.Context) {
 		return
 	}
 
-	answerID := ctx.Query("_id")
-	err = e.ExamResultUseCase.DeleteOne(ctx, answerID)
+	examID := ctx.Query("exam_id")
+
+	_, err = e.ExamResultUseCase.UpdateStatus(ctx, examID, 1)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

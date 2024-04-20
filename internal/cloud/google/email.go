@@ -67,6 +67,7 @@ import (
 //		}
 //		return nil
 //	}
+
 type EmailData struct {
 	URL       string
 	FirstName string

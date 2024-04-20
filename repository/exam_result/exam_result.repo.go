@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
+	"time"
 )
 
 type examResultRepository struct {
@@ -174,22 +175,23 @@ func (e *examResultRepository) CreateOne(ctx context.Context, examResult *exam_r
 	return nil
 }
 
-func (e *examResultRepository) UpdateStatus(ctx context.Context, examResultID string, status *int) error {
+func (e *examResultRepository) UpdateStatus(ctx context.Context, examID string, status int) (*mongo.UpdateResult, error) {
 	collection := e.database.Collection(e.collectionExamResult)
 
-	filter := bson.D{{Key: "_id", Value: examResultID}}
+	filter := bson.D{{Key: "exam_id", Value: examID}}
 	update := bson.M{
 		"$set": bson.M{
-			"status": status,
+			"is_complete": status,
+			"started_at":  time.Now(),
 		},
 	}
 
-	_, err := collection.UpdateOne(ctx, filter, &update)
+	data, err := collection.UpdateOne(ctx, filter, &update)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return data, nil
 }
 
 func (e *examResultRepository) DeleteOne(ctx context.Context, examResultID string) error {

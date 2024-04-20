@@ -2,6 +2,7 @@ package exam_repository
 
 import (
 	exam_domain "clean-architecture/domain/exam"
+	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,25 +13,26 @@ import (
 )
 
 type examRepository struct {
-	database             *mongo.Database
-	collectionLesson     string
-	collectionUnit       string
-	collectionVocabulary string
-	collectionExam       string
+	database               *mongo.Database
+	collectionLesson       string
+	collectionUnit         string
+	collectionExam         string
+	collectionExamQuestion string
 }
 
-func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionVocabulary string) exam_domain.IExamRepository {
+func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionExamQuestion string) exam_domain.IExamRepository {
 	return &examRepository{
-		database:             db,
-		collectionExam:       collectionExam,
-		collectionLesson:     collectionLesson,
-		collectionUnit:       collectionUnit,
-		collectionVocabulary: collectionVocabulary,
+		database:               db,
+		collectionExam:         collectionExam,
+		collectionLesson:       collectionLesson,
+		collectionUnit:         collectionUnit,
+		collectionExamQuestion: collectionExamQuestion,
 	}
 }
 
 func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domain.Response, error) {
 	collectionExam := e.database.Collection(e.collectionExam)
+	collectionExamQuestion := e.database.Collection(e.collectionExamQuestion)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -39,6 +41,11 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domai
 	perPage := 7
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	count, err := collectionExam.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return exam_domain.Response{}, err
+	}
 
 	cursor, err := collectionExam.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
@@ -52,12 +59,19 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domai
 			return exam_domain.Response{}, err
 		}
 
+		filterExamID := bson.M{"exam_id": exam.ID}
+		countExamID, _ := collectionExamQuestion.CountDocuments(ctx, filterExamID)
+
+		countQuestion, _ := internal.Int64ToInt16(countExamID)
+		exam.CountQuestion = countQuestion
+
 		// Thêm lesson vào slice lessons
 		exams = append(exams, exam)
 	}
 
 	examRes := exam_domain.Response{
-		Exam: exams,
+		Exam:  exams,
+		Count: count,
 	}
 
 	return examRes, nil
@@ -65,6 +79,7 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domai
 
 func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string) (exam_domain.Response, error) {
 	collectionExam := e.database.Collection(e.collectionExam)
+	collectionExamQuestion := e.database.Collection(e.collectionExamQuestion)
 
 	idUnit, err := primitive.ObjectIDFromHex(unitID)
 	if err != nil {
@@ -81,14 +96,18 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string) (
 	var exams []exam_domain.Exam
 	for cursor.Next(ctx) {
 		var exam exam_domain.Exam
-
 		if err = cursor.Decode(&exam); err != nil {
 			return exam_domain.Response{}, err
 		}
 
+		filterExamID := bson.M{"exam_id": exam.ID}
+		countExamID, _ := collectionExamQuestion.CountDocuments(ctx, filterExamID)
+
+		count, _ := internal.Int64ToInt16(countExamID)
+		exam.CountQuestion = count
+
 		// Gắn CourseID vào bài học
 		exam.UnitID = idUnit
-
 		exams = append(exams, exam)
 	}
 
@@ -122,16 +141,14 @@ func (e *examRepository) CreateOne(ctx context.Context, exam *exam_domain.Exam) 
 	collectionExam := e.database.Collection(e.collectionExam)
 	collectionLesson := e.database.Collection(e.collectionLesson)
 	collectionUnit := e.database.Collection(e.collectionUnit)
-	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
 
 	filterLessonID := bson.M{"_id": exam.LessonID}
 	countLessonID, err := collectionLesson.CountDocuments(ctx, filterLessonID)
 	if err != nil {
 		return err
 	}
-
 	if countLessonID == 0 {
-		return errors.New("the lesson ID do not exist")
+		return errors.New("the lesson ID does not exist")
 	}
 
 	filterUnitID := bson.M{"_id": exam.UnitID}
@@ -140,35 +157,15 @@ func (e *examRepository) CreateOne(ctx context.Context, exam *exam_domain.Exam) 
 		return err
 	}
 	if countUnitID == 0 {
-		return errors.New("the unit ID do not exist")
-	}
-
-	filterVocabularyID := bson.M{"_id": exam.UnitID}
-	countVocabularyID, err := collectionVocabulary.CountDocuments(ctx, filterVocabularyID)
-	if err != nil {
-		return err
-	}
-	if countVocabularyID == 0 {
-		return errors.New("the vocabulary ID do not exist")
+		return errors.New("the unit ID does not exist")
 	}
 
 	_, err = collectionExam.InsertOne(ctx, exam)
-	return nil
-}
-
-func (e *examRepository) UpdateCompleted(ctx context.Context, examID string, isComplete int) error {
-	collection := e.database.Collection(e.collectionExam)
-
-	objID, err := primitive.ObjectIDFromHex(examID)
 	if err != nil {
 		return err
 	}
 
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: bson.D{{Key: "is_complete", Value: isComplete}}}}
-
-	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
+	return nil
 }
 
 func (e *examRepository) DeleteOne(ctx context.Context, examID string) error {
@@ -189,4 +186,21 @@ func (e *examRepository) DeleteOne(ctx context.Context, examID string) error {
 
 	_, err = collectionExam.DeleteOne(ctx, filter)
 	return err
+}
+
+func (e *examRepository) CountQuestion(ctx context.Context, examID string) int64 {
+	collectionExamQuestion := e.database.Collection(e.collectionExamQuestion)
+
+	idExam, err := primitive.ObjectIDFromHex(examID)
+	if err != nil {
+		return 0
+	}
+
+	filter := bson.M{"exam_id": idExam}
+	count, err := collectionExamQuestion.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0
+	}
+
+	return count
 }

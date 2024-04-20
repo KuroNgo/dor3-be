@@ -12,30 +12,23 @@ const (
 )
 
 type User struct {
-	ID         primitive.ObjectID `bson:"_id" json:"_id"`
-	FullName   string             `bson:"full_name"  json:"full_name"`
-	Email      string             `bson:"email"  json:"email"`
-	Password   string             `bson:"password"  json:"password"`
-	AvatarURL  string             `bson:"avatar_url"  json:"avatar_url"`
-	AssetID    string             `bson:"asset_id"  json:"asset_id"`
-	Specialize string             `bson:"specialize"  json:"specialize"`
-	Phone      string             `bson:"phone"   json:"phone"`
-	Provider   string             `json:"provider" bson:"provider"`
-	Verified   bool               `json:"verified" bson:"verified"`
-	CreatedAt  time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt  time.Time          `json:"updated_at" bson:"updated_at"`
-	Role       string             `bson:"role" json:"role"`
+	ID        primitive.ObjectID `bson:"_id" json:"_id"`
+	FullName  string             `bson:"full_name"  json:"full_name"`
+	Email     string             `bson:"email"  json:"email"`
+	Password  string             `bson:"password"  json:"password"`
+	AvatarURL string             `bson:"avatar_url"  json:"avatar_url"`
+	AssetID   string             `bson:"asset_id"  json:"asset_id"`
+	Phone     string             `bson:"phone"   json:"phone"`
+	Provider  string             `bson:"provider" json:"provider"`
+	Verified  bool               `bson:"verified" json:"verified"`
+	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
+	Role      string             `bson:"role" json:"role"`
 }
 
 type Response struct {
 	Count int64  `bson:"count" json:"count"`
 	User  []User `bson:"user" json:"user"`
-}
-
-type ResponseIndividual struct {
-	ResponseIndividual User
-	StatusCode         int    `bson:"status_code" json:"status_code"`
-	AccessToken        string `bson:"access_token" json:"access_token"`
 }
 
 //go:generate mockery --name IUserRepository

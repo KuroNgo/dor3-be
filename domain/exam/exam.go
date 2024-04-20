@@ -12,14 +12,14 @@ const (
 )
 
 type Exam struct {
-	ID           primitive.ObjectID `bson:"_id" json:"_id"`
-	LessonID     primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
-	UnitID       primitive.ObjectID `bson:"unit_id" json:"unit_id"`
-	VocabularyID primitive.ObjectID `bson:"vocabulary_id" json:"vocabulary_id"`
+	ID       primitive.ObjectID `bson:"_id" json:"_id"`
+	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
+	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 
-	Title       string        `bson:"title" json:"title"`
-	Description string        `bson:"description" json:"description"`
-	Duration    time.Duration `bson:"duration" json:"duration"`
+	Title         string        `bson:"title" json:"title"`
+	Description   string        `bson:"description" json:"description"`
+	Duration      time.Duration `bson:"duration" json:"duration"`
+	CountQuestion int16         `bson:"count_question" json:"count_question"`
 
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
@@ -27,8 +27,9 @@ type Exam struct {
 }
 
 type Response struct {
-	Count int64 `bson:"count" json:"count"`
-	Exam  []Exam
+	Count         int64 `bson:"count" json:"count"`
+	CountQuestion int64 `bson:"count_question" json:"count_question"`
+	Exam          []Exam
 }
 
 type IExamRepository interface {
@@ -37,6 +38,7 @@ type IExamRepository interface {
 
 	CreateOne(ctx context.Context, exam *Exam) error
 	UpdateOne(ctx context.Context, exam *Exam) (*mongo.UpdateResult, error)
-	UpdateCompleted(ctx context.Context, examID string, isComplete int) error
 	DeleteOne(ctx context.Context, examID string) error
+
+	CountQuestion(ctx context.Context, examID string) int64
 }

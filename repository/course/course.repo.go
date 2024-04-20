@@ -87,7 +87,7 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 	return err
 }
 
-func (c *courseRepository) CountCourse(ctx context.Context) int64 {
+func (c *courseRepository) StatisticCourse(ctx context.Context) int64 {
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
 	filter := bson.D{}

@@ -1,4 +1,4 @@
-package exam_controller
+package course_controller
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (e *ExamsController) DeleteOneExam(ctx *gin.Context) {
+func (c *CourseController) StatisticCourse(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -15,7 +15,8 @@ func (e *ExamsController) DeleteOneExam(ctx *gin.Context) {
 		})
 		return
 	}
-	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+
+	admin, err := c.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
@@ -24,18 +25,9 @@ func (e *ExamsController) DeleteOneExam(ctx *gin.Context) {
 		return
 	}
 
-	examID := ctx.Query("_id")
-
-	err = e.ExamUseCase.DeleteOne(ctx, examID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"message": err.Error(),
-		})
-		return
-	}
+	count := c.CourseUseCase.StatisticCourse(ctx)
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"status": "success",
+		"total": count,
 	})
 }

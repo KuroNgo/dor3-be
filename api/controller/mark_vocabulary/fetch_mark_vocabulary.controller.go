@@ -7,11 +7,24 @@ import (
 )
 
 func (m *MarkVocabularyController) FetchManyByMarkListIdAndUserId(ctx *gin.Context) {
-	currentUser := ctx.MustGet("access_token")
-	user, err := m.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	user, err := m.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
 
 	idMarkList := ctx.Query("course_id")
-
 	markVocabulary, err := m.MarkVocabularyUseCase.FetchManyByMarkListIDAndUserId(ctx, idMarkList, fmt.Sprint(user.ID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{

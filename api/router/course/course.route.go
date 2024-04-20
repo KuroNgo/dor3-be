@@ -21,4 +21,5 @@ func CourseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Datab
 
 	router := group.Group("/course")
 	router.GET("/fetch", course.FetchCourse)
+	router.GET("/statistic", course.StatisticCourse)
 }
