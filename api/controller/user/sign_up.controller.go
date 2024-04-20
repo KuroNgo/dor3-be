@@ -56,18 +56,17 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 
 	if err != nil {
 		newUser := user_domain.User{
-			ID:       primitive.NewObjectID(),
-			FullName: user.FullName,
-			//AvatarURL:  user.AvatarURL,
-			Specialize: user.Specialize,
-			Email:      user.Email,
-			Password:   hashedPassword,
-			Verified:   false,
-			Provider:   "fe-it",
-			Role:       "user",
-			Phone:      user.Phone,
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
+			ID:        primitive.NewObjectID(),
+			FullName:  user.FullName,
+			AvatarURL: user.AvatarURL,
+			Email:     user.Email,
+			Password:  hashedPassword,
+			Verified:  false,
+			Provider:  "fe-it",
+			Role:      "user",
+			Phone:     user.Phone,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		}
 
 		// thực hiện đăng ký người dùng
@@ -131,19 +130,18 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 		return
 	}
 	newUser := user_domain.User{
-		ID:         primitive.NewObjectID(),
-		FullName:   user.FullName,
-		AvatarURL:  imageURL.ImageURL,
-		AssetID:    imageURL.AssetID,
-		Specialize: user.Specialize,
-		Email:      user.Email,
-		Password:   hashedPassword,
-		Verified:   false,
-		Provider:   "fe-it",
-		Role:       "user",
-		Phone:      user.Phone,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		ID:        primitive.NewObjectID(),
+		FullName:  user.FullName,
+		AvatarURL: imageURL.ImageURL,
+		AssetID:   imageURL.AssetID,
+		Email:     user.Email,
+		Password:  hashedPassword,
+		Verified:  false,
+		Provider:  "fe-it",
+		Role:      "user",
+		Phone:     user.Phone,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	// thực hiện đăng ký người dùng

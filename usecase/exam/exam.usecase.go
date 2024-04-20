@@ -67,18 +67,6 @@ func (e *examUseCase) CreateOne(ctx context.Context, exam *exam_domain.Exam) err
 	return nil
 }
 
-func (e *examUseCase) UpdateCompleted(ctx context.Context, examID string, isComplete int) error {
-	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
-	defer cancel()
-
-	err := e.examRepository.UpdateCompleted(ctx, examID, isComplete)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (e *examUseCase) DeleteOne(ctx context.Context, examID string) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()

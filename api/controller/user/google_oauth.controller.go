@@ -62,13 +62,12 @@ func (auth *GoogleAuthController) GoogleLoginWithUser(c *gin.Context) {
 		UpdatedAt: time.Now(),
 	}
 
-	updatedUser, err := auth.GoogleAuthUseCase.UpsertUser(c, resBody.Email, resBody)
+	updateUser, err := auth.GoogleAuthUseCase.UpsertUser(c, resBody.Email, resBody)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{
 			"status":  "fail",
 			"message": err.Error(),
 		})
-		return
 	}
 
 	signedToken, err := google_utils.SignJWT(userInfo)
@@ -78,7 +77,7 @@ func (auth *GoogleAuthController) GoogleLoginWithUser(c *gin.Context) {
 		return
 	}
 
-	accessToken, err := internal.CreateToken(auth.Database.AccessTokenExpiresIn, updatedUser.ID.Hex(), auth.Database.AccessTokenPrivateKey)
+	accessToken, err := internal.CreateToken(auth.Database.AccessTokenExpiresIn, updateUser.ID.Hex(), auth.Database.AccessTokenPrivateKey)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  "fail",
@@ -87,7 +86,7 @@ func (auth *GoogleAuthController) GoogleLoginWithUser(c *gin.Context) {
 		return
 	}
 
-	refreshToken, err := internal.CreateToken(auth.Database.RefreshTokenExpiresIn, updatedUser.ID.Hex(), auth.Database.RefreshTokenPrivateKey)
+	refreshToken, err := internal.CreateToken(auth.Database.RefreshTokenExpiresIn, updateUser.ID.Hex(), auth.Database.RefreshTokenPrivateKey)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  "fail",

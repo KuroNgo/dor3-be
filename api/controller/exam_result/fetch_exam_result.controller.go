@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (e *ExamResultController) FetchManyExam(ctx *gin.Context) {
+func (e *ExamResultController) FetchManyExamResult(ctx *gin.Context) {
 	page := ctx.DefaultQuery("page", "1")
 
 	exam, err := e.ExamResultUseCase.FetchMany(ctx, page)

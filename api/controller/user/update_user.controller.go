@@ -52,12 +52,11 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		userResponse := user_domain.User{
-			FullName:   result.FullName,
-			Email:      userInput.Email,
-			Phone:      userInput.Phone,
-			Role:       result.Role,
-			UpdatedAt:  time.Now(),
-			Specialize: userInput.Specialize,
+			FullName:  result.FullName,
+			Email:     userInput.Email,
+			Phone:     userInput.Phone,
+			Role:      result.Role,
+			UpdatedAt: time.Now(),
 		}
 
 		_, err = u.UserUseCase.Update(ctx, &userResponse)
@@ -115,14 +114,13 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 
 	resultString, err := json.Marshal(result)
 	userResponse := user_domain.User{
-		FullName:   result.FullName,
-		Email:      userInput.Email,
-		Phone:      userInput.Phone,
-		Role:       result.Role,
-		AvatarURL:  imageURL.ImageURL,
-		AssetID:    imageURL.AssetID,
-		UpdatedAt:  time.Now(),
-		Specialize: userInput.Specialize,
+		FullName:  result.FullName,
+		Email:     userInput.Email,
+		Phone:     userInput.Phone,
+		Role:      result.Role,
+		AvatarURL: imageURL.ImageURL,
+		AssetID:   imageURL.AssetID,
+		UpdatedAt: time.Now(),
 	}
 
 	_, err = u.UserUseCase.Update(ctx, &userResponse)

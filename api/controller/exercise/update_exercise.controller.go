@@ -10,9 +10,8 @@ import (
 
 func (e *ExerciseController) UpdateOneExercise(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-
-	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
-	if err != nil {
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	if err != nil || admin == nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": err.Error(),
@@ -39,7 +38,7 @@ func (e *ExerciseController) UpdateOneExercise(ctx *gin.Context) {
 		Duration:    exerciseInput.Duration,
 
 		UpdatedAt:  time.Now(),
-		WhoUpdates: user.FullName,
+		WhoUpdates: admin.FullName,
 	}
 
 	data, err := e.ExerciseUseCase.UpdateOne(ctx, &updateExercise)

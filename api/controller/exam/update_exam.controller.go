@@ -9,7 +9,14 @@ import (
 )
 
 func (e *ExamsController) UpdateOneExam(ctx *gin.Context) {
-	currentUser := ctx.MustGet("currentUser")
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
 	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -29,10 +36,9 @@ func (e *ExamsController) UpdateOneExam(ctx *gin.Context) {
 	}
 
 	exam := exam_domain.Exam{
-		ID:           examInput.ID,
-		LessonID:     examInput.LessonID,
-		UnitID:       examInput.UnitID,
-		VocabularyID: examInput.VocabularyID,
+		ID:       examInput.ID,
+		LessonID: examInput.LessonID,
+		UnitID:   examInput.UnitID,
 
 		Title:       examInput.Title,
 		Description: examInput.Description,

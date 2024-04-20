@@ -9,8 +9,22 @@ import (
 )
 
 func (e *ExamResultController) CreateOneExam(ctx *gin.Context) {
-	currentUser := ctx.MustGet("currentUser")
-	userID, _ := primitive.ObjectIDFromHex(fmt.Sprintf("%s", currentUser))
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
 
 	examID := ctx.Query("exam_id")
 	idExam, _ := primitive.ObjectIDFromHex(fmt.Sprintf("%s", examID))
@@ -25,15 +39,15 @@ func (e *ExamResultController) CreateOneExam(ctx *gin.Context) {
 	}
 
 	result := exam_result_domain.ExamResult{
-		ID:        primitive.NewObjectID(),
-		UserID:    userID,
-		ExamID:    idExam,
-		Score:     inputResult.Score,
-		StartedAt: inputResult.StartedAt,
-		Status:    1,
+		ID:         primitive.NewObjectID(),
+		UserID:     user.ID,
+		ExamID:     idExam,
+		Score:      inputResult.Score,
+		StartedAt:  inputResult.StartedAt,
+		IsComplete: 1,
 	}
 
-	err := e.ExamResultUseCase.CreateOne(ctx, &result)
+	err = e.ExamResultUseCase.CreateOne(ctx, &result)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

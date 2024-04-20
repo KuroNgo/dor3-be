@@ -24,6 +24,5 @@ type IExamUseCase interface {
 
 	CreateOne(ctx context.Context, exam *Exam) error
 	UpdateOne(ctx context.Context, exam *Exam) (*mongo.UpdateResult, error)
-	UpdateCompleted(ctx context.Context, examID string, isComplete int) error
 	DeleteOne(ctx context.Context, examID string) error
 }

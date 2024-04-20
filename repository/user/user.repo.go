@@ -131,21 +131,35 @@ func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.Use
 
 func (u *userRepository) UpsertOne(c context.Context, email string, user *user_domain.User) (*user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
-	doc, err := internal.ToDoc(user)
-	if err != nil {
+
+	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+	filter := bson.D{{Key: "email", Value: email}}
+	update := bson.D{{Key: "$set", Value: bson.M{
+		"full_name":  user.FullName,
+		"email":      user.Email,
+		"password":   user.Password,
+		"avatar_url": user.AvatarURL,
+		"asset_id":   user.AssetID,
+		"phone":      user.Phone,
+		"provider":   user.Provider,
+		"verified":   user.Verified,
+		"created_at": user.CreatedAt,
+		"updated_at": user.UpdatedAt,
+		"role":       user.Role,
+	}}}
+	res := collection.FindOneAndUpdate(c, filter, update, opts)
+
+	var updatedUser *user_domain.User
+	if err := res.Decode(&updatedUser); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, errors.New("user not found")
+		}
 		return nil, err
 	}
 
-	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(1)
-	query := bson.D{{Key: "email", Value: email}}
-	update := bson.D{{Key: "$set", Value: doc}}
-	res := collection.FindOneAndUpdate(c, query, update, opts)
-
-	var updatedPost *user_domain.User
-
-	if err := res.Decode(&updatedPost); err != nil {
-		return nil, errors.New("no post with that Id exists")
+	if updatedUser != nil {
+		return updatedUser, nil
+	} else {
+		return user, nil
 	}
-
-	return updatedPost, nil
 }

@@ -67,11 +67,11 @@ func (c *courseUseCase) DeleteOne(ctx context.Context, courseID string) error {
 	return err
 }
 
-func (c *courseUseCase) CountCourse(ctx context.Context) int64 {
+func (c *courseUseCase) StatisticCourse(ctx context.Context) int64 {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
 
-	num := c.courseRepository.CountCourse(ctx)
+	num := c.courseRepository.StatisticCourse(ctx)
 
 	return num
 }
