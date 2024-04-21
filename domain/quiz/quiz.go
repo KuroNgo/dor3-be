@@ -36,10 +36,12 @@ type Response struct {
 type IQuizRepository interface {
 	FetchMany(ctx context.Context) (Response, error)
 	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
+	FetchManyByLessonID(ctx context.Context, unitID string) (Response, error)
+
+	CreateOne(ctx context.Context, quiz *Quiz) error
 
 	UpdateOne(ctx context.Context, quiz *Quiz) (*mongo.UpdateResult, error)
 	UpdateCompleted(ctx context.Context, quiz *Quiz) error
 
-	CreateOne(ctx context.Context, quiz *Quiz) error
 	DeleteOne(ctx context.Context, quizID string) error
 }

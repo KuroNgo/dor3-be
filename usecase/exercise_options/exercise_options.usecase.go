@@ -3,6 +3,7 @@ package exercise_options
 import (
 	exercise_options_domain "clean-architecture/domain/exercise_options"
 	"context"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -30,16 +31,16 @@ func (e *exerciseOptionsUseCase) FetchManyByQuestionID(ctx context.Context, ques
 	return data, nil
 }
 
-func (e *exerciseOptionsUseCase) UpdateOne(ctx context.Context, exerciseOptionsID string, exerciseOptions exercise_options_domain.ExerciseOptions) error {
+func (e *exerciseOptionsUseCase) UpdateOne(ctx context.Context, exerciseOptions *exercise_options_domain.ExerciseOptions) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.exerciseOptionsRepository.UpdateOne(ctx, exerciseOptionsID, exerciseOptions)
+	data, err := e.exerciseOptionsRepository.UpdateOne(ctx, exerciseOptions)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return data, nil
 }
 
 func (e *exerciseOptionsUseCase) CreateOne(ctx context.Context, exerciseOptions *exercise_options_domain.ExerciseOptions) error {

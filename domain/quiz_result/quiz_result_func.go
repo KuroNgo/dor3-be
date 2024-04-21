@@ -20,6 +20,8 @@ type IQuizResultUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchManyByQuizID(ctx context.Context, quizID string) (Response, error)
 
+	GetResultsByUserIDAndQuizID(ctx context.Context, userID string, quizID string) (QuizResult, error)
+
 	CreateOne(ctx context.Context, quizResult *QuizResult) error
 	DeleteOne(ctx context.Context, quizResultID string) error
 }
