@@ -11,18 +11,6 @@ type examAnswerUseCase struct {
 	contextTimeout       time.Duration
 }
 
-func (e *examAnswerUseCase) DeleteAll(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
-	defer cancel()
-
-	err := e.examAnswerRepository.DeleteAll(ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func NewExamAnswerUseCase(examAnswerRepository exam_answer_domain.IExamAnswerRepository, timeout time.Duration) exam_answer_domain.IExamAnswerUseCase {
 	return &examAnswerUseCase{
 		examAnswerRepository: examAnswerRepository,
@@ -30,11 +18,23 @@ func NewExamAnswerUseCase(examAnswerRepository exam_answer_domain.IExamAnswerRep
 	}
 }
 
-func (e *examAnswerUseCase) FetchManyByQuestionID(ctx context.Context, questionID string) (exam_answer_domain.Response, error) {
+func (e *examAnswerUseCase) DeleteAllAnswerByExamID(ctx context.Context, examID string) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examAnswerRepository.FetchManyByQuestionID(ctx, questionID)
+	err := e.examAnswerRepository.DeleteAllAnswerByExamID(ctx, examID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e *examAnswerUseCase) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (exam_answer_domain.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	data, err := e.examAnswerRepository.FetchManyAnswerByUserIDAndQuestionID(ctx, questionID, userID)
 	if err != nil {
 		return exam_answer_domain.Response{}, err
 	}

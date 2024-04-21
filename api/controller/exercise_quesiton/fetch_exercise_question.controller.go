@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (e *ExerciseQuestionsController) FetchManyExamOptions(ctx *gin.Context) {
+func (e *ExerciseQuestionsController) FetchManyExerciseOptions(ctx *gin.Context) {
 	_, err := ctx.Cookie("access_token")
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -16,7 +16,7 @@ func (e *ExerciseQuestionsController) FetchManyExamOptions(ctx *gin.Context) {
 	}
 
 	exerciseID := ctx.Query("exercise_id")
-	exam, err := e.ExerciseQuestionUseCase.FetchManyByExamID(ctx, exerciseID)
+	exam, err := e.ExerciseQuestionUseCase.FetchManyByExerciseID(ctx, exerciseID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

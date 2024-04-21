@@ -10,12 +10,12 @@ import (
 )
 
 type examOptionsRepository struct {
-	database           mongo.Database
+	database           *mongo.Database
 	collectionQuestion string
 	collectionOptions  string
 }
 
-func NewExamOptionsRepository(db mongo.Database, collectionQuestion string, collectionOptions string) exam_options_domain.IExamOptionRepository {
+func NewExamOptionsRepository(db *mongo.Database, collectionQuestion string, collectionOptions string) exam_options_domain.IExamOptionRepository {
 	return &examOptionsRepository{
 		database:           db,
 		collectionQuestion: collectionQuestion,

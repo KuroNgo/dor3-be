@@ -2,7 +2,6 @@ package exam_answer_repository
 
 import (
 	exam_answer_domain "clean-architecture/domain/exam_answer"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -69,18 +68,6 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 	return response, nil
 }
 
-func (e *examAnswerRepository) UpdateOne(ctx context.Context, examAnswerID string, examAnswer exam_answer_domain.ExamAnswer) error {
-	collection := e.database.Collection(e.collectionAnswer)
-	doc, err := internal.ToDoc(examAnswer)
-	objID, err := primitive.ObjectIDFromHex(examAnswerID)
-
-	filter := bson.D{{Key: "_id", Value: objID}}
-	update := bson.D{{Key: "$set", Value: doc}}
-
-	_, err = collection.UpdateOne(ctx, filter, &update)
-	return err
-}
-
 func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_answer_domain.ExamAnswer) error {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
@@ -118,7 +105,7 @@ func (e *examAnswerRepository) DeleteOne(ctx context.Context, examID string) err
 	return err
 }
 
-func (e *examAnswerRepository) DeleteAllAnswerByExamID(ctx context.Context) error {
+func (e *examAnswerRepository) DeleteAllAnswerByExamID(ctx context.Context, examID string) error {
 	//TODO implement me
 	panic("implement me")
 }

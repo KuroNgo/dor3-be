@@ -10,11 +10,21 @@ import (
 
 // UpdateOneQuiz done
 func (q *QuizController) UpdateOneQuiz(ctx *gin.Context) {
-	currentUser := ctx.MustGet("currentUser")
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
 
-	user, err := q.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	admin, err := q.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
 		return
 	}
 
@@ -34,7 +44,7 @@ func (q *QuizController) UpdateOneQuiz(ctx *gin.Context) {
 		Title:        quiz.Title,
 		Description:  quiz.Description,
 		Duration:     quiz.Duration,
-		WhoUpdates:   user.FullName,
+		WhoUpdates:   admin.FullName,
 		UpdatedAt:    time.Now(),
 	}
 
@@ -54,11 +64,21 @@ func (q *QuizController) UpdateOneQuiz(ctx *gin.Context) {
 
 // UpdateOneQuiz done
 func (q *QuizController) UpdateComplete(ctx *gin.Context) {
-	currentUser := ctx.MustGet("currentUser")
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
 
-	user, err := q.UserUseCase.GetByID(ctx, fmt.Sprint(currentUser))
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	admin, err := q.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
 		return
 	}
 
@@ -78,7 +98,7 @@ func (q *QuizController) UpdateComplete(ctx *gin.Context) {
 		Title:        quiz.Title,
 		Description:  quiz.Description,
 		Duration:     quiz.Duration,
-		WhoUpdates:   user.FullName,
+		WhoUpdates:   admin.FullName,
 		UpdatedAt:    time.Now(),
 	}
 

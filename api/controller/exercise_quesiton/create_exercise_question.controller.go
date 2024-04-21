@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func (e *ExerciseQuestionsController) CreateOneExamQuestions(ctx *gin.Context) {
+func (e *ExerciseQuestionsController) CreateOneExerciseQuestions(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -48,7 +48,7 @@ func (e *ExerciseQuestionsController) CreateOneExamQuestions(ctx *gin.Context) {
 		WhoUpdate:    admin.FullName,
 	}
 
-	err = e.ExamQuestionUseCase.CreateOne(ctx, &question)
+	err = e.ExerciseQuestionUseCase.CreateOne(ctx, &question)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

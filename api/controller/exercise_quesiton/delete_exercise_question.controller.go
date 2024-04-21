@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (e *ExerciseQuestionsController) DeleteOneExamQuestions(ctx *gin.Context) {
+func (e *ExerciseQuestionsController) DeleteOneExerciseQuestions(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -26,7 +26,7 @@ func (e *ExerciseQuestionsController) DeleteOneExamQuestions(ctx *gin.Context) {
 	}
 
 	answerID := ctx.Query("_id")
-	err = e.ExamQuestionUseCase.DeleteOne(ctx, answerID)
+	err = e.ExerciseQuestionUseCase.DeleteOne(ctx, answerID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
