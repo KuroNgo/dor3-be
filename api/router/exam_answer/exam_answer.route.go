@@ -26,7 +26,7 @@ func ExamAnswerRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.D
 		Database:          env,
 	}
 
-	router := group.Group("/answer")
+	router := group.Group("/exam/answer")
 	router.GET("/fetch", answer.FetchManyAnswerByUserIDAndQuestionID)
 	router.POST("/create", answer.CreateOneExamAnswer)
 	router.DELETE("/delete", answer.DeleteOneAnswer)
