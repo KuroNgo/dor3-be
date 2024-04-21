@@ -2,6 +2,7 @@ package exercise_answer_route
 
 import (
 	exercise_answer_controller "clean-architecture/api/controller/exercise_answer"
+	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
 	quiz_answer_domain "clean-architecture/domain/quiz_answer"
 	quiz_question_domain "clean-architecture/domain/quiz_question"
@@ -26,8 +27,8 @@ func ExerciseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Dat
 	}
 
 	router := group.Group("/exercise/answer")
-	router.GET("/fetch", answer.FetchManyAnswerByUserIDAndQuestionID)
-	router.POST("/create", answer.CreateOneExamAnswer)
-	router.DELETE("/delete", answer.DeleteOneAnswer)
-	router.GET("/delete/all", answer.DeleteAllAnswerInExerciseID)
+	router.GET("/fetch", middleware.DeserializeUser(), answer.FetchManyAnswerByUserIDAndQuestionID)
+	router.POST("/create", middleware.DeserializeUser(), answer.CreateOneExamAnswer)
+	router.DELETE("/delete", middleware.DeserializeUser(), answer.DeleteOneAnswer)
+	router.GET("/delete/all", middleware.DeserializeUser(), answer.DeleteAllAnswerInExerciseID)
 }

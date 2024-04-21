@@ -2,6 +2,7 @@ package exam_answer_route
 
 import (
 	exam_answer_controller "clean-architecture/api/controller/exam_answer"
+	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
 	exam_domain "clean-architecture/domain/exam"
 	exam_answer_domain "clean-architecture/domain/exam_answer"
@@ -27,8 +28,8 @@ func ExamAnswerRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.D
 	}
 
 	router := group.Group("/exam/answer")
-	router.GET("/fetch", answer.FetchManyAnswerByUserIDAndQuestionID)
-	router.POST("/create", answer.CreateOneExamAnswer)
-	router.DELETE("/delete", answer.DeleteOneAnswer)
-	router.DELETE("/delete-all", answer.DeleteAllAnswerInExamID)
+	router.GET("/fetch", middleware.DeserializeUser(), answer.FetchManyAnswerByUserIDAndQuestionID)
+	router.POST("/create", middleware.DeserializeUser(), answer.CreateOneExamAnswer)
+	router.DELETE("/delete", middleware.DeserializeUser(), answer.DeleteOneAnswer)
+	router.DELETE("/delete-all", middleware.DeserializeUser(), answer.DeleteAllAnswerInExamID)
 }

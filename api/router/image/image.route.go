@@ -19,7 +19,6 @@ func ImageRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Databa
 	}
 
 	router := group.Group("/image")
-	// riêng audio thì giành cho cả 2 phiá
 	router.GET("/fetch-by-name", image.FetchImageByName)
 	router.GET("/fetch-many", image.FetchImage)
 }

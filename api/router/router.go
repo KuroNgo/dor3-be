@@ -6,7 +6,12 @@ import (
 	admin_route "clean-architecture/api/router/admin"
 	course_route "clean-architecture/api/router/course"
 	exam_route "clean-architecture/api/router/exam"
+	exam_answer_route "clean-architecture/api/router/exam_answer"
+	exam_options_route "clean-architecture/api/router/exam_options"
+	exam_question_route "clean-architecture/api/router/exam_question"
+	exam_result_route "clean-architecture/api/router/exam_result"
 	exercise_route "clean-architecture/api/router/exercise"
+	exercise_answer_route "clean-architecture/api/router/exercise_answer"
 	image_route "clean-architecture/api/router/image"
 	lesson_route "clean-architecture/api/router/lesson"
 	mark_list_route "clean-architecture/api/router/mark_list"
@@ -39,14 +44,6 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 		middleware.StructuredLogger(&log.Logger, value),
 	)
 
-	//test cro
-	//config := cors.DefaultConfig()
-	//config.AllowOrigins = []string{"http://localhost:3000"}
-	// config.AllowOrigins = []string{"http://google.com", "http://facebook.com"}
-	// config.AllowAllOrigins = true
-
-	//publicRouter.Use(cors.New(config))
-
 	privateRouter.Use(
 		middleware.CORS(),
 		//middleware.RateLimiter(),
@@ -64,7 +61,12 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	user_route.GoogleAuthRoute(env, timeout, db, publicRouter)
 	user_route.UserRouter(env, timeout, db, publicRouter)
 	exam_route.ExamRoute(env, timeout, db, publicRouter)
+	exam_answer_route.ExamAnswerRoute(env, timeout, db, publicRouter)
+	exam_question_route.ExamQuestionRoute(env, timeout, db, publicRouter)
+	exam_options_route.ExamOptionsRoute(env, timeout, db, publicRouter)
+	exam_result_route.ExamResultRoute(env, timeout, db, publicRouter)
 	exercise_route.ExerciseRoute(env, timeout, db, publicRouter)
+	exercise_answer_route.ExerciseRoute(env, timeout, db, publicRouter)
 	user_route.LoginFromRoleRoute(env, timeout, db, publicRouter)
 	image_route.ImageRoute(env, timeout, db, publicRouter)
 	quiz_route.QuizRouter(env, timeout, db, publicRouter)
@@ -78,6 +80,8 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	// All Private API
 	activity_log_route.AdminActivityRoute(env, timeout, db, privateRouter)
 	exam_route.AdminExamRoute(env, timeout, db, privateRouter)
+	exam_options_route.AdminExamOptionsRoute(env, timeout, db, publicRouter)
+	exam_question_route.AdminExamQuestionRoute(env, timeout, db, publicRouter)
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
 	admin_route.AdminRouter(env, timeout, db, privateRouter)
 	image_route.AdminImageRoute(env, timeout, db, privateRouter)
