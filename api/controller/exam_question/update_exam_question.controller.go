@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func (e *ExamQuestionsController) UpdateOneExamOptions(ctx *gin.Context) {
+func (e *ExamQuestionsController) UpdateOneExamQuestion(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

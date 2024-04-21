@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (e *ExamResultController) CreateOneExam(ctx *gin.Context) {
+func (e *ExamResultController) CreateOneExamResult(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

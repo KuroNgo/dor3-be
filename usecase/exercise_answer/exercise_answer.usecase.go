@@ -1,4 +1,4 @@
-package exercise_answer
+package exercise_answer_usecase
 
 import (
 	exercise_answer_domain "clean-architecture/domain/exercise_answer"
@@ -18,11 +18,11 @@ func NewExerciseAnswerUseCase(exerciseAnswerRepository exercise_answer_domain.IE
 	}
 }
 
-func (e *exerciseAnswerUseCase) FetchManyByQuestionID(ctx context.Context, questionID string) (exercise_answer_domain.Response, error) {
+func (e *exerciseAnswerUseCase) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (exercise_answer_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.exerciseAnswerRepository.FetchManyByQuestionID(ctx, questionID)
+	data, err := e.exerciseAnswerRepository.FetchManyAnswerByUserIDAndQuestionID(ctx, questionID, userID)
 	if err != nil {
 		return exercise_answer_domain.Response{}, err
 	}

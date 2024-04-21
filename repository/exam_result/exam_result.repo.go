@@ -1,4 +1,4 @@
-package exam_result
+package exam_result_repository
 
 import (
 	exam_result_domain "clean-architecture/domain/exam_result"

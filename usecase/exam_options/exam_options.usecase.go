@@ -3,12 +3,20 @@ package exam_options_usecase
 import (
 	exam_options_domain "clean-architecture/domain/exam_options"
 	"context"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
 type examOptionsUseCase struct {
 	examOptionsRepository exam_options_domain.IExamOptionRepository
 	contextTimeout        time.Duration
+}
+
+func NewExamOptionsUseCase(examOptionsRepository exam_options_domain.IExamOptionRepository, timeout time.Duration) exam_options_domain.IExamOptionsUseCase {
+	return &examOptionsUseCase{
+		examOptionsRepository: examOptionsRepository,
+		contextTimeout:        timeout,
+	}
 }
 
 func (e *examOptionsUseCase) FetchManyByQuestionID(ctx context.Context, questionID string) (exam_options_domain.Response, error) {
@@ -23,16 +31,16 @@ func (e *examOptionsUseCase) FetchManyByQuestionID(ctx context.Context, question
 	return data, nil
 }
 
-func (e *examOptionsUseCase) UpdateOne(ctx context.Context, examOptionsID string, examOptions exam_options_domain.ExamOptions) error {
+func (e *examOptionsUseCase) UpdateOne(ctx context.Context, examOptions *exam_options_domain.ExamOptions) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.examOptionsRepository.UpdateOne(ctx, examOptionsID, examOptions)
+	data, err := e.examOptionsRepository.UpdateOne(ctx, examOptions)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return data, nil
 }
 
 func (e *examOptionsUseCase) CreateOne(ctx context.Context, examOptions *exam_options_domain.ExamOptions) error {
@@ -57,11 +65,4 @@ func (e *examOptionsUseCase) DeleteOne(ctx context.Context, examID string) error
 	}
 
 	return nil
-}
-
-func NewExamOptionsUseCase(examOptionsRepository exam_options_domain.IExamOptionRepository, timeout time.Duration) exam_options_domain.IExamOptionsUseCase {
-	return &examOptionsUseCase{
-		examOptionsRepository: examOptionsRepository,
-		contextTimeout:        timeout,
-	}
 }

@@ -3,6 +3,7 @@ package exam_question_usecase
 import (
 	exam_question_domain "clean-architecture/domain/exam_question"
 	"context"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -42,16 +43,16 @@ func (e *examQuestionUseCase) FetchManyByExamID(ctx context.Context, examID stri
 	return data, nil
 }
 
-func (e *examQuestionUseCase) UpdateOne(ctx context.Context, examQuestionID string, examQuestion exam_question_domain.ExamQuestion) error {
+func (e *examQuestionUseCase) UpdateOne(ctx context.Context, examQuestion *exam_question_domain.ExamQuestion) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.examQuestionRepository.UpdateOne(ctx, examQuestionID, examQuestion)
+	data, err := e.examQuestionRepository.UpdateOne(ctx, examQuestion)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return data, nil
 }
 
 func (e *examQuestionUseCase) CreateOne(ctx context.Context, examQuestion *exam_question_domain.ExamQuestion) error {
