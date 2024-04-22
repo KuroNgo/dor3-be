@@ -19,7 +19,7 @@ func NewExerciseQuestionUseCase(exerciseQuestionRepository exercise_result_domai
 	}
 }
 
-func (e *exerciseResultUseCase) FetchManyByExamID(ctx context.Context, exerciseID string) (exercise_result_domain.Response, error) {
+func (e *exerciseResultUseCase) FetchManyByExerciseID(ctx context.Context, exerciseID string) (exercise_result_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
@@ -31,7 +31,7 @@ func (e *exerciseResultUseCase) FetchManyByExamID(ctx context.Context, exerciseI
 	return data, nil
 }
 
-func (e *exerciseResultUseCase) GetResultsByUserIDAndExamID(ctx context.Context, userID string, exerciseID string) (exercise_result_domain.ExerciseResult, error) {
+func (e *exerciseResultUseCase) GetResultsByUserIDAndExerciseID(ctx context.Context, userID string, exerciseID string) (exercise_result_domain.ExerciseResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 

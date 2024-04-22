@@ -16,7 +16,7 @@ func (q *QuizQuestionsController) FetchManyQuizQuestion(ctx *gin.Context) {
 	}
 
 	quizID := ctx.Query("quiz_id")
-	exam, err := q.QuizQuestionUseCase.FetchManyByExamID(ctx, quizID)
+	exam, err := q.QuizQuestionUseCase.FetchManyByQuizID(ctx, quizID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

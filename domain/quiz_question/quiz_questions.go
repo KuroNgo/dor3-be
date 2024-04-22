@@ -35,7 +35,7 @@ type Response struct {
 
 type IQuizQuestionRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchManyByExamID(ctx context.Context, quizID string) (Response, error)
+	FetchManyByQuizID(ctx context.Context, quizID string) (Response, error)
 
 	UpdateOne(ctx context.Context, quizQuestion *QuizQuestion) (*mongo.UpdateResult, error)
 	CreateOne(ctx context.Context, quizQuestion *QuizQuestion) error

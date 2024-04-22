@@ -19,9 +19,9 @@ type Input struct {
 
 type IExerciseResultUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchManyByExamID(ctx context.Context, userID string) (Response, error)
+	FetchManyByExerciseID(ctx context.Context, userID string) (Response, error)
 
-	GetResultsByUserIDAndExamID(ctx context.Context, userID string, exerciseID string) (ExerciseResult, error)
+	GetResultsByUserIDAndExerciseID(ctx context.Context, userID string, exerciseID string) (ExerciseResult, error)
 
 	CreateOne(ctx context.Context, exerciseResult *ExerciseResult) error
 	UpdateStatus(ctx context.Context, exerciseResultID string, status int) (*mongo.UpdateResult, error)

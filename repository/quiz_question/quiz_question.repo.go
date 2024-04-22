@@ -56,7 +56,7 @@ func (q quizQuestionRepository) FetchMany(ctx context.Context, page string) (qui
 	return questionsRes, nil
 }
 
-func (q quizQuestionRepository) FetchManyByExamID(ctx context.Context, quizID string) (quiz_question_domain.Response, error) {
+func (q quizQuestionRepository) FetchManyByQuizID(ctx context.Context, quizID string) (quiz_question_domain.Response, error) {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
 
 	idQuiz, err := primitive.ObjectIDFromHex(quizID)

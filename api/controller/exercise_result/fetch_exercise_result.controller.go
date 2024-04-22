@@ -27,7 +27,7 @@ func (e *ExerciseResultController) FetchManyExerciseResult(ctx *gin.Context) {
 func (e *ExerciseResultController) FetchResultByExerciseID(ctx *gin.Context) {
 	exerciseID := ctx.Query("exercise_id")
 
-	exercise, err := e.ExerciseResultUseCase.FetchManyByExamID(ctx, exerciseID)
+	exercise, err := e.ExerciseResultUseCase.FetchManyByExerciseID(ctx, exerciseID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -42,11 +42,11 @@ func (e *ExerciseResultController) FetchResultByExerciseID(ctx *gin.Context) {
 	})
 }
 
-func (e *ExerciseResultController) GetResultsByUserIDAndExamID(ctx *gin.Context) {
+func (e *ExerciseResultController) GetResultsByUserIDAndExerciseID(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-	examId := ctx.Query("exam_id")
+	exerciseId := ctx.Query("exercise_id")
 
-	exam, err := e.ExerciseResultUseCase.GetResultsByUserIDAndExamID(ctx, fmt.Sprintf("%s", currentUser), examId)
+	exercise, err := e.ExerciseResultUseCase.GetResultsByUserIDAndExerciseID(ctx, fmt.Sprintf("%s", currentUser), exerciseId)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -57,6 +57,6 @@ func (e *ExerciseResultController) GetResultsByUserIDAndExamID(ctx *gin.Context)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
-		"data":   exam,
+		"data":   exercise,
 	})
 }
