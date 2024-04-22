@@ -1,4 +1,4 @@
-package quizQuestionRepository
+package quiz_question_usecase
 
 import (
 	quiz_question_domain "clean-architecture/domain/quiz_question"

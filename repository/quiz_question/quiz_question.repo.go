@@ -1,4 +1,4 @@
-package quiz_question
+package quiz_question_repository
 
 import (
 	quiz_question_domain "clean-architecture/domain/quiz_question"
@@ -12,9 +12,17 @@ import (
 )
 
 type quizQuestionRepository struct {
-	database           mongo.Database
+	database           *mongo.Database
 	collectionQuestion string
 	collectionExam     string
+}
+
+func NewQuizQuestionRepository(db *mongo.Database, collectionQuestion string, collectionExam string) quiz_question_domain.IQuizQuestionRepository {
+	return &quizQuestionRepository{
+		database:           db,
+		collectionQuestion: collectionQuestion,
+		collectionExam:     collectionExam,
+	}
 }
 
 func (q quizQuestionRepository) FetchMany(ctx context.Context, page string) (quiz_question_domain.Response, error) {
@@ -141,12 +149,4 @@ func (q quizQuestionRepository) DeleteOne(ctx context.Context, quizID string) er
 
 	_, err = collectionQuestion.DeleteOne(ctx, filter)
 	return err
-}
-
-func NewQuizQuestionRepository(db mongo.Database, collectionQuestion string, collectionExam string) quiz_question_domain.IQuizQuestionRepository {
-	return &quizQuestionRepository{
-		database:           db,
-		collectionQuestion: collectionQuestion,
-		collectionExam:     collectionExam,
-	}
 }
