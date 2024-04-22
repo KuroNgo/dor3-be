@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (q *QuizResultController) DeleteOneQuiz(ctx *gin.Context) {
+func (q *QuizResultController) DeleteOneQuizResult(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -24,8 +24,8 @@ func (q *QuizResultController) DeleteOneQuiz(ctx *gin.Context) {
 		return
 	}
 
-	answerID := ctx.Query("_id")
-	err = q.QuizResultUseCase.DeleteOne(ctx, answerID)
+	resultID := ctx.Query("_id")
+	err = q.QuizResultUseCase.DeleteOne(ctx, resultID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

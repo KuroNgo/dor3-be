@@ -24,8 +24,8 @@ func (e *QuizResultController) FetchManyExerciseResult(ctx *gin.Context) {
 	})
 }
 
-func (e *QuizResultController) FetchResultByExerciseID(ctx *gin.Context) {
-	exerciseID := ctx.Query("exercise_id")
+func (e *QuizResultController) FetchResultByQuizID(ctx *gin.Context) {
+	exerciseID := ctx.Query("quiz_id")
 
 	exercise, err := e.QuizResultUseCase.FetchManyByQuizID(ctx, exerciseID)
 	if err != nil {
@@ -42,7 +42,7 @@ func (e *QuizResultController) FetchResultByExerciseID(ctx *gin.Context) {
 	})
 }
 
-func (e *QuizResultController) GetResultsByUserIDAndExamID(ctx *gin.Context) {
+func (e *QuizResultController) GetResultsByUserIDAndQuizID(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
 	examId := ctx.Query("exam_id")
 

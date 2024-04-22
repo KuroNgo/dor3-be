@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func (e *QuizAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
+func (q *QuizAnswerController) CreateOneQuizAnswer(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -18,7 +18,7 @@ func (e *QuizAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 		})
 		return
 	}
-	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	user, err := q.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || user == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
@@ -44,7 +44,7 @@ func (e *QuizAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 		SubmittedAt: time.Now(),
 	}
 
-	err = e.QuizAnswerUseCase.CreateOne(ctx, &answer)
+	err = q.QuizAnswerUseCase.CreateOne(ctx, &answer)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
