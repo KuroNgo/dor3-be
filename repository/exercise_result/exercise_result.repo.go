@@ -1,4 +1,4 @@
-package exercise_result
+package exercise_result_repository
 
 import (
 	exercise_result_domain "clean-architecture/domain/exercise_result"
@@ -13,12 +13,12 @@ import (
 )
 
 type exerciseResultRepository struct {
-	database                 mongo.Database
+	database                 *mongo.Database
 	collectionExerciseResult string
 	collectionExercise       string
 }
 
-func NewExerciseResultRepository(db mongo.Database, collectionExerciseResult string, collectionExercise string) exercise_result_domain.IExerciseResultRepository {
+func NewExerciseResultRepository(db *mongo.Database, collectionExerciseResult string, collectionExercise string) exercise_result_domain.IExerciseResultRepository {
 	return &exerciseResultRepository{
 		database:                 db,
 		collectionExerciseResult: collectionExerciseResult,

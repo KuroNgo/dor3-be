@@ -1,4 +1,4 @@
-package quiz_answer
+package quiz_answer_repository
 
 import (
 	quiz_answer_domain "clean-architecture/domain/quiz_answer"

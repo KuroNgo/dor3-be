@@ -1,4 +1,4 @@
-package exercise_question
+package exercise_question_repository
 
 import (
 	exercise_questions_domain "clean-architecture/domain/exercise_questions"
@@ -12,12 +12,12 @@ import (
 )
 
 type exerciseQuestionRepository struct {
-	database           mongo.Database
+	database           *mongo.Database
 	collectionQuestion string
 	collectionExercise string
 }
 
-func NewExerciseQuestionRepository(db mongo.Database, collectionQuestion string, collectionExercise string) exercise_questions_domain.IExerciseQuestionRepository {
+func NewExerciseQuestionRepository(db *mongo.Database, collectionQuestion string, collectionExercise string) exercise_questions_domain.IExerciseQuestionRepository {
 	return &exerciseQuestionRepository{
 		database:           db,
 		collectionQuestion: collectionQuestion,

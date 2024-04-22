@@ -1,45 +1,33 @@
-package quiz_answer
+package quiz_answer_usecase
 
 import (
-	quiz_result_domain "clean-architecture/domain/quiz_result"
+	quiz_answer_domain "clean-architecture/domain/quiz_answer"
 	"context"
 	"time"
 )
 
 type quizResultUseCase struct {
-	quizQuestionRepository quiz_result_domain.IQuizResultRepository
-	contextTimeout         time.Duration
+	quizAnswerRepository quiz_answer_domain.IQuizAnswerRepository
+	contextTimeout       time.Duration
 }
 
-func (q *quizResultUseCase) FetchMany(ctx context.Context, page string) (quiz_result_domain.Response, error) {
+func (q *quizResultUseCase) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (quiz_answer_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizQuestionRepository.FetchMany(ctx, page)
+	data, err := q.quizAnswerRepository.FetchManyAnswerByUserIDAndQuestionID(ctx, questionID, userID)
 	if err != nil {
-		return quiz_result_domain.Response{}, err
+		return quiz_answer_domain.Response{}, err
 	}
 
 	return data, nil
 }
 
-func (q *quizResultUseCase) FetchManyByQuizID(ctx context.Context, quizID string) (quiz_result_domain.Response, error) {
+func (q *quizResultUseCase) CreateOne(ctx context.Context, quizAnswer *quiz_answer_domain.QuizAnswer) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizQuestionRepository.FetchManyByQuizID(ctx, quizID)
-	if err != nil {
-		return quiz_result_domain.Response{}, err
-	}
-
-	return data, nil
-}
-
-func (q *quizResultUseCase) CreateOne(ctx context.Context, quizResult *quiz_result_domain.QuizResult) error {
-	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
-	defer cancel()
-
-	err := q.quizQuestionRepository.CreateOne(ctx, quizResult)
+	err := q.quizAnswerRepository.CreateOne(ctx, quizAnswer)
 	if err != nil {
 		return err
 	}
@@ -47,11 +35,11 @@ func (q *quizResultUseCase) CreateOne(ctx context.Context, quizResult *quiz_resu
 	return nil
 }
 
-func (q *quizResultUseCase) DeleteOne(ctx context.Context, quizResultID string) error {
+func (q *quizResultUseCase) DeleteOne(ctx context.Context, quizID string) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	err := q.quizQuestionRepository.DeleteOne(ctx, quizResultID)
+	err := q.quizAnswerRepository.DeleteOne(ctx, quizID)
 	if err != nil {
 		return err
 	}
@@ -59,9 +47,9 @@ func (q *quizResultUseCase) DeleteOne(ctx context.Context, quizResultID string) 
 	return nil
 }
 
-func NewQuizResultUseCase(quizQuestionRepository quiz_result_domain.IQuizResultRepository, timeout time.Duration) quiz_result_domain.IQuizResultUseCase {
+func NewQuizResultUseCase(quizAnswerRepository quiz_answer_domain.IQuizAnswerRepository, timeout time.Duration) quiz_answer_domain.IQuizAnswerUseCase {
 	return &quizResultUseCase{
-		quizQuestionRepository: quizQuestionRepository,
-		contextTimeout:         timeout,
+		quizAnswerRepository: quizAnswerRepository,
+		contextTimeout:       timeout,
 	}
 }

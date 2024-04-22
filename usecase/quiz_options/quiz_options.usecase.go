@@ -1,4 +1,4 @@
-package quiz_options
+package quiz_options_usecase
 
 import (
 	quiz_options_domain "clean-architecture/domain/quiz_options"
@@ -10,6 +10,13 @@ import (
 type quizOptionsUseCase struct {
 	quizOptionsRepository quiz_options_domain.IQuizOptionRepository
 	contextTimeout        time.Duration
+}
+
+func NewQuizOptionsUseCase(quizOptionsRepository quiz_options_domain.IQuizOptionRepository, timeout time.Duration) quiz_options_domain.IQuizOptionUseCase {
+	return &quizOptionsUseCase{
+		quizOptionsRepository: quizOptionsRepository,
+		contextTimeout:        timeout,
+	}
 }
 
 func (q *quizOptionsUseCase) FetchManyByQuestionID(ctx context.Context, questionID string) (quiz_options_domain.Response, error) {
@@ -58,11 +65,4 @@ func (q *quizOptionsUseCase) DeleteOne(ctx context.Context, optionsID string) er
 	}
 
 	return nil
-}
-
-func NewQuizOptionsUseCase(quizOptionsRepository quiz_options_domain.IQuizOptionRepository, timeout time.Duration) quiz_options_domain.IQuizOptionRepository {
-	return &quizOptionsUseCase{
-		quizOptionsRepository: quizOptionsRepository,
-		contextTimeout:        timeout,
-	}
 }
