@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (e *QuizOptionsController) DeleteOneExerciseOptions(ctx *gin.Context) {
+func (e *QuizOptionsController) DeleteOneQuizOptions(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

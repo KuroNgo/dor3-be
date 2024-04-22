@@ -1,4 +1,4 @@
-package quiz_result
+package quiz_result_usecase
 
 import (
 	quiz_result_domain "clean-architecture/domain/quiz_result"
@@ -46,7 +46,7 @@ func (q *quizResultUseCase) GetResultsByUserIDAndQuizID(ctx context.Context, use
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizQuestionRepository.GetResultsByUserIDAndExerciseID(ctx, userID, quizID)
+	data, err := q.quizQuestionRepository.GetResultsByUserIDAndQuizID(ctx, userID, quizID)
 	if err != nil {
 		return quiz_result_domain.QuizResult{}, err
 	}

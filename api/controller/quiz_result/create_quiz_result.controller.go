@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (q *QuizResultController) CreateOneExercise(ctx *gin.Context) {
+func (q *QuizResultController) CreateOneQuizResult(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

@@ -40,7 +40,7 @@ func (e *QuizAnswerController) DeleteOneAnswer(ctx *gin.Context) {
 	})
 }
 
-func (e *QuizAnswerController) DeleteAllAnswerInExerciseID(ctx *gin.Context) {
+func (e *QuizAnswerController) DeleteAllAnswerInQuizID(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -59,8 +59,8 @@ func (e *QuizAnswerController) DeleteAllAnswerInExerciseID(ctx *gin.Context) {
 		return
 	}
 
-	examID := ctx.Query("_id")
-	err = e.QuizAnswerUseCase.DeleteOne(ctx, examID)
+	quizID := ctx.Query("_id")
+	err = e.QuizAnswerUseCase.DeleteOne(ctx, quizID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

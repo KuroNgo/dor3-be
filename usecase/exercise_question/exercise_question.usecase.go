@@ -35,7 +35,7 @@ func (e *exerciseQuestionUseCase) FetchManyByExerciseID(ctx context.Context, exe
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.exerciseQuestionRepository.FetchManyByExamID(ctx, exerciseID)
+	data, err := e.exerciseQuestionRepository.FetchManyByExerciseID(ctx, exerciseID)
 	if err != nil {
 		return exercise_questions_domain.Response{}, err
 	}

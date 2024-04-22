@@ -1,4 +1,4 @@
-package quiz_result
+package quiz_result_repository
 
 import (
 	quiz_result_domain "clean-architecture/domain/quiz_result"
@@ -14,12 +14,20 @@ import (
 
 type quizResultRepository struct {
 	database             *mongo.Database
-	collectionExamResult string
-	collectionExam       string
+	collectionQuizResult string
+	collectionQuiz       string
+}
+
+func NewQuizResultRepository(db *mongo.Database, collectionQuizResult string, collectionQuiz string) quiz_result_domain.IQuizResultRepository {
+	return &quizResultRepository{
+		database:             db,
+		collectionQuizResult: collectionQuizResult,
+		collectionQuiz:       collectionQuiz,
+	}
 }
 
 func (q *quizResultRepository) FetchMany(ctx context.Context, page string) (quiz_result_domain.Response, error) {
-	collectionResult := q.database.Collection(q.collectionExamResult)
+	collectionResult := q.database.Collection(q.collectionQuizResult)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -52,7 +60,7 @@ func (q *quizResultRepository) FetchMany(ctx context.Context, page string) (quiz
 }
 
 func (q *quizResultRepository) FetchManyByQuizID(ctx context.Context, quizID string) (quiz_result_domain.Response, error) {
-	collectionResult := q.database.Collection(q.collectionExamResult)
+	collectionResult := q.database.Collection(q.collectionQuizResult)
 
 	idQuiz, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
@@ -84,7 +92,7 @@ func (q *quizResultRepository) FetchManyByQuizID(ctx context.Context, quizID str
 }
 
 func (q *quizResultRepository) FetchManyByUserID(ctx context.Context, userID string) (quiz_result_domain.Response, error) {
-	collectionResult := q.database.Collection(q.collectionExamResult)
+	collectionResult := q.database.Collection(q.collectionQuizResult)
 
 	idUser, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -128,8 +136,8 @@ func (q *quizResultRepository) FetchManyByUserID(ctx context.Context, userID str
 	return resultRes, nil
 }
 
-func (q *quizResultRepository) GetResultsByUserIDAndExerciseID(ctx context.Context, userID string, exerciseID string) (quiz_result_domain.QuizResult, error) {
-	collection := q.database.Collection(q.collectionExamResult)
+func (q *quizResultRepository) GetResultsByUserIDAndQuizID(ctx context.Context, userID string, exerciseID string) (quiz_result_domain.QuizResult, error) {
+	collection := q.database.Collection(q.collectionQuizResult)
 
 	var result quiz_result_domain.QuizResult
 
@@ -200,17 +208,17 @@ func (q *quizResultRepository) GetOverallPerformance(ctx context.Context, userID
 }
 
 func (q *quizResultRepository) CreateOne(ctx context.Context, quizResult *quiz_result_domain.QuizResult) error {
-	collectionResult := q.database.Collection(q.collectionExamResult)
-	collectionExam := q.database.Collection(q.collectionExam)
+	collectionResult := q.database.Collection(q.collectionQuizResult)
+	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
-	filterExamID := bson.M{"quiz_id": quizResult.QuizID}
-	countLessonID, err := collectionExam.CountDocuments(ctx, filterExamID)
+	filterQuizID := bson.M{"quiz_id": quizResult.QuizID}
+	countLessonID, err := collectionQuiz.CountDocuments(ctx, filterQuizID)
 	if err != nil {
 		return err
 	}
 
 	if countLessonID == 0 {
-		return errors.New("the examID do not exist")
+		return errors.New("the quizID do not exist")
 	}
 
 	_, err = collectionResult.InsertOne(ctx, quizResult)
@@ -218,7 +226,7 @@ func (q *quizResultRepository) CreateOne(ctx context.Context, quizResult *quiz_r
 }
 
 func (q *quizResultRepository) DeleteOne(ctx context.Context, quizResultID string) error {
-	collectionResult := q.database.Collection(q.collectionExamResult)
+	collectionResult := q.database.Collection(q.collectionQuizResult)
 
 	objID, err := primitive.ObjectIDFromHex(quizResultID)
 	if err != nil {
@@ -239,7 +247,7 @@ func (q *quizResultRepository) DeleteOne(ctx context.Context, quizResultID strin
 }
 
 func (q *quizResultRepository) UpdateStatus(ctx context.Context, quizResultID string, status int) (*mongo.UpdateResult, error) {
-	collection := q.database.Collection(q.collectionExamResult)
+	collection := q.database.Collection(q.collectionQuizResult)
 
 	filter := bson.D{{Key: "quiz_id", Value: quizResultID}}
 	update := bson.M{
@@ -273,12 +281,4 @@ func (q *quizResultRepository) CalculatePercentage(ctx context.Context, correctA
 
 	percentage := float64(correctAnswers) / float64(totalQuestions) * 100
 	return percentage
-}
-
-func NewQuizResultRepository(db *mongo.Database, collectionExamResult string, collectionExam string) quiz_result_domain.IQuizResultRepository {
-	return &quizResultRepository{
-		database:             db,
-		collectionExamResult: collectionExamResult,
-		collectionExam:       collectionExam,
-	}
 }

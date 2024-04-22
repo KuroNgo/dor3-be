@@ -28,7 +28,7 @@ func ExerciseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Dat
 
 	router := group.Group("/exercise/answer")
 	router.GET("/fetch", middleware.DeserializeUser(), answer.FetchManyAnswerByUserIDAndQuestionID)
-	router.POST("/create", middleware.DeserializeUser(), answer.CreateOneExamAnswer)
+	router.POST("/create", middleware.DeserializeUser(), answer.CreateOneExerciseAnswer)
 	router.DELETE("/delete", middleware.DeserializeUser(), answer.DeleteOneAnswer)
 	router.GET("/delete/all", middleware.DeserializeUser(), answer.DeleteAllAnswerInExerciseID)
 }

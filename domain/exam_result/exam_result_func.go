@@ -8,12 +8,13 @@ import (
 )
 
 type Input struct {
-	ID        primitive.ObjectID `bson:"_id" json:"_id"`
-	UserID    primitive.ObjectID `bson:"user_id" json:"user_id"`
-	ExamID    primitive.ObjectID `bson:"exam_id" json:"exam_id"`
-	Score     int16              `bson:"score" json:"score"`
-	StartedAt time.Time          `bson:"started_at" json:"started_at"`
-	Status    int                `bson:"is_complete" json:"is_complete"`
+	ID     primitive.ObjectID `bson:"_id" json:"_id"`
+	UserID primitive.ObjectID `bson:"user_id" json:"user_id"`
+	ExamID primitive.ObjectID `bson:"exam_id" json:"exam_id"`
+
+	Score     int16     `bson:"score" json:"score"`
+	StartedAt time.Time `bson:"started_at" json:"started_at"`
+	Status    int       `bson:"is_complete" json:"is_complete"`
 }
 
 type IExamResultUseCase interface {

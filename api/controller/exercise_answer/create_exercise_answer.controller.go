@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func (e *ExerciseAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
+func (e *ExerciseAnswerController) CreateOneExerciseAnswer(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

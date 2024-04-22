@@ -56,7 +56,7 @@ func (e *exerciseQuestionRepository) FetchMany(ctx context.Context, page string)
 	return questionsRes, nil
 }
 
-func (e *exerciseQuestionRepository) FetchManyByExamID(ctx context.Context, exerciseID string) (exercise_questions_domain.Response, error) {
+func (e *exerciseQuestionRepository) FetchManyByExerciseID(ctx context.Context, exerciseID string) (exercise_questions_domain.Response, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
 	idExam, err := primitive.ObjectIDFromHex(exerciseID)
@@ -64,7 +64,7 @@ func (e *exerciseQuestionRepository) FetchManyByExamID(ctx context.Context, exer
 		return exercise_questions_domain.Response{}, err
 	}
 
-	filter := bson.M{"exam_id": idExam}
+	filter := bson.M{"exercise_id": idExam}
 	cursor, err := collectionQuestion.Find(ctx, filter)
 	if err != nil {
 		return exercise_questions_domain.Response{}, err

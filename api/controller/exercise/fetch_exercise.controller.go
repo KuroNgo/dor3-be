@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (e *ExerciseController) FetchMany(ctx *gin.Context) {
+func (e *ExerciseController) FetchManyExercise(ctx *gin.Context) {
 	_, err := ctx.Cookie("access_token")
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
