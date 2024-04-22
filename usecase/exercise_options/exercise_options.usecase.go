@@ -1,4 +1,4 @@
-package exercise_options
+package exercise_options_usecase
 
 import (
 	exercise_options_domain "clean-architecture/domain/exercise_options"

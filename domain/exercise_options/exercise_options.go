@@ -15,8 +15,9 @@ type ExerciseOptions struct {
 	ID         primitive.ObjectID `bson:"_id" json:"_id"`
 	QuestionID primitive.ObjectID `bson:"question_id" json:"question_id"`
 
-	Content    string `bson:"content" json:"content"`
-	BlankIndex int    `bson:"blank_index" json:"blank_index"`
+	Content       string `bson:"content" json:"content"`
+	BlankIndex    int    `bson:"blank_index" json:"blank_index"`
+	CorrectAnswer string `bson:"correct_answer" json:"correct_answer"`
 
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 	UpdateAt  time.Time `bson:"update_at" json:"update_at"`

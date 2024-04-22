@@ -13,7 +13,7 @@ type Input struct {
 	Content string `bson:"content" json:"content"`
 }
 
-type IExamOptionUseCase interface {
+type IQuizOptionUseCase interface {
 	FetchManyByQuestionID(ctx context.Context, questionID string) (Response, error)
 	UpdateOne(ctx context.Context, quizOptions *QuizOptions) (*mongo.UpdateResult, error)
 	CreateOne(ctx context.Context, quizOptions *QuizOptions) error

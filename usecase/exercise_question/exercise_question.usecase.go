@@ -1,4 +1,4 @@
-package exercise_question
+package exercise_question_usecase
 
 import (
 	exercise_questions_domain "clean-architecture/domain/exercise_questions"

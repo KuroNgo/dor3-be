@@ -15,7 +15,8 @@ type QuizOptions struct {
 	ID         primitive.ObjectID `bson:"_id" json:"_id"`
 	QuestionID primitive.ObjectID `bson:"question_id" json:"question_id"`
 
-	Content string `bson:"content" json:"content"`
+	Content       string `bson:"content" json:"content"`
+	CorrectAnswer string `bson:"correct_answer" json:"correct_answer"`
 
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 	UpdateAt  time.Time `bson:"update_at" json:"update_at"`
