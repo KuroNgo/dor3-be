@@ -17,7 +17,6 @@ type MarkToFavourite struct {
 }
 
 type Response struct {
-	CountMarkList   int64 `json:"count_mark_list"`
 	MarkToFavourite []MarkToFavourite
 }
 

@@ -4,8 +4,8 @@ import (
 	exercise_answer_controller "clean-architecture/api/controller/exercise_answer"
 	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
-	quiz_answer_domain "clean-architecture/domain/quiz_answer"
-	quiz_question_domain "clean-architecture/domain/quiz_question"
+	exercise_answer_domain "clean-architecture/domain/exercise_answer"
+	exercise_questions_domain "clean-architecture/domain/exercise_questions"
 	user_domain "clean-architecture/domain/user"
 	exercise_answer_repository "clean-architecture/repository/exercise_answer"
 	user_repository "clean-architecture/repository/user"
@@ -17,7 +17,7 @@ import (
 )
 
 func ExerciseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	ans := exercise_answer_repository.NewExerciseAnswerRepository(db, quiz_question_domain.CollectionQuizQuestion, quiz_answer_domain.CollectionQuizAnswers)
+	ans := exercise_answer_repository.NewExerciseAnswerRepository(db, exercise_questions_domain.CollectionExerciseQuestion, exercise_answer_domain.CollectionExerciseAnswers)
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
 
 	answer := &exercise_answer_controller.ExerciseAnswerController{

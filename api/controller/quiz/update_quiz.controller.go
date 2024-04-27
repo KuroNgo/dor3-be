@@ -38,14 +38,13 @@ func (q *QuizController) UpdateOneQuiz(ctx *gin.Context) {
 	}
 
 	updateQuiz := quiz_domain.Quiz{
-		LessonID:     quiz.LessonID,
-		UnitID:       quiz.UnitID,
-		VocabularyID: quiz.VocabularyID,
-		Title:        quiz.Title,
-		Description:  quiz.Description,
-		Duration:     quiz.Duration,
-		WhoUpdates:   admin.FullName,
-		UpdatedAt:    time.Now(),
+		LessonID:    quiz.LessonID,
+		UnitID:      quiz.UnitID,
+		Title:       quiz.Title,
+		Description: quiz.Description,
+		Duration:    quiz.Duration,
+		WhoUpdates:  admin.FullName,
+		UpdatedAt:   time.Now(),
 	}
 
 	_, err = q.QuizUseCase.UpdateOne(ctx, &updateQuiz)
@@ -92,14 +91,13 @@ func (q *QuizController) UpdateComplete(ctx *gin.Context) {
 	}
 
 	updateQuiz := quiz_domain.Quiz{
-		LessonID:     quiz.LessonID,
-		UnitID:       quiz.UnitID,
-		VocabularyID: quiz.VocabularyID,
-		Title:        quiz.Title,
-		Description:  quiz.Description,
-		Duration:     quiz.Duration,
-		WhoUpdates:   admin.FullName,
-		UpdatedAt:    time.Now(),
+		LessonID:    quiz.LessonID,
+		UnitID:      quiz.UnitID,
+		Title:       quiz.Title,
+		Description: quiz.Description,
+		Duration:    quiz.Duration,
+		WhoUpdates:  admin.FullName,
+		UpdatedAt:   time.Now(),
 	}
 
 	err = q.QuizUseCase.UpdateCompleted(ctx, &updateQuiz)

@@ -36,6 +36,18 @@ func (e *exerciseQuestionRepository) FetchMany(ctx context.Context, page string)
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
+	count, err := collectionQuestion.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return exercise_questions_domain.Response{}, err
+	}
+
+	cal1 := count / int64(perPage)
+	cal2 := count % int64(perPage)
+	var cal int64 = 0
+	if cal2 != 0 {
+		cal = cal1 + 1
+	}
+
 	cursor, err := collectionQuestion.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
 		return exercise_questions_domain.Response{}, err
@@ -51,6 +63,7 @@ func (e *exerciseQuestionRepository) FetchMany(ctx context.Context, page string)
 		questions = append(questions, question)
 	}
 	questionsRes := exercise_questions_domain.Response{
+		Page:             cal,
 		ExerciseQuestion: questions,
 	}
 	return questionsRes, nil

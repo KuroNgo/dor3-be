@@ -68,13 +68,13 @@ func (l *lessonUseCase) UpdateComplete(ctx context.Context, lessonID string, les
 	return err
 }
 
-func (l *lessonUseCase) FetchMany(ctx context.Context) (lesson_domain.Response, error) {
+func (l *lessonUseCase) FetchMany(ctx context.Context) ([]lesson_domain.LessonResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()
 
 	lesson, err := l.lessonRepository.FetchMany(ctx)
 	if err != nil {
-		return lesson_domain.Response{}, err
+		return nil, err
 	}
 
 	return lesson, err

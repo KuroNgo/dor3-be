@@ -31,14 +31,7 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
-	var userInput user_domain.Input
-	if err := ctx.ShouldBindJSON(&userInput); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "fail",
-			"message": err.Error(),
-		})
-		return
-	}
+	phone := ctx.Request.FormValue("phone")
 
 	result, err := u.UserUseCase.GetByID(ctx, fmt.Sprint(sub))
 	if err != nil {
@@ -53,8 +46,8 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 	if err != nil {
 		userResponse := user_domain.User{
 			FullName:  result.FullName,
-			Email:     userInput.Email,
-			Phone:     userInput.Phone,
+			Email:     result.Email,
+			Phone:     phone,
 			Role:      result.Role,
 			UpdatedAt: time.Now(),
 		}
@@ -74,17 +67,6 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
-	// Nếu có file được tải lên, tiến hành xử lý file
-	file, err = ctx.FormFile("file")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Error parsing form",
-			"message": err.Error(),
-		})
-		return
-	}
-
-	// Kiểm tra xem file có phải là hình ảnh không
 	if !file_internal.IsImage(file.Filename) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid file format. Only images are allowed.",
@@ -115,8 +97,8 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 	resultString, err := json.Marshal(result)
 	userResponse := user_domain.User{
 		FullName:  result.FullName,
-		Email:     userInput.Email,
-		Phone:     userInput.Phone,
+		Email:     result.Email,
+		Phone:     result.Phone,
 		Role:      result.Role,
 		AvatarURL: imageURL.ImageURL,
 		AssetID:   imageURL.AssetID,

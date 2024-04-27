@@ -128,7 +128,7 @@ func (a *adminRepository) UpdateOne(ctx context.Context, admin *admin_domain.Adm
 			"address":    admin.Address,
 			"phone":      admin.Phone,
 			"updated_at": admin.UpdatedAt,
-			"avatar":     admin.Avatar,
+			"avatar":     admin.AvatarURL,
 		},
 	}
 

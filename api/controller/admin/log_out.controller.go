@@ -10,7 +10,7 @@ func (a *AdminController) Logout(ctx *gin.Context) {
 	ctx.SetCookie("refresh_token", "", -1, "/", "localhost", false, true)
 	ctx.SetCookie("logged_in", "", -1, "/", "localhost", false, false)
 
-	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
 }

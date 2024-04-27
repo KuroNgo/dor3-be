@@ -7,7 +7,8 @@ import (
 
 // FetchManyQuiz done
 func (q *QuizController) FetchManyQuiz(ctx *gin.Context) {
-	quiz, err := q.QuizUseCase.FetchMany(ctx)
+	page := ctx.DefaultQuery("page", "1")
+	quiz, err := q.QuizUseCase.FetchMany(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

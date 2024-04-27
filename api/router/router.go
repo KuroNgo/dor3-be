@@ -39,7 +39,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	value := activity_log_route.ActivityRoute(env, timeout, db)
 
 	publicRouter := gin.Group("/api/")
-	privateRouter := gin.Group("/api/admin")
+	privateRouter := gin.Group("/api/admin/")
 
 	// Middleware
 	publicRouter.Use(
@@ -52,7 +52,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	)
 
 	privateRouter.Use(
-		middleware.CORS(),
+		middleware.CORSPrivate(),
 		//middleware.RateLimiter(),
 		middleware.Recover(),
 		gzip.Gzip(gzip.DefaultCompression,
@@ -83,6 +83,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	quiz_route.QuizRouter(env, timeout, db, publicRouter)
 	quiz_answer_route.QuizAnswerRoute(env, timeout, db, publicRouter)
 	quiz_question_route.QuizQuestionRoute(env, timeout, db, publicRouter)
+	quiz_options_route.QuizOptionsRoute(env, timeout, db, publicRouter)
 	quiz_result_route.QuizResultRoute(env, timeout, db, publicRouter)
 
 	mark_vocabulary_route.MarkVocabularyRoute(env, timeout, db, publicRouter)

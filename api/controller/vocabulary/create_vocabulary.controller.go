@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"os"
+	"time"
 )
 
 func (v *VocabularyController) CreateOneVocabulary(ctx *gin.Context) {
@@ -56,6 +57,8 @@ func (v *VocabularyController) CreateOneVocabulary(ctx *gin.Context) {
 		LinkURL:       vocabularyInput.LinkURL,
 		UnitID:        vocabularyInput.UnitID,
 		IsFavourite:   0,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 		WhoUpdates:    admin.FullName,
 	}
 
@@ -147,6 +150,8 @@ func (v *VocabularyController) CreateVocabularyWithFileInAdmin(ctx *gin.Context)
 			FieldOfIT:     vocabulary.FieldOfIT,
 			LinkURL:       "",
 			IsFavourite:   0,
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
 			WhoUpdates:    admin.FullName,
 		}
 		vocabularies = append(vocabularies, v)
@@ -249,6 +254,8 @@ func (v *VocabularyController) CreateVocabularyWithFileInUser(ctx *gin.Context) 
 			FieldOfIT:     vocabulary.FieldOfIT,
 			LinkURL:       "",
 			IsFavourite:   0,
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
 			WhoUpdates:    admin.FullName,
 		}
 		vocabularies = append(vocabularies, v)

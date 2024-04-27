@@ -30,7 +30,8 @@ type ExamQuestion struct {
 }
 
 type Response struct {
-	Count        int `bson:"count" json:"count"`
+	Count        int   `bson:"count" json:"count"`
+	Page         int64 `bson:"page" json:"page"`
 	ExamQuestion []ExamQuestion
 }
 

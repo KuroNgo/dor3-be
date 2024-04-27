@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (l *LoginFromRoleController) Login2(ctx *gin.Context) {
+func (l *LoginFromRoleController) Login(ctx *gin.Context) {
 	//  Lấy thông tin từ request
 	var adminInput admin_domain.SignIn
 	if err := ctx.ShouldBindJSON(&adminInput); err != nil {

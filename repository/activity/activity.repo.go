@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -51,6 +52,14 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
+	count, err := collection.CountDocuments(ctx, bson.D{})
+	cal1 := count / int64(perPage)
+	cal2 := count % int64(perPage)
+	var cal int64 = 0
+	if cal2 != 0 {
+		cal = cal1 + 1
+	}
+
 	cursor, err := collection.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
 		return activity_log_domain.Response{}, err
@@ -75,7 +84,13 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 		activities = append(activities, activity)
 	}
 
+	// Sắp xếp slice activities theo thời gian giảm dần (từ mới nhất đến cũ nhất)
+	sort.Slice(activities, func(i, j int) bool {
+		return activities[i].ActivityTime.After(activities[j].ActivityTime)
+	})
+
 	activityRes := activity_log_domain.Response{
+		Page:        cal,
 		ActivityLog: activities,
 	}
 	return activityRes, nil

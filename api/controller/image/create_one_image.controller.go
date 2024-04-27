@@ -20,17 +20,10 @@ func (im *ImageController) CreateOneImageStatic(ctx *gin.Context) {
 		return
 	}
 
-	// Lấy file từ form
 	file, err := ctx.FormFile("files")
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
-	f, err := file.Open()
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error opening uploaded file",
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
 		})
 		return
 	}
@@ -42,14 +35,15 @@ func (im *ImageController) CreateOneImageStatic(ctx *gin.Context) {
 		return
 	}
 
-	filename, ok := ctx.Get("filePath")
-	if !ok {
+	f, err := file.Open()
+	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "filename not found",
+			"error": err.Error(),
 		})
+		return
 	}
 
-	result, err := cloudinary.UploadToCloudinary(f, filename.(string), im.Database.CloudinaryUploadFolderStatic)
+	result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderStatic)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -91,18 +85,10 @@ func (im *ImageController) CreateOneImageLesson(ctx *gin.Context) {
 		})
 		return
 	}
-
-	// Lấy file từ form
 	file, err := ctx.FormFile("files")
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
-	f, err := file.Open()
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error opening uploaded file",
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
 		})
 		return
 	}
@@ -114,14 +100,15 @@ func (im *ImageController) CreateOneImageLesson(ctx *gin.Context) {
 		return
 	}
 
-	filename, ok := ctx.Get("filePath")
-	if !ok {
+	f, err := file.Open()
+	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "filename not found",
+			"error": err.Error(),
 		})
+		return
 	}
 
-	result, err := cloudinary.UploadToCloudinary(f, filename.(string), im.Database.CloudinaryUploadFolderLesson)
+	result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderLesson)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -164,17 +151,10 @@ func (im *ImageController) CreateOneImageUser(ctx *gin.Context) {
 		return
 	}
 
-	// Lấy file từ form
-	file, err := ctx.FormFile("file")
+	file, err := ctx.FormFile("files")
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
-	f, err := file.Open()
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error opening uploaded file",
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
 		})
 		return
 	}
@@ -186,14 +166,15 @@ func (im *ImageController) CreateOneImageUser(ctx *gin.Context) {
 		return
 	}
 
-	filename, ok := ctx.Get("filePath")
-	if !ok {
+	f, err := file.Open()
+	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "filename not found",
+			"error": err.Error(),
 		})
+		return
 	}
 
-	result, err := cloudinary.UploadToCloudinary(f, filename.(string), im.Database.CloudinaryUploadFolderUser)
+	result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderUser)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -236,17 +217,18 @@ func (im *ImageController) CreateOneImageExam(ctx *gin.Context) {
 		return
 	}
 
-	// Lấy file từ form
-	file, err := ctx.FormFile("file")
+	file, err := ctx.FormFile("files")
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
 	f, err := file.Open()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error opening uploaded file",
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
 		})
 		return
 	}
@@ -258,14 +240,7 @@ func (im *ImageController) CreateOneImageExam(ctx *gin.Context) {
 		return
 	}
 
-	filename, ok := ctx.Get("filePath")
-	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "filename not found",
-		})
-	}
-
-	result, err := cloudinary.UploadToCloudinary(f, filename.(string), im.Database.CloudinaryUploadFolderExam)
+	result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderExam)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -308,17 +283,18 @@ func (im *ImageController) CreateOneImageQuiz(ctx *gin.Context) {
 		return
 	}
 
-	// Lấy file từ form
-	file, err := ctx.FormFile("file")
+	file, err := ctx.FormFile("files")
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
 	f, err := file.Open()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error opening uploaded file",
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
 		})
 		return
 	}
@@ -330,14 +306,7 @@ func (im *ImageController) CreateOneImageQuiz(ctx *gin.Context) {
 		return
 	}
 
-	filename, ok := ctx.Get("filePath")
-	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "filename not found",
-		})
-	}
-
-	result, err := cloudinary.UploadToCloudinary(f, filename.(string), im.Database.CloudinaryUploadFolderQuiz)
+	result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderQuiz)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),

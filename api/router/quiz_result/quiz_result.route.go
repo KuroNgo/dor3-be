@@ -4,8 +4,8 @@ import (
 	quiz_result_controller "clean-architecture/api/controller/quiz_result"
 	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
-	exercise_domain "clean-architecture/domain/exercise"
-	quiz_question_domain "clean-architecture/domain/quiz_question"
+	quiz_domain "clean-architecture/domain/quiz"
+	quiz_result_domain "clean-architecture/domain/quiz_result"
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/repository/quiz_result"
 	user_repository "clean-architecture/repository/user"
@@ -17,7 +17,7 @@ import (
 )
 
 func QuizResultRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	res := quiz_result_repository.NewQuizResultRepository(db, quiz_question_domain.CollectionQuizQuestion, exercise_domain.CollectionExercise)
+	res := quiz_result_repository.NewQuizResultRepository(db, quiz_result_domain.CollectionQuizResult, quiz_domain.CollectionQuiz)
 	users := user_repository.NewUserRepository(db, user_domain.CollectionUser)
 
 	result := &quiz_result_controller.QuizResultController{
@@ -27,8 +27,8 @@ func QuizResultRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.D
 	}
 
 	router := group.Group("/quiz/result")
-	router.GET("/fetch/quiz/:quiz_id", middleware.DeserializeUser(), result.FetchResultByQuizID)
-	router.GET("/fetch/user/:user_id/quiz/:quiz_id", middleware.DeserializeUser(), result.GetResultsByUserIDAndQuizID)
+	router.GET("/fetch/quiz_id", middleware.DeserializeUser(), result.FetchResultByQuizID)
+	router.GET("/fetch/user_id", middleware.DeserializeUser(), result.GetResultsByUserIDAndQuizID)
 	router.POST("/create", middleware.DeserializeUser(), result.CreateOneQuizResult)
 	router.DELETE("/delete/:_id", middleware.DeserializeUser(), result.DeleteOneQuizResult)
 }

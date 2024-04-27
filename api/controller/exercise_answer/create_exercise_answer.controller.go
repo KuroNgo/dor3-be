@@ -18,6 +18,7 @@ func (e *ExerciseAnswerController) CreateOneExerciseAnswer(ctx *gin.Context) {
 		})
 		return
 	}
+
 	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || user == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

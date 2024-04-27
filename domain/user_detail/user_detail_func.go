@@ -12,8 +12,8 @@ type Input struct {
 }
 
 type IUserDetailUseCase interface {
-	FetchByUserID(c context.Context) (UserDetail, error)
-	Create(c context.Context, user UserDetail) error
+	FetchByUserID(ctx context.Context) (UserDetail, error)
+	Create(ctx context.Context, user UserDetail) error
 	Update(ctx context.Context, user *UserDetail) (*mongo.UpdateResult, error)
-	DeleteOne(c context.Context, userID string) error
+	DeleteOne(ctx context.Context, userID string) error
 }

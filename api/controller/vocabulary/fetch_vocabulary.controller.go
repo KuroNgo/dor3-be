@@ -36,9 +36,7 @@ func (v *VocabularyController) FetchByLesson(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
-		"data": gin.H{
-			"word": vocabulary,
-		},
+		"data":   vocabulary,
 	})
 }
 
@@ -57,9 +55,7 @@ func (v *VocabularyController) FetchMany(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
-		"data": gin.H{
-			"word": vocabulary,
-		},
+		"data":   vocabulary,
 	})
 }
 
@@ -68,7 +64,7 @@ func (v *VocabularyController) FetchByIdUnit(ctx *gin.Context) {
 
 	vocabulary, err := v.VocabularyUseCase.FetchByIdUnit(ctx, idUnit)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": err.Error(),
 		})
@@ -92,9 +88,22 @@ func (v *VocabularyController) FetchAllVocabulary(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"status": "success",
-		"data": gin.H{
-			"word": vocabulary,
-		},
+		"status":     "success",
+		"vocabulary": vocabulary,
+	})
+}
+func (v *VocabularyController) FetchAllVocabularyLatest(ctx *gin.Context) {
+	vocabulary, err := v.VocabularyUseCase.GetLatestVocabulary(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":     "success",
+		"vocabulary": vocabulary,
 	})
 }

@@ -21,7 +21,7 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 	}
 
 	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
-	if err != nil {
+	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
 			"message": "You are not authorized to perform this action!",
@@ -47,10 +47,9 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 	}
 
 	exerciseRes := &exercise_domain.Exercise{
-		Id:           primitive.NewObjectID(),
-		LessonID:     exerciseInput.LessonID,
-		UnitID:       exerciseInput.UnitID,
-		VocabularyID: exerciseInput.VocabularyID,
+		Id:       primitive.NewObjectID(),
+		LessonID: exerciseInput.LessonID,
+		UnitID:   exerciseInput.UnitID,
 
 		Title:       exerciseInput.Title,
 		Description: exerciseInput.Description,

@@ -7,18 +7,19 @@ import (
 )
 
 type Input struct {
-	Id            primitive.ObjectID `bson:"_id" json:"_id"`
-	Word          string             `bson:"word" json:"word"`
-	PartOfSpeech  string             `bson:"part_of_speech" json:"part_of_speech"`
-	Pronunciation string             `bson:"pronunciation" json:"pronunciation"`
-	Mean          string             `bson:"mean" json:"mean"`
-	ExampleVie    string             `bson:"example_vie" json:"example_vie"`
-	ExampleEng    string             `bson:"example_eng" json:"example_eng"`
-	ExplainVie    string             `bson:"explain_vie" json:"explain_vie"`
-	ExplainEng    string             `bson:"explain_eng" json:"explain_eng"`
-	FieldOfIT     string             `bson:"field_of_it" json:"field_of_it"`
-	LinkURL       string             `bson:"link_url" json:"link_url"`
-	UnitID        primitive.ObjectID `bson:"unit_id" json:"unit_id"`
+	Id     primitive.ObjectID `bson:"_id" json:"_id"`
+	UnitID primitive.ObjectID `bson:"unit_id" json:"unit_id"`
+
+	Word          string `bson:"word" json:"word"`
+	PartOfSpeech  string `bson:"part_of_speech" json:"part_of_speech"`
+	Pronunciation string `bson:"pronunciation" json:"pronunciation"`
+	Mean          string `bson:"mean" json:"mean"`
+	ExampleVie    string `bson:"example_vie" json:"example_vie"`
+	ExampleEng    string `bson:"example_eng" json:"example_eng"`
+	ExplainVie    string `bson:"explain_vie" json:"explain_vie"`
+	ExplainEng    string `bson:"explain_eng" json:"explain_eng"`
+	FieldOfIT     string `bson:"field_of_it" json:"field_of_it"`
+	LinkURL       string `bson:"link_url" json:"link_url"`
 }
 
 type FetchByWordInput struct {
@@ -34,15 +35,15 @@ type IVocabularyUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchByIdUnit(ctx context.Context, idUnit string) (Response, error)
 	FindUnitIDByUnitLevel(ctx context.Context, unitLevel int) (primitive.ObjectID, error)
-	FetchByWord(ctx context.Context, word string) (Response, error)
-	FetchByLesson(ctx context.Context, lessonName string) (Response, error)
+	FetchByWord(ctx context.Context, word string) (SearchingResponse, error)
+	FetchByLesson(ctx context.Context, lessonName string) (SearchingResponse, error)
 
 	GetAllVocabulary(ctx context.Context) ([]string, error)
 	GetLatestVocabulary(ctx context.Context) ([]string, error)
 	GetLatestVocabularyBatch(ctx context.Context) (Response, error)
 
 	UpdateOne(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
-	UpdateOneAudio(c context.Context, vocabularyID string, linkURL string) error
+	UpdateOneAudio(ctx context.Context, vocabularyID string, linkURL string) error
 	UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error
 
 	CreateOne(ctx context.Context, vocabulary *Vocabulary) error

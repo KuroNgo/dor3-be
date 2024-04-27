@@ -4,24 +4,23 @@ import (
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal"
 	"clean-architecture/internal/cloud/cloudinary"
+	"clean-architecture/internal/cloud/google"
 	file_internal "clean-architecture/internal/file"
 	"github.com/gin-gonic/gin"
+	"github.com/thanhpk/randstr"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"time"
 )
 
 func (u *UserController) SignUp(ctx *gin.Context) {
-	var user user_domain.SignUp
-	if err := ctx.ShouldBindJSON(&user); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"message": err.Error()},
-		)
-		return
-	}
+	email := ctx.Request.FormValue("email")
+	fullName := ctx.Request.FormValue("full_name")
+	password := ctx.Request.FormValue("password")
+	avatarUrl := ctx.Request.FormValue("avatar_url")
+	phone := ctx.Request.FormValue("phone")
 
-	if !internal.EmailValid(user.Email) {
+	if !internal.EmailValid(email) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"message": "Email Invalid !",
@@ -30,7 +29,7 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 	}
 
 	// Bên phía client sẽ phải so sánh password thêm một lần nữa đã đúng chưa
-	if !internal.PasswordStrong(user.Password) {
+	if !internal.PasswordStrong(password) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status": "error",
 			"message": "Password must have at least 8 characters, " +
@@ -40,7 +39,7 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 	}
 
 	// Băm mật khẩu
-	hashedPassword, err := internal.HashPassword(user.Password)
+	hashedPassword, err := internal.HashPassword(password)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -49,22 +48,21 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	user.Password = hashedPassword
-	user.Password = internal.Santize(user.Password)
-	user.Email = internal.Santize(user.Email)
+	password = hashedPassword
+	password = internal.Santize(password)
+	email = internal.Santize(email)
 	file, err := ctx.FormFile("file")
-
 	if err != nil {
 		newUser := user_domain.User{
 			ID:        primitive.NewObjectID(),
-			FullName:  user.FullName,
-			AvatarURL: user.AvatarURL,
-			Email:     user.Email,
+			FullName:  fullName,
+			AvatarURL: avatarUrl,
+			Email:     email,
 			Password:  hashedPassword,
 			Verified:  false,
 			Provider:  "fe-it",
 			Role:      "user",
-			Phone:     user.Phone,
+			Phone:     phone,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
@@ -79,25 +77,48 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 			return
 		}
 
-		// Thêm công việc cron để gửi email nhắc nhở
-		//err = google.SendEmail(user.Email, subject_const.SignInTheFirstTime, subject_const.ContentTitle2)
-		//if err != nil {
-		//	return
-		//}
+		code := randstr.Dec(6)
+		verificationCode := internal.Encode(code)
+		firstName := newUser.FullName
+
+		updUser := user_domain.User{
+			ID:               newUser.ID,
+			VerificationCode: verificationCode,
+		}
+
+		// Update User in Database
+		_, err = u.UserUseCase.Update(ctx, &updUser)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status":  "error",
+				"message": err.Error()},
+			)
+			return
+		}
+
+		// ? Send Email
+		emailData := google.EmailData{
+			URL:       u.Database.ClientOrigin + "/verifyemail/" + code,
+			FirstName: firstName,
+			Subject:   "Your account verification code",
+		}
+
+		//Thêm công việc cron để gửi email nhắc nhở
+		err = google.SendEmail(&newUser, &emailData, "sign_in_first_time.sendmail.html")
+		if err != nil {
+			ctx.JSON(http.StatusBadGateway, gin.H{
+				"status":  "success",
+				"message": "There was an error sending email",
+			})
+			return
+		}
+
+		message := "We sent an email with a verification code to your email"
 
 		// Trả về phản hồi thành công
 		ctx.JSON(http.StatusOK, gin.H{
-			"status": "success",
-		})
-		return
-	}
-
-	// Nếu có file được tải lên, tiến hành xử lý file
-	file, err = ctx.FormFile("file")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Error parsing form",
-			"message": err.Error(),
+			"status":  "success",
+			"message": message,
 		})
 		return
 	}
@@ -120,9 +141,7 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 	}
 	defer f.Close()
 
-	// Tải file lên Cloudinary
-	filename, _ := ctx.Get("filePath")
-	imageURL, err := cloudinary.UploadToCloudinary(f, filename.(string), u.Database.CloudinaryUploadFolderUser)
+	imageURL, err := cloudinary.UploadToCloudinary(f, file.Filename, u.Database.CloudinaryUploadFolderUser)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -131,15 +150,15 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 	}
 	newUser := user_domain.User{
 		ID:        primitive.NewObjectID(),
-		FullName:  user.FullName,
+		FullName:  fullName,
 		AvatarURL: imageURL.ImageURL,
 		AssetID:   imageURL.AssetID,
-		Email:     user.Email,
+		Email:     email,
 		Password:  hashedPassword,
 		Verified:  false,
 		Provider:  "fe-it",
 		Role:      "user",
-		Phone:     user.Phone,
+		Phone:     phone,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

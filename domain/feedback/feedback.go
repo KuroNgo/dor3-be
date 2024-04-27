@@ -19,7 +19,7 @@ type Feedback struct {
 }
 
 type Response struct {
-	Count    int `bson:"count" json:"count"`
+	Total    int64 `bson:"total" json:"total"`
 	Feedback []Feedback
 }
 

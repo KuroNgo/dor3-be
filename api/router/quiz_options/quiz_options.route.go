@@ -2,6 +2,7 @@ package quiz_options_route
 
 import (
 	quiz_options_controller "clean-architecture/api/controller/quiz_options"
+	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
 	exercise_domain "clean-architecture/domain/exercise"
 	quiz_options_domain "clean-architecture/domain/quiz_options"
@@ -26,5 +27,5 @@ func QuizOptionsRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.
 	}
 
 	router := group.Group("/quiz/options")
-	router.POST("/fetch", options.FetchManyExerciseOptions)
+	router.POST("/fetch", middleware.DeserializeUser(), options.FetchManyQuizOptions)
 }

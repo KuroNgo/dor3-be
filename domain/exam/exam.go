@@ -16,20 +16,35 @@ type Exam struct {
 	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 
-	Title         string        `bson:"title" json:"title"`
-	Description   string        `bson:"description" json:"description"`
-	Duration      time.Duration `bson:"duration" json:"duration"`
-	CountQuestion int16         `bson:"count_question" json:"count_question"`
+	Title       string        `bson:"title" json:"title"`
+	Description string        `bson:"description" json:"description"`
+	Duration    time.Duration `bson:"duration" json:"duration"`
 
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
 	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
 }
 
-type Response struct {
-	Count         int64 `bson:"count" json:"count"`
+type ExamResponse struct {
+	ID       primitive.ObjectID `bson:"_id" json:"_id"`
+	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
+	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
+
+	Title       string        `bson:"title" json:"title"`
+	Description string        `bson:"description" json:"description"`
+	Duration    time.Duration `bson:"duration" json:"duration"`
+
+	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
+	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
+
 	CountQuestion int64 `bson:"count_question" json:"count_question"`
-	Exam          []Exam
+}
+
+type Response struct {
+	CountExam int64 `bson:"count_exam" json:"count_exam"`
+	Page      int64 `json:"page" bson:"page"`
+	Exam      []Exam
 }
 
 type IExamRepository interface {

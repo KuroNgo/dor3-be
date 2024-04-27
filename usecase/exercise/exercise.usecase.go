@@ -31,13 +31,13 @@ func (e *exerciseUseCase) FetchManyByLessonID(ctx context.Context, unitID string
 	return vocabulary, err
 }
 
-func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string) (exercise_domain.Response, error) {
+func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
 	vocabulary, err := e.exerciseRepository.FetchManyByUnitID(ctx, unitID)
 	if err != nil {
-		return exercise_domain.Response{}, err
+		return exercise_domain.ExerciseResponse{}, err
 	}
 
 	return vocabulary, err
@@ -55,16 +55,16 @@ func (e *exerciseUseCase) UpdateCompleted(ctx context.Context, exerciseID string
 	return nil
 }
 
-func (e *exerciseUseCase) FetchMany(ctx context.Context, page string) (exercise_domain.Response, error) {
+func (e *exerciseUseCase) FetchMany(ctx context.Context, page string) ([]exercise_domain.ExerciseResponse, int64, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := e.exerciseRepository.FetchMany(ctx, page)
+	exercises, count, err := e.exerciseRepository.FetchMany(ctx, page)
 	if err != nil {
-		return exercise_domain.Response{}, err
+		return nil, 0, err
 	}
 
-	return vocabulary, err
+	return exercises, count, err
 }
 
 func (e *exerciseUseCase) UpdateOne(ctx context.Context, exercise *exercise_domain.Exercise) (*mongo.UpdateResult, error) {

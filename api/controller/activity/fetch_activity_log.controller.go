@@ -15,6 +15,7 @@ func (a *ActivityController) FetchManyActivity(ctx *gin.Context) {
 		})
 		return
 	}
+
 	admin, err := a.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

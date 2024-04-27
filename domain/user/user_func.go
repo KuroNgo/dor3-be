@@ -33,8 +33,8 @@ type IUserUseCase interface {
 	Create(ctx context.Context, user User) error
 	Update(ctx context.Context, user *User) (*mongo.UpdateResult, error)
 	Delete(ctx context.Context, userID string) error
-	Login(c context.Context, request SignIn) (*User, error)
+	Login(ctx context.Context, request SignIn) (*User, error)
 	GetByEmail(ctx context.Context, email string) (*User, error)
-	UpdateImage(c context.Context, userID string, imageURL string) error
+	UpdateImage(ctx context.Context, userID string, imageURL string) error
 	GetByID(ctx context.Context, id string) (*User, error)
 }

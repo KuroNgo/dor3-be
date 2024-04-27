@@ -32,7 +32,9 @@ func (im *ImageController) FetchImageByName(ctx *gin.Context) {
 }
 
 func (im *ImageController) FetchImage(ctx *gin.Context) {
-	imageURL, err := im.ImageUseCase.FetchMany(ctx)
+	page := ctx.DefaultQuery("page", "1")
+
+	imageURL, err := im.ImageUseCase.FetchMany(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

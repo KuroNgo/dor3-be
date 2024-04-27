@@ -2,14 +2,13 @@ package exercise_repository
 
 import (
 	exercise_domain "clean-architecture/domain/exercise"
-	vocabulary_domain "clean-architecture/domain/vocabulary"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"math/rand"
 	"strconv"
 )
 
@@ -19,13 +18,17 @@ type exerciseRepository struct {
 	collectionUnit       string
 	collectionVocabulary string
 	collectionExercise   string
+	collectionQuestion   string
 }
 
-func NewExerciseRepository(db *mongo.Database, collectionVocabulary string, collectionExercise string) exercise_domain.IExerciseRepository {
+func NewExerciseRepository(db *mongo.Database, collectionLesson string, collectionUnit string, collectionVocabulary string, collectionExercise string, collectionQuestion string) exercise_domain.IExerciseRepository {
 	return &exerciseRepository{
 		database:             db,
+		collectionLesson:     collectionLesson,
+		collectionUnit:       collectionUnit,
 		collectionVocabulary: collectionVocabulary,
 		collectionExercise:   collectionExercise,
+		collectionQuestion:   collectionQuestion,
 	}
 }
 
@@ -39,60 +42,127 @@ func (e *exerciseRepository) UpdateCompleted(ctx context.Context, exerciseID str
 	panic("implement me")
 }
 
-func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string) (exercise_domain.Response, error) {
-	//TODO implement me
-	panic("implement me")
+func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
+	collectionExercise := e.database.Collection(e.collectionExercise)
+
+	idUnit, err := primitive.ObjectIDFromHex(unitID)
+	if err != nil {
+		return exercise_domain.ExerciseResponse{}, err
+	}
+
+	filter := bson.M{"unit_id": idUnit}
+	cursor, err := collectionExercise.Find(ctx, filter)
+	if err != nil {
+		return exercise_domain.ExerciseResponse{}, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
+
+	var exercises []exercise_domain.ExerciseResponse
+	for cursor.Next(ctx) {
+		var exercise exercise_domain.Exercise
+		if err = cursor.Decode(&exercise); err != nil {
+			return exercise_domain.ExerciseResponse{}, err
+		}
+
+		// Lấy thông tin liên quan cho mỗi khóa học
+		countQuest, err := e.countQuestionByExerciseID(ctx, exercise.Id)
+		if err != nil {
+			return exercise_domain.ExerciseResponse{}, err
+		}
+
+		exerciseRes := exercise_domain.ExerciseResponse{
+			ID:            exercise.Id,
+			LessonID:      exercise.LessonID,
+			UnitID:        exercise.UnitID,
+			Title:         exercise.Title,
+			Description:   exercise.Description,
+			Duration:      exercise.Duration,
+			CreatedAt:     exercise.CreatedAt,
+			UpdatedAt:     exercise.UpdatedAt,
+			WhoUpdates:    exercise.WhoUpdates,
+			CountQuestion: countQuest,
+		}
+
+		exercises = append(exercises, exerciseRes)
+	}
+
+	// Kiểm tra nếu danh sách exercises không rỗng
+	if len(exercises) == 0 {
+		return exercise_domain.ExerciseResponse{}, errors.New("no exercises found")
+	}
+
+	// Chọn một giá trị ngẫu nhiên từ danh sách exercises
+	randomIndex := rand.Intn(len(exercises))
+	randomExercise := exercises[randomIndex]
+
+	return randomExercise, nil
 }
 
-func (e *exerciseRepository) FetchMany(ctx context.Context, page string) (exercise_domain.Response, error) {
+func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exercise_domain.ExerciseResponse, int64, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
-	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
-
-	// Đếm tổng số lượng tài liệu trong collection
-	count, err := collectionExercise.CountDocuments(ctx, bson.D{})
-	if err != nil {
-		return exercise_domain.Response{}, err
-	}
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return exercise_domain.Response{}, errors.New("invalid page number")
+		return nil, 0, errors.New("invalid page number")
 	}
-
 	perPage := 1
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
-	cursor, err := collectionExercise.Find(ctx, bson.D{}, findOptions)
 
+	count, err := collectionExercise.CountDocuments(ctx, bson.D{})
 	if err != nil {
-		return exercise_domain.Response{}, err
+		return nil, 0, err
+	}
+
+	cal1 := count / int64(perPage)
+	cal2 := count % int64(perPage)
+	var cal int64 = 0
+	if cal2 != 0 {
+		cal = cal1 + 1
+	}
+
+	cursor, err := collectionExercise.Find(ctx, bson.D{}, findOptions)
+	if err != nil {
+		return nil, 0, err
 	}
 	defer cursor.Close(ctx)
 
-	var exercises []exercise_domain.Exercise
+	var exercises []exercise_domain.ExerciseResponse
 
 	for cursor.Next(ctx) {
 		var exercise exercise_domain.Exercise
-
 		if err := cursor.Decode(&exercise); err != nil {
-			return exercise_domain.Response{}, err
+			return nil, 0, err
 		}
 
-		var vocabulary vocabulary_domain.Vocabulary
-		if err := collectionVocabulary.FindOne(ctx, bson.M{"_id": vocabulary.UnitID}).Decode(&vocabulary); err != nil {
-			return exercise_domain.Response{}, err
+		// Lấy thông tin liên quan cho mỗi khóa học
+		countQuest, err := e.countQuestionByExerciseID(ctx, exercise.Id)
+		if err != nil {
+			return nil, 0, err
 		}
 
-		exercise.VocabularyID = vocabulary.Id
-		exercises = append(exercises, exercise)
+		exerciseRes := exercise_domain.ExerciseResponse{
+			ID:            exercise.Id,
+			LessonID:      exercise.LessonID,
+			UnitID:        exercise.UnitID,
+			Title:         exercise.Title,
+			Description:   exercise.Description,
+			Duration:      exercise.Duration,
+			CreatedAt:     exercise.CreatedAt,
+			UpdatedAt:     exercise.UpdatedAt,
+			WhoUpdates:    exercise.WhoUpdates,
+			CountQuestion: countQuest,
+		}
+
+		exercises = append(exercises, exerciseRes)
 	}
 
-	exerciseRes := exercise_domain.Response{
-		Exercise: exercises,
-		Count:    count,
-	}
-
-	return exerciseRes, nil
+	return exercises, cal, nil
 }
 
 func (e *exerciseRepository) UpdateOne(ctx context.Context, exercise *exercise_domain.Exercise) (*mongo.UpdateResult, error) {
@@ -103,7 +173,6 @@ func (e *exerciseRepository) UpdateOne(ctx context.Context, exercise *exercise_d
 		"$set": bson.M{
 			"lesson_id":  exercise.LessonID,
 			"unit_id":    exercise.UnitID,
-			"vocabulary": exercise.VocabularyID,
 			"title":      exercise.Title,
 			"duration":   exercise.Duration,
 			"update_at":  exercise.UpdatedAt,
@@ -120,64 +189,8 @@ func (e *exerciseRepository) UpdateOne(ctx context.Context, exercise *exercise_d
 
 func (e *exerciseRepository) CreateOne(ctx context.Context, exercise *exercise_domain.Exercise) error {
 	collectionExercise := e.database.Collection(e.collectionExercise)
-	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
-
-	filter := bson.M{"content": exercise.Title, "vocabulary_id": exercise.VocabularyID}
-	filterReference := bson.M{"_id": exercise.VocabularyID}
-
-	countParent, err := collectionVocabulary.CountDocuments(ctx, filterReference)
-	if err != nil {
-		return err
-	}
-
-	// check exists with CountDocuments
-	count, err := collectionExercise.CountDocuments(ctx, filter)
-	if err != nil {
-		return err
-	}
-
-	if count > 0 {
-		return errors.New("the content of exercise in vocabulary did exist")
-	}
-	if countParent == 0 {
-		return errors.New("the vocabulary ID do not exist")
-	}
-
-	_, err = collectionVocabulary.InsertOne(ctx, exercise)
-	return nil
-}
-
-func (e *exerciseRepository) UpsertOne(ctx context.Context, id string, exercise *exercise_domain.Exercise) (exercise_domain.Response, error) {
-	collectionExercise := e.database.Collection(e.collectionExercise)
-	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
-
-	filterReference := bson.M{"_id": exercise.VocabularyID}
-	count, err := collectionVocabulary.CountDocuments(ctx, filterReference)
-	if err != nil {
-		return exercise_domain.Response{}, err
-	}
-
-	if count == 0 {
-		return exercise_domain.Response{}, errors.New("the vocabulary ID do not exist")
-	}
-	doc, err := internal.ToDoc(exercise)
-
-	idHex, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return exercise_domain.Response{}, err
-	}
-
-	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(1)
-	query := bson.D{{Key: "_id", Value: idHex}}
-	update := bson.D{{Key: "$set", Value: doc}}
-	res := collectionExercise.FindOneAndUpdate(ctx, query, update, opts)
-
-	var updatePost exercise_domain.Response
-	if err := res.Decode(&updatePost); err != nil {
-		return exercise_domain.Response{}, err
-	}
-
-	return updatePost, nil
+	_, err := collectionExercise.InsertOne(ctx, exercise)
+	return err
 }
 
 func (e *exerciseRepository) DeleteOne(ctx context.Context, exerciseID string) error {
@@ -202,4 +215,17 @@ func (e *exerciseRepository) DeleteOne(ctx context.Context, exerciseID string) e
 
 	_, err = collectionExercise.DeleteOne(ctx, filter)
 	return err
+}
+
+// countLessonsByCourseID counts the number of lessons associated with a course.
+func (e *exerciseRepository) countQuestionByExerciseID(ctx context.Context, exerciseId primitive.ObjectID) (int32, error) {
+	collectionQuestion := e.database.Collection(e.collectionQuestion)
+
+	filter := bson.M{"exercise_id": exerciseId}
+	count, err := collectionQuestion.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, err
+	}
+
+	return int32(count), nil
 }

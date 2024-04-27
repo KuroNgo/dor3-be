@@ -8,6 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"strconv"
 )
 
 type imageRepository struct {
@@ -51,8 +53,16 @@ func (i *imageRepository) GetURLByName(ctx context.Context, name string) (image_
 	return image, err
 }
 
-func (i *imageRepository) FetchMany(ctx context.Context) (image_domain.Response, error) {
+func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_domain.Response, error) {
 	collection := i.database.Collection(i.collection)
+
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return image_domain.Response{}, errors.New("invalid page number")
+	}
+	perPage := 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
 	// Đếm tổng số lượng tài liệu trong collection
 	count, err := collection.CountDocuments(ctx, bson.D{})
@@ -60,7 +70,14 @@ func (i *imageRepository) FetchMany(ctx context.Context) (image_domain.Response,
 		return image_domain.Response{}, err
 	}
 
-	cursor, err := collection.Find(ctx, bson.D{})
+	cal1 := count / int64(perPage)
+	cal2 := count % int64(perPage)
+	var cal int64 = 0
+	if cal2 != 0 {
+		cal = cal1 + 1
+	}
+
+	cursor, err := collection.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
 		return image_domain.Response{}, err
 	}
@@ -77,17 +94,16 @@ func (i *imageRepository) FetchMany(ctx context.Context) (image_domain.Response,
 		size += doc.Size
 	}
 
-	var image []image_domain.Image
-
-	err = cursor.All(ctx, &image)
-	if image == nil {
-		return image_domain.Response{}, err
-	}
-	// Tạo cấu trúc dữ liệu Response
 	response := image_domain.Response{
-		Image: image,
-		Count: count,
-		Size:  size,
+		Image:           images,
+		Count:           count,
+		SizeKB:          size,
+		SizeRemainingKB: (1024 * 1024) - size,
+		MaxSizeKB:       1024 * 1024,
+		SizeMB:          size / 1024,
+		SizeRemainingMB: ((1024 * 1024) - size) / 1024,
+		Page:            cal,
+		MaxSizeMB:       1024,
 	}
 
 	return response, err

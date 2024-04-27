@@ -6,7 +6,7 @@ import (
 )
 
 func (c *CourseController) FetchCourse(ctx *gin.Context) {
-	course, err := c.CourseUseCase.FetchMany(ctx)
+	course, err := c.CourseUseCase.FetchManyForEachCourse(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

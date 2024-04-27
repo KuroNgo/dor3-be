@@ -17,7 +17,7 @@ func (e *ExerciseController) UpdateOneExercise(ctx *gin.Context) {
 		})
 		return
 	}
-	
+
 	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -37,9 +37,8 @@ func (e *ExerciseController) UpdateOneExercise(ctx *gin.Context) {
 	}
 
 	updateExercise := exercise_domain.Exercise{
-		LessonID:     exerciseInput.LessonID,
-		UnitID:       exerciseInput.UnitID,
-		VocabularyID: exerciseInput.VocabularyID,
+		LessonID: exerciseInput.LessonID,
+		UnitID:   exerciseInput.UnitID,
 
 		Title:       exerciseInput.Title,
 		Description: exerciseInput.Description,

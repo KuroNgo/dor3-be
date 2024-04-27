@@ -2,7 +2,6 @@ package exam_repository
 
 import (
 	exam_domain "clean-architecture/domain/exam"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -32,7 +31,6 @@ func NewExamRepository(db *mongo.Database, collectionExam string, collectionLess
 
 func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domain.Response, error) {
 	collectionExam := e.database.Collection(e.collectionExam)
-	collectionExamQuestion := e.database.Collection(e.collectionExamQuestion)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -47,6 +45,13 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domai
 		return exam_domain.Response{}, err
 	}
 
+	cal1 := count / int64(perPage)
+	cal2 := count % int64(perPage)
+	var cal int64 = 0
+	if cal2 != 0 {
+		cal = cal1 + 1
+	}
+
 	cursor, err := collectionExam.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
 		return exam_domain.Response{}, err
@@ -59,19 +64,14 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domai
 			return exam_domain.Response{}, err
 		}
 
-		filterExamID := bson.M{"exam_id": exam.ID}
-		countExamID, _ := collectionExamQuestion.CountDocuments(ctx, filterExamID)
-
-		countQuestion, _ := internal.Int64ToInt16(countExamID)
-		exam.CountQuestion = countQuestion
-
 		// Thêm lesson vào slice lessons
 		exams = append(exams, exam)
 	}
 
 	examRes := exam_domain.Response{
-		Exam:  exams,
-		Count: count,
+		Page:      cal,
+		Exam:      exams,
+		CountExam: count,
 	}
 
 	return examRes, nil
@@ -79,7 +79,6 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domai
 
 func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string) (exam_domain.Response, error) {
 	collectionExam := e.database.Collection(e.collectionExam)
-	collectionExamQuestion := e.database.Collection(e.collectionExamQuestion)
 
 	idUnit, err := primitive.ObjectIDFromHex(unitID)
 	if err != nil {
@@ -99,12 +98,6 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string) (
 		if err = cursor.Decode(&exam); err != nil {
 			return exam_domain.Response{}, err
 		}
-
-		filterExamID := bson.M{"exam_id": exam.ID}
-		countExamID, _ := collectionExamQuestion.CountDocuments(ctx, filterExamID)
-
-		count, _ := internal.Int64ToInt16(countExamID)
-		exam.CountQuestion = count
 
 		// Gắn CourseID vào bài học
 		exam.UnitID = idUnit

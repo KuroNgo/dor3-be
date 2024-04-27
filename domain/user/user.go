@@ -12,34 +12,35 @@ const (
 )
 
 type User struct {
-	ID        primitive.ObjectID `bson:"_id" json:"_id"`
-	FullName  string             `bson:"full_name"  json:"full_name"`
-	Email     string             `bson:"email"  json:"email"`
-	Password  string             `bson:"password"  json:"password"`
-	AvatarURL string             `bson:"avatar_url"  json:"avatar_url"`
-	AssetID   string             `bson:"asset_id"  json:"asset_id"`
-	Phone     string             `bson:"phone"   json:"phone"`
-	Provider  string             `bson:"provider" json:"provider"`
-	Verified  bool               `bson:"verified" json:"verified"`
-	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
-	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
-	Role      string             `bson:"role" json:"role"`
+	ID               primitive.ObjectID `bson:"_id" json:"_id"`
+	FullName         string             `bson:"full_name"  json:"full_name"`
+	Email            string             `bson:"email"  json:"email"`
+	Password         string             `bson:"password"  json:"password"`
+	Role             string             `bson:"role" json:"role"`
+	AvatarURL        string             `bson:"avatar_url"  json:"avatar_url"`
+	AssetID          string             `bson:"asset_id"  json:"asset_id"`
+	Phone            string             `bson:"phone"   json:"phone"`
+	Provider         string             `bson:"provider" json:"provider"`
+	Verified         bool               `bson:"verified" json:"verified"`
+	VerificationCode string             `bson:"verification_code" json:"verification_code"`
+	CreatedAt        time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt        time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
 type Response struct {
-	Count int64  `bson:"count" json:"count"`
+	Total int64  `bson:"total" json:"total"`
 	User  []User `bson:"user" json:"user"`
 }
 
 //go:generate mockery --name IUserRepository
 type IUserRepository interface {
-	FetchMany(c context.Context) (Response, error)
-	DeleteOne(c context.Context, userID string) error
-	Login(c context.Context, request SignIn) (*User, error)
-	GetByEmail(c context.Context, email string) (*User, error)
-	GetByID(c context.Context, id string) (*User, error)
-	Create(c context.Context, user User) error
+	FetchMany(ctx context.Context) (Response, error)
+	DeleteOne(ctx context.Context, userID string) error
+	Login(ctx context.Context, request SignIn) (*User, error)
+	GetByEmail(ctx context.Context, email string) (*User, error)
+	GetByID(ctx context.Context, id string) (*User, error)
+	Create(ctx context.Context, user User) error
 	Update(ctx context.Context, user *User) (*mongo.UpdateResult, error)
-	UpsertOne(c context.Context, email string, user *User) (*User, error)
-	UpdateImage(c context.Context, userID string, imageURL string) error
+	UpsertOne(ctx context.Context, email string, user *User) (*User, error)
+	UpdateImage(ctx context.Context, userID string, imageURL string) error
 }

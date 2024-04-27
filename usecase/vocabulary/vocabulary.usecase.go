@@ -49,25 +49,25 @@ func (v *vocabularyUseCase) FetchByIdUnit(ctx context.Context, idUnit string) (v
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) FetchByWord(ctx context.Context, word string) (vocabulary_domain.Response, error) {
+func (v *vocabularyUseCase) FetchByWord(ctx context.Context, word string) (vocabulary_domain.SearchingResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
 	vocabulary, err := v.vocabularyRepository.FetchByWord(ctx, word)
 	if err != nil {
-		return vocabulary_domain.Response{}, err
+		return vocabulary_domain.SearchingResponse{}, err
 	}
 
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) FetchByLesson(ctx context.Context, lessonName string) (vocabulary_domain.Response, error) {
+func (v *vocabularyUseCase) FetchByLesson(ctx context.Context, lessonName string) (vocabulary_domain.SearchingResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
 	vocabulary, err := v.vocabularyRepository.FetchByLesson(ctx, lessonName)
 	if err != nil {
-		return vocabulary_domain.Response{}, err
+		return vocabulary_domain.SearchingResponse{}, err
 	}
 
 	return vocabulary, err

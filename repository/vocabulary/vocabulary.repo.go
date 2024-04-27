@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
+	"time"
 )
 
 type vocabularyRepository struct {
@@ -49,8 +50,9 @@ func (v *vocabularyRepository) GetLatestVocabulary(ctx context.Context) ([]strin
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
 	var vocabularies []string
-
-	cursor, err := collectionVocabulary.Find(ctx, bson.D{}, options.Find().SetSort(bson.D{{"_id", -1}}))
+	yesterday := time.Now().Add(-1 * time.Hour)
+	filter := bson.M{"created_at": bson.M{"$gt": yesterday}}
+	cursor, err := collectionVocabulary.Find(ctx, filter, options.Find().SetSort(bson.D{{"_id", -1}}))
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +83,10 @@ func (v *vocabularyRepository) GetLatestVocabularyBatch(ctx context.Context) (vo
 
 	var vocabularies []vocabulary_domain.Vocabulary
 
-	cursor, err := collectionVocabulary.Find(ctx, bson.D{}, options.Find().SetSort(bson.D{{"_id", -1}}))
+	yesterday := time.Now().AddDate(0, 0, -1)
+	filter := bson.M{"created_at": bson.M{"$gt": yesterday}}
+	cursor, err := collectionVocabulary.Find(ctx, filter, options.Find().SetSort(bson.D{{"$natural", -1}}))
+
 	if err != nil {
 		return vocabulary_domain.Response{}, err
 	}
@@ -190,9 +195,9 @@ func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string)
 		vocabularies = append(vocabularies, vocabulary)
 	}
 
-	if len(vocabularies) == 0 {
-		return vocabulary_domain.Response{}, errors.New("no vocabulary found for the provided unit_id")
-	}
+	//if len(vocabularies) == 0 {
+	//	return vocabulary_domain.Response{}, errors.New("no vocabulary found for the provided unit_id")
+	//}
 
 	response := vocabulary_domain.Response{
 		Vocabulary: vocabularies,
@@ -200,7 +205,7 @@ func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string)
 	return response, nil
 }
 
-func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) (vocabulary_domain.Response, error) {
+func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) (vocabulary_domain.SearchingResponse, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
 	regex := primitive.Regex{Pattern: word, Options: "i"}
@@ -210,28 +215,34 @@ func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) (vo
 
 	cursor, err := collectionVocabulary.Find(ctx, filter, &options.FindOptions{Limit: &limit})
 	if err != nil {
-		return vocabulary_domain.Response{}, err
+		return vocabulary_domain.SearchingResponse{}, err
 	}
 	defer cursor.Close(ctx)
 
 	var vocabularies []vocabulary_domain.Vocabulary
 	if err := cursor.All(ctx, &vocabularies); err != nil {
-		return vocabulary_domain.Response{}, err
+		return vocabulary_domain.SearchingResponse{}, err
 	}
 
-	vocabularyRes := vocabulary_domain.Response{
-		Vocabulary: vocabularies,
+	count, err := collectionVocabulary.CountDocuments(ctx, filter)
+	if err != nil {
+		return vocabulary_domain.SearchingResponse{}, err
+	}
+
+	vocabularyRes := vocabulary_domain.SearchingResponse{
+		CountVocabularySearch: count,
+		Vocabulary:            vocabularies,
 	}
 
 	return vocabularyRes, nil
 }
 
-func (v *vocabularyRepository) FetchByWord2(ctx context.Context, word string) (vocabulary_domain.Response, error) {
+func (v *vocabularyRepository) FetchByWord2(ctx context.Context, word string) (vocabulary_domain.SearchingResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (v *vocabularyRepository) FetchByLesson(ctx context.Context, lessonName string) (vocabulary_domain.Response, error) {
+func (v *vocabularyRepository) FetchByLesson(ctx context.Context, lessonName string) (vocabulary_domain.SearchingResponse, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
 	regex := primitive.Regex{Pattern: lessonName, Options: "i"}
@@ -241,17 +252,23 @@ func (v *vocabularyRepository) FetchByLesson(ctx context.Context, lessonName str
 
 	cursor, err := collectionVocabulary.Find(ctx, filter, &options.FindOptions{Limit: &limit})
 	if err != nil {
-		return vocabulary_domain.Response{}, err
+		return vocabulary_domain.SearchingResponse{}, err
 	}
 	defer cursor.Close(ctx)
 
 	var vocabularies []vocabulary_domain.Vocabulary
 	if err := cursor.All(ctx, &vocabularies); err != nil {
-		return vocabulary_domain.Response{}, err
+		return vocabulary_domain.SearchingResponse{}, err
 	}
 
-	vocabularyRes := vocabulary_domain.Response{
-		Vocabulary: vocabularies,
+	count, err := collectionVocabulary.CountDocuments(ctx, filter)
+	if err != nil {
+		return vocabulary_domain.SearchingResponse{}, err
+	}
+
+	vocabularyRes := vocabulary_domain.SearchingResponse{
+		CountVocabularySearch: count,
+		Vocabulary:            vocabularies,
 	}
 
 	return vocabularyRes, nil
@@ -265,10 +282,22 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 	if err != nil {
 		return vocabulary_domain.Response{}, errors.New("invalid page number")
 	}
-
 	perPage := 7
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	// Đếm tổng số lượng tài liệu trong collection
+	count, err := collectionVocabulary.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return vocabulary_domain.Response{}, err
+	}
+
+	cal1 := count / int64(perPage)
+	cal2 := count % int64(perPage)
+	var cal int64 = 0
+	if cal2 != 0 {
+		cal = cal1 + 1
+	}
 
 	cursor, err := collectionVocabulary.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
@@ -295,6 +324,7 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 	}
 
 	vocabularyRes := vocabulary_domain.Response{
+		Page:       cal,
 		Vocabulary: vocabularies,
 	}
 

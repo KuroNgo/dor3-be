@@ -25,6 +25,7 @@ type ActivityLog struct {
 }
 
 type Response struct {
+	Page        int64 `json:"page" bson:"page"`
 	ActivityLog []ActivityLog
 }
 
