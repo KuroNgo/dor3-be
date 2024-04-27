@@ -7,6 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"strconv"
 )
 
 type quizRepository struct {
@@ -87,10 +89,31 @@ func (q *quizRepository) FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]q
 	panic("implement me")
 }
 
-func (q *quizRepository) FetchMany(ctx context.Context) (quiz_domain.Response, error) {
+func (q *quizRepository) FetchMany(ctx context.Context, page string) (quiz_domain.Response, error) {
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
-	cursor, err := collectionQuiz.Find(ctx, bson.D{})
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return quiz_domain.Response{}, errors.New("invalid page number")
+	}
+	perPage := 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	// Đếm tổng số lượng tài liệu trong collection
+	count, err := collectionQuiz.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return quiz_domain.Response{}, err
+	}
+
+	cal1 := count / int64(perPage)
+	cal2 := count % int64(perPage)
+	var cal int64 = 0
+	if cal2 != 0 {
+		cal = cal1 + 1
+	}
+
+	cursor, err := collectionQuiz.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
 		return quiz_domain.Response{}, err
 	}
@@ -106,6 +129,7 @@ func (q *quizRepository) FetchMany(ctx context.Context) (quiz_domain.Response, e
 		quiz = append(quiz, q)
 	}
 	quizRes := quiz_domain.Response{
+		Page: cal,
 		Quiz: quiz,
 	}
 	return quizRes, nil

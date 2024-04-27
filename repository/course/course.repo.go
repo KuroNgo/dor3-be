@@ -10,43 +10,72 @@ import (
 )
 
 type courseRepository struct {
-	database         *mongo.Database
-	collectionCourse string
-	collectionLesson string
+	database             *mongo.Database
+	collectionCourse     string
+	collectionLesson     string
+	collectionUnit       string
+	collectionVocabulary string
 }
 
-func NewCourseRepository(db *mongo.Database, collectionCourse string, collectionLesson string) course_domain.ICourseRepository {
+func NewCourseRepository(db *mongo.Database, collectionCourse string, collectionLesson string, collectionUnit string, collectionVocabulary string) course_domain.ICourseRepository {
 	return &courseRepository{
-		database:         db,
-		collectionCourse: collectionCourse,
-		collectionLesson: collectionLesson,
+		database:             db,
+		collectionCourse:     collectionCourse,
+		collectionLesson:     collectionLesson,
+		collectionUnit:       collectionUnit,
+		collectionVocabulary: collectionVocabulary,
 	}
 }
 
-func (c *courseRepository) FetchMany(ctx context.Context) (course_domain.Response, error) {
+func (c *courseRepository) FetchManyForEachCourse(ctx context.Context) ([]course_domain.CourseResponse, error) {
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
+	// Lấy tất cả các khóa học từ cơ sở dữ liệu
 	cursor, err := collectionCourse.Find(ctx, bson.D{})
 	if err != nil {
-		return course_domain.Response{}, err
+		return nil, err
 	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
-	var courses []course_domain.Course
+	var courses []course_domain.CourseResponse
 	for cursor.Next(ctx) {
 		var course course_domain.Course
-		if err = cursor.Decode(&course); err != nil {
-			return course_domain.Response{}, err
+		if err := cursor.Decode(&course); err != nil {
+			return nil, err
 		}
 
-		// Thêm lesson vào slice lessons
-		courses = append(courses, course)
-	}
-	err = cursor.All(ctx, &courses)
-	courseRes := course_domain.Response{
-		Course: courses,
+		// Lấy thông tin liên quan cho mỗi khóa học
+		countLesson, err := c.countLessonsByCourseID(ctx, course.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		countVocabulary, err := c.countVocabularyByCourseID(ctx, course.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		courseRes := course_domain.CourseResponse{
+			Id:              course.Id,
+			Name:            course.Name,
+			Description:     course.Description,
+			CreatedAt:       course.CreatedAt,
+			UpdatedAt:       course.UpdatedAt,
+			WhoUpdated:      course.WhoUpdated,
+			CountLesson:     countLesson,
+			CountVocabulary: countVocabulary,
+		}
+
+		// Thêm cấu trúc dữ liệu này vào danh sách
+		courses = append(courses, courseRes)
 	}
 
-	return courseRes, err
+	return courses, nil
 }
 
 func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {
@@ -103,6 +132,16 @@ func (c *courseRepository) StatisticCourse(ctx context.Context) int64 {
 func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error {
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
+	// Default the Course for iT cannot delete
+	objID2, err := primitive.ObjectIDFromHex("660b8a0c2aef1f3a28265523")
+	if err != nil {
+		return err
+	}
+	countIn, err := collectionCourse.CountDocuments(ctx, objID2)
+	if countIn > 0 {
+		return errors.New("the course cannot be deleted")
+	}
+
 	// Convert courseID string to ObjectID
 	objID, err := primitive.ObjectIDFromHex(courseID)
 	if err != nil {
@@ -110,7 +149,7 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 	}
 
 	// Check if any lesson is associated with the course
-	countFK, err := c.countLessonsByCourseID(ctx, courseID)
+	countFK, err := c.countLessonsByCourseID(ctx, objID)
 	if err != nil {
 		return err
 	}
@@ -133,7 +172,7 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 }
 
 // countLessonsByCourseID counts the number of lessons associated with a course.
-func (c *courseRepository) countLessonsByCourseID(ctx context.Context, courseID string) (int64, error) {
+func (c *courseRepository) countLessonsByCourseID(ctx context.Context, courseID primitive.ObjectID) (int32, error) {
 	collectionLesson := c.database.Collection(c.collectionLesson)
 
 	filter := bson.M{"course_id": courseID}
@@ -141,5 +180,58 @@ func (c *courseRepository) countLessonsByCourseID(ctx context.Context, courseID 
 	if err != nil {
 		return 0, err
 	}
-	return count, nil
+
+	return int32(count), nil
+}
+
+func (c *courseRepository) countVocabularyByCourseID(ctx context.Context, courseID primitive.ObjectID) (int32, error) {
+	collectionVocabulary := c.database.Collection(c.collectionVocabulary)
+
+	// Phần pipeline aggregation để nối các collection và đếm số lượng từ vựng
+	pipeline := []bson.M{
+		// Nối collection Vocabulary với collection Unit
+		{"$lookup": bson.M{
+			"from":         "unit",
+			"localField":   "unit_id",
+			"foreignField": "_id",
+			"as":           "unit",
+		}},
+		{"$unwind": "$unit"},
+		// Nối collection Unit với collection Lesson
+		{"$lookup": bson.M{
+			"from":         "lesson",
+			"localField":   "unit.lesson_id",
+			"foreignField": "_id",
+			"as":           "lesson",
+		}},
+		{"$unwind": "$lesson"},
+		// Lọc các từ vựng thuộc về khóa học được cung cấp
+		{"$match": bson.M{"lesson.course_id": courseID}},
+		// Đếm số lượng từ vựng
+		{"$count": "totalVocabulary"},
+	}
+
+	// Thực hiện aggregation
+	cursor, err := collectionVocabulary.Aggregate(ctx, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
+
+	var result struct {
+		TotalVocabulary int32 `bson:"totalVocabulary"`
+	}
+
+	if cursor.Next(ctx) {
+		if err := cursor.Decode(&result); err != nil {
+			return 0, err
+		}
+	}
+
+	return result.TotalVocabulary, nil
 }

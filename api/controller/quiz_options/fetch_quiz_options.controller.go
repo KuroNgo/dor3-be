@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (q *QuizOptionsController) FetchManyExerciseOptions(ctx *gin.Context) {
+func (q *QuizOptionsController) FetchManyQuizOptions(ctx *gin.Context) {
 	_, err := ctx.Cookie("access_token")
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

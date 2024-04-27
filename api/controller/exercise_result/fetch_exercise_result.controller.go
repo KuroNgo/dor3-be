@@ -25,7 +25,7 @@ func (e *ExerciseResultController) FetchManyExerciseResult(ctx *gin.Context) {
 }
 
 func (e *ExerciseResultController) FetchResultByExerciseID(ctx *gin.Context) {
-	exerciseID := ctx.Query("exercise_id")
+	exerciseID := ctx.Param("exercise_id")
 
 	exercise, err := e.ExerciseResultUseCase.FetchManyByExerciseID(ctx, exerciseID)
 	if err != nil {
@@ -44,7 +44,7 @@ func (e *ExerciseResultController) FetchResultByExerciseID(ctx *gin.Context) {
 
 func (e *ExerciseResultController) GetResultsByUserIDAndExerciseID(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
-	exerciseId := ctx.Query("exercise_id")
+	exerciseId := ctx.Param("exercise_id")
 
 	exercise, err := e.ExerciseResultUseCase.GetResultsByUserIDAndExerciseID(ctx, fmt.Sprintf("%s", currentUser), exerciseId)
 	if err != nil {

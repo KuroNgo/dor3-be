@@ -17,9 +17,7 @@ func (l *LessonController) FetchMany(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
-		"data": gin.H{
-			"lesson": lesson,
-		},
+		"data":   lesson,
 	})
 }
 

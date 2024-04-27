@@ -10,18 +10,20 @@ import (
 )
 
 type lessonRepository struct {
-	database         *mongo.Database
-	collectionLesson string
-	collectionCourse string
-	collectionUnit   string
+	database             *mongo.Database
+	collectionLesson     string
+	collectionCourse     string
+	collectionUnit       string
+	collectionVocabulary string
 }
 
-func NewLessonRepository(db *mongo.Database, collectionLesson string, collectionCourse string, collectionUnit string) lesson_domain.ILessonRepository {
+func NewLessonRepository(db *mongo.Database, collectionLesson string, collectionCourse string, collectionUnit string, collectionVocabulary string) lesson_domain.ILessonRepository {
 	return &lessonRepository{
-		database:         db,
-		collectionLesson: collectionLesson,
-		collectionCourse: collectionCourse,
-		collectionUnit:   collectionUnit,
+		database:             db,
+		collectionLesson:     collectionLesson,
+		collectionCourse:     collectionCourse,
+		collectionUnit:       collectionUnit,
+		collectionVocabulary: collectionVocabulary,
 	}
 }
 
@@ -93,29 +95,58 @@ func (l *lessonRepository) UpdateComplete(ctx context.Context, lessonID string, 
 	return nil
 }
 
-func (l *lessonRepository) FetchMany(ctx context.Context) (lesson_domain.Response, error) {
+func (l *lessonRepository) FetchMany(ctx context.Context) ([]lesson_domain.LessonResponse, error) {
 	collectionLesson := l.database.Collection(l.collectionLesson)
 
 	cursor, err := collectionLesson.Find(ctx, bson.D{})
 	if err != nil {
-		return lesson_domain.Response{}, err
+		return nil, err
 	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
-	var lessons []lesson_domain.Lesson
+	var lessons []lesson_domain.LessonResponse
 	for cursor.Next(ctx) {
 		var lesson lesson_domain.Lesson
 		if err = cursor.Decode(&lesson); err != nil {
-			return lesson_domain.Response{}, err
+			return nil, err
+		}
+
+		// Lấy thông tin liên quan cho mỗi chủ đề
+		countUnit, err := l.countUnitsByLessonsID(ctx, lesson.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		countVocabulary, err := l.countVocabularyByLessonID(ctx, lesson.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		lessonRes := lesson_domain.LessonResponse{
+			ID:              lesson.ID,
+			CourseID:        lesson.CourseID,
+			Name:            lesson.Name,
+			Content:         lesson.Content,
+			ImageURL:        lesson.ImageURL,
+			Level:           lesson.Level,
+			IsCompleted:     lesson.IsCompleted,
+			CreatedAt:       lesson.CreatedAt,
+			UpdatedAt:       lesson.UpdatedAt,
+			WhoUpdates:      lesson.WhoUpdates,
+			CountUnit:       countUnit,
+			CountVocabulary: countVocabulary,
 		}
 
 		// Thêm lesson vào slice lessons
-		lessons = append(lessons, lesson)
-	}
-	lessonRes := lesson_domain.Response{
-		Lesson: lessons,
+		lessons = append(lessons, lessonRes)
 	}
 
-	return lessonRes, err
+	return lessons, err
 }
 
 func (l *lessonRepository) UpdateOne(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {
@@ -214,4 +245,62 @@ func (l *lessonRepository) DeleteOne(ctx context.Context, lessonID string) error
 
 	_, err = collectionLesson.DeleteOne(ctx, filter)
 	return err
+}
+
+// countLessonsByCourseID counts the number of lessons associated with a course.
+func (l *lessonRepository) countUnitsByLessonsID(ctx context.Context, lessonID primitive.ObjectID) (int32, error) {
+	collectionUnit := l.database.Collection(l.collectionUnit)
+
+	filter := bson.M{"lesson_id": lessonID}
+	count, err := collectionUnit.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, err
+	}
+
+	return int32(count), nil
+}
+
+func (l *lessonRepository) countVocabularyByLessonID(ctx context.Context, lessonID primitive.ObjectID) (int32, error) {
+	collectionVocabulary := l.database.Collection(l.collectionVocabulary)
+
+	// Phần pipeline aggregation để nối các collection và đếm số lượng từ vựng
+	pipeline := []bson.M{
+		// Nối collection Vocabulary với collection Unit
+		{"$lookup": bson.M{
+			"from":         "unit",
+			"localField":   "unit_id",
+			"foreignField": "_id",
+			"as":           "unit",
+		}},
+		{"$unwind": "$unit"},
+
+		// Lọc các từ vựng thuộc về khóa học được cung cấp
+		{"$match": bson.M{"unit.lesson_id": lessonID}},
+		// Đếm số lượng từ vựng
+		{"$count": "totalVocabulary"},
+	}
+
+	// Thực hiện aggregation
+	cursor, err := collectionVocabulary.Aggregate(ctx, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
+
+	var result struct {
+		TotalVocabulary int32 `bson:"totalVocabulary"`
+	}
+
+	if cursor.Next(ctx) {
+		if err := cursor.Decode(&result); err != nil {
+			return 0, err
+		}
+	}
+
+	return result.TotalVocabulary, nil
 }

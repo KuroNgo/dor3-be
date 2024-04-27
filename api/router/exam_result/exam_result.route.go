@@ -5,7 +5,7 @@ import (
 	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
 	exam_domain "clean-architecture/domain/exam"
-	exam_question_domain "clean-architecture/domain/exam_question"
+	exam_result_domain "clean-architecture/domain/exam_result"
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/repository/exam_result"
 	user_repository "clean-architecture/repository/user"
@@ -17,7 +17,7 @@ import (
 )
 
 func ExamResultRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	res := exam_result_repository.NewExamResultRepository(db, exam_question_domain.CollectionExamQuestion, exam_domain.CollectionExam)
+	res := exam_result_repository.NewExamResultRepository(db, exam_result_domain.CollectionExamResult, exam_domain.CollectionExam)
 	users := user_repository.NewUserRepository(db, user_domain.CollectionUser)
 
 	result := &exam_result_controller.ExamResultController{
@@ -27,8 +27,8 @@ func ExamResultRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.D
 	}
 
 	router := group.Group("/exam/result")
-	router.GET("/fetch/user/:user_id/exam/:exam_id", middleware.DeserializeUser(), result.GetResultsByUserIDAndExamID)
+	router.GET("/fetch/user_id/exam_id", middleware.DeserializeUser(), result.GetResultsByUserIDAndExamID)
+	router.GET("/fetch/exam_id", middleware.DeserializeUser(), result.FetchResultByExamID)
 	router.POST("/create", middleware.DeserializeUser(), result.CreateOneExamResult)
-	router.GET("/fetch/exam/:exam_id", middleware.DeserializeUser(), result.FetchResultByExamID)
 	router.DELETE("/delete/:_id", middleware.DeserializeUser(), result.DeleteOneExamResult)
 }

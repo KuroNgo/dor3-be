@@ -31,7 +31,14 @@ func (v *VocabularyController) GenerateVoice(ctx *gin.Context) {
 		return
 	}
 
-	_ = google.CreateTextToSpeech(wordInput.Vocabulary)
+	err = google.CreateTextToSpeech(wordInput.Vocabulary)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status":  "success",

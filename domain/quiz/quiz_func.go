@@ -8,25 +8,24 @@ import (
 )
 
 type Input struct {
-	ID           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	LessonID     primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
-	UnitID       primitive.ObjectID `bson:"unit_id" json:"unit_id"`
-	VocabularyID primitive.ObjectID `bson:"vocabulary" json:"vocabulary"`
-	Title        string             `bson:"title" json:"title"`
-	Description  string             `bson:"description" json:"description"`
-	Duration     time.Duration      `bson:"duration" json:"duration"`
+	ID       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
+	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
+
+	Title       string        `bson:"title" json:"title"`
+	Description string        `bson:"description" json:"description"`
+	Duration    time.Duration `bson:"duration" json:"duration"`
 }
 
 type Completed struct {
-	LessonID     primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
-	UnitID       primitive.ObjectID `bson:"unit_id" json:"unit_id"`
-	VocabularyID primitive.ObjectID `bson:"vocabulary" json:"vocabulary"`
-	IsComplete   int                `bson:"is_complete" json:"is_complete"`
+	LessonID   primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
+	UnitID     primitive.ObjectID `bson:"unit_id" json:"unit_id"`
+	IsComplete int                `bson:"is_complete" json:"is_complete"`
 }
 
 //go:generate mockery --name IQuizUseCase
 type IQuizUseCase interface {
-	FetchMany(ctx context.Context) (Response, error)
+	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
 
 	UpdateOne(ctx context.Context, quiz *Quiz) (*mongo.UpdateResult, error)

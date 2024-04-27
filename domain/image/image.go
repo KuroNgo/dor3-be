@@ -19,15 +19,21 @@ type Image struct {
 }
 
 type Response struct {
-	Count int64 `json:"count"`
-	Size  int64 `json:"size(KB)"`
-	Image []Image
+	Count           int64 `json:"count"`
+	SizeKB          int64 `json:"size(KB)"`
+	SizeRemainingKB int64 `json:"size_remaining(KB)"`
+	MaxSizeKB       int64 `json:"max_size(KB)"`
+	SizeMB          int64 `json:"size(MB)"`
+	SizeRemainingMB int64 `json:"size_remaining(MB)"`
+	MaxSizeMB       int64 `json:"max_size(MB)"`
+	Page            int64 `json:"page"`
+	Image           []Image
 }
 
 //go:generate mockery --name IImageRepository
 type IImageRepository interface {
 	GetURLByName(ctx context.Context, name string) (Image, error)
-	FetchMany(ctx context.Context) (Response, error)
+	FetchMany(ctx context.Context, page string) (Response, error)
 
 	CreateOne(ctx context.Context, image *Image) error
 	UpdateOne(ctx context.Context, imageID string, image *Image) error

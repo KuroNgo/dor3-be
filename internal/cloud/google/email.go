@@ -2,6 +2,7 @@ package google
 
 import (
 	"bytes"
+	user_domain "clean-architecture/domain/user"
 	subject_const "clean-architecture/internal/cloud/google/const"
 	"crypto/tls"
 	"fmt"
@@ -95,7 +96,7 @@ func ParseTemplateDir(dir string) (*template.Template, error) {
 	return template.ParseFiles(paths...)
 }
 
-func SendEmail(data *EmailData, templateName string) error {
+func SendEmail(user *user_domain.User, data *EmailData, templateName string) error {
 	var body bytes.Buffer
 
 	templated, err := ParseTemplateDir("templates")
@@ -114,6 +115,11 @@ func SendEmail(data *EmailData, templateName string) error {
 	m.SetHeader("From", subject_const.From)
 	m.SetHeader("To", subject_const.To)
 	m.SetHeader("Subject", data.Subject)
+
+	m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin1, subject_const.Admin)
+	m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin2, subject_const.Admin)
+	m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin3, subject_const.Admin)
+
 	m.SetBody("text/html", body.String())
 	m.AddAlternative("text/plain", html2text.HTML2Text(body.String()))
 

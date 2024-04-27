@@ -43,11 +43,11 @@ func (q *quizUseCase) UpdateCompleted(ctx context.Context, quiz *quiz_domain.Qui
 	return nil
 }
 
-func (q *quizUseCase) FetchMany(ctx context.Context) (quiz_domain.Response, error) {
+func (q *quizUseCase) FetchMany(ctx context.Context, page string) (quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	quiz, err := q.quizRepository.FetchMany(ctx)
+	quiz, err := q.quizRepository.FetchMany(ctx, page)
 	if err != nil {
 		return quiz_domain.Response{}, err
 	}

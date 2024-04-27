@@ -15,6 +15,14 @@ type quizOptionsRepository struct {
 	collectionOptions  string
 }
 
+func NewQuizOptionsRepository(db *mongo.Database, collectionQuestion string, collectionOptions string) quiz_options_domain.IQuizOptionRepository {
+	return &quizOptionsRepository{
+		database:           db,
+		collectionQuestion: collectionQuestion,
+		collectionOptions:  collectionOptions,
+	}
+}
+
 func (q *quizOptionsRepository) FetchManyByQuestionID(ctx context.Context, questionID string) (quiz_options_domain.Response, error) {
 	collectionOptions := q.database.Collection(q.collectionOptions)
 	idQuestion, err := primitive.ObjectIDFromHex(questionID)
@@ -104,12 +112,4 @@ func (q *quizOptionsRepository) DeleteOne(ctx context.Context, optionsID string)
 
 	_, err = collectionOptions.DeleteOne(ctx, filter)
 	return err
-}
-
-func NewQuizOptionsRepository(db *mongo.Database, collectionQuestion string, collectionOptions string) quiz_options_domain.IQuizOptionRepository {
-	return &quizOptionsRepository{
-		database:           db,
-		collectionQuestion: collectionQuestion,
-		collectionOptions:  collectionOptions,
-	}
 }

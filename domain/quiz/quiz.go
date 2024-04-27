@@ -12,10 +12,9 @@ const (
 )
 
 type Quiz struct {
-	ID           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	LessonID     primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
-	UnitID       primitive.ObjectID `bson:"unit_id" json:"unit_id"`
-	VocabularyID primitive.ObjectID `bson:"vocabulary" json:"vocabulary"`
+	ID       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
+	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 
 	Title       string        `bson:"title" json:"title"`
 	Description string        `bson:"description" json:"description"`
@@ -27,14 +26,32 @@ type Quiz struct {
 	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
 }
 
+type QuizResponse struct {
+	ID       primitive.ObjectID `bson:"_id" json:"_id"`
+	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
+	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
+
+	Title       string        `bson:"title" json:"title"`
+	Description string        `bson:"description" json:"description"`
+	Duration    time.Duration `bson:"duration" json:"duration"`
+
+	IsComplete int       `bson:"is_complete" json:"is_complete"`
+	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
+	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
+
+	CountQuestion int64 `bson:"count_question" json:"count_question"`
+}
+
 type Response struct {
-	Count int64 `bson:"count" json:"count"`
+	Total int64 `bson:"total" json:"total"`
+	Page  int64 `bson:"page" json:"page"`
 	Quiz  []Quiz
 }
 
 //go:generate mockery --name IQuizRepository
 type IQuizRepository interface {
-	FetchMany(ctx context.Context) (Response, error)
+	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
 	FetchManyByLessonID(ctx context.Context, unitID string) (Response, error)
 

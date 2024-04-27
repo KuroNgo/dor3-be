@@ -37,6 +37,19 @@ func (q *quizResultRepository) FetchMany(ctx context.Context, page string) (quiz
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
+	// Đếm tổng số lượng tài liệu trong collection
+	count, err := collectionResult.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return quiz_result_domain.Response{}, err
+	}
+
+	cal1 := count / int64(perPage)
+	cal2 := count % int64(perPage)
+	var cal int64 = 0
+	if cal2 != 0 {
+		cal = cal1 + 1
+	}
+
 	cursor, err := collectionResult.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
 		return quiz_result_domain.Response{}, err
@@ -53,6 +66,7 @@ func (q *quizResultRepository) FetchMany(ctx context.Context, page string) (quiz
 	}
 
 	resultRes := quiz_result_domain.Response{
+		Page:       cal,
 		QuizResult: results,
 	}
 

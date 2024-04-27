@@ -25,6 +25,7 @@ type Response struct {
 	TotalScore   int16   `bson:"total_score" json:"total_score"`
 	AverageScore float64 `bson:"average_score" json:"average_score"`
 	Percentage   float64 `bson:"percentage" json:"percentage"`
+	Page         int64   `bson:"page" json:"page"`
 	QuizResult   []QuizResult
 }
 

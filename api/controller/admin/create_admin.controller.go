@@ -27,7 +27,6 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	// Bên phía client sẽ phải so sánh password thêm một lần nữa đã đúng chưa
 	if !internal.PasswordStrong(admin.Password) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -36,7 +35,6 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	// Băm mật khẩu
 	hashedPassword, err := internal.HashPassword(admin.Password)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -54,7 +52,7 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 		Id:        primitive.NewObjectID(),
 		Address:   admin.Address,
 		FullName:  admin.FullName,
-		Avatar:    admin.Avatar,
+		AvatarURL: admin.Avatar,
 		Email:     admin.Email,
 		Password:  hashedPassword,
 		Role:      "admin",
@@ -63,7 +61,6 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 		UpdatedAt: time.Now(),
 	}
 
-	// thực hiện đăng ký người dùng
 	err = a.AdminUseCase.CreateOne(ctx, newAdmin)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -73,7 +70,6 @@ func (a *AdminController) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	// Trả về phản hồi thành công
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})

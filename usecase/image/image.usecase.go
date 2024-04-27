@@ -29,11 +29,11 @@ func (i *imageUseCase) GetURLByName(ctx context.Context, name string) (image_dom
 	return image, err
 }
 
-func (i *imageUseCase) FetchMany(ctx context.Context) (image_domain.Response, error) {
+func (i *imageUseCase) FetchMany(ctx context.Context, page string) (image_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, i.contextTimeout)
 	defer cancel()
 
-	quiz, err := i.imageRepository.FetchMany(ctx)
+	quiz, err := i.imageRepository.FetchMany(ctx, page)
 	if err != nil {
 		return image_domain.Response{}, err
 	}

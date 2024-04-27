@@ -30,6 +30,7 @@ type ExerciseQuestion struct {
 }
 
 type Response struct {
+	Page             int64 `bson:"page" json:"page"`
 	ExerciseQuestion []ExerciseQuestion
 }
 

@@ -18,6 +18,60 @@ type unitRepository struct {
 	collectionVocabulary string
 }
 
+func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_domain.UnitResponse, error) {
+	collectionUnit := u.database.Collection(u.collectionUnit)
+
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return nil, errors.New("invalid page number")
+	}
+	perPage := 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip)).SetSort(bson.D{{"level", 1}})
+
+	cursor, err := collectionUnit.Find(ctx, bson.D{}, findOptions)
+	if err != nil {
+		return nil, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
+
+	var units []unit_domain.UnitResponse
+	for cursor.Next(ctx) {
+		var unit unit_domain.UnitResponse
+		if err = cursor.Decode(&unit); err != nil {
+			return nil, err
+		}
+
+		// Lấy thông tin liên quan cho mỗi unit
+		countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		unitRes := unit_domain.UnitResponse{
+			ID:              unit.ID,
+			LessonID:        unit.LessonID,
+			Name:            unit.Name,
+			ImageURL:        unit.ImageURL,
+			Level:           unit.Level,
+			IsComplete:      unit.IsComplete,
+			CreatedAt:       unit.CreatedAt,
+			UpdatedAt:       unit.UpdatedAt,
+			WhoUpdates:      unit.WhoUpdates,
+			CountVocabulary: countVocabulary,
+		}
+
+		units = append(units, unitRes)
+	}
+
+	return units, nil
+}
+
 func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLesson string, collectionVocabulary string) unit_domain.IUnitRepository {
 	return &unitRepository{
 		database:             db,
@@ -172,40 +226,6 @@ func (u *unitRepository) CheckLessonComplete(ctx context.Context, lessonID primi
 	return true, nil
 }
 
-func (u *unitRepository) FetchMany(ctx context.Context, page string) (unit_domain.Response, error) {
-	collectionUnit := u.database.Collection(u.collectionUnit)
-
-	pageNumber, err := strconv.Atoi(page)
-	if err != nil {
-		return unit_domain.Response{}, errors.New("invalid page number")
-	}
-	perPage := 7
-	skip := (pageNumber - 1) * perPage
-	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip)).SetSort(bson.D{{"level", 1}})
-
-	cursor, err := collectionUnit.Find(ctx, bson.D{}, findOptions)
-	if err != nil {
-		return unit_domain.Response{}, err
-	}
-
-	var units []unit_domain.Unit
-	for cursor.Next(ctx) {
-		var unit unit_domain.Unit
-		if err := cursor.Decode(&unit); err != nil {
-			return unit_domain.Response{}, err
-		}
-
-		// Thêm lesson vào slice lessons
-		units = append(units, unit)
-	}
-
-	unitRes := unit_domain.Response{
-		Unit: units,
-	}
-
-	return unitRes, err
-}
-
 func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) error {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 	collectionLesson := u.database.Collection(u.collectionLesson)
@@ -281,4 +301,17 @@ func (u *unitRepository) DeleteOne(ctx context.Context, unitID string) error {
 
 	_, err = collectionUnit.DeleteOne(ctx, filter)
 	return err
+}
+
+// countLessonsByCourseID counts the number of lessons associated with a course.
+func (l *unitRepository) countVocabularyByUnitID(ctx context.Context, unitID primitive.ObjectID) (int32, error) {
+	collectionVocabulary := l.database.Collection(l.collectionVocabulary)
+
+	filter := bson.M{"unit_id": unitID}
+	count, err := collectionVocabulary.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, err
+	}
+
+	return int32(count), nil
 }

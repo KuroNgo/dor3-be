@@ -34,7 +34,7 @@ type IAdminUseCase interface {
 	FetchMany(ctx context.Context) (Response, error)
 	GetByEmail(ctx context.Context, email string) (*Admin, error)
 
-	Login(c context.Context, request SignIn) (*Admin, error)
+	Login(ctx context.Context, request SignIn) (*Admin, error)
 	CreateOne(ctx context.Context, admin Admin) error
 	UpdateOne(ctx context.Context, admin *Admin) (*mongo.UpdateResult, error)
 

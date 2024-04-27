@@ -21,7 +21,9 @@ type MarkList struct {
 }
 
 type Response struct {
-	MarkList []MarkList
+	Total           int64 `json:"total"`
+	CountVocabulary int64 `json:"count_vocabulary"`
+	MarkList        []MarkList
 }
 
 type IMarkListRepository interface {
