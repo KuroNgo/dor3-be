@@ -46,6 +46,21 @@ func (v *vocabularyRepository) FindUnitIDByUnitLevel(ctx context.Context, unitLe
 	return data.Id, nil
 }
 
+func (v *vocabularyRepository) FindVocabularyIDByVocabularyConfig(ctx context.Context, word string) (primitive.ObjectID, error) {
+	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
+
+	filter := bson.M{"word_for_config": word}
+	var data struct {
+		Id primitive.ObjectID `bson:"_id"`
+	}
+
+	err := collectionVocabulary.FindOne(ctx, filter).Decode(&data)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+	return data.Id, nil
+}
+
 func (v *vocabularyRepository) GetLatestVocabulary(ctx context.Context) ([]string, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
@@ -282,7 +297,7 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 	if err != nil {
 		return vocabulary_domain.Response{}, errors.New("invalid page number")
 	}
-	perPage := 7
+	perPage := 2
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
@@ -357,18 +372,17 @@ func (v *vocabularyRepository) UpdateOne(ctx context.Context, vocabulary *vocabu
 	return data, err
 }
 
-func (v *vocabularyRepository) UpdateOneAudio(c context.Context, vocabularyID string, linkURL string) error {
+func (v *vocabularyRepository) UpdateOneAudio(c context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
 	collection := v.database.Collection(v.collectionVocabulary)
-	objID, err := primitive.ObjectIDFromHex(vocabularyID)
 
-	filter := bson.D{{Key: "_id", Value: objID}}
+	filter := bson.D{{Key: "_id", Value: vocabulary.Id}}
 	update := bson.M{
 		"$set": bson.M{
-			"linkURL": linkURL,
+			"link_url": vocabulary.LinkURL,
 		},
 	}
 
-	_, err = collection.UpdateOne(c, filter, update)
+	_, err := collection.UpdateOne(c, filter, &update)
 	if err != nil {
 		return err
 	}

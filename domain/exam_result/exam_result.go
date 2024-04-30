@@ -29,6 +29,12 @@ type Response struct {
 	ExamResult   []ExamResult
 }
 
+type Statistics struct {
+	TotalScore   int16   `bson:"total_score" json:"total_score"`
+	AverageScore float64 `bson:"average_score" json:"average_score"`
+	Percentage   float64 `bson:"percentage" json:"percentage"`
+}
+
 type IExamResultRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchManyByExamID(ctx context.Context, userID string) (Response, error)

@@ -26,6 +26,11 @@ type Response struct {
 	MarkList        []MarkList
 }
 
+type Statistics struct {
+	Total           int64 `json:"total"`
+	CountVocabulary int64 `json:"count_vocabulary"`
+}
+
 type IMarkListRepository interface {
 	FetchManyByUserID(ctx context.Context, userId string) (Response, error)
 

@@ -44,9 +44,12 @@ type QuizResponse struct {
 }
 
 type Response struct {
+	Page int64 `bson:"page" json:"page"`
+	Quiz []Quiz
+}
+
+type Statistics struct {
 	Total int64 `bson:"total" json:"total"`
-	Page  int64 `bson:"page" json:"page"`
-	Quiz  []Quiz
 }
 
 //go:generate mockery --name IQuizRepository

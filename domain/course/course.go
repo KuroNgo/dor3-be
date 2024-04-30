@@ -32,9 +32,12 @@ type CourseResponse struct {
 }
 
 type Response struct {
+	Course []Course
+}
+
+type Statistics struct {
 	CountLesson     int32 `bson:"count_lesson" json:"count_lesson"`
 	CountVocabulary int32 `bson:"count_vocabulary" json:"count_vocabulary"`
-	Course          []Course
 }
 
 //go:generate mockery --name ICourseRepository

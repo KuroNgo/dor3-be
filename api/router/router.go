@@ -38,8 +38,9 @@ import (
 func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, gin *gin.Engine) {
 	value := activity_log_route.ActivityRoute(env, timeout, db)
 
-	publicRouter := gin.Group("/api/")
+	publicRouter := gin.Group("/api")
 	privateRouter := gin.Group("/api/admin/")
+	routerMid := gin.Group("/api")
 
 	// Middleware
 	publicRouter.Use(
@@ -62,11 +63,12 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	)
 
 	// This is a CORS method for check IP validation
-	publicRouter.OPTIONS("/*path", middleware.OptionMessage)
+	publicRouter.OPTIONS("/*path", middleware.OptionMessagePublic, middleware.OptionMessagePrivate)
 
 	// All Public APIs
 	user_route.GoogleAuthRoute(env, timeout, db, publicRouter)
 	user_route.UserRouter(env, timeout, db, publicRouter)
+	user_route.LoginFromRoleRoute(env, timeout, db, routerMid)
 
 	exam_route.ExamRoute(env, timeout, db, publicRouter)
 	exam_answer_route.ExamAnswerRoute(env, timeout, db, publicRouter)
@@ -89,7 +91,6 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	mark_vocabulary_route.MarkVocabularyRoute(env, timeout, db, publicRouter)
 	mark_list_route.MarkListRoute(env, timeout, db, publicRouter)
 
-	user_route.LoginFromRoleRoute(env, timeout, db, publicRouter)
 	image_route.ImageRoute(env, timeout, db, publicRouter)
 	course_route.CourseRoute(env, timeout, db, publicRouter)
 	lesson_route.LessonRoute(env, timeout, db, publicRouter)

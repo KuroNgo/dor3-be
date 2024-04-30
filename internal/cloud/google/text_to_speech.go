@@ -1,23 +1,28 @@
 package google
 
 import (
-	"fmt"
 	htgotts "github.com/hegedustibor/htgo-tts"
-	"mime/multipart"
 	"os"
+	"strings"
 )
 
 func CreateTextToSpeech(word string) error {
 	speech := htgotts.Speech{Folder: "audio", Language: "en"}
-	_, err := speech.CreateSpeechFile(word, word)
+	wordRemoveSpace := strings.ReplaceAll(word, " ", "")
+	_, err := speech.CreateSpeechFile(word, wordRemoveSpace)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func ListFilesInDirectory(dir string) ([]*multipart.FileHeader, error) {
-	var fileHeaders []*multipart.FileHeader
+type FileInfo struct {
+	OriginalName string
+	TrimmedName  string
+}
+
+func ListFilesInDirectory(dir string) ([]string, error) {
+	var filenames []string
 
 	files, err := os.ReadDir(dir)
 	if err != nil {
@@ -26,19 +31,17 @@ func ListFilesInDirectory(dir string) ([]*multipart.FileHeader, error) {
 
 	for _, file := range files {
 		if !file.IsDir() {
-			fileHeader := &multipart.FileHeader{
-				Filename: file.Name(),
-			}
-			fileHeaders = append(fileHeaders, fileHeader)
+			filenames = append(filenames, file.Name())
 		}
 	}
 
-	return fileHeaders, nil
+	return filenames, nil
 }
 
-func DeleteFile(fileName string) {
-	err := os.Remove(fileName)
+func DeleteAllFilesInDirectory(dir string) error {
+	err := os.RemoveAll(dir)
 	if err != nil {
-		fmt.Printf("Failed to delete temporary file: %v\n", err)
+		return err
 	}
+	return nil
 }

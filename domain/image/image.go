@@ -19,6 +19,11 @@ type Image struct {
 }
 
 type Response struct {
+	Page  int64 `json:"page"`
+	Image []Image
+}
+
+type Statistics struct {
 	Count           int64 `json:"count"`
 	SizeKB          int64 `json:"size(KB)"`
 	SizeRemainingKB int64 `json:"size_remaining(KB)"`
@@ -26,8 +31,6 @@ type Response struct {
 	SizeMB          int64 `json:"size(MB)"`
 	SizeRemainingMB int64 `json:"size_remaining(MB)"`
 	MaxSizeMB       int64 `json:"max_size(MB)"`
-	Page            int64 `json:"page"`
-	Image           []Image
 }
 
 //go:generate mockery --name IImageRepository

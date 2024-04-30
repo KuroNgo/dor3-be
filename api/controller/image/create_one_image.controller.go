@@ -43,7 +43,7 @@ func (im *ImageController) CreateOneImageStatic(ctx *gin.Context) {
 		return
 	}
 
-	result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderStatic)
+	result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderStatic)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -108,7 +108,7 @@ func (im *ImageController) CreateOneImageLesson(ctx *gin.Context) {
 		return
 	}
 
-	result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderLesson)
+	result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderLesson)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -174,7 +174,7 @@ func (im *ImageController) CreateOneImageUser(ctx *gin.Context) {
 		return
 	}
 
-	result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderUser)
+	result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderUser)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -240,7 +240,7 @@ func (im *ImageController) CreateOneImageExam(ctx *gin.Context) {
 		return
 	}
 
-	result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderExam)
+	result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderExam)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -306,7 +306,7 @@ func (im *ImageController) CreateOneImageQuiz(ctx *gin.Context) {
 		return
 	}
 
-	result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderQuiz)
+	result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderQuiz)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),

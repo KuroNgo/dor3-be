@@ -45,7 +45,7 @@ func (im *ImageController) CreateManyImageForLesson(ctx *gin.Context) {
 		}
 
 		// Tải lên tệp vào Cloudinary
-		result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderLesson)
+		result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderLesson)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Error uploading file",
@@ -114,7 +114,7 @@ func (im *ImageController) CreateManyImageForExam(ctx *gin.Context) {
 		}
 
 		// Tải lên tệp vào Cloudinary
-		result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderExam)
+		result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderExam)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Error uploading file",
@@ -183,7 +183,7 @@ func (im *ImageController) CreateManyImageForUser(ctx *gin.Context) {
 		}
 
 		// Tải lên tệp vào Cloudinary
-		result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderUser)
+		result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderUser)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Error uploading file",
@@ -253,7 +253,7 @@ func (im *ImageController) CreateManyImageForQuiz(ctx *gin.Context) {
 		}
 
 		// Tải lên tệp vào Cloudinary
-		result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderQuiz)
+		result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderQuiz)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Error uploading file",
@@ -322,7 +322,7 @@ func (im *ImageController) CreateManyImageForStatic(ctx *gin.Context) {
 		}
 
 		// Tải lên tệp vào Cloudinary
-		result, err := cloudinary.UploadToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderStatic)
+		result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderStatic)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Error uploading file",

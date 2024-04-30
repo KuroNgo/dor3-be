@@ -95,15 +95,8 @@ func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_dom
 	}
 
 	response := image_domain.Response{
-		Image:           images,
-		Count:           count,
-		SizeKB:          size,
-		SizeRemainingKB: (1024 * 1024) - size,
-		MaxSizeKB:       1024 * 1024,
-		SizeMB:          size / 1024,
-		SizeRemainingMB: ((1024 * 1024) - size) / 1024,
-		Page:            cal,
-		MaxSizeMB:       1024,
+		Image: images,
+		Page:  cal,
 	}
 
 	return response, err

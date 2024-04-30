@@ -83,7 +83,7 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 	defer f.Close()
 
 	// Tải file lên Cloudinary
-	result, err := cloudinary.UploadToCloudinary(f, file.Filename, l.Database.CloudinaryUploadFolderUser)
+	result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, l.Database.CloudinaryUploadFolderUser)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -204,7 +204,7 @@ func (l *LessonController) CreateOneLessonHaveImage(ctx *gin.Context) {
 	defer f.Close()
 
 	// Tải file lên Cloudinary
-	result, err := cloudinary.UploadToCloudinary(f, file.Filename, l.Database.CloudinaryUploadFolderUser)
+	result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, l.Database.CloudinaryUploadFolderUser)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),

@@ -1,0 +1,23 @@
+{{template "base" .}}
+{{define "content"}}
+<table role="presentation" class="main">
+    <!-- START MAIN CONTENT AREA -->
+    <tr>
+        <td class="wrapper">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td>
+                        <p>Hi {{ .FirstName }},</p>
+                        <p>Your verification code is: <strong>{{ .URL }}</strong></p>
+                        <p>Please use this code to verify your account within 30 minutes.</p>
+                        <p>If you did not request this verification code, please ignore this email.</p>
+                        <p>Best regards,</p>
+                        <p>FEIT | Fluent English for IT</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <!-- END MAIN CONTENT AREA -->
+</table>
+{{end}}

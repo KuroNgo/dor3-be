@@ -2,7 +2,6 @@ package google
 
 import (
 	"bytes"
-	user_domain "clean-architecture/domain/user"
 	subject_const "clean-architecture/internal/cloud/google/const"
 	"crypto/tls"
 	"fmt"
@@ -13,61 +12,6 @@ import (
 	"os"
 	"path/filepath"
 )
-
-//func SendEmail(to string, subject string, templateName string) error {
-//	m := gomail.NewMessage()
-//	m.SetHeader(subject_const.From, subject_const.Mailer1, subject_const.Password1)
-//	m.SetHeader(subject_const.To, to)
-//
-//	m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin1, subject_const.Admin)
-//	m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin2, subject_const.Admin)
-//	m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin3, subject_const.Admin)
-//
-//	m.SetHeader(subject_const.Subject, subject)
-//
-//	var body bytes.Buffer
-//	template, err := ParseTemplateDir("templates")
-//	if err != nil {
-//		log.Fatal("Could not parse template", err)
-//	}
-//
-//	template = template.Lookup(templateName)
-//	template.Execute(&body, &data)
-//	fmt.Println(template.Name())
-//
-//	m.SetBody(subject_const.Body, html2text.HTML2Text(body.String()))
-//
-//	d := gomail.NewDialer("smtp.gmail.com", 587, subject_const.Mailer1, subject_const.Password1)
-//	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-//
-//	if err := d.DialAndSend(m); err != nil {
-//		return err
-//	}
-//	return nil
-//}
-
-//	func SendEmailV2(to string, subject string, body string) error {
-//		m := gomail.NewMessage()
-//		m.SetHeader(subject_const.From, subject_const.Mailer1, subject_const.Password1)
-//		m.SetHeader(subject_const.To, to)
-//
-//		m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin1, subject_const.Admin)
-//		m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin3, subject_const.Admin)
-//
-//		m.SetHeader(subject_const.Subject, subject)
-//		m.SetBody(subject_const.Body, body)
-//
-//		// random image
-//		m.Attach("assets/images/Artboard.png")
-//
-//		d := gomail.NewDialer("smtp.gmail.com", 587, subject_const.Mailer1, subject_const.Password1)
-//		d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-//
-//		if err := d.DialAndSend(m); err != nil {
-//			return err
-//		}
-//		return nil
-//	}
 
 type EmailData struct {
 	URL       string
@@ -96,7 +40,7 @@ func ParseTemplateDir(dir string) (*template.Template, error) {
 	return template.ParseFiles(paths...)
 }
 
-func SendEmail(user *user_domain.User, data *EmailData, templateName string) error {
+func SendEmail(data *EmailData, templateName string) error {
 	var body bytes.Buffer
 
 	templated, err := ParseTemplateDir("templates")
@@ -104,20 +48,19 @@ func SendEmail(user *user_domain.User, data *EmailData, templateName string) err
 		log.Fatal("Could not parse template", err)
 	}
 
-	templates := templated.Lookup(templateName)
-	err = templates.Execute(&body, &data)
+	err = templated.ExecuteTemplate(&body, templateName, &data)
 	if err != nil {
 		return err
 	}
 
 	m := gomail.NewMessage()
 
-	m.SetHeader("From", subject_const.From)
-	m.SetHeader("To", subject_const.To)
+	m.SetHeader("From", subject_const.Mailer1)
+	m.SetHeader("To", subject_const.Test)
 	m.SetHeader("Subject", data.Subject)
 
-	m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin1, subject_const.Admin)
-	m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin2, subject_const.Admin)
+	//m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin1, subject_const.Admin)
+	//m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin2, subject_const.Admin)
 	m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin3, subject_const.Admin)
 
 	m.SetBody("text/html", body.String())
