@@ -1,6 +1,6 @@
 package cloudinary
 
-type Upload struct {
+type UploadImage struct {
 	ImageURL string `bson:"image_url" json:"image_url"`
 	AssetID  string `bson:"asset_id" json:"asset_id"`
 }
@@ -14,4 +14,9 @@ type Update struct {
 type RemainingDataAccount struct {
 	RemainingData int16 `bson:"remaining_data" json:"remaining_data"`
 	RemainingFile int16 `bson:"remaining_file" json:"remaining_file"`
+}
+
+type UploadAudio struct {
+	AudioURL string `bson:"image_url" json:"image_url"`
+	AssetID  string `bson:"asset_id" json:"asset_id"`
 }

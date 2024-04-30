@@ -35,6 +35,7 @@ type IVocabularyUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchByIdUnit(ctx context.Context, idUnit string) (Response, error)
 	FindUnitIDByUnitLevel(ctx context.Context, unitLevel int) (primitive.ObjectID, error)
+	FindVocabularyIDByVocabularyName(ctx context.Context, word string) (primitive.ObjectID, error)
 	FetchByWord(ctx context.Context, word string) (SearchingResponse, error)
 	FetchByLesson(ctx context.Context, lessonName string) (SearchingResponse, error)
 
@@ -43,7 +44,7 @@ type IVocabularyUseCase interface {
 	GetLatestVocabularyBatch(ctx context.Context) (Response, error)
 
 	UpdateOne(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
-	UpdateOneAudio(ctx context.Context, vocabularyID string, linkURL string) error
+	UpdateOneAudio(ctx context.Context, vocabulary *Vocabulary) error
 	UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error
 
 	CreateOne(ctx context.Context, vocabulary *Vocabulary) error

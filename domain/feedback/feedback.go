@@ -15,12 +15,18 @@ type Feedback struct {
 	UserID        primitive.ObjectID `bson:"user_id" json:"user_id"`
 	Title         string             `bson:"title" json:"title"`
 	Content       string             `bson:"content" json:"content"`
+	File          string             `bson:"file" json:"file"`
 	SubmittedDate time.Time          `bson:"submitted_date" json:"submitted_date"`
+	IsSeen        int                `bson:"is_seen" json:"is_seen"`
 }
 
 type Response struct {
 	Total    int64 `bson:"total" json:"total"`
 	Feedback []Feedback
+}
+
+type Statistics struct {
+	Total int64 `bson:"total" json:"total"`
 }
 
 type IFeedbackRepository interface {

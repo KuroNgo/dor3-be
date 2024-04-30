@@ -35,6 +35,10 @@ type Response struct {
 	ExamQuestion []ExamQuestion
 }
 
+type Statistics struct {
+	Count int `bson:"count" json:"count"`
+}
+
 type IExamQuestionRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchManyByExamID(ctx context.Context, examID string) (Response, error)

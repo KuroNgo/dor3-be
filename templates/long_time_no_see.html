@@ -1,0 +1,23 @@
+{{template "base" .}}
+{{define "content"}}
+<table role="presentation" class="main">
+    <!-- START MAIN CONTENT AREA -->
+    <tr>
+        <td class="wrapper">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td>
+                        <p>Hello {{ .FirstName }},</p>
+                        <p>We noticed that you haven't logged into your account for the past 3 days.</p>
+                        <p>Is there anything we can assist you with?</p>
+                        <p>If you have any questions or need help, please don't hesitate to reach out to us.</p>
+                        <p>Best regards,</p>
+                        <p>FEIT | Fluent English for IT</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <!-- END MAIN CONTENT AREA -->
+</table>
+{{end}}

@@ -10,6 +10,7 @@ const (
 	Mailer3 = ""
 
 	Password1 = "iguhalllohlaewge"
+	Test      = "2011423@dlu.edu.vn"
 
 	Admin = "admin"
 	User  = "user"

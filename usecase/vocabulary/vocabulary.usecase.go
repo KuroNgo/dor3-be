@@ -13,6 +13,25 @@ type vocabularyUseCase struct {
 	contextTimeout       time.Duration
 }
 
+func NewVocabularyUseCase(vocabularyRepository vocabulary_domain.IVocabularyRepository, timeout time.Duration) vocabulary_domain.IVocabularyUseCase {
+	return &vocabularyUseCase{
+		vocabularyRepository: vocabularyRepository,
+		contextTimeout:       timeout,
+	}
+}
+
+func (v *vocabularyUseCase) FindVocabularyIDByVocabularyName(ctx context.Context, word string) (primitive.ObjectID, error) {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+
+	vocabulary, err := v.vocabularyRepository.FindVocabularyIDByVocabularyConfig(ctx, word)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	return vocabulary, err
+}
+
 func (v *vocabularyUseCase) GetLatestVocabulary(ctx context.Context) ([]string, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
@@ -28,13 +47,6 @@ func (v *vocabularyUseCase) GetLatestVocabulary(ctx context.Context) ([]string, 
 func (v *vocabularyUseCase) GetLatestVocabularyBatch(ctx context.Context) (vocabulary_domain.Response, error) {
 	//TODO implement me
 	panic("implement me")
-}
-
-func NewVocabularyUseCase(vocabularyRepository vocabulary_domain.IVocabularyRepository, timeout time.Duration) vocabulary_domain.IVocabularyUseCase {
-	return &vocabularyUseCase{
-		vocabularyRepository: vocabularyRepository,
-		contextTimeout:       timeout,
-	}
 }
 
 func (v *vocabularyUseCase) FetchByIdUnit(ctx context.Context, idUnit string) (vocabulary_domain.Response, error) {
@@ -85,11 +97,11 @@ func (v *vocabularyUseCase) FetchMany(ctx context.Context, page string) (vocabul
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) UpdateOneAudio(c context.Context, vocabularyID string, linkURL string) error {
+func (v *vocabularyUseCase) UpdateOneAudio(c context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
 	ctx, cancel := context.WithTimeout(c, v.contextTimeout)
 	defer cancel()
 
-	err := v.vocabularyRepository.UpdateOneAudio(ctx, vocabularyID, linkURL)
+	err := v.vocabularyRepository.UpdateOneAudio(ctx, vocabulary)
 	if err != nil {
 		return err
 	}

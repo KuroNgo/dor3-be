@@ -138,13 +138,9 @@ func (q *quizResultRepository) FetchManyByUserID(ctx context.Context, userID str
 		result.Score = score
 		results = append(results, result)
 	}
-	averageScore, _ := q.GetAverageScoreByUser(ctx, userID)
-	percentScore, _ := q.GetOverallPerformance(ctx, userID)
 
 	resultRes := quiz_result_domain.Response{
-		QuizResult:   results,
-		AverageScore: averageScore,
-		Percentage:   percentScore,
+		QuizResult: results,
 	}
 
 	return resultRes, nil

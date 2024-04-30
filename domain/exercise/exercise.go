@@ -48,6 +48,10 @@ type Response struct {
 	Exercise      []Exercise
 }
 
+type Statistics struct {
+	CountExercise int64 `bson:"count_exercise" json:"count_exercise"`
+}
+
 type IExerciseRepository interface {
 	FetchMany(ctx context.Context, page string) ([]ExerciseResponse, int64, error)
 	FetchManyByLessonID(ctx context.Context, unitID string) (Response, error)

@@ -4,7 +4,6 @@ import (
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal"
 	"clean-architecture/internal/cloud/cloudinary"
-	"clean-architecture/internal/cloud/google"
 	file_internal "clean-architecture/internal/file"
 	"github.com/gin-gonic/gin"
 	"github.com/thanhpk/randstr"
@@ -79,7 +78,7 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 
 		code := randstr.Dec(6)
 		verificationCode := internal.Encode(code)
-		firstName := newUser.FullName
+		//firstName := newUser.FullName
 
 		updUser := user_domain.User{
 			ID:               newUser.ID,
@@ -97,21 +96,21 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 		}
 
 		// ? Send Email
-		emailData := google.EmailData{
-			URL:       u.Database.ClientOrigin + "/verifyemail/" + code,
-			FirstName: firstName,
-			Subject:   "Your account verification code",
-		}
+		//emailData := google.EmailData{
+		//	URL:       u.Database.ClientOrigin + "/verifyemail/" + code,
+		//	FirstName: firstName,
+		//	Subject:   "Your account verification code",
+		//}
 
 		//Thêm công việc cron để gửi email nhắc nhở
-		err = google.SendEmail(&newUser, &emailData, "sign_in_first_time.sendmail.html")
-		if err != nil {
-			ctx.JSON(http.StatusBadGateway, gin.H{
-				"status":  "success",
-				"message": "There was an error sending email",
-			})
-			return
-		}
+		//err = google.SendEmail(&newUser, &emailData, "sign_in_first_time.sendmail.html")
+		//if err != nil {
+		//	ctx.JSON(http.StatusBadGateway, gin.H{
+		//		"status":  "success",
+		//		"message": "There was an error sending email",
+		//	})
+		//	return
+		//}
 
 		message := "We sent an email with a verification code to your email"
 
@@ -141,7 +140,7 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 	}
 	defer f.Close()
 
-	imageURL, err := cloudinary.UploadToCloudinary(f, file.Filename, u.Database.CloudinaryUploadFolderUser)
+	imageURL, err := cloudinary.UploadImageToCloudinary(f, file.Filename, u.Database.CloudinaryUploadFolderUser)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),

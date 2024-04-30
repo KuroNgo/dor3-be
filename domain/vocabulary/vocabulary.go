@@ -16,6 +16,7 @@ type Vocabulary struct {
 	UnitID primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 
 	Word          string `bson:"word" json:"word"`
+	WordForConfig string `bson:"word_for_config" json:"word_for_config"`
 	PartOfSpeech  string `bson:"part_of_speech" json:"part_of_speech"`
 	Mean          string `bson:"mean" json:"mean"`
 	Pronunciation string `bson:"pronunciation" json:"pronunciation"`
@@ -34,9 +35,8 @@ type Vocabulary struct {
 }
 
 type Response struct {
-	Page                  int64 `bson:"page" json:"page"`
-	CountVocabularySearch int
-	Vocabulary            []Vocabulary
+	Page       int64 `bson:"page" json:"page"`
+	Vocabulary []Vocabulary
 }
 
 type SearchingResponse struct {
@@ -44,10 +44,15 @@ type SearchingResponse struct {
 	Vocabulary            []Vocabulary
 }
 
+type Statistics struct {
+	CountVocabulary int `bson:"count_vocabulary" json:"count_vocabulary"`
+}
+
 //go:generate mockery --name IVocabularyRepository
 type IVocabularyRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FindUnitIDByUnitLevel(ctx context.Context, unitLevel int) (primitive.ObjectID, error)
+	FindVocabularyIDByVocabularyConfig(ctx context.Context, word string) (primitive.ObjectID, error)
 	FetchByIdUnit(ctx context.Context, idUnit string) (Response, error)
 	FetchByWord(ctx context.Context, word string) (SearchingResponse, error)
 	FetchByWord2(ctx context.Context, word string) (SearchingResponse, error)
@@ -61,7 +66,7 @@ type IVocabularyRepository interface {
 
 	UpdateOne(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
 	UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error
-	UpdateOneAudio(ctx context.Context, vocabularyID string, linkURL string) error
+	UpdateOneAudio(ctx context.Context, vocabulary *Vocabulary) error
 
 	DeleteOne(ctx context.Context, vocabularyID string) error
 }

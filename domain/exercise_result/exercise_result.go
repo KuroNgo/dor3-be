@@ -29,6 +29,12 @@ type Response struct {
 	ExerciseResult []ExerciseResult
 }
 
+type Statistics struct {
+	TotalScore   int16   `bson:"total_score" json:"total_score"`
+	AverageScore float64 `bson:"average_score" json:"average_score"`
+	Percentage   float64 `bson:"percentage" json:"percentage"`
+}
+
 type IExerciseResultRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchManyByExerciseID(ctx context.Context, userID string) (Response, error)

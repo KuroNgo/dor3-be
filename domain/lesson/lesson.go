@@ -46,6 +46,11 @@ type Response struct {
 	Lesson          []Lesson
 }
 
+type Statistics struct {
+	CountVocabulary int64 `json:"count_vocabulary"`
+	CountUnit       int64 `json:"count_unit"`
+}
+
 //go:generate mockery --name ILessonRepository
 type ILessonRepository interface {
 	FetchMany(ctx context.Context) ([]LessonResponse, error)
