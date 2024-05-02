@@ -293,61 +293,36 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 		return
 	}
 
-	errChan := make(chan error)
-	defer close(errChan)
-
-	successCount := 0
 	for _, lesson := range result {
-		go func(lesson file_internal.Lesson) {
-			// Tìm ID của khóa học từ tên khóa học
-			courseID, err := l.LessonUseCase.FindCourseIDByCourseName(ctx, lesson.CourseID)
-			if err != nil {
-				errChan <- fmt.Errorf("failed to find course ID for course '%s': %v", lesson.CourseID, err)
-				return
-			}
-
-			// Tạo bài học
-			le := lesson_domain.Lesson{
-				ID:          primitive.NewObjectID(),
-				CourseID:    courseID,
-				Name:        lesson.Name,
-				Level:       lesson.Level,
-				IsCompleted: 0,
-				CreatedAt:   time.Now(),
-				UpdatedAt:   time.Now(),
-				WhoUpdates:  admin.FullName,
-			}
-
-			// Tạo bài học trong cơ sở dữ liệu
-			err = l.LessonUseCase.CreateOneByNameCourse(ctx, &le)
-			if err != nil {
-				errChan <- fmt.Errorf("failed to create lesson '%s': %v", le.Name, err)
-				return
-			}
-
-			// Gửi thông báo thành công
-			errChan <- nil
-		}(lesson)
-	}
-
-	// Đợi goroutine kết thúc và xử lý lỗi nếu có
-	for range result {
-		if err := <-errChan; err == nil {
-			successCount++
+		// Tìm ID của khóa học từ tên khóa học
+		courseID, err := l.LessonUseCase.FindCourseIDByCourseName(ctx, lesson.CourseID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
-	}
 
-	// Trả về kết quả
-	if successCount > 0 {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Failed to create any lesson",
-			"message": "Any value have exist in database",
-		})
-		return
+		// Tạo bài học
+		le := lesson_domain.Lesson{
+			ID:          primitive.NewObjectID(),
+			CourseID:    courseID,
+			Name:        lesson.Name,
+			Level:       lesson.Level,
+			IsCompleted: 0,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+			WhoUpdates:  admin.FullName,
+		}
+
+		// Tạo bài học trong cơ sở dữ liệu
+		err = l.LessonUseCase.CreateOneByNameCourse(ctx, &le)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"status":        "success",
-		"success_count": successCount,
+		"status": "success",
 	})
 }

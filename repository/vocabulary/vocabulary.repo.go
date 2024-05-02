@@ -11,8 +11,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
+	"sync"
 	"time"
 )
+
+var wg sync.WaitGroup
 
 type vocabularyRepository struct {
 	database             *mongo.Database
@@ -38,6 +41,7 @@ func (v *vocabularyRepository) FindUnitIDByUnitLevel(ctx context.Context, unitLe
 		Id primitive.ObjectID `bson:"_id"`
 	}
 
+	// Thực hiện truy vấn FindOneAndUpdate
 	err := collectionUnit.FindOne(ctx, filter).Decode(&data)
 	if err != nil {
 		return primitive.NilObjectID, err
@@ -136,7 +140,12 @@ func (v *vocabularyRepository) GetAllVocabulary(ctx context.Context) ([]string, 
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	for cursor.Next(ctx) {
 		var result bson.M
@@ -168,6 +177,12 @@ func (v *vocabularyRepository) CreateOneByNameUnit(ctx context.Context, vocabula
 		return errors.New("parent unit not found")
 	}
 
+	countUnit := 0
+	if countParent > 5 {
+		_, err = collectionUnit.InsertOne(ctx, countUnit)
+		countUnit++
+	}
+
 	count, err := collectionVocabulary.CountDocuments(ctx, filter)
 	if err != nil {
 		return err
@@ -197,7 +212,12 @@ func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string)
 	if err != nil {
 		return vocabulary_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	var vocabularies []vocabulary_domain.Vocabulary
 
@@ -209,10 +229,6 @@ func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string)
 		vocabulary.UnitID = idUnit2
 		vocabularies = append(vocabularies, vocabulary)
 	}
-
-	//if len(vocabularies) == 0 {
-	//	return vocabulary_domain.Response{}, errors.New("no vocabulary found for the provided unit_id")
-	//}
 
 	response := vocabulary_domain.Response{
 		Vocabulary: vocabularies,
@@ -232,7 +248,12 @@ func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) (vo
 	if err != nil {
 		return vocabulary_domain.SearchingResponse{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	var vocabularies []vocabulary_domain.Vocabulary
 	if err := cursor.All(ctx, &vocabularies); err != nil {

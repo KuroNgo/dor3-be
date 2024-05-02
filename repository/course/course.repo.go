@@ -7,6 +7,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"sync"
+)
+
+var (
+	wg sync.WaitGroup
 )
 
 type courseRepository struct {
@@ -29,8 +34,6 @@ func NewCourseRepository(db *mongo.Database, collectionCourse string, collection
 
 func (c *courseRepository) FetchManyForEachCourse(ctx context.Context) ([]course_domain.CourseResponse, error) {
 	collectionCourse := c.database.Collection(c.collectionCourse)
-
-	// Lấy tất cả các khóa học từ cơ sở dữ liệu
 	cursor, err := collectionCourse.Find(ctx, bson.D{})
 	if err != nil {
 		return nil, err
@@ -49,16 +52,29 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context) ([]course
 			return nil, err
 		}
 
-		// Lấy thông tin liên quan cho mỗi khóa học
-		countLesson, err := c.countLessonsByCourseID(ctx, course.Id)
-		if err != nil {
-			return nil, err
-		}
+		countLessonCh := make(chan int32)
+		countVocabularyCh := make(chan int32)
 
-		countVocabulary, err := c.countVocabularyByCourseID(ctx, course.Id)
-		if err != nil {
-			return nil, err
-		}
+		go func() {
+			defer close(countLessonCh)
+			countLesson, err := c.countLessonsByCourseID(ctx, course.Id)
+			if err != nil {
+				return
+			}
+			countLessonCh <- countLesson
+		}()
+
+		go func() {
+			defer close(countVocabularyCh)
+			countVocabulary, err := c.countVocabularyByCourseID(ctx, course.Id)
+			if err != nil {
+				return
+			}
+			countVocabularyCh <- countVocabulary
+		}()
+
+		countLesson := <-countLessonCh
+		countVocab := <-countVocabularyCh
 
 		courseRes := course_domain.CourseResponse{
 			Id:              course.Id,
@@ -68,10 +84,9 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context) ([]course
 			UpdatedAt:       course.UpdatedAt,
 			WhoUpdated:      course.WhoUpdated,
 			CountLesson:     countLesson,
-			CountVocabulary: countVocabulary,
+			CountVocabulary: countVocab,
 		}
 
-		// Thêm cấu trúc dữ liệu này vào danh sách
 		courses = append(courses, courseRes)
 	}
 

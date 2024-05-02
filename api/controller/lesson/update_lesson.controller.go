@@ -9,7 +9,14 @@ import (
 )
 
 func (l *LessonController) UpdateOneLesson(ctx *gin.Context) {
-	currentUser := ctx.MustGet("currentUser")
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
 	admin, err := l.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

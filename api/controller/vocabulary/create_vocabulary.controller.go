@@ -411,9 +411,9 @@ func (v *VocabularyController) UploadAudioToCloudinary(ctx *gin.Context) {
 		}
 	}
 
-	v.DeleteFolderOfVocabulary(ctx)
-
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
+
+	v.DeleteFolderOfVocabulary(ctx)
 }

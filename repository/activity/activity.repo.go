@@ -52,13 +52,20 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
-	count, err := collection.CountDocuments(ctx, bson.D{})
-	cal1 := count / int64(perPage)
-	cal2 := count % int64(perPage)
-	var cal int64 = 0
-	if cal2 != 0 {
-		cal = cal1 + 1
-	}
+	cal := make(chan int64)
+
+	go func() {
+		count, err := collection.CountDocuments(ctx, bson.D{})
+		if err != nil {
+			return
+		}
+
+		cal1 := count / int64(perPage)
+		cal2 := count % int64(perPage)
+		if cal2 != 0 {
+			cal <- cal1
+		}
+	}()
 
 	cursor, err := collection.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
@@ -89,8 +96,9 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 		return activities[i].ActivityTime.After(activities[j].ActivityTime)
 	})
 
+	count := <-cal
 	activityRes := activity_log_domain.Response{
-		Page:        cal,
+		Page:        count,
 		ActivityLog: activities,
 	}
 	return activityRes, nil

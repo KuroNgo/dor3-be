@@ -148,7 +148,7 @@ func (v *vocabularyUseCase) FindUnitIDByUnitLevel(ctx context.Context, unitLevel
 func (v *vocabularyUseCase) CreateOneByNameUnit(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
-	err := v.vocabularyRepository.CreateOne(ctx, vocabulary)
+	err := v.vocabularyRepository.CreateOneByNameUnit(ctx, vocabulary)
 
 	if err != nil {
 		return err
