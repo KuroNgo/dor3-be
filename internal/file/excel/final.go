@@ -3,63 +3,92 @@ package excel
 import (
 	file_internal "clean-architecture/internal/file"
 	"errors"
+	"fmt"
 	"github.com/xuri/excelize/v2"
 )
 
-func ReadFileForLessonManagementSystem(filename string) ([]file_internal.Final, error) {
+func ReadFileForLessonManagementSystem(filename string) (file_internal.Course, []file_internal.Lesson, []file_internal.Unit, []file_internal.Vocabulary, error) {
+	// Khởi tạo các kênh
+	lessonCh := make(chan file_internal.Lesson)
+	unitCh := make(chan file_internal.Unit)
+	vocabularyCh := make(chan file_internal.Vocabulary)
+
 	f, err := excelize.OpenFile(filename)
 	if err != nil {
-		return nil, err
+		return file_internal.Course{}, nil, nil, nil, err
 	}
 
+	// Lấy danh sách các sheet trong file
 	sheetList := f.GetSheetList()
 	if sheetList == nil {
-		return nil, errors.New("empty sheet name")
+		return file_internal.Course{}, nil, nil, nil, errors.New("empty sheet name")
 	}
 
-	const maximumUnitCount = 10
-	var final []file_internal.Final
-
-	for _, elementSheet := range sheetList {
-		unitCount := 1 // Reset unitCount for each lesson
-
-		rows, err := f.GetRows(elementSheet)
-		if err != nil {
-			return nil, err
+	// Goroutine xử lý bài học
+	go func() {
+		defer close(lessonCh)
+		for i, sheetName := range sheetList {
+			lesson := file_internal.Lesson{
+				CourseID: "English for IT",
+				Name:     sheetName,
+				Level:    i,
+			}
+			lessonCh <- lesson
 		}
+	}()
 
-		for i, row := range rows {
-			if i == 0 {
+	//Goroutine xử lý từng hàng trong sheet
+	go func() {
+		defer close(unitCh)
+		defer close(vocabularyCh)
+		for _, sheetName := range sheetList {
+			rows, err := f.GetRows(sheetName)
+			if err != nil {
 				continue
 			}
+			for count, row := range rows {
+				if len(row) >= 8 {
+					// Tạo dữ liệu unit
+					unit := file_internal.Unit{
+						LessonID: sheetName,
+						Name:     fmt.Sprintf("Unit %d", count+1),
+						Level:    count + 1,
+					}
+					unitCh <- unit
 
-			// Handle Vocabulary
-			if len(row) >= 4 {
-				v := file_internal.Final{
-					LessonCourseID:          "English for IT",
-					LessonName:              elementSheet,
-					LessonLevel:             i,
-					VocabularyWord:          row[0],
-					VocabularyPartOfSpeech:  row[1],
-					VocabularyPronunciation: row[2],
-					VocabularyExample:       row[3],
-					VocabularyFieldOfIT:     elementSheet,
-					VocabularyUnitLevel:     unitCount,
-					MeanLessonID:            "English for IT",
-					MeanVocabularyID:        row[0],
-					MeanExplainVie:          row[4],
-					MeanExplainEng:          row[5],
-					MeanExampleVie:          row[6],
-					MeanExampleEng:          row[7],
-				}
-				final = append(final, v)
-
-				if len(final)%maximumUnitCount == 0 {
-					unitCount++
+					// Tạo dữ liệu vocabulary
+					vocabulary := file_internal.Vocabulary{
+						Word:          row[0],
+						PartOfSpeech:  row[1],
+						Pronunciation: row[2],
+						Example:       row[3],
+						ExplainVie:    row[4],
+						ExplainEng:    row[5],
+						ExampleVie:    row[6],
+						ExampleEng:    row[7],
+						FieldOfIT:     sheetName,
+						UnitLevel:     count,
+					}
+					vocabularyCh <- vocabulary
 				}
 			}
 		}
+	}()
+
+	// Nhận dữ liệu từ các kênh bài học và từ vựng
+	for lesson := range lessonCh {
+		lessons = append(lessons, lesson)
 	}
 
-	return final, nil
+	for vocabulary := range vocabularyCh {
+		vocabularies = append(vocabularies, vocabulary)
+	}
+
+	// Nhận dữ liệu từ các kênh units và vocabularies
+	for unit := range unitCh {
+		units = append(units, unit)
+	}
+	// Trả về kết quả
+	course := file_internal.Course{Name: "English for IT"}
+	return course, lessons, units, vocabularies, nil
 }

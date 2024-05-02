@@ -4,10 +4,12 @@ import (
 	"clean-architecture/internal/file"
 	"errors"
 	"github.com/xuri/excelize/v2"
-	"sync"
 )
 
 func ReadFileForLesson(filename string) ([]file_internal.Lesson, error) {
+	// khởi tạo channel
+	lessonCh := make(chan file_internal.Lesson)
+
 	f, err := excelize.OpenFile(filename)
 	if err != nil {
 		return nil, err
@@ -18,28 +20,22 @@ func ReadFileForLesson(filename string) ([]file_internal.Lesson, error) {
 		return nil, errors.New("no sheets found in the Excel file")
 	}
 
-	var lessons []file_internal.Lesson
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-
-	for i, elementSheet := range sheetList {
-		wg.Add(1)
-		go func(sheetName string, level int) {
-			defer wg.Done()
-
+	go func() {
+		defer close(lessonCh)
+		for i, elementSheet := range sheetList {
 			l := file_internal.Lesson{
 				CourseID: "English for IT",
-				Name:     sheetName,
-				Level:    level,
+				Name:     elementSheet,
+				Level:    i,
 			}
+			lessonCh <- l
+		}
+	}()
 
-			mu.Lock()
-			lessons = append(lessons, l)
-			mu.Unlock()
-		}(elementSheet, i)
+	// nhận dữ liệu từ các kênh bai học
+	for lesson := range lessonCh {
+		lessons = append(lessons, lesson)
 	}
-
-	wg.Wait()
 
 	return lessons, nil
 }

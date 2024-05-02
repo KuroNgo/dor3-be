@@ -116,16 +116,31 @@ func (l *lessonRepository) FetchMany(ctx context.Context) ([]lesson_domain.Lesso
 			return nil, err
 		}
 
-		// Lấy thông tin liên quan cho mỗi chủ đề
-		countUnit, err := l.countUnitsByLessonsID(ctx, lesson.ID)
-		if err != nil {
-			return nil, err
-		}
+		countUnitCh := make(chan int32)
+		go func() {
+			defer close(countUnitCh)
+			// Lấy thông tin liên quan cho mỗi chủ đề
+			countUnit, err := l.countUnitsByLessonsID(ctx, lesson.ID)
+			if err != nil {
+				return
+			}
 
-		countVocabulary, err := l.countVocabularyByLessonID(ctx, lesson.ID)
-		if err != nil {
-			return nil, err
-		}
+			countUnitCh <- countUnit
+		}()
+
+		countVocabularyCh := make(chan int32)
+		go func() {
+			defer close(countVocabularyCh)
+			countVocabulary, err := l.countVocabularyByLessonID(ctx, lesson.ID)
+			if err != nil {
+				return
+			}
+
+			countVocabularyCh <- countVocabulary
+		}()
+
+		countUnit := <-countUnitCh
+		countVocabulary := <-countVocabularyCh
 
 		lessonRes := lesson_domain.LessonResponse{
 			ID:              lesson.ID,

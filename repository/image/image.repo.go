@@ -64,18 +64,22 @@ func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_dom
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
-	// Đếm tổng số lượng tài liệu trong collection
-	count, err := collection.CountDocuments(ctx, bson.D{})
-	if err != nil {
-		return image_domain.Response{}, err
-	}
+	calculate := make(chan int64)
 
-	cal1 := count / int64(perPage)
-	cal2 := count % int64(perPage)
-	var cal int64 = 0
-	if cal2 != 0 {
-		cal = cal1 + 1
-	}
+	go func() {
+		defer close(calculate)
+		// Đếm tổng số lượng tài liệu trong collection
+		count, err := collection.CountDocuments(ctx, bson.D{})
+		if err != nil {
+			return
+		}
+
+		cal1 := count / int64(perPage)
+		cal2 := count % int64(perPage)
+		if cal2 != 0 {
+			calculate <- cal1
+		}
+	}()
 
 	cursor, err := collection.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
@@ -94,6 +98,7 @@ func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_dom
 		size += doc.Size
 	}
 
+	cal := <-calculate
 	response := image_domain.Response{
 		Image: images,
 		Page:  cal,

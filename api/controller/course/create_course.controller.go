@@ -4,7 +4,6 @@ import (
 	course_domain "clean-architecture/domain/course"
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
-	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"clean-architecture/internal"
 	file_internal "clean-architecture/internal/file"
 	"clean-architecture/internal/file/excel"
@@ -195,10 +194,7 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 
 	err = ctx.Request.ParseMultipartForm(8 << 20) // 8MB max size
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Error parsing form",
-			"message": err.Error(),
-		})
+		ctx.String(http.StatusBadRequest, "Error parsing form: "+err.Error())
 		return
 	}
 
@@ -221,22 +217,38 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		return
 	}
 	defer func() {
-		err := os.Remove(file.Filename)
+		err = os.Remove(file.Filename)
 		if err != nil {
 			fmt.Printf("Failed to delete temporary file: %v\n", err)
 		}
 	}()
 
-	result, err := excel.ReadFileForLessonManagementSystem(file.Filename)
+	resC, resL, resU, _, err := excel.ReadFileForLessonManagementSystem(file.Filename)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	var lessons []lesson_domain.Lesson
-	for _, lesson := range result {
-		courseID, err := c.LessonUseCase.FindCourseIDByCourseName(ctx, lesson.LessonCourseID)
-		if err != nil {
+	course := course_domain.Course{
+		Id:          primitive.NewObjectID(),
+		Name:        resC.Name,
+		Description: "",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		WhoUpdated:  admin.FullName,
+	}
+	err = c.CourseUseCase.CreateOne(ctx, &course)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "create success course",
+	})
+
+	for _, lesson := range resL {
+		courseID, errL := c.LessonUseCase.FindCourseIDByCourseName(ctx, lesson.CourseID)
+		if errL != nil {
 			ctx.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
@@ -244,27 +256,29 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		l := lesson_domain.Lesson{
 			ID:          primitive.NewObjectID(),
 			CourseID:    courseID,
-			Name:        lesson.LessonName,
-			Level:       lesson.LessonLevel,
+			Name:        lesson.Name,
+			Level:       lesson.Level,
 			IsCompleted: 0,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 			WhoUpdates:  admin.FullName,
 		}
-		lessons = append(lessons, l)
-	}
 
-	for _, lesson := range lessons {
-		err = c.LessonUseCase.CreateOneByNameCourse(ctx, &lesson)
+		// Tạo bài học trong cơ sở dữ liệu
+		err = c.LessonUseCase.CreateOneByNameCourse(ctx, &l)
 		if err != nil {
-			continue
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 	}
 
-	var units []unit_domain.Unit
-	for _, unit := range result {
-		lessonID, err := c.UnitUseCase.FindLessonIDByLessonName(ctx, unit.UnitLessonID)
-		if err != nil {
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "create success lesson",
+	})
+
+	for _, unit := range resU {
+		lessonID, errN := c.UnitUseCase.FindLessonIDByLessonName(ctx, unit.LessonID)
+		if errN != nil {
 			ctx.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
@@ -272,56 +286,159 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		elUnit := unit_domain.Unit{
 			ID:         primitive.NewObjectID(),
 			LessonID:   lessonID,
-			Name:       unit.UnitName,
+			Name:       unit.Name,
+			Level:      unit.Level,
 			ImageURL:   "",
 			IsComplete: 0,
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
-			//WhoUpdates: user.FullName,
-		}
-		units = append(units, elUnit)
-	}
-
-	for _, unit := range units {
-		err = c.UnitUseCase.CreateOneByNameLesson(ctx, &unit)
-		if err != nil {
-			continue
-		}
-	}
-
-	var vocabularies []vocabulary_domain.Vocabulary
-
-	for _, vocabulary := range result {
-		unitID, err := c.VocabularyUseCase.FindUnitIDByUnitLevel(ctx, vocabulary.VocabularyUnitLevel)
-		if err != nil {
-			ctx.JSON(500, gin.H{"error": err.Error()})
-			return
+			WhoUpdates: admin.FullName,
 		}
 
-		v := vocabulary_domain.Vocabulary{
-			Id:            primitive.NewObjectID(),
-			UnitID:        unitID,
-			Word:          vocabulary.VocabularyWord,
-			PartOfSpeech:  vocabulary.VocabularyPartOfSpeech,
-			Pronunciation: vocabulary.VocabularyPronunciation,
-			ExplainEng:    vocabulary.MeanExplainEng,
-			ExplainVie:    vocabulary.MeanExplainVie,
-			ExampleVie:    vocabulary.MeanExampleVie,
-			ExampleEng:    vocabulary.MeanExampleEng,
-			FieldOfIT:     vocabulary.VocabularyFieldOfIT,
-			LinkURL:       "",
-		}
-		vocabularies = append(vocabularies, v)
-	}
-
-	for _, vocabulary := range vocabularies {
-		err = c.VocabularyUseCase.CreateOneByNameUnit(ctx, &vocabulary)
+		err = c.UnitUseCase.CreateOneByNameLesson(ctx, &elUnit)
 		if err != nil {
 			continue
 		}
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"status": "success",
+		"status": "create success unit",
+	})
+
+	//var vocabularies []vocabulary_domain.Vocabulary
+	//
+	//for _, vocabulary := range resV {
+	//	unitID, errV := c.VocabularyUseCase.FindUnitIDByUnitLevel(ctx, vocabulary.UnitLevel)
+	//	if errV != nil {
+	//		ctx.JSON(500, gin.H{"error": err.Error()})
+	//		return
+	//	}
+	//
+	//	vocabularyTrimSpace := strings.ReplaceAll(vocabulary.Word, " ", "")
+	//
+	//	v := vocabulary_domain.Vocabulary{
+	//		Id:            primitive.NewObjectID(),
+	//		UnitID:        unitID,
+	//		Word:          vocabulary.Word,
+	//		WordForConfig: vocabularyTrimSpace,
+	//		PartOfSpeech:  vocabulary.PartOfSpeech,
+	//		Pronunciation: vocabulary.Pronunciation,
+	//		Mean:          vocabulary.Example,
+	//		ExampleEng:    vocabulary.ExampleEng,
+	//		ExampleVie:    vocabulary.ExampleVie,
+	//		ExplainEng:    vocabulary.ExplainEng,
+	//		ExplainVie:    vocabulary.ExplainVie,
+	//		FieldOfIT:     vocabulary.FieldOfIT,
+	//		LinkURL:       "",
+	//		IsFavourite:   0,
+	//		CreatedAt:     time.Now(),
+	//		UpdatedAt:     time.Now(),
+	//		WhoUpdates:    admin.FullName,
+	//	}
+	//	vocabularies = append(vocabularies, v)
+	//}
+	//
+	//for _, vocabulary := range vocabularies {
+	//	err = c.VocabularyUseCase.CreateOneByNameUnit(ctx, &vocabulary)
+	//	if err != nil {
+	//		continue
+	//	}
+	//}
+	//
+	//data, err := c.VocabularyUseCase.GetLatestVocabulary(ctx)
+	//if err != nil {
+	//	ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	//	return
+	//}
+	//
+	//for _, audio := range data {
+	//	_ = google.CreateTextToSpeech(audio)
+	//}
+	//
+	//ctx.JSON(http.StatusOK, gin.H{
+	//	"status": "success create audio for vocabulary latest",
+	//})
+	//
+	//// Lấy danh sách tệp trong thư mục audio
+	//dir := "audio"
+	//files, err := google.ListFilesInDirectory(dir)
+	//if err != nil {
+	//	ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	//	return
+	//}
+	//
+	//for _, audioFileName := range files {
+	//	audio := strings.TrimSuffix(audioFileName, ".mp3")
+	//
+	//	// Mở từng tệp
+	//	f, errF := os.Open(filepath.Join(dir, audioFileName))
+	//	if errF != nil {
+	//		return
+	//	}
+	//
+	//	// Kiểm tra xem file có phải là MP3 không
+	//	if !file_internal.IsMP3(audioFileName) {
+	//		ctx.JSON(http.StatusBadRequest, gin.H{
+	//			"error": fmt.Sprintf("%s is not an MP3 file", audioFileName),
+	//		})
+	//		return
+	//	}
+	//
+	//	// Upload file lên Cloudinary
+	//	dataRes, errD := cloudinary.UploadAudioToCloudinary(f, audioFileName, c.Database.CloudinaryUploadFolderAudioVocabulary)
+	//	if errD != nil {
+	//		ctx.JSON(http.StatusInternalServerError, gin.H{
+	//			"error": fmt.Sprintf("Error uploading file %s to Cloudinary: %s", audioFileName, err),
+	//		})
+	//		return
+	//	}
+	//
+	//	// Tìm ID của từ vựng dựa trên tên file
+	//	wordID, err := c.VocabularyUseCase.FindVocabularyIDByVocabularyName(ctx, audio)
+	//	if err != nil {
+	//		ctx.JSON(http.StatusInternalServerError, gin.H{
+	//			"error": fmt.Sprintf("Error finding vocabulary ID for file %s: %s", audioFileName, err.Error()),
+	//		})
+	//		return
+	//	}
+	//
+	//	vocabularyRes := &vocabulary_domain.Vocabulary{
+	//		Id:      wordID,
+	//		LinkURL: dataRes.AudioURL,
+	//	}
+	//
+	//	errV := c.VocabularyUseCase.UpdateOneAudio(ctx, vocabularyRes)
+	//	if errV != nil {
+	//		ctx.JSON(http.StatusInternalServerError, gin.H{
+	//			"error": fmt.Sprintf("Error updating vocabulary for file %s: %s", audioFileName, err.Error()),
+	//		})
+	//		return
+	//	}
+	//}
+	//
+	//ctx.JSON(http.StatusOK, gin.H{
+	//	"status": "success for upload audio to cloudinary ",
+	//})
+	//
+	//err = google.DeleteAllFilesInDirectory("audio")
+	//if err != nil {
+	//	ctx.JSON(http.StatusInternalServerError, gin.H{
+	//		"status":  "error",
+	//		"message": err.Error(),
+	//	})
+	//	return
+	//}
+
+	// Trả về mảng dữ liệu dưới dạng JSON
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success for delete folder audio",
+	})
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success create vocabulary",
+	})
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success create vocabulary with file",
 	})
 }

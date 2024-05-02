@@ -24,7 +24,6 @@ func ReadFileForCourse(filename string) ([]file_internal.Course, error) {
 		return nil, errors.New("empty sheet name")
 	}
 
-	var courses []file_internal.Course
 	rows, err := f.GetRows(sheetName)
 	if err != nil {
 		return nil, err
