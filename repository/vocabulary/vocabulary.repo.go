@@ -69,8 +69,9 @@ func (v *vocabularyRepository) GetLatestVocabulary(ctx context.Context) ([]strin
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
 	var vocabularies []string
-	yesterday := time.Now().Add(-1 * time.Hour)
+	yesterday := time.Now().Add(-24 * time.Hour)
 	filter := bson.M{"created_at": bson.M{"$gt": yesterday}}
+
 	cursor, err := collectionVocabulary.Find(ctx, filter, options.Find().SetSort(bson.D{{"_id", -1}}))
 	if err != nil {
 		return nil, err
@@ -95,40 +96,6 @@ func (v *vocabularyRepository) GetLatestVocabulary(ctx context.Context) ([]strin
 	}
 
 	return vocabularies, nil
-}
-
-func (v *vocabularyRepository) GetLatestVocabularyBatch(ctx context.Context) (vocabulary_domain.Response, error) {
-	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
-
-	var vocabularies []vocabulary_domain.Vocabulary
-
-	yesterday := time.Now().AddDate(0, 0, -1)
-	filter := bson.M{"created_at": bson.M{"$gt": yesterday}}
-	cursor, err := collectionVocabulary.Find(ctx, filter, options.Find().SetSort(bson.D{{"$natural", -1}}))
-
-	if err != nil {
-		return vocabulary_domain.Response{}, err
-	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
-		if err != nil {
-			return
-		}
-	}(cursor, ctx)
-
-	for cursor.Next(ctx) {
-		var vocabulary vocabulary_domain.Vocabulary
-		if err = cursor.Decode(&vocabulary); err != nil {
-			return vocabulary_domain.Response{}, err
-		}
-		vocabularies = append(vocabularies, vocabulary)
-	}
-
-	response := vocabulary_domain.Response{
-		Vocabulary: vocabularies,
-	}
-
-	return response, nil
 }
 
 func (v *vocabularyRepository) GetAllVocabulary(ctx context.Context) ([]string, error) {
@@ -175,12 +142,6 @@ func (v *vocabularyRepository) CreateOneByNameUnit(ctx context.Context, vocabula
 	}
 	if countParent == 0 {
 		return errors.New("parent unit not found")
-	}
-
-	countUnit := 0
-	if countParent > 5 {
-		_, err = collectionUnit.InsertOne(ctx, countUnit)
-		countUnit++
 	}
 
 	count, err := collectionVocabulary.CountDocuments(ctx, filter)
@@ -322,18 +283,22 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
-	// Đếm tổng số lượng tài liệu trong collection
-	count, err := collectionVocabulary.CountDocuments(ctx, bson.D{})
-	if err != nil {
-		return vocabulary_domain.Response{}, err
-	}
+	calCh := make(chan int64)
+	go func() {
+		defer close(calCh)
+		// Đếm tổng số lượng tài liệu trong collection
+		count, err := collectionVocabulary.CountDocuments(ctx, bson.D{})
+		if err != nil {
+			return
+		}
 
-	cal1 := count / int64(perPage)
-	cal2 := count % int64(perPage)
-	var cal int64 = 0
-	if cal2 != 0 {
-		cal = cal1 + 1
-	}
+		cal1 := count / int64(perPage)
+		cal2 := count % int64(perPage)
+
+		if cal2 != 0 {
+			calCh <- cal1
+		}
+	}()
 
 	cursor, err := collectionVocabulary.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
@@ -359,6 +324,7 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 		vocabularies = append(vocabularies, vocabulary)
 	}
 
+	cal := <-calCh
 	vocabularyRes := vocabulary_domain.Response{
 		Page:       cal,
 		Vocabulary: vocabularies,
@@ -431,6 +397,19 @@ func (v *vocabularyRepository) UpdateIsFavourite(ctx context.Context, vocabulary
 }
 
 func (v *vocabularyRepository) CreateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
+	session, err := v.database.Client().StartSession()
+	if err != nil {
+		return err
+	}
+	defer session.EndSession(ctx)
+
+	// Bắt đầu transaction
+	err = session.StartTransaction()
+	if err != nil {
+		return err
+	}
+
+	// Thực hiện các thao tác dữ liệu trong transaction
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
 
@@ -439,23 +418,52 @@ func (v *vocabularyRepository) CreateOne(ctx context.Context, vocabulary *vocabu
 
 	countParent, err := collectionUnit.CountDocuments(ctx, filterReference)
 	if err != nil {
+		err := session.AbortTransaction(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 
-	// check exists with CountDocuments
+	// Kiểm tra và thêm từ vựng vào cơ sở dữ liệu
 	count, err := collectionVocabulary.CountDocuments(ctx, filter)
+	if err != nil {
+		err := session.AbortTransaction(ctx)
+		if err != nil {
+			return errors.New("the vocabulary already exist")
+		}
+		return err
+	}
+	if count > 0 {
+		err := session.AbortTransaction(ctx)
+		if err != nil {
+			return err
+		}
+		return errors.New("the word in unit already exists")
+	}
+	if countParent == 0 {
+		err := session.AbortTransaction(ctx)
+		if err != nil {
+			return err
+		}
+		return errors.New("the parent unit does not exist")
+	}
+
+	_, err = collectionVocabulary.InsertOne(ctx, vocabulary)
+	if err != nil {
+		err := session.AbortTransaction(ctx)
+		if err != nil {
+			return err
+		}
+		return err
+	}
+
+	// Kết thúc transaction
+	err = session.CommitTransaction(ctx)
 	if err != nil {
 		return err
 	}
 
-	if count > 0 {
-		return errors.New("the word in unit did exist")
-	}
-	if countParent == 0 {
-		return errors.New("the unit ID do not exist")
-	}
-
-	_, err = collectionVocabulary.InsertOne(ctx, vocabulary)
 	return nil
 }
 

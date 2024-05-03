@@ -25,5 +25,7 @@ func LoginFromRoleRoute(env *bootstrap.Database, timeout time.Duration, db *mong
 	}
 
 	router := group.Group("/login")
-	router.POST("/role", login.Login)
+	router.POST("/role", login.LoginFromRole)
+	router.POST("/admin", login.LoginAdmin)
+	router.POST("/user", login.LoginUser)
 }

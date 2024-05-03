@@ -32,6 +32,58 @@ func NewCourseRepository(db *mongo.Database, collectionCourse string, collection
 	}
 }
 
+func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
+	collectionCourse := c.database.Collection(c.collectionCourse)
+	idCourse, err := primitive.ObjectIDFromHex(courseID)
+	if err != nil {
+		return course_domain.CourseResponse{}, err
+	}
+	filter := bson.M{"_id": idCourse}
+
+	var course course_domain.CourseResponse
+	err = collectionCourse.FindOne(ctx, filter).Decode(&course)
+	if err != nil {
+		return course_domain.CourseResponse{}, err
+	}
+
+	countLessonCh := make(chan int32)
+	countVocabularyCh := make(chan int32)
+
+	go func() {
+		defer close(countLessonCh)
+		countLesson, err := c.countLessonsByCourseID(ctx, course.Id)
+		if err != nil {
+			return
+		}
+		countLessonCh <- countLesson
+	}()
+
+	go func() {
+		defer close(countVocabularyCh)
+		countVocabulary, err := c.countVocabularyByCourseID(ctx, course.Id)
+		if err != nil {
+			return
+		}
+		countVocabularyCh <- countVocabulary
+	}()
+
+	countLesson := <-countLessonCh
+	countVocab := <-countVocabularyCh
+
+	courseRes := course_domain.CourseResponse{
+		Id:              course.Id,
+		Name:            course.Name,
+		Description:     course.Description,
+		CreatedAt:       course.CreatedAt,
+		UpdatedAt:       course.UpdatedAt,
+		WhoUpdated:      course.WhoUpdated,
+		CountLesson:     countLesson,
+		CountVocabulary: countVocab,
+	}
+
+	return courseRes, nil
+}
+
 func (c *courseRepository) FetchManyForEachCourse(ctx context.Context) ([]course_domain.CourseResponse, error) {
 	collectionCourse := c.database.Collection(c.collectionCourse)
 	cursor, err := collectionCourse.Find(ctx, bson.D{})

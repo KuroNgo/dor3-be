@@ -20,6 +20,18 @@ func NewLessonUseCase(lessonRepository lesson_domain.ILessonRepository, timeout 
 	}
 }
 
+func (l *lessonUseCase) FetchByID(ctx context.Context, lessonID string) (lesson_domain.LessonResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
+	defer cancel()
+	data, err := l.lessonRepository.FetchByID(ctx, lessonID)
+
+	if err != nil {
+		return lesson_domain.LessonResponse{}, err
+	}
+
+	return data, nil
+}
+
 func (l *lessonUseCase) FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error) {
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()

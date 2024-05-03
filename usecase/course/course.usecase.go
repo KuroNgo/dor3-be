@@ -19,6 +19,18 @@ func NewCourseUseCase(courseRepository course_domain.ICourseRepository, timeout 
 	}
 }
 
+func (c *courseUseCase) FetchByID(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
+	defer cancel()
+
+	course, err := c.courseRepository.FetchByID(ctx, courseID)
+	if err != nil {
+		return course_domain.CourseResponse{}, err
+	}
+
+	return course, err
+}
+
 func (c *courseUseCase) FetchManyForEachCourse(ctx context.Context) ([]course_domain.CourseResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
