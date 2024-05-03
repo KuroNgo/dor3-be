@@ -43,6 +43,7 @@ type Statistics struct {
 //go:generate mockery --name ICourseRepository
 type ICourseRepository interface {
 	FetchManyForEachCourse(ctx context.Context) ([]CourseResponse, error)
+	FetchByID(ctx context.Context, courseID string) (CourseResponse, error)
 	UpdateOne(ctx context.Context, course *Course) (*mongo.UpdateResult, error)
 	CreateOne(ctx context.Context, course *Course) error
 	DeleteOne(ctx context.Context, courseID string) error

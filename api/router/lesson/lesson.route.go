@@ -23,5 +23,6 @@ func LessonRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Datab
 
 	router := group.Group("/lesson")
 	router.GET("/fetch", lesson.FetchMany)
-	router.GET("/fetch/:course_id", lesson.FetchByIdCourse)
+	router.GET("/fetch/_id", lesson.FetchById)
+	router.GET("/fetch/course_id", lesson.FetchByIdCourse)
 }

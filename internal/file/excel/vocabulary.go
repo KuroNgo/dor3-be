@@ -10,6 +10,8 @@ import (
 const maximumVocabulary = 5
 
 func ReadFileForVocabulary(filename string) ([]file_internal.Vocabulary, error) {
+	vocabularyCh := make(chan file_internal.Vocabulary)
+
 	f, err := excelize.OpenFile(filename)
 	if err != nil {
 		return nil, err
@@ -25,39 +27,47 @@ func ReadFileForVocabulary(filename string) ([]file_internal.Vocabulary, error) 
 		return nil, errors.New("empty sheet name")
 	}
 
-	for _, elementSheet := range sheetList {
-		unitCount := 1 // Reset unitCount for each lesson
+	go func() {
+		defer close(vocabularyCh)
+		for _, elementSheet := range sheetList {
+			unitCount := 1 // Reset unitCount for each lesson
 
-		rows, err := f.GetRows(elementSheet)
-		if err != nil {
-			return nil, err
-		}
-
-		for i, row := range rows {
-			if i == 0 {
-				continue
+			rows, err := f.GetRows(elementSheet)
+			if err != nil {
+				return
 			}
 
-			if len(row) >= 8 {
-				v := file_internal.Vocabulary{
-					Word:          row[0],
-					PartOfSpeech:  row[1],
-					Pronunciation: row[2],
-					Example:       row[3],
-					ExplainVie:    row[4],
-					ExplainEng:    row[5],
-					ExampleVie:    row[6],
-					ExampleEng:    row[7],
-					FieldOfIT:     elementSheet,
-					UnitLevel:     unitCount,
+			for i, row := range rows {
+				if i == 0 {
+					continue
 				}
-				vocabularies = append(vocabularies, v)
 
-				if len(vocabularies)%maximumVocabulary == 0 {
-					unitCount++
+				if len(row) >= 8 {
+					v := file_internal.Vocabulary{
+						Word:          row[0],
+						PartOfSpeech:  row[1],
+						Pronunciation: row[2],
+						Example:       row[3],
+						ExplainVie:    row[4],
+						ExplainEng:    row[5],
+						ExampleVie:    row[6],
+						ExampleEng:    row[7],
+						FieldOfIT:     elementSheet,
+						UnitLevel:     unitCount,
+					}
+
+					vocabularyCh <- v
+
+					if len(vocabularyCh) == maximumVocabulary {
+						unitCount++
+					}
 				}
 			}
 		}
+	}()
+
+	for vocabulary := range vocabularyCh {
+		vocabularies = append(vocabularies, vocabulary)
 	}
 
 	return vocabularies, nil

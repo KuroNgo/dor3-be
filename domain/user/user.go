@@ -17,6 +17,7 @@ type User struct {
 	Email            string             `bson:"email"  json:"email"`
 	Password         string             `bson:"password"  json:"password"`
 	Role             string             `bson:"role" json:"role"`
+	CoverURL         string             `bson:"cover_url" json:"cover_url"`
 	AvatarURL        string             `bson:"avatar_url"  json:"avatar_url"`
 	AssetID          string             `bson:"asset_id"  json:"asset_id"`
 	Phone            string             `bson:"phone"   json:"phone"`

@@ -37,3 +37,20 @@ func (l *LessonController) FetchByIdCourse(ctx *gin.Context) {
 		"lesson": lesson,
 	})
 }
+
+func (l *LessonController) FetchById(ctx *gin.Context) {
+	idLesson := ctx.Query("_id")
+	lesson, err := l.LessonUseCase.FetchByIdCourse(ctx, idLesson)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"lesson": lesson,
+	})
+}

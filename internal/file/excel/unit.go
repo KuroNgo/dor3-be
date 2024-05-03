@@ -15,6 +15,7 @@ var (
 )
 
 func ReadFileForUnit(filename string) ([]file_internal.Unit, error) {
+	unitCh := make(chan file_internal.Unit)
 	f, err := excelize.OpenFile(filename)
 	if err != nil {
 		return nil, err
@@ -32,34 +33,42 @@ func ReadFileForUnit(filename string) ([]file_internal.Unit, error) {
 
 	vocabularyCount := 0
 
-	for _, elementSheet := range sheetList {
-		unitCount := 1 // Reset unitCount for each lesson
+	go func() {
+		defer close(unitCh)
+		for _, elementSheet := range sheetList {
+			unitCount := 1 // Reset unitCount for each lesson
 
-		rows, err := f.GetRows(elementSheet)
-		if err != nil {
-			return nil, err
-		}
-
-		for i, row := range rows {
-			if i == 0 {
-				continue
+			rows, err := f.GetRows(elementSheet)
+			if err != nil {
+				return
 			}
 
-			vocabularyCount++
-			if vocabularyCount%5 == 0 {
-				if len(row) >= 2 {
-					u := file_internal.Unit{
-						LessonID: elementSheet,
-						Name:     fmt.Sprintf("Unit %d", unitCount),
-						Level:    unitCount,
-					}
-					units = append(units, u)
+			for i, row := range rows {
+				if i == 0 {
+					continue
 				}
 
-				unitCount++         // auto
-				vocabularyCount = 0 // Reset vocabulary count
+				vocabularyCount++
+				if vocabularyCount%5 == 0 {
+					if len(row) >= 2 {
+						u := file_internal.Unit{
+							LessonID: elementSheet,
+							Name:     fmt.Sprintf("Unit %d", unitCount),
+							Level:    unitCount,
+						}
+						unitCh <- u
+					}
+
+					unitCount++         // auto
+					vocabularyCount = 0 // Reset vocabulary count
+				}
 			}
 		}
+	}()
+
+	for unit := range unitCh {
+		units = append(units, unit)
 	}
+
 	return units, nil
 }

@@ -17,6 +17,63 @@ type lessonRepository struct {
 	collectionVocabulary string
 }
 
+func (l *lessonRepository) FetchByID(ctx context.Context, lessonID string) (lesson_domain.LessonResponse, error) {
+	collectionLesson := l.database.Collection(l.collectionLesson)
+
+	idLesson, err := primitive.ObjectIDFromHex(lessonID)
+	if err != nil {
+		return lesson_domain.LessonResponse{}, err
+	}
+
+	filter := bson.M{"_id": idLesson}
+
+	var lesson lesson_domain.LessonResponse
+	err = collectionLesson.FindOne(ctx, filter).Decode(&lesson)
+	if err != nil {
+		return lesson_domain.LessonResponse{}, err
+	}
+
+	countUnitCh := make(chan int32)
+	countVocabularyCh := make(chan int32)
+
+	go func() {
+		defer close(countVocabularyCh)
+		countVocabulary, err := l.countVocabularyByLessonID(ctx, lesson.ID)
+		if err != nil {
+			return
+		}
+		countVocabularyCh <- countVocabulary
+	}()
+
+	go func() {
+		defer close(countUnitCh)
+		countUnit, err := l.countUnitsByLessonsID(ctx, lesson.ID)
+		if err != nil {
+			return
+		}
+		countUnitCh <- countUnit
+	}()
+
+	countUnit := <-countUnitCh
+	countVocabulary := <-countVocabularyCh
+
+	lessonRes := lesson_domain.LessonResponse{
+		ID:              lesson.ID,
+		CourseID:        lesson.CourseID,
+		Name:            lesson.Name,
+		Content:         lesson.Content,
+		ImageURL:        lesson.ImageURL,
+		Level:           lesson.Level,
+		IsCompleted:     lesson.IsCompleted,
+		CreatedAt:       lesson.CreatedAt,
+		UpdatedAt:       lesson.UpdatedAt,
+		WhoUpdates:      lesson.WhoUpdates,
+		CountUnit:       countUnit,
+		CountVocabulary: countVocabulary,
+	}
+	return lessonRes, nil
+}
+
 func NewLessonRepository(db *mongo.Database, collectionLesson string, collectionCourse string, collectionUnit string, collectionVocabulary string) lesson_domain.ILessonRepository {
 	return &lessonRepository{
 		database:             db,

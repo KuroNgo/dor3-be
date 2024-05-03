@@ -37,6 +37,31 @@ import (
 //		log.Fatal("error while trying to ping mongo", err)
 //	}
 //
+//	session, err := client.StartSession()
+//	if err != nil {
+//		log.Fatal("err to start sessions", err)
+//	}
+//	defer session.EndSession(context.Background())
+//
+//	err = session.StartTransaction()
+//	if err != nil {
+//		log.Fatal("err to start sessions", err)
+//	}
+//	defer func() {
+//		if err != nil {
+//			// Rollback giao dịch
+//			err := session.AbortTransaction(context.Background())
+//			if err != nil {
+//				return
+//			}
+//			return
+//		}
+//		// Commit giao dịch
+//		err := session.CommitTransaction(context.Background())
+//		if err != nil {
+//			return
+//		}
+//	}()
 //	return client
 //}
 
@@ -58,6 +83,31 @@ func NewMongoDatabase(env *bootstrap.Database) *mongo_driven.Client {
 		log.Fatal("error while trying to ping mongo", err)
 	}
 
+	session, err := client.StartSession()
+	if err != nil {
+		log.Fatal("err to start sessions", err)
+	}
+	defer session.EndSession(context.Background())
+
+	err = session.StartTransaction()
+	if err != nil {
+		log.Fatal("err to start sessions", err)
+	}
+	defer func() {
+		if err != nil {
+			// Rollback giao dịch
+			err := session.AbortTransaction(context.Background())
+			if err != nil {
+				return
+			}
+			return
+		}
+		// Commit giao dịch
+		err := session.CommitTransaction(context.Background())
+		if err != nil {
+			return
+		}
+	}()
 	return client
 }
 

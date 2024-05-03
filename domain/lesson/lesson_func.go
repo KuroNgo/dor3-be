@@ -27,6 +27,7 @@ type Update struct {
 //go:generate mockery --name ICourseUseCase
 type ILessonUseCase interface {
 	FetchMany(ctx context.Context) ([]LessonResponse, error)
+	FetchByID(ctx context.Context, lessonID string) (LessonResponse, error)
 	FetchByIdCourse(ctx context.Context, idCourse string) (Response, error)
 	FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error)
 
