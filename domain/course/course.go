@@ -32,7 +32,7 @@ type CourseResponse struct {
 }
 
 type Response struct {
-	Course []Course
+	Course []Course `json:"course" bson:"course"`
 }
 
 type Statistics struct {

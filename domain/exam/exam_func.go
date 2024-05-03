@@ -4,18 +4,16 @@ import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"time"
 )
 
 type Input struct {
-	ID           primitive.ObjectID `bson:"_id" json:"_id"`
-	LessonID     primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
-	UnitID       primitive.ObjectID `bson:"unit_id" json:"unit_id"`
-	VocabularyID primitive.ObjectID `bson:"vocabulary_id" json:"vocabulary_id"`
+	ID       primitive.ObjectID `bson:"_id" json:"_id"`
+	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
+	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 
-	Title       string        `bson:"title" json:"title"`
-	Description string        `bson:"description" json:"description"`
-	Duration    time.Duration `bson:"duration" json:"duration"`
+	Title       string `bson:"title" json:"title"`
+	Description string `bson:"description" json:"description"`
+	Duration    string `bson:"duration" json:"duration"`
 }
 
 type IExamUseCase interface {

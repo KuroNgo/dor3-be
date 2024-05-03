@@ -42,8 +42,8 @@ type UnitResponse struct {
 }
 
 type Response struct {
-	Page int64 `json:"page"`
-	Unit []Unit
+	Page int64  `json:"page"`
+	Unit []Unit `bson:"unit" json:"unit"`
 }
 
 type Statistics struct {

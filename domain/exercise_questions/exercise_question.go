@@ -30,8 +30,8 @@ type ExerciseQuestion struct {
 }
 
 type Response struct {
-	Page             int64 `bson:"page" json:"page"`
-	ExerciseQuestion []ExerciseQuestion
+	Page             int64              `bson:"page" json:"page"`
+	ExerciseQuestion []ExerciseQuestion `json:"exercise_question" bson:"exercise_question"`
 }
 
 type IExerciseQuestionRepository interface {

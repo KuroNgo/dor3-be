@@ -20,7 +20,7 @@ type ExamAnswer struct {
 }
 
 type Response struct {
-	ExamAnswer []ExamAnswer
+	ExamAnswer []ExamAnswer `json:"exam_answer" bson:"exam_answer"`
 }
 
 type IExamAnswerRepository interface {

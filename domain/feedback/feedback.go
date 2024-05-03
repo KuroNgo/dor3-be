@@ -21,8 +21,8 @@ type Feedback struct {
 }
 
 type Response struct {
-	Total    int64 `bson:"total" json:"total"`
-	Feedback []Feedback
+	Total    int64      `bson:"total" json:"total"`
+	Feedback []Feedback `json:"feedback" bson:"feedback"`
 }
 
 type Statistics struct {

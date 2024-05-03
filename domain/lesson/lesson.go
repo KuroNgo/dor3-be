@@ -40,10 +40,10 @@ type LessonResponse struct {
 }
 
 type Response struct {
-	CountVocabulary int64 `json:"count_vocabulary"`
-	Page            int64 `json:"page"`
-	CountUnit       int64 `json:"count_unit"`
-	Lesson          []Lesson
+	CountVocabulary int64    `json:"count_vocabulary"`
+	Page            int64    `json:"page"`
+	CountUnit       int64    `json:"count_unit"`
+	Lesson          []Lesson `json:"lesson" bson:"lesson"`
 }
 
 type Statistics struct {

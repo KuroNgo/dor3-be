@@ -43,9 +43,9 @@ type ExerciseResponse struct {
 }
 
 type Response struct {
-	CountExercise int64 `bson:"count_exercise" json:"count_exercise"`
-	Page          int64 `bson:"page" json:"page"`
-	Exercise      []Exercise
+	CountExercise int64      `bson:"count_exercise" json:"count_exercise"`
+	Page          int64      `bson:"page" json:"page"`
+	Exercise      []Exercise `json:"exercise" bson:"exercise"`
 }
 
 type Statistics struct {

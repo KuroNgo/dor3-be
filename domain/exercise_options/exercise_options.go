@@ -25,7 +25,7 @@ type ExerciseOptions struct {
 }
 
 type Response struct {
-	ExerciseOptions []ExerciseOptions
+	ExerciseOptions []ExerciseOptions `json:"exercise_options" bson:"exercise_options"`
 }
 
 type IExerciseOptionRepository interface {

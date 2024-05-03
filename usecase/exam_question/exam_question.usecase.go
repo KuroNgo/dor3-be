@@ -31,11 +31,11 @@ func (e *examQuestionUseCase) FetchMany(ctx context.Context, page string) (exam_
 	return data, nil
 }
 
-func (e *examQuestionUseCase) FetchManyByExamID(ctx context.Context, examID string) (exam_question_domain.Response, error) {
+func (e *examQuestionUseCase) FetchManyByExamID(ctx context.Context, examID string, page string) (exam_question_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examQuestionRepository.FetchManyByExamID(ctx, examID)
+	data, err := e.examQuestionRepository.FetchManyByExamID(ctx, examID, page)
 	if err != nil {
 		return exam_question_domain.Response{}, err
 	}

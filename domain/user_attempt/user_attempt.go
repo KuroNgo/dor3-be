@@ -24,7 +24,7 @@ type UserProcess struct {
 }
 
 type Response struct {
-	UserProcess []UserProcess
+	UserProcess []UserProcess `bson:"user_process" json:"user_process"`
 }
 
 type Statistics struct {

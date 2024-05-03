@@ -35,13 +35,13 @@ type Vocabulary struct {
 }
 
 type Response struct {
-	Page       int64 `bson:"page" json:"page"`
-	Vocabulary []Vocabulary
+	Page       int64        `bson:"page" json:"page"`
+	Vocabulary []Vocabulary `bson:"vocabulary" json:"vocabulary"`
 }
 
 type SearchingResponse struct {
-	CountVocabularySearch int64 `bson:"count_vocabulary_search" json:"count_vocabulary_search"`
-	Vocabulary            []Vocabulary
+	CountVocabularySearch int64        `bson:"count_vocabulary_search" json:"count_vocabulary_search"`
+	Vocabulary            []Vocabulary `bson:"vocabulary" json:"vocabulary"`
 }
 
 type Statistics struct {

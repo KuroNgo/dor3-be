@@ -49,7 +49,7 @@ func (e *ExamsController) UpdateOneExam(ctx *gin.Context) {
 		WhoUpdates: admin.FullName,
 	}
 
-	_, err = e.ExamUseCase.UpdateOne(ctx, &exam)
+	data, err := e.ExamUseCase.UpdateOne(ctx, &exam)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -60,5 +60,6 @@ func (e *ExamsController) UpdateOneExam(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
+		"data":   data,
 	})
 }

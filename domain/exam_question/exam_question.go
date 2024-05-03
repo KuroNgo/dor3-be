@@ -1,6 +1,7 @@
 package exam_question_domain
 
 import (
+	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -20,9 +21,19 @@ type ExamQuestion struct {
 	Type    string `bson:"type" json:"type"`
 	Level   int    `bson:"level" json:"level"`
 
-	// admin add metadata of file and system will be found it
-	Filename      string `bson:"filename" json:"filename"`
-	AudioDuration string `bson:"audio_duration" json:"audio_duration"`
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdateAt  time.Time `bson:"update_at" json:"update_at"`
+	WhoUpdate string    `bson:"who_update" json:"who_update"`
+}
+
+type ExamQuestionResponse struct {
+	ID         primitive.ObjectID `bson:"_id" json:"_id"`
+	ExamID     primitive.ObjectID `bson:"exam_id" json:"exam_id"`
+	Vocabulary vocabulary_domain.Vocabulary
+
+	Content string `bson:"content" json:"content"`
+	Type    string `bson:"type" json:"type"`
+	Level   int    `bson:"level" json:"level"`
 
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 	UpdateAt  time.Time `bson:"update_at" json:"update_at"`
@@ -30,9 +41,9 @@ type ExamQuestion struct {
 }
 
 type Response struct {
-	Count        int   `bson:"count" json:"count"`
-	Page         int64 `bson:"page" json:"page"`
-	ExamQuestion []ExamQuestion
+	Count                int64                  `bson:"count" json:"count"`
+	Page                 int64                  `bson:"page" json:"page"`
+	ExamQuestionResponse []ExamQuestionResponse `json:"exam_question_response" bson:"exam_question_response"`
 }
 
 type Statistics struct {
@@ -41,7 +52,7 @@ type Statistics struct {
 
 type IExamQuestionRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchManyByExamID(ctx context.Context, examID string) (Response, error)
+	FetchManyByExamID(ctx context.Context, examID string, page string) (Response, error)
 
 	CreateOne(ctx context.Context, examQuestion *ExamQuestion) error
 	UpdateOne(ctx context.Context, examQuestion *ExamQuestion) (*mongo.UpdateResult, error)
