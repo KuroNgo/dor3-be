@@ -7,11 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"sync"
-)
-
-var (
-	wg sync.WaitGroup
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"strconv"
 )
 
 type courseRepository struct {
@@ -84,11 +81,35 @@ func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (cour
 	return courseRes, nil
 }
 
-func (c *courseRepository) FetchManyForEachCourse(ctx context.Context) ([]course_domain.CourseResponse, error) {
+func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page string) ([]course_domain.CourseResponse, int64, error) {
 	collectionCourse := c.database.Collection(c.collectionCourse)
-	cursor, err := collectionCourse.Find(ctx, bson.D{})
+
+	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return nil, err
+		return nil, 0, errors.New("invalid page number")
+	}
+	perPage := 5
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	calCh := make(chan int64)
+
+	go func() {
+		count, err := collectionCourse.CountDocuments(ctx, bson.D{})
+		if err != nil {
+			return
+		}
+
+		cal1 := count / int64(perPage)
+		cal2 := count % int64(perPage)
+		if cal2 != 0 {
+			calCh <- cal1
+		}
+	}()
+
+	cursor, err := collectionCourse.Find(ctx, bson.D{}, findOptions)
+	if err != nil {
+		return nil, 0, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
 		err := cursor.Close(ctx)
@@ -101,7 +122,7 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context) ([]course
 	for cursor.Next(ctx) {
 		var course course_domain.Course
 		if err := cursor.Decode(&course); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 
 		countLessonCh := make(chan int32)
@@ -142,7 +163,9 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context) ([]course
 		courses = append(courses, courseRes)
 	}
 
-	return courses, nil
+	cal := <-calCh
+
+	return courses, cal, nil
 }
 
 func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {
@@ -181,19 +204,6 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 
 	_, err = collectionCourse.InsertOne(ctx, course)
 	return err
-}
-
-func (c *courseRepository) StatisticCourse(ctx context.Context) int64 {
-	collectionCourse := c.database.Collection(c.collectionCourse)
-
-	filter := bson.D{}
-
-	count, err := collectionCourse.CountDocuments(ctx, filter)
-	if err != nil {
-		return 0
-	}
-
-	return count
 }
 
 func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error {

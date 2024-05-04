@@ -7,6 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"strconv"
 )
 
 type lessonRepository struct {
@@ -84,8 +86,31 @@ func NewLessonRepository(db *mongo.Database, collectionLesson string, collection
 	}
 }
 
-func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string) (lesson_domain.Response, error) {
+func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string, page string) (lesson_domain.Response, error) {
 	collectionLesson := l.database.Collection(l.collectionLesson)
+
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return lesson_domain.Response{}, errors.New("invalid page number")
+	}
+	perPage := 5
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	calCh := make(chan int64)
+
+	go func() {
+		count, err := collectionLesson.CountDocuments(ctx, bson.D{})
+		if err != nil {
+			return
+		}
+
+		cal1 := count / int64(perPage)
+		cal2 := count % int64(perPage)
+		if cal2 != 0 {
+			calCh <- cal1
+		}
+	}()
 
 	idCourse2, err := primitive.ObjectIDFromHex(idCourse)
 	if err != nil {
@@ -94,7 +119,7 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string)
 
 	filter := bson.M{"course_id": idCourse2}
 
-	cursor, err := collectionLesson.Find(ctx, filter)
+	cursor, err := collectionLesson.Find(ctx, filter, findOptions)
 	if err != nil {
 		return lesson_domain.Response{}, err
 	}
@@ -102,11 +127,43 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string)
 
 	var lessons []lesson_domain.Lesson
 
+	var countVocabularies int32 = 0
+	var countUnits int32 = 0
+
 	for cursor.Next(ctx) {
 		var lesson lesson_domain.Lesson
 		if err = cursor.Decode(&lesson); err != nil {
 			return lesson_domain.Response{}, err
 		}
+
+		countUnitCh := make(chan int32)
+		go func() {
+			defer close(countUnitCh)
+			// Lấy thông tin liên quan cho mỗi chủ đề
+			countUnit, err := l.countUnitsByLessonsID(ctx, lesson.ID)
+			if err != nil {
+				return
+			}
+
+			countUnitCh <- countUnit
+		}()
+
+		countVocabularyCh := make(chan int32)
+		go func() {
+			defer close(countVocabularyCh)
+			countVocabulary, err := l.countVocabularyByLessonID(ctx, lesson.ID)
+			if err != nil {
+				return
+			}
+
+			countVocabularyCh <- countVocabulary
+		}()
+
+		countUnit := <-countUnitCh
+		countUnits = countUnit
+		
+		countVocabulary := <-countVocabularyCh
+		countVocabularies = countVocabulary
 
 		// Gắn CourseID vào bài học
 		lesson.CourseID = idCourse2
@@ -114,8 +171,12 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string)
 		lessons = append(lessons, lesson)
 	}
 
+	cal := <-calCh
 	response := lesson_domain.Response{
-		Lesson: lessons,
+		CountVocabulary: countVocabularies,
+		CountUnit:       countUnits,
+		Page:            cal,
+		Lesson:          lessons,
 	}
 	return response, nil
 }
@@ -152,7 +213,7 @@ func (l *lessonRepository) UpdateComplete(ctx context.Context, lessonID string, 
 	return nil
 }
 
-func (l *lessonRepository) FetchMany(ctx context.Context) ([]lesson_domain.LessonResponse, error) {
+func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson_domain.LessonResponse, error) {
 	collectionLesson := l.database.Collection(l.collectionLesson)
 
 	cursor, err := collectionLesson.Find(ctx, bson.D{})

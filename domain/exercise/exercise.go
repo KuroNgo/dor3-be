@@ -42,20 +42,15 @@ type ExerciseResponse struct {
 	CountQuestion int32 `bson:"count_question" json:"count_question"`
 }
 
-type Response struct {
-	CountExercise int64      `bson:"count_exercise" json:"count_exercise"`
-	Page          int64      `bson:"page" json:"page"`
-	Exercise      []Exercise `json:"exercise" bson:"exercise"`
-}
-
 type Statistics struct {
 	CountExercise int64 `bson:"count_exercise" json:"count_exercise"`
 }
 
 type IExerciseRepository interface {
 	FetchMany(ctx context.Context, page string) ([]ExerciseResponse, int64, error)
-	FetchManyByLessonID(ctx context.Context, unitID string) (Response, error)
-	FetchManyByUnitID(ctx context.Context, unitID string) (ExerciseResponse, error)
+	FetchManyByLessonID(ctx context.Context, unitID string) ([]ExerciseResponse, error)
+	FetchOneByUnitID(ctx context.Context, unitID string) (ExerciseResponse, error)
+	FetchManyByUnitID(ctx context.Context, unitID string) ([]ExerciseResponse, error)
 
 	CreateOne(ctx context.Context, exercise *Exercise) error
 

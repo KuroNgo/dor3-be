@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
+	"sync"
 )
 
 func (im *ImageController) CreateManyImageForLesson(ctx *gin.Context) {
@@ -28,49 +29,56 @@ func (im *ImageController) CreateManyImageForLesson(ctx *gin.Context) {
 	}
 	files := form.File["files"]
 
-	for _, file := range files {
-		if !file_internal.IsImage(file.Filename) {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for _, file := range files {
+			if !file_internal.IsImage(file.Filename) {
+				ctx.JSON(http.StatusBadRequest, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
 
-		f, err := file.Open()
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Error opening uploaded file",
-			})
-			return
-		}
+			f, err := file.Open()
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"error": "Error opening uploaded file",
+				})
+				return
+			}
 
-		// Tải lên tệp vào Cloudinary
-		result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderLesson)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Error uploading file",
-			})
-			return
-		}
+			// Tải lên tệp vào Cloudinary
+			result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderLesson)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"error": "Error uploading file",
+				})
+				return
+			}
 
-		// Tạo metadata từ thông tin của file và đường dẫn trả về từ Cloudinary
-		metadata := &image_domain.Image{
-			Id:        primitive.NewObjectID(),
-			ImageName: file.Filename,
-			ImageUrl:  result.ImageURL,
-			Size:      file.Size / 1024,
-			Category:  "lesson",
-			AssetId:   result.AssetID,
-		}
+			// Tạo metadata từ thông tin của file và đường dẫn trả về từ Cloudinary
+			metadata := &image_domain.Image{
+				Id:        primitive.NewObjectID(),
+				ImageName: file.Filename,
+				ImageUrl:  result.ImageURL,
+				Size:      file.Size / 1024,
+				Category:  "lesson",
+				AssetId:   result.AssetID,
+			}
 
-		err = im.ImageUseCase.CreateOne(ctx, metadata)
-		if err != nil {
-			//ctx.JSON(http.StatusBadRequest, gin.H{
-			//	"error": err.Error(),
-			//})
-			continue
+			err = im.ImageUseCase.CreateOne(ctx, metadata)
+			if err != nil {
+				//ctx.JSON(http.StatusBadRequest, gin.H{
+				//	"error": err.Error(),
+				//})
+				continue
+			}
 		}
-	}
+	}()
+
+	wg.Wait()
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": "Files uploaded successfully",
@@ -305,49 +313,56 @@ func (im *ImageController) CreateManyImageForStatic(ctx *gin.Context) {
 	}
 	files := form.File["files"]
 
-	for _, file := range files {
-		if !file_internal.IsImage(file.Filename) {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for _, file := range files {
+			if !file_internal.IsImage(file.Filename) {
+				ctx.JSON(http.StatusBadRequest, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
 
-		f, err := file.Open()
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Error opening uploaded file",
-			})
-			return
-		}
+			f, err := file.Open()
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"error": "Error opening uploaded file",
+				})
+				return
+			}
 
-		// Tải lên tệp vào Cloudinary
-		result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderStatic)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Error uploading file",
-			})
-			return
-		}
+			// Tải lên tệp vào Cloudinary
+			result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, im.Database.CloudinaryUploadFolderStatic)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"error": "Error uploading file",
+				})
+				return
+			}
 
-		// Tạo metadata từ thông tin của file và đường dẫn trả về từ Cloudinary
-		metadata := &image_domain.Image{
-			Id:        primitive.NewObjectID(),
-			ImageName: file.Filename,
-			ImageUrl:  result.ImageURL,
-			Size:      file.Size / 1024,
-			Category:  "static",
-			AssetId:   result.AssetID,
-		}
+			// Tạo metadata từ thông tin của file và đường dẫn trả về từ Cloudinary
+			metadata := &image_domain.Image{
+				Id:        primitive.NewObjectID(),
+				ImageName: file.Filename,
+				ImageUrl:  result.ImageURL,
+				Size:      file.Size / 1024,
+				Category:  "static",
+				AssetId:   result.AssetID,
+			}
 
-		err = im.ImageUseCase.CreateOne(ctx, metadata)
-		if err != nil {
-			//ctx.JSON(http.StatusBadRequest, gin.H{
-			//	"error": err.Error(),
-			//})
-			continue
+			err = im.ImageUseCase.CreateOne(ctx, metadata)
+			if err != nil {
+				//ctx.JSON(http.StatusBadRequest, gin.H{
+				//	"error": err.Error(),
+				//})
+				continue
+			}
 		}
-	}
+	}()
+
+	wg.Wait()
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": "Files uploaded successfully",

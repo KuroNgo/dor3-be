@@ -14,7 +14,7 @@ import (
 )
 
 type EmailData struct {
-	URL       string
+	Code      string
 	FirstName string
 	Subject   string
 }
@@ -40,7 +40,7 @@ func ParseTemplateDir(dir string) (*template.Template, error) {
 	return template.ParseFiles(paths...)
 }
 
-func SendEmail(data *EmailData, templateName string) error {
+func SendEmail(data *EmailData, emailTo string, templateName string) error {
 	var body bytes.Buffer
 
 	templated, err := ParseTemplateDir("templates")
@@ -56,7 +56,7 @@ func SendEmail(data *EmailData, templateName string) error {
 	m := gomail.NewMessage()
 
 	m.SetHeader("From", subject_const.Mailer1)
-	m.SetHeader("To", subject_const.Test)
+	m.SetHeader("To", emailTo)
 	m.SetHeader("Subject", data.Subject)
 
 	//m.SetAddressHeader(subject_const.Bcc, subject_const.BCCAdmin1, subject_const.Admin)

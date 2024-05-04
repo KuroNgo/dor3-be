@@ -11,6 +11,18 @@ type imageUseCase struct {
 	contextTimeout  time.Duration
 }
 
+func (i *imageUseCase) FetchByCategory(ctx context.Context, category string, page string) (image_domain.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, i.contextTimeout)
+	defer cancel()
+
+	image, err := i.imageRepository.FetchByCategory(ctx, category, page)
+	if err != nil {
+		return image_domain.Response{}, err
+	}
+
+	return image, err
+}
+
 func NewImageUseCase(imageRepository image_domain.IImageRepository, timeout time.Duration) image_domain.IImageUseCase {
 	return &imageUseCase{
 		imageRepository: imageRepository,

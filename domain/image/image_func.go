@@ -14,6 +14,7 @@ type Input struct {
 type IImageUseCase interface {
 	GetURLByName(ctx context.Context, name string) (Image, error)
 	FetchMany(ctx context.Context, page string) (Response, error)
+	FetchByCategory(ctx context.Context, category string, page string) (Response, error)
 
 	CreateOne(ctx context.Context, image *Image) error
 	UpdateOne(ctx context.Context, imageID string, image *Image) error

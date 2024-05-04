@@ -30,11 +30,12 @@ type Input struct {
 
 //go:generate mockery --name IUserUseCase
 type IUserUseCase interface {
-	Create(ctx context.Context, user User) error
-	Update(ctx context.Context, user *User) (*mongo.UpdateResult, error)
+	Create(ctx context.Context, user *User) error
+	UpdateVerify(ctx context.Context, user *User) (*mongo.UpdateResult, error)
 	Delete(ctx context.Context, userID string) error
 	Login(ctx context.Context, request SignIn) (*User, error)
 	GetByEmail(ctx context.Context, email string) (*User, error)
+	Update(ctx context.Context, user *User) error
 	UpdateImage(ctx context.Context, userID string, imageURL string) error
 	GetByID(ctx context.Context, id string) (*User, error)
 }

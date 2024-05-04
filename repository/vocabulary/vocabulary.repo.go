@@ -15,39 +15,61 @@ import (
 	"time"
 )
 
-var wg sync.WaitGroup
-
 type vocabularyRepository struct {
 	database             *mongo.Database
 	collectionVocabulary string
 	collectionMark       string
 	collectionUnit       string
+
+	vocabularyManyCache    map[string]vocabulary_domain.Response
+	vocabularyOneCache     map[string][]vocabulary_domain.Vocabulary
+	vocabularyCacheExpires map[string]time.Time
+	cacheMutex             sync.RWMutex
 }
 
 func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, collectionMark string, collectionUnit string) vocabulary_domain.IVocabularyRepository {
 	return &vocabularyRepository{
-		database:             db,
-		collectionVocabulary: collectionVocabulary,
-		collectionMark:       collectionMark,
-		collectionUnit:       collectionUnit,
+		database:               db,
+		collectionVocabulary:   collectionVocabulary,
+		collectionMark:         collectionMark,
+		collectionUnit:         collectionUnit,
+		vocabularyManyCache:    make(map[string]vocabulary_domain.Response),
+		vocabularyOneCache:     make(map[string][]vocabulary_domain.Vocabulary),
+		vocabularyCacheExpires: make(map[string]time.Time),
 	}
 }
 
 func (v *vocabularyRepository) FindUnitIDByUnitLevel(ctx context.Context, unitLevel int) (primitive.ObjectID, error) {
 	collectionUnit := v.database.Collection(v.collectionUnit)
 
+	// Tìm kiếm unit có cùng level
 	filter := bson.M{"level": unitLevel}
-	var data struct {
+	var existingUnit struct {
 		Id primitive.ObjectID `bson:"_id"`
 	}
 
-	// Thực hiện truy vấn FindOneAndUpdate
-	err := collectionUnit.FindOne(ctx, filter).Decode(&data)
+	err := collectionUnit.FindOne(ctx, filter).Decode(&existingUnit)
+	if err == nil {
+		return existingUnit.Id, nil
+	} else if !errors.Is(err, mongo.ErrNoDocuments) {
+		return primitive.NilObjectID, err
+	}
+
+	newUnit := unit_domain.Unit{
+		ID:         primitive.NewObjectID(),
+		Name:       "Unit " + strconv.Itoa(unitLevel),
+		Level:      unitLevel,
+		IsComplete: 0,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	}
+
+	_, err = collectionUnit.InsertOne(ctx, newUnit)
 	if err != nil {
 		return primitive.NilObjectID, err
 	}
 
-	return data.Id, nil
+	return newUnit.ID, nil
 }
 
 func (v *vocabularyRepository) FindVocabularyIDByVocabularyConfig(ctx context.Context, word string) (primitive.ObjectID, error) {
@@ -198,6 +220,18 @@ func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string)
 }
 
 func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) (vocabulary_domain.SearchingResponse, error) {
+	v.cacheMutex.RLock()
+	cachedData, found := v.vocabularyOneCache[word]
+	v.cacheMutex.RUnlock()
+
+	if found {
+		vocabularyRes := vocabulary_domain.SearchingResponse{
+			CountVocabularySearch: int64(len(cachedData)),
+			Vocabulary:            cachedData,
+		}
+		return vocabularyRes, nil
+	}
+
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
 	regex := primitive.Regex{Pattern: word, Options: "i"}
@@ -231,12 +265,12 @@ func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) (vo
 		Vocabulary:            vocabularies,
 	}
 
-	return vocabularyRes, nil
-}
+	v.cacheMutex.Lock()
+	v.vocabularyOneCache[word] = vocabularies
+	v.vocabularyCacheExpires[word] = time.Now().Add(5 * time.Minute)
+	v.cacheMutex.Unlock()
 
-func (v *vocabularyRepository) FetchByWord2(ctx context.Context, word string) (vocabulary_domain.SearchingResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return vocabularyRes, nil
 }
 
 func (v *vocabularyRepository) FetchByLesson(ctx context.Context, lessonName string) (vocabulary_domain.SearchingResponse, error) {
@@ -272,6 +306,15 @@ func (v *vocabularyRepository) FetchByLesson(ctx context.Context, lessonName str
 }
 
 func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (vocabulary_domain.Response, error) {
+	// Kiểm tra cache trước khi truy vấn cơ sở dữ liệu
+	v.cacheMutex.RLock()
+	cachedData, found := v.vocabularyManyCache[page]
+	v.cacheMutex.RUnlock()
+
+	if found {
+		return cachedData, nil
+	}
+
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
 
@@ -279,7 +322,7 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 	if err != nil {
 		return vocabulary_domain.Response{}, errors.New("invalid page number")
 	}
-	perPage := 2
+	perPage := 7
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
@@ -329,6 +372,11 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 		Page:       cal,
 		Vocabulary: vocabularies,
 	}
+
+	v.cacheMutex.Lock()
+	v.vocabularyManyCache[page] = vocabularyRes
+	v.vocabularyCacheExpires[page] = time.Now().Add(5 * time.Minute) // Ví dụ: hết hạn sau 5 phút
+	v.cacheMutex.Unlock()
 
 	return vocabularyRes, nil
 }
@@ -536,4 +584,9 @@ func (v *vocabularyRepository) DeleteOne(ctx context.Context, vocabularyID strin
 
 	_, err = collectionVocabulary.DeleteOne(ctx, filter)
 	return err
+}
+
+func (v *vocabularyRepository) DeleteMany(ctx context.Context, vocabularyID ...string) error {
+	//TODO implement me
+	panic("implement me")
 }

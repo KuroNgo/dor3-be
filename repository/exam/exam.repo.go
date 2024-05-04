@@ -19,6 +19,11 @@ type examRepository struct {
 	collectionExamQuestion string
 }
 
+func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionExamQuestion string) exam_domain.IExamRepository {
 	return &examRepository{
 		database:               db,

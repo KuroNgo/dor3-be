@@ -109,13 +109,11 @@ func (q quizQuestionRepository) UpdateOne(ctx context.Context, quizQuestion *qui
 	filter := bson.D{{Key: "_id", Value: quizQuestion.ID}}
 	update := bson.M{
 		"$set": bson.M{
-			"exam_id":        quizQuestion.QuizID,
-			"content":        quizQuestion.Content,
-			"level":          quizQuestion.Level,
-			"filename":       quizQuestion.Filename,
-			"audio_duration": quizQuestion.AudioDuration,
-			"update_at":      quizQuestion.UpdateAt,
-			"who_update":     quizQuestion.WhoUpdate,
+			"exam_id":    quizQuestion.QuizID,
+			"content":    quizQuestion.Content,
+			"level":      quizQuestion.Level,
+			"update_at":  quizQuestion.UpdateAt,
+			"who_update": quizQuestion.WhoUpdate,
 		},
 	}
 

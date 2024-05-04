@@ -6,7 +6,8 @@ import (
 )
 
 func (l *LessonController) FetchMany(ctx *gin.Context) {
-	lesson, err := l.LessonUseCase.FetchMany(ctx)
+	page := ctx.DefaultQuery("page", "1")
+	lesson, err := l.LessonUseCase.FetchMany(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -23,7 +24,9 @@ func (l *LessonController) FetchMany(ctx *gin.Context) {
 
 func (l *LessonController) FetchByIdCourse(ctx *gin.Context) {
 	idCourse := ctx.Query("course_id")
-	lesson, err := l.LessonUseCase.FetchByIdCourse(ctx, idCourse)
+	page := ctx.DefaultQuery("page", "1")
+
+	lesson, err := l.LessonUseCase.FetchByIdCourse(ctx, idCourse, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -40,7 +43,9 @@ func (l *LessonController) FetchByIdCourse(ctx *gin.Context) {
 
 func (l *LessonController) FetchById(ctx *gin.Context) {
 	idLesson := ctx.Query("_id")
-	lesson, err := l.LessonUseCase.FetchByIdCourse(ctx, idLesson)
+	page := ctx.DefaultQuery("page", "1")
+
+	lesson, err := l.LessonUseCase.FetchByIdCourse(ctx, idLesson, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

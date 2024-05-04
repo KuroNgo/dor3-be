@@ -16,6 +16,19 @@ type userRepository struct {
 	collection string
 }
 
+func (u *userRepository) Update(ctx context.Context, user *user_domain.User) error {
+	collection := u.database.Collection(u.collection)
+
+	filter := bson.D{{Key: "_id", Value: user.ID}}
+	update := bson.D{{Key: "$set", Value: user}}
+
+	_, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func NewUserRepository(db *mongo.Database, collection string) user_domain.IUserRepository {
 	return &userRepository{
 		database:   db,
@@ -35,11 +48,15 @@ func (u *userRepository) UpdateImage(c context.Context, userID string, imageURL 
 	return err
 }
 
-func (u *userRepository) Update(ctx context.Context, user *user_domain.User) (*mongo.UpdateResult, error) {
+func (u *userRepository) UpdateVerify(ctx context.Context, user *user_domain.User) (*mongo.UpdateResult, error) {
 	collection := u.database.Collection(u.collection)
 
 	filter := bson.D{{Key: "_id", Value: user.ID}}
-	update := bson.M{"$set": user}
+	update := bson.D{{Key: "$set", Value: bson.M{
+		"verified":          user.Verified,
+		"verification_code": user.VerificationCode,
+		"updated_at":        user.UpdatedAt,
+	}}}
 
 	data, err := collection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -48,7 +65,7 @@ func (u *userRepository) Update(ctx context.Context, user *user_domain.User) (*m
 	return data, nil
 }
 
-func (u *userRepository) Create(c context.Context, user user_domain.User) error {
+func (u *userRepository) Create(c context.Context, user *user_domain.User) error {
 	collection := u.database.Collection(u.collection)
 
 	filter := bson.M{"email": user.Email}
@@ -60,7 +77,7 @@ func (u *userRepository) Create(c context.Context, user user_domain.User) error 
 	if count > 0 {
 		return errors.New("the email do not unique")
 	}
-	_, err = collection.InsertOne(c, user)
+	_, err = collection.InsertOne(c, &user)
 	return err
 }
 

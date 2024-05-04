@@ -12,6 +12,18 @@ type userUseCase struct {
 	contextTimeout time.Duration
 }
 
+func (u *userUseCase) Update(ctx context.Context, user *user_domain.User) error {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+	err := u.userRepository.Update(ctx, user)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *userUseCase) UpdateImage(c context.Context, userID string, imageURL string) error {
 	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
 	defer cancel()
@@ -31,7 +43,7 @@ func NewUserUseCase(userRepository user_domain.IUserRepository, timeout time.Dur
 	}
 }
 
-func (u *userUseCase) Create(c context.Context, user user_domain.User) error {
+func (u *userUseCase) Create(c context.Context, user *user_domain.User) error {
 	ctx, cancel := context.WithTimeout(c, u.contextTimeout)
 	defer cancel()
 	err := u.userRepository.Create(ctx, user)
@@ -91,10 +103,10 @@ func (u *userUseCase) GetByID(c context.Context, id string) (*user_domain.User, 
 	return user, err
 }
 
-func (u *userUseCase) Update(ctx context.Context, user *user_domain.User) (*mongo.UpdateResult, error) {
+func (u *userUseCase) UpdateVerify(ctx context.Context, user *user_domain.User) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
-	data, err := u.userRepository.Update(ctx, user)
+	data, err := u.userRepository.UpdateVerify(ctx, user)
 
 	if err != nil {
 		return nil, err

@@ -185,8 +185,8 @@ func (v *VocabularyController) CreateVocabularyWithFileInAdmin(ctx *gin.Context)
 		"success_count": successCount,
 	})
 
-	v.CreateAudioLatest(ctx)
-	v.UploadAudioToCloudinary(ctx)
+	//v.CreateAudioLatest(ctx)
+	//v.UploadAudioToCloudinary(ctx)
 }
 
 func (v *VocabularyController) CreateVocabularyWithFileInUser(ctx *gin.Context) {

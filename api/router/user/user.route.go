@@ -20,7 +20,6 @@ func UserRouter(env *bootstrap.Database, timeout time.Duration, db *mongo.Databa
 	}
 
 	router := group.Group("/user")
-	router.GET("/get/mail", user.GetMailTest)
 	router.POST("/signup", user.SignUp)
 	router.GET("/info", middleware.DeserializeUser(), user.GetMe)
 	router.GET("/refresh", user.RefreshToken)

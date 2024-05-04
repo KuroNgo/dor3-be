@@ -55,6 +55,7 @@ type Statistics struct {
 type IExamRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
+	FetchOneByUnitID(ctx context.Context, unitID string) (Response, error)
 
 	CreateOne(ctx context.Context, exam *Exam) error
 	UpdateOne(ctx context.Context, exam *Exam) (*mongo.UpdateResult, error)

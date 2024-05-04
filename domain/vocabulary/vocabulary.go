@@ -44,10 +44,6 @@ type SearchingResponse struct {
 	Vocabulary            []Vocabulary `bson:"vocabulary" json:"vocabulary"`
 }
 
-type Statistics struct {
-	CountVocabulary int `bson:"count_vocabulary" json:"count_vocabulary"`
-}
-
 //go:generate mockery --name IVocabularyRepository
 type IVocabularyRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
@@ -55,7 +51,6 @@ type IVocabularyRepository interface {
 	FindVocabularyIDByVocabularyConfig(ctx context.Context, word string) (primitive.ObjectID, error)
 	FetchByIdUnit(ctx context.Context, idUnit string) (Response, error)
 	FetchByWord(ctx context.Context, word string) (SearchingResponse, error)
-	FetchByWord2(ctx context.Context, word string) (SearchingResponse, error)
 	FetchByLesson(ctx context.Context, unitName string) (SearchingResponse, error)
 
 	GetAllVocabulary(ctx context.Context) ([]string, error)
@@ -69,4 +64,5 @@ type IVocabularyRepository interface {
 	UpdateOneAudio(ctx context.Context, vocabulary *Vocabulary) error
 
 	DeleteOne(ctx context.Context, vocabularyID string) error
+	DeleteMany(ctx context.Context, vocabularyID ...string) error
 }

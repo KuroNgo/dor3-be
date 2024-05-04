@@ -13,6 +13,11 @@ type vocabularyUseCase struct {
 	contextTimeout       time.Duration
 }
 
+func (v *vocabularyUseCase) DeleteMany(ctx context.Context, vocabularyID ...string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewVocabularyUseCase(vocabularyRepository vocabulary_domain.IVocabularyRepository, timeout time.Duration) vocabulary_domain.IVocabularyUseCase {
 	return &vocabularyUseCase{
 		vocabularyRepository: vocabularyRepository,

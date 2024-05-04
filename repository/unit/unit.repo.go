@@ -126,7 +126,7 @@ func (u *unitRepository) FindLessonIDByLessonName(ctx context.Context, lessonNam
 	return data.Id, nil
 }
 
-func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string) (unit_domain.Response, error) {
+func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, page string) (unit_domain.Response, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 
 	idLesson2, err := primitive.ObjectIDFromHex(idLesson)

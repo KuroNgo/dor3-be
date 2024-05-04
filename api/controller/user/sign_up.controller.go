@@ -4,6 +4,7 @@ import (
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal"
 	"clean-architecture/internal/cloud/cloudinary"
+	"clean-architecture/internal/cloud/google"
 	file_internal "clean-architecture/internal/file"
 	"github.com/gin-gonic/gin"
 	"github.com/thanhpk/randstr"
@@ -52,7 +53,7 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 	email = internal.Santize(email)
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		newUser := user_domain.User{
+		newUser := &user_domain.User{
 			ID:        primitive.NewObjectID(),
 			FullName:  fullName,
 			AvatarURL: avatarUrl,
@@ -77,16 +78,16 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 		}
 
 		code := randstr.Dec(6)
-		verificationCode := internal.Encode(code)
-		//firstName := newUser.FullName
 
 		updUser := user_domain.User{
 			ID:               newUser.ID,
-			VerificationCode: verificationCode,
+			VerificationCode: code,
+			Verified:         true,
+			UpdatedAt:        time.Now(),
 		}
 
 		// Update User in Database
-		_, err = u.UserUseCase.Update(ctx, &updUser)
+		_, err = u.UserUseCase.UpdateVerify(ctx, &updUser)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"status":  "error",
@@ -95,29 +96,25 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 			return
 		}
 
-		// ? Send Email
-		//emailData := google.EmailData{
-		//	URL:       u.Database.ClientOrigin + "/verifyemail/" + code,
-		//	FirstName: firstName,
-		//	Subject:   "Your account verification code",
-		//}
+		emailData := google.EmailData{
+			Code:      code,
+			FirstName: newUser.FullName,
+			Subject:   "Your account verification code",
+		}
 
-		//Thêm công việc cron để gửi email nhắc nhở
-		//err = google.SendEmail(&newUser, &emailData, "sign_in_first_time.sendmail.html")
-		//if err != nil {
-		//	ctx.JSON(http.StatusBadGateway, gin.H{
-		//		"status":  "success",
-		//		"message": "There was an error sending email",
-		//	})
-		//	return
-		//}
-
-		message := "We sent an email with a verification code to your email"
+		err = google.SendEmail(&emailData, newUser.Email, "sign_in_first_time.html")
+		if err != nil {
+			ctx.JSON(http.StatusBadGateway, gin.H{
+				"status":  "success",
+				"message": "There was an error sending email",
+			})
+			return
+		}
 
 		// Trả về phản hồi thành công
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":  "success",
-			"message": message,
+			"message": "We sent an email with a verification code to your email",
 		})
 		return
 	}
@@ -163,7 +160,7 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 	}
 
 	// thực hiện đăng ký người dùng
-	err = u.UserUseCase.Create(ctx, newUser)
+	err = u.UserUseCase.Create(ctx, &newUser)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
