@@ -19,6 +19,11 @@ type examRepository struct {
 	collectionExamQuestion string
 }
 
+func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionExamQuestion string) exam_domain.IExamRepository {
 	return &examRepository{
 		database:               db,
@@ -39,18 +44,20 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domai
 	perPage := 7
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
-
 	count, err := collectionExam.CountDocuments(ctx, bson.D{})
 	if err != nil {
 		return exam_domain.Response{}, err
 	}
 
-	cal1 := count / int64(perPage)
-	cal2 := count % int64(perPage)
-	var cal int64 = 0
-	if cal2 != 0 {
-		cal = cal1 + 1
-	}
+	calCh := make(chan int64)
+	go func() {
+		defer close(calCh)
+		cal1 := count / int64(perPage)
+		cal2 := count % int64(perPage)
+		if cal2 != 0 {
+			calCh <- cal1 + 1
+		}
+	}()
 
 	cursor, err := collectionExam.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
@@ -68,6 +75,7 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domai
 		exams = append(exams, exam)
 	}
 
+	cal := <-calCh
 	examRes := exam_domain.Response{
 		Page:      cal,
 		Exam:      exams,

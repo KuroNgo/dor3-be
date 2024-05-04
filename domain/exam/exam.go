@@ -16,9 +16,9 @@ type Exam struct {
 	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 
-	Title       string        `bson:"title" json:"title"`
-	Description string        `bson:"description" json:"description"`
-	Duration    time.Duration `bson:"duration" json:"duration"`
+	Title       string `bson:"title" json:"title"`
+	Description string `bson:"description" json:"description"`
+	Duration    string `bson:"duration" json:"duration"`
 
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
@@ -30,9 +30,9 @@ type ExamResponse struct {
 	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 
-	Title       string        `bson:"title" json:"title"`
-	Description string        `bson:"description" json:"description"`
-	Duration    time.Duration `bson:"duration" json:"duration"`
+	Title       string `bson:"title" json:"title"`
+	Description string `bson:"description" json:"description"`
+	Duration    string `bson:"duration" json:"duration"`
 
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
@@ -42,9 +42,9 @@ type ExamResponse struct {
 }
 
 type Response struct {
-	CountExam int64 `bson:"count_exam" json:"count_exam"`
-	Page      int64 `json:"page" bson:"page"`
-	Exam      []Exam
+	CountExam int64  `bson:"count_exam" json:"count_exam"`
+	Page      int64  `json:"page" bson:"page"`
+	Exam      []Exam `json:"exam" bson:"exam"`
 }
 
 type Statistics struct {
@@ -55,6 +55,7 @@ type Statistics struct {
 type IExamRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
+	FetchOneByUnitID(ctx context.Context, unitID string) (Response, error)
 
 	CreateOne(ctx context.Context, exam *Exam) error
 	UpdateOne(ctx context.Context, exam *Exam) (*mongo.UpdateResult, error)

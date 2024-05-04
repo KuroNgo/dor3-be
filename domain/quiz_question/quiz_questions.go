@@ -20,18 +20,14 @@ type QuizQuestion struct {
 	Type    string `bson:"type" json:"type"`
 	Level   int    `bson:"level" json:"level"`
 
-	// admin add metadata of file and system will be found it
-	Filename      string `bson:"filename" json:"filename"`
-	AudioDuration string `bson:"audio_duration" json:"audio_duration"`
-
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 	UpdateAt  time.Time `bson:"update_at" json:"update_at"`
 	WhoUpdate string    `bson:"who_update" json:"who_update"`
 }
 
 type Response struct {
-	Page         int64 `bson:"page" json:"page"`
-	QuizQuestion []QuizQuestion
+	Page         int64          `bson:"page" json:"page"`
+	QuizQuestion []QuizQuestion `json:"quiz_question" bson:"quiz_question"`
 }
 
 type IQuizQuestionRepository interface {

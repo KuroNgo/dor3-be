@@ -19,8 +19,9 @@ type Input struct {
 
 type IExerciseUseCase interface {
 	FetchMany(ctx context.Context, page string) ([]ExerciseResponse, int64, error)
-	FetchManyByLessonID(ctx context.Context, unitID string) (Response, error)
-	FetchManyByUnitID(ctx context.Context, unitID string) (ExerciseResponse, error)
+	FetchManyByLessonID(ctx context.Context, unitID string) ([]ExerciseResponse, error)
+	FetchManyByUnitID(ctx context.Context, unitID string) ([]ExerciseResponse, error)
+	FetchOneByUnitID(ctx context.Context, unitID string) (ExerciseResponse, error)
 
 	UpdateOne(ctx context.Context, exercise *Exercise) (*mongo.UpdateResult, error)
 	UpdateCompleted(ctx context.Context, exerciseID string, isComplete int) error

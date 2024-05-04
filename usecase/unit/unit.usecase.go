@@ -32,11 +32,11 @@ func (u *unitUseCase) FetchMany(ctx context.Context, page string) ([]unit_domain
 	return unit, err
 }
 
-func (u *unitUseCase) FetchByIdLesson(ctx context.Context, idLesson string) (unit_domain.Response, error) {
+func (u *unitUseCase) FetchByIdLesson(ctx context.Context, idLesson string, page string) (unit_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
-	unit, err := u.unitRepository.FetchByIdLesson(ctx, idLesson)
+	unit, err := u.unitRepository.FetchByIdLesson(ctx, idLesson, page)
 	if err != nil {
 		return unit_domain.Response{}, err
 	}

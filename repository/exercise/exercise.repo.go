@@ -32,7 +32,12 @@ func NewExerciseRepository(db *mongo.Database, collectionLesson string, collecti
 	}
 }
 
-func (e *exerciseRepository) FetchManyByLessonID(ctx context.Context, unitID string) (exercise_domain.Response, error) {
+func (e *exerciseRepository) FetchManyByLessonID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -42,7 +47,7 @@ func (e *exerciseRepository) UpdateCompleted(ctx context.Context, exerciseID str
 	panic("implement me")
 }
 
-func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
+func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
 
 	idUnit, err := primitive.ObjectIDFromHex(unitID)

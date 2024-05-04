@@ -24,7 +24,7 @@ type QuizOptions struct {
 }
 
 type Response struct {
-	QuizOptions []QuizOptions
+	QuizOptions []QuizOptions `json:"quiz_options" bson:"quiz_options"`
 }
 
 type IQuizOptionRepository interface {

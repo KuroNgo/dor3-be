@@ -17,7 +17,7 @@ type MarkToFavourite struct {
 }
 
 type Response struct {
-	MarkToFavourite []MarkToFavourite
+	MarkToFavourite []MarkToFavourite `json:"mark_to_favourite" bson:"mark_to_favourite"`
 }
 
 type IMarkToFavouriteRepository interface {

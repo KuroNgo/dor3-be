@@ -19,6 +19,7 @@ func ImageRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Databa
 	}
 
 	router := group.Group("/image")
-	router.GET("/fetch-by-name", image.FetchImageByName)
-	router.GET("/fetch-many", image.FetchImage)
+	router.GET("/fetch/name", image.FetchImageByName)
+	router.GET("/fetch/category", image.FetchImageByCategory)
+	router.GET("/fetch", image.FetchImage)
 }

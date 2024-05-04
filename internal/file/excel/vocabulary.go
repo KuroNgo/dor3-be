@@ -29,7 +29,7 @@ func ReadFileForVocabulary(filename string) ([]file_internal.Vocabulary, error) 
 
 	go func() {
 		defer close(vocabularyCh)
-		for _, elementSheet := range sheetList {
+		for i, elementSheet := range sheetList {
 			unitCount := 1 // Reset unitCount for each lesson
 
 			rows, err := f.GetRows(elementSheet)
@@ -37,8 +37,10 @@ func ReadFileForVocabulary(filename string) ([]file_internal.Vocabulary, error) 
 				return
 			}
 
-			for i, row := range rows {
-				if i == 0 {
+			vocabCount := 0 // Initialize vocabulary count for the current unit
+
+			for j, row := range rows {
+				if j == 0 {
 					continue
 				}
 
@@ -52,14 +54,19 @@ func ReadFileForVocabulary(filename string) ([]file_internal.Vocabulary, error) 
 						ExplainEng:    row[5],
 						ExampleVie:    row[6],
 						ExampleEng:    row[7],
-						FieldOfIT:     elementSheet,
+						FieldOfIT:     sheetList[i],
 						UnitLevel:     unitCount,
 					}
 
 					vocabularyCh <- v
 
-					if len(vocabularyCh) == maximumVocabulary {
+					// Increase vocabulary count for the current unit
+					vocabCount++
+
+					// If vocabCount reaches the maximum vocabulary, create a new unit
+					if vocabCount == maximumVocabulary {
 						unitCount++
+						vocabCount = 1 // Reset vocabCount for the new unit
 					}
 				}
 			}

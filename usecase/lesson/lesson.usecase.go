@@ -56,11 +56,11 @@ func (l *lessonUseCase) CreateOneByNameCourse(ctx context.Context, lesson *lesso
 	return nil
 }
 
-func (l *lessonUseCase) FetchByIdCourse(ctx context.Context, idCourse string) (lesson_domain.Response, error) {
+func (l *lessonUseCase) FetchByIdCourse(ctx context.Context, idCourse string, page string) (lesson_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()
 
-	lesson, err := l.lessonRepository.FetchByIdCourse(ctx, idCourse)
+	lesson, err := l.lessonRepository.FetchByIdCourse(ctx, idCourse, page)
 	if err != nil {
 		return lesson_domain.Response{}, err
 	}
@@ -80,11 +80,11 @@ func (l *lessonUseCase) UpdateComplete(ctx context.Context, lessonID string, les
 	return err
 }
 
-func (l *lessonUseCase) FetchMany(ctx context.Context) ([]lesson_domain.LessonResponse, error) {
+func (l *lessonUseCase) FetchMany(ctx context.Context, page string) ([]lesson_domain.LessonResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()
 
-	lesson, err := l.lessonRepository.FetchMany(ctx)
+	lesson, err := l.lessonRepository.FetchMany(ctx, page)
 	if err != nil {
 		return nil, err
 	}

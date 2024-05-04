@@ -99,6 +99,7 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	count := <-cal
 	activityRes := activity_log_domain.Response{
 		Page:        count,
+		PageCurrent: int64(pageNumber),
 		ActivityLog: activities,
 	}
 	return activityRes, nil

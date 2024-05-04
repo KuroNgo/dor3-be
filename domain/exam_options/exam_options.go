@@ -24,7 +24,7 @@ type ExamOptions struct {
 }
 
 type Response struct {
-	ExamOptions []ExamOptions
+	ExamOptions []ExamOptions `json:"exam_options" bson:"exam_options"`
 }
 
 type IExamOptionRepository interface {

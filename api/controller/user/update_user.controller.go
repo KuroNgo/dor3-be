@@ -52,7 +52,7 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 			UpdatedAt: time.Now(),
 		}
 
-		_, err = u.UserUseCase.Update(ctx, &userResponse)
+		err = u.UserUseCase.Update(ctx, &userResponse)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",
@@ -105,7 +105,7 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 		UpdatedAt: time.Now(),
 	}
 
-	_, err = u.UserUseCase.Update(ctx, &userResponse)
+	err = u.UserUseCase.Update(ctx, &userResponse)
 	if err != nil {
 		ctx.JSON(http.StatusForbidden, gin.H{
 			"status":  "fail",

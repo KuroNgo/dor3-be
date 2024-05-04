@@ -17,6 +17,60 @@ type imageRepository struct {
 	collection string
 }
 
+func (i *imageRepository) FetchByCategory(ctx context.Context, category string, page string) (image_domain.Response, error) {
+	collectionImage := i.database.Collection(i.collection)
+
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return image_domain.Response{}, errors.New("invalid page number")
+	}
+	perPage := 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	calculate := make(chan int64)
+
+	go func() {
+		defer close(calculate)
+		// Đếm tổng số lượng tài liệu trong collection
+		count, err := collectionImage.CountDocuments(ctx, bson.D{})
+		if err != nil {
+			return
+		}
+
+		cal1 := count / int64(perPage)
+		cal2 := count % int64(perPage)
+		if cal2 != 0 {
+			calculate <- cal1
+		}
+	}()
+
+	filter := bson.M{"category": category}
+	cursor, err := collectionImage.Find(ctx, filter, findOptions)
+	if err != nil {
+		return image_domain.Response{}, err
+	}
+
+	var images []image_domain.Image
+	for cursor.Next(ctx) {
+		var image image_domain.Image
+		if err := cursor.Decode(&image); err != nil {
+			return image_domain.Response{}, err
+		}
+
+		image.Category = category
+		images = append(images, image)
+	}
+
+	cal := <-calculate
+
+	imgRes := image_domain.Response{
+		Page:  cal,
+		Image: images,
+	}
+	return imgRes, nil
+}
+
 func NewImageRepository(db *mongo.Database, collection string) image_domain.IImageRepository {
 	return &imageRepository{
 		database:   db,

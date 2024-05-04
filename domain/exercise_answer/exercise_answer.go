@@ -22,7 +22,7 @@ type ExerciseAnswer struct {
 }
 
 type Response struct {
-	ExerciseAnswer []ExerciseAnswer
+	ExerciseAnswer []ExerciseAnswer `json:"exercise_answer" bson:"exercise_answer"`
 }
 
 type IExerciseAnswerRepository interface {

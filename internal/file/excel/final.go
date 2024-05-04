@@ -41,12 +41,16 @@ func ReadFileForLessonManagementSystem(filename string) (file_internal.Course, [
 	go func() {
 		defer close(unitCh)
 		defer close(vocabularyCh)
-		for _, sheetName := range sheetList {
+		for i, sheetName := range sheetList {
 			rows, err := f.GetRows(sheetName)
 			if err != nil {
 				continue
 			}
 			for count, row := range rows {
+				if count == 0 {
+					continue
+				}
+
 				if len(row) >= 8 {
 					// Tạo dữ liệu unit
 					unit := file_internal.Unit{
@@ -66,7 +70,7 @@ func ReadFileForLessonManagementSystem(filename string) (file_internal.Course, [
 						ExplainEng:    row[5],
 						ExampleVie:    row[6],
 						ExampleEng:    row[7],
-						FieldOfIT:     sheetName,
+						FieldOfIT:     sheetList[i],
 						UnitLevel:     count,
 					}
 					vocabularyCh <- vocabulary

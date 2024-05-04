@@ -21,9 +21,9 @@ type MarkList struct {
 }
 
 type Response struct {
-	Total           int64 `json:"total"`
-	CountVocabulary int64 `json:"count_vocabulary"`
-	MarkList        []MarkList
+	Total           int64      `json:"total"`
+	CountVocabulary int64      `json:"count_vocabulary"`
+	MarkList        []MarkList `json:"mark_list" bson:"mark_list"`
 }
 
 type Statistics struct {

@@ -19,25 +19,30 @@ func NewExerciseUseCase(exerciseRepository exercise_domain.IExerciseRepository, 
 	}
 }
 
-func (e *exerciseUseCase) FetchManyByLessonID(ctx context.Context, unitID string) (exercise_domain.Response, error) {
+func (e *exerciseUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *exerciseUseCase) FetchManyByLessonID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
 	vocabulary, err := e.exerciseRepository.FetchManyByLessonID(ctx, unitID)
 	if err != nil {
-		return exercise_domain.Response{}, err
+		return nil, err
 	}
 
 	return vocabulary, err
 }
 
-func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
+func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
 	vocabulary, err := e.exerciseRepository.FetchManyByUnitID(ctx, unitID)
 	if err != nil {
-		return exercise_domain.ExerciseResponse{}, err
+		return nil, err
 	}
 
 	return vocabulary, err

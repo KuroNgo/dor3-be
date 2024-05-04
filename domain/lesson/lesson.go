@@ -40,10 +40,10 @@ type LessonResponse struct {
 }
 
 type Response struct {
-	CountVocabulary int64 `json:"count_vocabulary"`
-	Page            int64 `json:"page"`
-	CountUnit       int64 `json:"count_unit"`
-	Lesson          []Lesson
+	CountVocabulary int32    `json:"count_vocabulary"`
+	Page            int64    `json:"page"`
+	CountUnit       int32    `json:"count_unit"`
+	Lesson          []Lesson `json:"lesson" bson:"lesson"`
 }
 
 type Statistics struct {
@@ -53,10 +53,10 @@ type Statistics struct {
 
 //go:generate mockery --name ILessonRepository
 type ILessonRepository interface {
-	FetchMany(ctx context.Context) ([]LessonResponse, error)
+	FetchMany(ctx context.Context, page string) ([]LessonResponse, error)
 	FetchByID(ctx context.Context, lessonID string) (LessonResponse, error)
 	FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error)
-	FetchByIdCourse(ctx context.Context, idCourse string) (Response, error)
+	FetchByIdCourse(ctx context.Context, idCourse string, page string) (Response, error)
 
 	CreateOne(ctx context.Context, lesson *Lesson) error
 	CreateOneByNameCourse(ctx context.Context, lesson *Lesson) error

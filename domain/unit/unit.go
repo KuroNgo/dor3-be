@@ -42,19 +42,16 @@ type UnitResponse struct {
 }
 
 type Response struct {
-	Page int64 `json:"page"`
-	Unit []Unit
-}
-
-type Statistics struct {
-	CountVocabulary int64 `json:"count_vocabulary"`
+	CountVocabulary int64  `json:"count_vocabulary"`
+	Page            int64  `json:"page"`
+	Unit            []Unit `bson:"unit" json:"unit"`
 }
 
 //go:generate mockery --name IUnitRepository
 type IUnitRepository interface {
 	FetchMany(ctx context.Context, page string) ([]UnitResponse, error)
 	FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error)
-	FetchByIdLesson(ctx context.Context, idLesson string) (Response, error)
+	FetchByIdLesson(ctx context.Context, idLesson string, page string) (Response, error)
 
 	CreateOne(ctx context.Context, unit *Unit) error
 	CreateOneByNameLesson(ctx context.Context, unit *Unit) error

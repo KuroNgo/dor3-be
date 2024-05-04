@@ -108,13 +108,11 @@ func (e *exerciseQuestionRepository) UpdateOne(ctx context.Context, exerciseQues
 	filter := bson.D{{Key: "_id", Value: exerciseQuestion.ID}}
 	update := bson.M{
 		"$set": bson.M{
-			"exercise_id":    exerciseQuestion.ExerciseID,
-			"content":        exerciseQuestion.Content,
-			"level":          exerciseQuestion.Level,
-			"filename":       exerciseQuestion.Filename,
-			"audio_duration": exerciseQuestion.AudioDuration,
-			"update_at":      exerciseQuestion.UpdateAt,
-			"who_update":     exerciseQuestion.WhoUpdate,
+			"exercise_id": exerciseQuestion.ExerciseID,
+			"content":     exerciseQuestion.Content,
+			"level":       exerciseQuestion.Level,
+			"update_at":   exerciseQuestion.UpdateAt,
+			"who_update":  exerciseQuestion.WhoUpdate,
 		},
 	}
 

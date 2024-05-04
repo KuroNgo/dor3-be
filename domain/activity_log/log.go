@@ -25,8 +25,9 @@ type ActivityLog struct {
 }
 
 type Response struct {
-	Page        int64 `json:"page" bson:"page"`
-	ActivityLog []ActivityLog
+	PageCurrent int64         `json:"page_current" bson:"page_current"`
+	Page        int64         `json:"page" bson:"page"`
+	ActivityLog []ActivityLog `json:"activity_log" bson:"activity_log"`
 }
 
 type IActivityRepository interface {

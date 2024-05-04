@@ -6,7 +6,8 @@ import (
 )
 
 func (c *CourseController) FetchCourse(ctx *gin.Context) {
-	course, err := c.CourseUseCase.FetchManyForEachCourse(ctx)
+	page := ctx.DefaultQuery("page", "1")
+	course, count, err := c.CourseUseCase.FetchManyForEachCourse(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -17,6 +18,7 @@ func (c *CourseController) FetchCourse(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
+		"page":   count,
 		"data":   course,
 	})
 }

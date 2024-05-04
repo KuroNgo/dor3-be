@@ -7,6 +7,7 @@ import (
 	exam_domain "clean-architecture/domain/exam"
 	exam_question_domain "clean-architecture/domain/exam_question"
 	user_domain "clean-architecture/domain/user"
+	vocabulary_domain "clean-architecture/domain/vocabulary"
 	exam_question_repository "clean-architecture/repository/exam_question"
 	user_repository "clean-architecture/repository/user"
 	exam_question_usecase "clean-architecture/usecase/exam_question"
@@ -17,7 +18,7 @@ import (
 )
 
 func ExamQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	quest := exam_question_repository.NewExamQuestionRepository(db, exam_question_domain.CollectionExamQuestion, exam_domain.CollectionExam)
+	quest := exam_question_repository.NewExamQuestionRepository(db, exam_question_domain.CollectionExamQuestion, exam_domain.CollectionExam, vocabulary_domain.CollectionVocabulary)
 	users := user_repository.NewUserRepository(db, user_domain.CollectionUser)
 
 	question := &exam_question_controller.ExamQuestionsController{
@@ -27,5 +28,6 @@ func ExamQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *mongo
 	}
 
 	router := group.Group("/exam/question")
-	router.GET("/fetch", middleware.DeserializeUser(), question.FetchManyExamOptions)
+	router.GET("/fetch", middleware.DeserializeUser(), question.FetchManyExamQuestions)
+	router.GET("/fetch/exam_id", middleware.DeserializeUser(), question.FetchManyExamQuestionsByExamID)
 }

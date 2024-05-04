@@ -25,7 +25,7 @@ type Admin struct {
 }
 
 type Response struct {
-	Admin []Admin
+	Admin []Admin `json:"admin" bson:"admin"`
 }
 
 type IAdminRepository interface {

@@ -7,6 +7,7 @@ import (
 	exam_domain "clean-architecture/domain/exam"
 	exam_question_domain "clean-architecture/domain/exam_question"
 	user_domain "clean-architecture/domain/user"
+	vocabulary_domain "clean-architecture/domain/vocabulary"
 	admin_repository "clean-architecture/repository/admin"
 	"clean-architecture/repository/exam_question"
 	admin_usecase "clean-architecture/usecase/admin"
@@ -17,7 +18,7 @@ import (
 )
 
 func AdminExamQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	quest := exam_question_repository.NewExamQuestionRepository(db, exam_question_domain.CollectionExamQuestion, exam_domain.CollectionExam)
+	quest := exam_question_repository.NewExamQuestionRepository(db, exam_question_domain.CollectionExamQuestion, exam_domain.CollectionExam, vocabulary_domain.CollectionVocabulary)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
 	question := &exam_question_controller.ExamQuestionsController{

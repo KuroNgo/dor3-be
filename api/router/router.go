@@ -15,6 +15,7 @@ import (
 	exercise_options_route "clean-architecture/api/router/exercise_options"
 	exercise_question_route "clean-architecture/api/router/exercise_question"
 	exercise_result_route "clean-architecture/api/router/exercise_result"
+	feedback_route "clean-architecture/api/router/feedback"
 	image_route "clean-architecture/api/router/image"
 	lesson_route "clean-architecture/api/router/lesson"
 	mark_list_route "clean-architecture/api/router/mark_list"
@@ -70,6 +71,8 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	user_route.UserRouter(env, timeout, db, publicRouter)
 	user_route.LoginFromRoleRoute(env, timeout, db, routerMid)
 
+	feedback_route.FeedbackRoute(env, timeout, db, publicRouter)
+
 	exam_route.ExamRoute(env, timeout, db, publicRouter)
 	exam_route.ExamRoute(env, timeout, db, privateRouter)
 	exam_answer_route.ExamAnswerRoute(env, timeout, db, publicRouter)
@@ -100,6 +103,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 
 	// All Private API
 	activity_log_route.AdminActivityRoute(env, timeout, db, privateRouter)
+	feedback_route.AdminFeedbackRoute(env, timeout, db, privateRouter)
 
 	exam_route.AdminExamRoute(env, timeout, db, privateRouter)
 	exam_options_route.AdminExamOptionsRoute(env, timeout, db, privateRouter)
