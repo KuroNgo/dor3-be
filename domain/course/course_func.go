@@ -14,7 +14,7 @@ type Input struct {
 
 //go:generate mockery --name ICourseUseCase
 type ICourseUseCase interface {
-	FetchManyForEachCourse(ctx context.Context, page string) ([]CourseResponse, int64, error)
+	FetchManyForEachCourse(ctx context.Context, page string) ([]CourseResponse, DetailForManyResponse, error)
 	FetchByID(ctx context.Context, courseID string) (CourseResponse, error)
 
 	UpdateOne(ctx context.Context, course *Course) (*mongo.UpdateResult, error)

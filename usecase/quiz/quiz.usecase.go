@@ -12,6 +12,16 @@ type quizUseCase struct {
 	contextTimeout time.Duration
 }
 
+func (q *quizUseCase) FetchManyByLessonID(ctx context.Context, unitID string, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (q *quizUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (quiz_domain.QuizResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewQuizUseCase(quizRepository quiz_domain.IQuizRepository, timeout time.Duration) quiz_domain.IQuizUseCase {
 	return &quizUseCase{
 		quizRepository: quizRepository,
@@ -19,16 +29,16 @@ func NewQuizUseCase(quizRepository quiz_domain.IQuizRepository, timeout time.Dur
 	}
 }
 
-func (q *quizUseCase) FetchManyByUnitID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
+func (q *quizUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	quiz, err := q.quizRepository.FetchManyByUnitID(ctx, unitID)
+	quiz, detail, err := q.quizRepository.FetchManyByUnitID(ctx, unitID, page)
 	if err != nil {
-		return quiz_domain.Response{}, err
+		return nil, quiz_domain.Response{}, err
 	}
 
-	return quiz, nil
+	return quiz, detail, nil
 }
 
 func (q *quizUseCase) UpdateCompleted(ctx context.Context, quiz *quiz_domain.Quiz) error {
@@ -43,16 +53,16 @@ func (q *quizUseCase) UpdateCompleted(ctx context.Context, quiz *quiz_domain.Qui
 	return nil
 }
 
-func (q *quizUseCase) FetchMany(ctx context.Context, page string) (quiz_domain.Response, error) {
+func (q *quizUseCase) FetchMany(ctx context.Context, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	quiz, err := q.quizRepository.FetchMany(ctx, page)
+	quiz, detail, err := q.quizRepository.FetchMany(ctx, page)
 	if err != nil {
-		return quiz_domain.Response{}, err
+		return nil, quiz_domain.Response{}, err
 	}
 
-	return quiz, nil
+	return quiz, detail, nil
 }
 
 func (q *quizUseCase) UpdateOne(ctx context.Context, quiz *quiz_domain.Quiz) (*mongo.UpdateResult, error) {

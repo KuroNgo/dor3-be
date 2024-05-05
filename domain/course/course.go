@@ -32,14 +32,15 @@ type CourseResponse struct {
 	CountVocabulary int32 `bson:"count_vocabulary" json:"count_vocabulary"`
 }
 
-type Statistics struct {
-	CountLesson     int32 `bson:"count_lesson" json:"count_lesson"`
-	CountVocabulary int32 `bson:"count_vocabulary" json:"count_vocabulary"`
+type DetailForManyResponse struct {
+	CountCourse int64 `bson:"count_exam" json:"count_exam"`
+	Page        int64 `json:"page" bson:"page"`
+	CurrentPage int   `json:"current_page" bson:"current_page"`
 }
 
 //go:generate mockery --name ICourseRepository
 type ICourseRepository interface {
-	FetchManyForEachCourse(ctx context.Context, page string) ([]CourseResponse, int64, error)
+	FetchManyForEachCourse(ctx context.Context, page string) ([]CourseResponse, DetailForManyResponse, error)
 	FetchByID(ctx context.Context, courseID string) (CourseResponse, error)
 
 	UpdateOne(ctx context.Context, course *Course) (*mongo.UpdateResult, error)

@@ -27,10 +27,6 @@ type Response struct {
 	Feedback []Feedback `json:"feedback" bson:"feedback"`
 }
 
-type Statistics struct {
-	Total int64 `bson:"total" json:"total"`
-}
-
 type IFeedbackRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchByUserID(ctx context.Context, userID string, page string) (Response, error)

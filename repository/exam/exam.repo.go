@@ -19,7 +19,7 @@ type examRepository struct {
 	collectionExamQuestion string
 }
 
-func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.Response, error) {
+func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.ExamResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -34,19 +34,19 @@ func NewExamRepository(db *mongo.Database, collectionExam string, collectionLess
 	}
 }
 
-func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domain.Response, error) {
+func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_domain.ExamResponse, exam_domain.DetailResponse, error) {
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return exam_domain.Response{}, errors.New("invalid page number")
+		return nil, exam_domain.DetailResponse{}, errors.New("invalid page number")
 	}
 	perPage := 7
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 	count, err := collectionExam.CountDocuments(ctx, bson.D{})
 	if err != nil {
-		return exam_domain.Response{}, err
+		return nil, exam_domain.DetailResponse{}, err
 	}
 
 	calCh := make(chan int64)
@@ -61,14 +61,14 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domai
 
 	cursor, err := collectionExam.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
-		return exam_domain.Response{}, err
+		return nil, exam_domain.DetailResponse{}, err
 	}
 
-	var exams []exam_domain.Exam
+	var exams []exam_domain.ExamResponse
 	for cursor.Next(ctx) {
-		var exam exam_domain.Exam
+		var exam exam_domain.ExamResponse
 		if err = cursor.Decode(&exam); err != nil {
-			return exam_domain.Response{}, err
+			return nil, exam_domain.DetailResponse{}, err
 		}
 
 		// Thêm lesson vào slice lessons
@@ -76,35 +76,61 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) (exam_domai
 	}
 
 	cal := <-calCh
-	examRes := exam_domain.Response{
+	detail := exam_domain.DetailResponse{
 		Page:      cal,
-		Exam:      exams,
 		CountExam: count,
 	}
 
-	return examRes, nil
+	return exams, detail, nil
 }
 
-func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string) (exam_domain.Response, error) {
+func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exam_domain.ExamResponse, exam_domain.DetailResponse, error) {
 	collectionExam := e.database.Collection(e.collectionExam)
+
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return nil, exam_domain.DetailResponse{}, errors.New("invalid page number")
+	}
+	perPage := 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+	count, err := collectionExam.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return nil, exam_domain.DetailResponse{}, err
+	}
+
+	calCh := make(chan int64)
+	go func() {
+		defer close(calCh)
+		cal1 := count / int64(perPage)
+		cal2 := count % int64(perPage)
+		if cal2 != 0 {
+			calCh <- cal1 + 1
+		}
+	}()
 
 	idUnit, err := primitive.ObjectIDFromHex(unitID)
 	if err != nil {
-		return exam_domain.Response{}, err
+		return nil, exam_domain.DetailResponse{}, err
 	}
 
 	filter := bson.M{"unit_id": idUnit}
-	cursor, err := collectionExam.Find(ctx, filter)
+	cursor, err := collectionExam.Find(ctx, filter, findOptions)
 	if err != nil {
-		return exam_domain.Response{}, err
+		return nil, exam_domain.DetailResponse{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
-	var exams []exam_domain.Exam
+	var exams []exam_domain.ExamResponse
 	for cursor.Next(ctx) {
-		var exam exam_domain.Exam
+		var exam exam_domain.ExamResponse
 		if err = cursor.Decode(&exam); err != nil {
-			return exam_domain.Response{}, err
+			return nil, exam_domain.DetailResponse{}, err
 		}
 
 		// Gắn CourseID vào bài học
@@ -112,10 +138,13 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string) (
 		exams = append(exams, exam)
 	}
 
-	response := exam_domain.Response{
-		Exam: exams,
+	cal := <-calCh
+	response := exam_domain.DetailResponse{
+		Page:        cal,
+		CurrentPage: pageNumber,
+		CountExam:   int64(len(exams)),
 	}
-	return response, nil
+	return exams, response, nil
 }
 
 func (e *examRepository) UpdateOne(ctx context.Context, exam *exam_domain.Exam) (*mongo.UpdateResult, error) {

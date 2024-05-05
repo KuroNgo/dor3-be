@@ -12,6 +12,11 @@ type exerciseUseCase struct {
 	contextTimeout     time.Duration
 }
 
+func (e *exerciseUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewExerciseUseCase(exerciseRepository exercise_domain.IExerciseRepository, timeout time.Duration) exercise_domain.IExerciseUseCase {
 	return &exerciseUseCase{
 		exerciseRepository: exerciseRepository,
@@ -19,33 +24,28 @@ func NewExerciseUseCase(exerciseRepository exercise_domain.IExerciseRepository, 
 	}
 }
 
-func (e *exerciseUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (e *exerciseUseCase) FetchManyByLessonID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, error) {
+func (e *exerciseUseCase) FetchManyByLessonID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := e.exerciseRepository.FetchManyByLessonID(ctx, unitID)
+	vocabulary, detail, err := e.exerciseRepository.FetchManyByLessonID(ctx, unitID)
 	if err != nil {
-		return nil, err
+		return nil, exercise_domain.DetailResponse{}, err
 	}
 
-	return vocabulary, err
+	return vocabulary, detail, err
 }
 
-func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, error) {
+func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := e.exerciseRepository.FetchManyByUnitID(ctx, unitID)
+	vocabulary, detail, err := e.exerciseRepository.FetchManyByUnitID(ctx, unitID)
 	if err != nil {
-		return nil, err
+		return nil, exercise_domain.DetailResponse{}, err
 	}
 
-	return vocabulary, err
+	return vocabulary, detail, err
 }
 
 func (e *exerciseUseCase) UpdateCompleted(ctx context.Context, exerciseID string, isComplete int) error {
@@ -60,16 +60,16 @@ func (e *exerciseUseCase) UpdateCompleted(ctx context.Context, exerciseID string
 	return nil
 }
 
-func (e *exerciseUseCase) FetchMany(ctx context.Context, page string) ([]exercise_domain.ExerciseResponse, int64, error) {
+func (e *exerciseUseCase) FetchMany(ctx context.Context, page string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	exercises, count, err := e.exerciseRepository.FetchMany(ctx, page)
+	exercises, detail, err := e.exerciseRepository.FetchMany(ctx, page)
 	if err != nil {
-		return nil, 0, err
+		return nil, exercise_domain.DetailResponse{}, err
 	}
 
-	return exercises, count, err
+	return exercises, detail, err
 }
 
 func (e *exerciseUseCase) UpdateOne(ctx context.Context, exercise *exercise_domain.Exercise) (*mongo.UpdateResult, error) {

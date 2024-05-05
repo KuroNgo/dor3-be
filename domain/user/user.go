@@ -39,11 +39,13 @@ type Statistics struct {
 //go:generate mockery --name IUserRepository
 type IUserRepository interface {
 	FetchMany(ctx context.Context) (Response, error)
-	DeleteOne(ctx context.Context, userID string) error
-	Login(ctx context.Context, request SignIn) (*User, error)
 	GetByEmail(ctx context.Context, email string) (*User, error)
 	GetByID(ctx context.Context, id string) (*User, error)
+
+	DeleteOne(ctx context.Context, userID string) error
+	Login(ctx context.Context, request SignIn) (*User, error)
 	Create(ctx context.Context, user *User) error
+
 	Update(ctx context.Context, user *User) error
 	UpdateVerify(ctx context.Context, user *User) (*mongo.UpdateResult, error)
 	UpsertOne(ctx context.Context, email string, user *User) (*User, error)

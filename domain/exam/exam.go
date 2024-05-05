@@ -41,21 +41,16 @@ type ExamResponse struct {
 	CountQuestion int64 `bson:"count_question" json:"count_question"`
 }
 
-type Response struct {
-	CountExam int64  `bson:"count_exam" json:"count_exam"`
-	Page      int64  `json:"page" bson:"page"`
-	Exam      []Exam `json:"exam" bson:"exam"`
-}
-
-type Statistics struct {
-	CountQuestion int64 `bson:"count_question" json:"count_question"`
-	CountExam     int64 `bson:"count_exam" json:"count_exam"`
+type DetailResponse struct {
+	CountExam   int64 `bson:"count_exam" json:"count_exam"`
+	Page        int64 `json:"page" bson:"page"`
+	CurrentPage int   `json:"current_page"`
 }
 
 type IExamRepository interface {
-	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
-	FetchOneByUnitID(ctx context.Context, unitID string) (Response, error)
+	FetchMany(ctx context.Context, page string) ([]ExamResponse, DetailResponse, error)
+	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]ExamResponse, DetailResponse, error)
+	FetchOneByUnitID(ctx context.Context, unitID string) (ExamResponse, error)
 
 	CreateOne(ctx context.Context, exam *Exam) error
 	UpdateOne(ctx context.Context, exam *Exam) (*mongo.UpdateResult, error)

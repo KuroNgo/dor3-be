@@ -19,6 +19,11 @@ type quizRepository struct {
 	collectionQuiz       string
 }
 
+func (q *quizRepository) FetchOneByUnitID(ctx context.Context, unitID string) (quiz_domain.QuizResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewQuizRepository(db *mongo.Database, collectionQuiz string, collectionLesson string, collectionUnit string, collectionVocabulary string) quiz_domain.IQuizRepository {
 	return &quizRepository{
 		database:             db,
@@ -28,7 +33,7 @@ func NewQuizRepository(db *mongo.Database, collectionQuiz string, collectionLess
 		collectionVocabulary: collectionVocabulary,
 	}
 }
-func (q *quizRepository) FetchManyByLessonID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
+func (q *quizRepository) FetchManyByLessonID(ctx context.Context, unitID string, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -50,38 +55,77 @@ func (q *quizRepository) UpdateCompleted(ctx context.Context, quiz *quiz_domain.
 	return nil
 }
 
-func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string) (quiz_domain.Response, error) {
+func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
+
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return nil, quiz_domain.Response{}, errors.New("invalid page number")
+	}
+	perPage := 5
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.
+		Find().
+		SetLimit(int64(perPage)).
+		SetSkip(int64(skip)).
+		SetSort(bson.D{{"level", 1}})
+
+	calCh := make(chan int64)
+	countUnitCh := make(chan int64)
+
+	go func() {
+		defer close(calCh)
+		defer close(countUnitCh)
+		count, err := collectionQuiz.CountDocuments(ctx, bson.D{})
+		if err != nil {
+			return
+		}
+
+		cal1 := count / int64(perPage)
+		cal2 := count % int64(perPage)
+		if cal2 != 0 {
+			calCh <- cal1
+		}
+	}()
 
 	idLesson2, err := primitive.ObjectIDFromHex(unitID)
 	if err != nil {
-		return quiz_domain.Response{}, err
+		return nil, quiz_domain.Response{}, err
 	}
 
 	filter := bson.M{"lesson_id": idLesson2}
-	cursor, err := collectionQuiz.Find(ctx, filter)
+	cursor, err := collectionQuiz.Find(ctx, filter, findOptions)
 	if err != nil {
-		return quiz_domain.Response{}, err
+		return nil, quiz_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
-	var quizs []quiz_domain.Quiz
+	var quizz []quiz_domain.QuizResponse
 	for cursor.Next(ctx) {
-		var quiz quiz_domain.Quiz
+		var quiz quiz_domain.QuizResponse
 		if err := cursor.Decode(&quiz); err != nil {
-			return quiz_domain.Response{}, err
+			return nil, quiz_domain.Response{}, err
 		}
 
 		// Gắn LessonID vào đơn vị
 		quiz.LessonID = idLesson2
 
-		quizs = append(quizs, quiz)
+		quizz = append(quizz, quiz)
 	}
 
+	cal := <-calCh
+	totalUnit := <-countUnitCh
 	response := quiz_domain.Response{
-		Quiz: quizs,
+		Total:       totalUnit,
+		Page:        cal,
+		CurrentPage: pageNumber,
 	}
-	return response, nil
+	return quizz, response, nil
 }
 
 func (q *quizRepository) FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]quiz_domain.Response, error) {
@@ -89,12 +133,12 @@ func (q *quizRepository) FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]q
 	panic("implement me")
 }
 
-func (q *quizRepository) FetchMany(ctx context.Context, page string) (quiz_domain.Response, error) {
+func (q *quizRepository) FetchMany(ctx context.Context, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return quiz_domain.Response{}, errors.New("invalid page number")
+		return nil, quiz_domain.Response{}, errors.New("invalid page number")
 	}
 	perPage := 7
 	skip := (pageNumber - 1) * perPage
@@ -103,7 +147,7 @@ func (q *quizRepository) FetchMany(ctx context.Context, page string) (quiz_domai
 	// Đếm tổng số lượng tài liệu trong collection
 	count, err := collectionQuiz.CountDocuments(ctx, bson.D{})
 	if err != nil {
-		return quiz_domain.Response{}, err
+		return nil, quiz_domain.Response{}, err
 	}
 
 	cal1 := count / int64(perPage)
@@ -115,24 +159,32 @@ func (q *quizRepository) FetchMany(ctx context.Context, page string) (quiz_domai
 
 	cursor, err := collectionQuiz.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
-		return quiz_domain.Response{}, err
+		return nil, quiz_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
-	var quiz []quiz_domain.Quiz
+	var quiz []quiz_domain.QuizResponse
 
 	for cursor.Next(ctx) {
-		var q quiz_domain.Quiz
+		var q quiz_domain.QuizResponse
 		if err := cursor.Decode(&q); err != nil {
-			return quiz_domain.Response{}, err
+			return nil, quiz_domain.Response{}, err
 		}
 		quiz = append(quiz, q)
 	}
-	quizRes := quiz_domain.Response{
-		Page: cal,
-		Quiz: quiz,
+
+	detail := quiz_domain.Response{
+		Total:       count,
+		Page:        cal,
+		CurrentPage: pageNumber,
 	}
-	return quizRes, nil
+
+	return quiz, detail, nil
 }
 
 func (q *quizRepository) UpdateOne(ctx context.Context, quiz *quiz_domain.Quiz) (*mongo.UpdateResult, error) {

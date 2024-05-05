@@ -12,51 +12,55 @@ const (
 )
 
 type Lesson struct {
-	ID          primitive.ObjectID `bson:"_id" json:"_id"`
-	CourseID    primitive.ObjectID `bson:"course_id" json:"course_id"`
-	Name        string             `bson:"name" json:"name"`
-	Content     string             `bson:"content" json:"content"`
-	ImageURL    string             `bson:"image_url" json:"image_url"`
-	Level       int                `bson:"level" json:"level"`
-	IsCompleted int                `bson:"is_completed" json:"is_completed"`
-	CreatedAt   time.Time          `bson:"created_at" json:"created_at"`
-	UpdatedAt   time.Time          `bson:"updated_at" json:"updated_at"`
-	WhoUpdates  string             `bson:"who_updates" json:"who_updates"`
+	ID       primitive.ObjectID `bson:"_id" json:"_id"`
+	CourseID primitive.ObjectID `bson:"course_id" json:"course_id"`
+
+	Name        string `bson:"name" json:"name"`
+	Content     string `bson:"content" json:"content"`
+	ImageURL    string `bson:"image_url" json:"image_url"`
+	Level       int    `bson:"level" json:"level"`
+	IsCompleted int    `bson:"is_completed" json:"is_completed"`
+
+	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
+	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
 }
 
 type LessonResponse struct {
-	ID              primitive.ObjectID `bson:"_id" json:"_id"`
-	CourseID        primitive.ObjectID `bson:"course_id" json:"course_id"`
-	Name            string             `bson:"name" json:"name"`
-	Content         string             `bson:"content" json:"content"`
-	ImageURL        string             `bson:"image_url" json:"image_url"`
-	Level           int                `bson:"level" json:"level"`
-	IsCompleted     int                `bson:"is_completed" json:"is_completed"`
-	CreatedAt       time.Time          `bson:"created_at" json:"created_at"`
-	UpdatedAt       time.Time          `bson:"updated_at" json:"updated_at"`
-	WhoUpdates      string             `bson:"who_updates" json:"who_updates"`
-	CountVocabulary int32              `json:"count_vocabulary"`
-	CountUnit       int32              `json:"count_unit"`
+	ID       primitive.ObjectID `bson:"_id" json:"_id"`
+	CourseID primitive.ObjectID `bson:"course_id" json:"course_id"`
+
+	Name     string `bson:"name" json:"name"`
+	Content  string `bson:"content" json:"content"`
+	ImageURL string `bson:"image_url" json:"image_url"`
+	Level    int    `bson:"level" json:"level"`
+
+	IsCompleted int       `bson:"is_completed" json:"is_completed"`
+	CreatedAt   time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt   time.Time `bson:"updated_at" json:"updated_at"`
+	WhoUpdates  string    `bson:"who_updates" json:"who_updates"`
+
+	UnitIsComplete  []int `bson:"unit_is_complete" json:"unit_is_complete"`
+	CountVocabulary int32 `json:"count_vocabulary"`
+	CountUnit       int32 `json:"count_unit"`
 }
 
-type Response struct {
-	CountVocabulary int32    `json:"count_vocabulary"`
-	Page            int64    `json:"page"`
-	CountUnit       int32    `json:"count_unit"`
-	Lesson          []Lesson `json:"lesson" bson:"lesson"`
+type DetailResponse struct {
+	Page        int64 `json:"page"`
+	CurrentPage int   `json:"current_page"`
 }
 
 type Statistics struct {
-	CountVocabulary int64 `json:"count_vocabulary"`
-	CountUnit       int64 `json:"count_unit"`
+	CountVocabulary int32 `json:"count_vocabulary"`
+	CountUnit       int32 `json:"count_unit"`
 }
 
 //go:generate mockery --name ILessonRepository
 type ILessonRepository interface {
-	FetchMany(ctx context.Context, page string) ([]LessonResponse, error)
+	FetchMany(ctx context.Context, page string) ([]LessonResponse, DetailResponse, error)
 	FetchByID(ctx context.Context, lessonID string) (LessonResponse, error)
 	FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error)
-	FetchByIdCourse(ctx context.Context, idCourse string, page string) (Response, error)
+	FetchByIdCourse(ctx context.Context, idCourse string, page string) ([]LessonResponse, DetailResponse, error)
 
 	CreateOne(ctx context.Context, lesson *Lesson) error
 	CreateOneByNameCourse(ctx context.Context, lesson *Lesson) error

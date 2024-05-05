@@ -17,8 +17,9 @@ type Input struct {
 }
 
 type IExamUseCase interface {
-	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
+	FetchMany(ctx context.Context, page string) ([]ExamResponse, DetailResponse, error)
+	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]ExamResponse, DetailResponse, error)
+	FetchOneByUnitID(ctx context.Context, unitID string) (ExamResponse, error)
 
 	CreateOne(ctx context.Context, exam *Exam) error
 	UpdateOne(ctx context.Context, exam *Exam) (*mongo.UpdateResult, error)
