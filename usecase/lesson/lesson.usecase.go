@@ -56,16 +56,16 @@ func (l *lessonUseCase) CreateOneByNameCourse(ctx context.Context, lesson *lesso
 	return nil
 }
 
-func (l *lessonUseCase) FetchByIdCourse(ctx context.Context, idCourse string, page string) (lesson_domain.Response, error) {
+func (l *lessonUseCase) FetchByIdCourse(ctx context.Context, idCourse string, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()
 
-	lesson, err := l.lessonRepository.FetchByIdCourse(ctx, idCourse, page)
+	lesson, detail, err := l.lessonRepository.FetchByIdCourse(ctx, idCourse, page)
 	if err != nil {
-		return lesson_domain.Response{}, err
+		return nil, lesson_domain.DetailResponse{}, err
 	}
 
-	return lesson, err
+	return lesson, detail, err
 }
 
 func (l *lessonUseCase) UpdateComplete(ctx context.Context, lessonID string, lesson lesson_domain.Lesson) error {
@@ -80,16 +80,16 @@ func (l *lessonUseCase) UpdateComplete(ctx context.Context, lessonID string, les
 	return err
 }
 
-func (l *lessonUseCase) FetchMany(ctx context.Context, page string) ([]lesson_domain.LessonResponse, error) {
+func (l *lessonUseCase) FetchMany(ctx context.Context, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()
 
-	lesson, err := l.lessonRepository.FetchMany(ctx, page)
+	lesson, detail, err := l.lessonRepository.FetchMany(ctx, page)
 	if err != nil {
-		return nil, err
+		return nil, lesson_domain.DetailResponse{}, err
 	}
 
-	return lesson, err
+	return lesson, detail, err
 }
 
 func (l *lessonUseCase) UpdateOne(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {

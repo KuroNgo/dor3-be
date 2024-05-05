@@ -64,32 +64,42 @@ func (e *examQuestionRepository) FetchMany(ctx context.Context, page string) (ex
 	var questions []exam_question_domain.ExamQuestionResponse
 	for cursor.Next(ctx) {
 		var question exam_question_domain.ExamQuestionResponse
-		if err = cursor.Decode(&question); err != nil {
+		if err := cursor.Decode(&question); err != nil {
 			return exam_question_domain.Response{}, err
 		}
 
-		var question2 exam_question_domain.ExamQuestion
-		if err = cursor.Decode(&question2); err != nil {
+		pipeline := bson.A{
+			bson.D{
+				{"$lookup", bson.D{
+					{"from", "vocabulary"},
+					{"localField", "VocabularyID"},
+					{"foreignField", "_id"},
+					{"as", "vocabulary"},
+				}},
+			},
+		}
+
+		// Thực hiện truy vấn aggregation để thêm thông tin vocabulary cho câu hỏi
+		cursorV, err := collectVocabulary.Aggregate(ctx, pipeline)
+		if err != nil {
 			return exam_question_domain.Response{}, err
 		}
 
-		vocab := make(chan vocabulary_domain.Vocabulary)
-		go func() {
-			defer close(vocab)
-			filterVocab := bson.M{"_id": question2.VocabularyID}
+		// Duyệt qua kết quả của truy vấn aggregation
+		var vocabularies []vocabulary_domain.Vocabulary
+		if err := cursorV.All(ctx, &vocabularies); err != nil {
+			return exam_question_domain.Response{}, err
+		}
 
-			var vocabulary vocabulary_domain.Vocabulary
-			err = collectVocabulary.FindOne(ctx, filterVocab).Decode(&vocabulary)
-			if err != nil {
-				return
-			}
+		// Gán vocabulary cho câu hỏi
+		if len(vocabularies) > 0 {
+			question.Vocabulary = vocabularies[0]
+		}
 
-			vocab <- vocabulary
-		}()
-
-		vocabulary := <-vocab
-		question.Vocabulary = vocabulary
-
+		err = cursorV.Close(ctx)
+		if err != nil {
+			return exam_question_domain.Response{}, err
+		}
 		questions = append(questions, question)
 	}
 
@@ -141,33 +151,44 @@ func (e *examQuestionRepository) FetchManyByExamID(ctx context.Context, examID s
 	var questions []exam_question_domain.ExamQuestionResponse
 	for cursor.Next(ctx) {
 		var question exam_question_domain.ExamQuestionResponse
-		if err = cursor.Decode(&question); err != nil {
+		if err := cursor.Decode(&question); err != nil {
 			return exam_question_domain.Response{}, err
 		}
 
 		question.ExamID = idExam
-		var question2 exam_question_domain.ExamQuestion
-		if err = cursor.Decode(&question2); err != nil {
+
+		pipeline := bson.A{
+			bson.D{
+				{"$lookup", bson.D{
+					{"from", "vocabulary"},
+					{"localField", "VocabularyID"},
+					{"foreignField", "_id"},
+					{"as", "vocabulary"},
+				}},
+			},
+		}
+
+		// Thực hiện truy vấn aggregation để thêm thông tin vocabulary cho câu hỏi
+		cursorV, err := collectVocabulary.Aggregate(ctx, pipeline)
+		if err != nil {
 			return exam_question_domain.Response{}, err
 		}
 
-		vocab := make(chan vocabulary_domain.Vocabulary)
-		go func() {
-			defer close(vocab)
-			filterVocab := bson.M{"_id": question2.VocabularyID}
+		// Duyệt qua kết quả của truy vấn aggregation
+		var vocabularies []vocabulary_domain.Vocabulary
+		if err := cursorV.All(ctx, &vocabularies); err != nil {
+			return exam_question_domain.Response{}, err
+		}
 
-			var vocabulary vocabulary_domain.Vocabulary
-			err = collectVocabulary.FindOne(ctx, filterVocab).Decode(&vocabulary)
-			if err != nil {
-				return
-			}
+		// Gán vocabulary cho câu hỏi
+		if len(vocabularies) > 0 {
+			question.Vocabulary = vocabularies[0]
+		}
 
-			vocab <- vocabulary
-		}()
-
-		vocabulary := <-vocab
-		question.Vocabulary = vocabulary
-
+		err = cursorV.Close(ctx)
+		if err != nil {
+			return exam_question_domain.Response{}, err
+		}
 		questions = append(questions, question)
 	}
 
@@ -206,7 +227,7 @@ func (e *examQuestionRepository) UpdateOne(ctx context.Context, examQuestion *ex
 		},
 	}
 
-	data, err := collection.UpdateOne(ctx, filter, update)
+	data, err := collection.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return nil, err
 	}

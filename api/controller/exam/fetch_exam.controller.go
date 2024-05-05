@@ -17,7 +17,7 @@ func (e *ExamsController) FetchManyExam(ctx *gin.Context) {
 
 	page := ctx.DefaultQuery("page", "1")
 
-	exam, err := e.ExamUseCase.FetchMany(ctx, page)
+	exam, detail, err := e.ExamUseCase.FetchMany(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -28,6 +28,7 @@ func (e *ExamsController) FetchManyExam(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
+		"detail": detail,
 		"data":   exam,
 	})
 }
@@ -43,8 +44,10 @@ func (e *ExamsController) FetchExamByUnitID(ctx *gin.Context) {
 	}
 
 	unitID := ctx.Query("unit_id")
+	page := ctx.DefaultQuery("page", "1")
 
-	exam, err := e.ExamUseCase.FetchManyByUnitID(ctx, unitID)
+	exam, detail, err := e.ExamUseCase.FetchManyByUnitID(ctx, unitID, page)
+
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -55,6 +58,7 @@ func (e *ExamsController) FetchExamByUnitID(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
+		"detail": detail,
 		"data":   exam,
 	})
 }

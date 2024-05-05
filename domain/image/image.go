@@ -19,8 +19,9 @@ type Image struct {
 }
 
 type Response struct {
-	Page  int64   `json:"page"`
-	Image []Image `json:"image" bson:"image"`
+	Page       int64      `json:"page"`
+	Statistics Statistics `json:"statistics"`
+	Image      []Image    `json:"image" bson:"image"`
 }
 
 type Statistics struct {

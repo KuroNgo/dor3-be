@@ -24,6 +24,7 @@ type UserProcess struct {
 }
 
 type Response struct {
+	Statistics  Statistics    `json:"statistics"`
 	UserProcess []UserProcess `bson:"user_process" json:"user_process"`
 }
 

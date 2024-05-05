@@ -29,10 +29,11 @@ type vocabularyRepository struct {
 
 func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, collectionMark string, collectionUnit string) vocabulary_domain.IVocabularyRepository {
 	return &vocabularyRepository{
-		database:               db,
-		collectionVocabulary:   collectionVocabulary,
-		collectionMark:         collectionMark,
-		collectionUnit:         collectionUnit,
+		database:             db,
+		collectionVocabulary: collectionVocabulary,
+		collectionMark:       collectionMark,
+		collectionUnit:       collectionUnit,
+
 		vocabularyManyCache:    make(map[string]vocabulary_domain.Response),
 		vocabularyOneCache:     make(map[string][]vocabulary_domain.Vocabulary),
 		vocabularyCacheExpires: make(map[string]time.Time),

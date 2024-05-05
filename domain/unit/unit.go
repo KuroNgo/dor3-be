@@ -38,20 +38,23 @@ type UnitResponse struct {
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
 	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
 
-	CountVocabulary int32 `json:"count_vocabulary"`
+	ExamIsComplete     int   `bson:"exam_is_complete" json:"exam_is_complete"`
+	ExerciseIsComplete int   `bson:"exercise_is_complete" json:"exercise_is_complete"`
+	QuizIsComplete     int   `bson:"quiz_is_complete" json:"quiz_is_complete"`
+	CountVocabulary    int32 `json:"count_vocabulary"`
 }
 
-type Response struct {
-	CountVocabulary int64  `json:"count_vocabulary"`
-	Page            int64  `json:"page"`
-	Unit            []Unit `bson:"unit" json:"unit"`
+type DetailResponse struct {
+	CountUnit   int64 `json:"count_unit"`
+	Page        int64 `json:"page"`
+	CurrentPage int   `json:"current_page"`
 }
 
 //go:generate mockery --name IUnitRepository
 type IUnitRepository interface {
-	FetchMany(ctx context.Context, page string) ([]UnitResponse, error)
+	FetchMany(ctx context.Context, page string) ([]UnitResponse, DetailResponse, error)
 	FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error)
-	FetchByIdLesson(ctx context.Context, idLesson string, page string) (Response, error)
+	FetchByIdLesson(ctx context.Context, idLesson string, page string) ([]UnitResponse, DetailResponse, error)
 
 	CreateOne(ctx context.Context, unit *Unit) error
 	CreateOneByNameLesson(ctx context.Context, unit *Unit) error

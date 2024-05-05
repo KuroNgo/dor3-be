@@ -18,20 +18,47 @@ type unitRepository struct {
 	collectionVocabulary string
 }
 
-func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_domain.UnitResponse, error) {
+func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLesson string, collectionVocabulary string) unit_domain.IUnitRepository {
+	return &unitRepository{
+		database:             db,
+		collectionUnit:       collectionUnit,
+		collectionLesson:     collectionLesson,
+		collectionVocabulary: collectionVocabulary,
+	}
+}
+
+func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return nil, errors.New("invalid page number")
+		return nil, unit_domain.DetailResponse{}, errors.New("invalid page number")
 	}
-	perPage := 7
+	perPage := 5
 	skip := (pageNumber - 1) * perPage
-	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip)).SetSort(bson.D{{"level", 1}})
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	calCh := make(chan int64)
+	countUnitCh := make(chan int64)
+
+	go func() {
+		defer close(calCh)
+		defer close(countUnitCh)
+		count, err := collectionUnit.CountDocuments(ctx, bson.D{})
+		if err != nil {
+			return
+		}
+
+		cal1 := count / int64(perPage)
+		cal2 := count % int64(perPage)
+		if cal2 != 0 {
+			calCh <- cal1
+		}
+	}()
 
 	cursor, err := collectionUnit.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
-		return nil, err
+		return nil, unit_domain.DetailResponse{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
 		err := cursor.Close(ctx)
@@ -44,42 +71,29 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 	for cursor.Next(ctx) {
 		var unit unit_domain.UnitResponse
 		if err = cursor.Decode(&unit); err != nil {
-			return nil, err
+			return nil, unit_domain.DetailResponse{}, err
 		}
 
-		// Lấy thông tin liên quan cho mỗi unit
 		countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
 		if err != nil {
-			return nil, err
+			return nil, unit_domain.DetailResponse{}, err
 		}
 
-		unitRes := unit_domain.UnitResponse{
-			ID:              unit.ID,
-			LessonID:        unit.LessonID,
-			Name:            unit.Name,
-			ImageURL:        unit.ImageURL,
-			Level:           unit.Level,
-			IsComplete:      unit.IsComplete,
-			CreatedAt:       unit.CreatedAt,
-			UpdatedAt:       unit.UpdatedAt,
-			WhoUpdates:      unit.WhoUpdates,
-			CountVocabulary: countVocabulary,
-		}
-
-		units = append(units, unitRes)
+		unit.CountVocabulary = countVocabulary
+		units = append(units, unit)
 	}
 
-	return units, nil
+	cal := <-calCh
+	countUnit := <-countUnitCh
+	detail := unit_domain.DetailResponse{
+		CountUnit:   countUnit,
+		Page:        cal,
+		CurrentPage: pageNumber,
+	}
+
+	return units, detail, nil
 }
 
-func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLesson string, collectionVocabulary string) unit_domain.IUnitRepository {
-	return &unitRepository{
-		database:             db,
-		collectionUnit:       collectionUnit,
-		collectionLesson:     collectionLesson,
-		collectionVocabulary: collectionVocabulary,
-	}
-}
 func (u *unitRepository) CreateOneByNameLesson(ctx context.Context, unit *unit_domain.Unit) error {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 	collectionLesson := u.database.Collection(u.collectionLesson)
@@ -126,31 +140,57 @@ func (u *unitRepository) FindLessonIDByLessonName(ctx context.Context, lessonNam
 	return data.Id, nil
 }
 
-func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, page string) (unit_domain.Response, error) {
+func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
+
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return nil, unit_domain.DetailResponse{}, errors.New("invalid page number")
+	}
+	perPage := 5
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip)).SetSort(bson.D{{"level", 1}})
+
+	calCh := make(chan int64)
+	countUnitCh := make(chan int64)
+
+	go func() {
+		defer close(calCh)
+		defer close(countUnitCh)
+		count, err := collectionUnit.CountDocuments(ctx, bson.D{})
+		if err != nil {
+			return
+		}
+
+		cal1 := count / int64(perPage)
+		cal2 := count % int64(perPage)
+		if cal2 != 0 {
+			calCh <- cal1
+		}
+	}()
 
 	idLesson2, err := primitive.ObjectIDFromHex(idLesson)
 	if err != nil {
-		return unit_domain.Response{}, err
+		return nil, unit_domain.DetailResponse{}, err
 	}
 
 	filter := bson.M{"lesson_id": idLesson2}
-
-	// Thêm sắp xếp theo level
-	setSort := options.Find().SetSort(bson.D{{"level", 1}})
-
-	cursor, err := collectionUnit.Find(ctx, filter, setSort)
+	cursor, err := collectionUnit.Find(ctx, filter, findOptions)
 	if err != nil {
-		return unit_domain.Response{}, err
+		return nil, unit_domain.DetailResponse{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
-	var units []unit_domain.Unit
-
+	var units []unit_domain.UnitResponse
 	for cursor.Next(ctx) {
-		var unit unit_domain.Unit
+		var unit unit_domain.UnitResponse
 		if err := cursor.Decode(&unit); err != nil {
-			return unit_domain.Response{}, err
+			return nil, unit_domain.DetailResponse{}, err
 		}
 
 		// Gắn LessonID vào đơn vị
@@ -159,10 +199,15 @@ func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, p
 		units = append(units, unit)
 	}
 
-	response := unit_domain.Response{
-		Unit: units,
+	cal := <-calCh
+	countUnit := <-countUnitCh
+
+	response := unit_domain.DetailResponse{
+		CountUnit:   countUnit,
+		Page:        cal,
+		CurrentPage: pageNumber,
 	}
-	return response, nil
+	return units, response, nil
 }
 
 func (u *unitRepository) UpdateComplete(ctx context.Context, updateData unit_domain.Update) error {

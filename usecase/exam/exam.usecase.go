@@ -12,6 +12,11 @@ type examUseCase struct {
 	contextTimeout time.Duration
 }
 
+func (e *examUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.ExamResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewExamUseCase(examRepository exam_domain.IExamRepository, timeout time.Duration) exam_domain.IExamUseCase {
 	return &examUseCase{
 		examRepository: examRepository,
@@ -19,28 +24,28 @@ func NewExamUseCase(examRepository exam_domain.IExamRepository, timeout time.Dur
 	}
 }
 
-func (e *examUseCase) FetchMany(ctx context.Context, page string) (exam_domain.Response, error) {
+func (e *examUseCase) FetchMany(ctx context.Context, page string) ([]exam_domain.ExamResponse, exam_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examRepository.FetchMany(ctx, page)
+	data, detail, err := e.examRepository.FetchMany(ctx, page)
 	if err != nil {
-		return exam_domain.Response{}, err
+		return nil, exam_domain.DetailResponse{}, err
 	}
 
-	return data, nil
+	return data, detail, nil
 }
 
-func (e *examUseCase) FetchManyByUnitID(ctx context.Context, unitID string) (exam_domain.Response, error) {
+func (e *examUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exam_domain.ExamResponse, exam_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examRepository.FetchManyByUnitID(ctx, unitID)
+	data, detail, err := e.examRepository.FetchManyByUnitID(ctx, unitID, page)
 	if err != nil {
-		return exam_domain.Response{}, err
+		return nil, exam_domain.DetailResponse{}, err
 	}
 
-	return data, nil
+	return data, detail, nil
 }
 
 func (e *examUseCase) UpdateOne(ctx context.Context, exam *exam_domain.Exam) (*mongo.UpdateResult, error) {

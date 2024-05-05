@@ -9,6 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
+	"sync"
+	"time"
 )
 
 type courseRepository struct {
@@ -17,6 +19,12 @@ type courseRepository struct {
 	collectionLesson     string
 	collectionUnit       string
 	collectionVocabulary string
+
+	courseResponseCache map[string]course_domain.DetailForManyResponse
+	courseManyCache     map[string][]course_domain.CourseResponse
+	courseOneCache      map[string]course_domain.CourseResponse
+	courseCacheExpires  map[string]time.Time
+	cacheMutex          sync.RWMutex
 }
 
 func NewCourseRepository(db *mongo.Database, collectionCourse string, collectionLesson string, collectionUnit string, collectionVocabulary string) course_domain.ICourseRepository {
@@ -26,10 +34,23 @@ func NewCourseRepository(db *mongo.Database, collectionCourse string, collection
 		collectionLesson:     collectionLesson,
 		collectionUnit:       collectionUnit,
 		collectionVocabulary: collectionVocabulary,
+
+		courseResponseCache: make(map[string]course_domain.DetailForManyResponse),
+		courseManyCache:     make(map[string][]course_domain.CourseResponse),
+		courseOneCache:      make(map[string]course_domain.CourseResponse),
+		courseCacheExpires:  make(map[string]time.Time),
 	}
 }
 
 func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
+	c.cacheMutex.RLock()
+	cachedData, found := c.courseOneCache[courseID]
+	c.cacheMutex.RUnlock()
+
+	if found {
+		return cachedData, nil
+	}
+
 	collectionCourse := c.database.Collection(c.collectionCourse)
 	idCourse, err := primitive.ObjectIDFromHex(courseID)
 	if err != nil {
@@ -67,105 +88,103 @@ func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (cour
 	countLesson := <-countLessonCh
 	countVocab := <-countVocabularyCh
 
-	courseRes := course_domain.CourseResponse{
-		Id:              course.Id,
-		Name:            course.Name,
-		Description:     course.Description,
-		CreatedAt:       course.CreatedAt,
-		UpdatedAt:       course.UpdatedAt,
-		WhoUpdated:      course.WhoUpdated,
-		CountLesson:     countLesson,
-		CountVocabulary: countVocab,
-	}
+	course.CountVocabulary = countVocab
+	course.CountLesson = countLesson
 
-	return courseRes, nil
+	c.cacheMutex.Lock()
+	c.courseOneCache[courseID] = course
+	c.courseCacheExpires[courseID] = time.Now().Add(5 * time.Minute)
+	c.cacheMutex.Unlock()
+
+	return course, nil
 }
 
-func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page string) ([]course_domain.CourseResponse, int64, error) {
+func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page string) ([]course_domain.CourseResponse, course_domain.DetailForManyResponse, error) {
+	c.cacheMutex.RLock()
+	cachedData, found := c.courseManyCache["course"]
+	cachedResponseData, found := c.courseResponseCache[page]
+	c.cacheMutex.RUnlock()
+
+	if found {
+		return cachedData, cachedResponseData, nil
+	}
+
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return nil, 0, errors.New("invalid page number")
+		return nil, course_domain.DetailForManyResponse{}, errors.New("invalid page number")
 	}
 	perPage := 5
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
-	calCh := make(chan int64)
+	count, err := collectionCourse.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return nil, course_domain.DetailForManyResponse{}, err
+	}
 
-	go func() {
-		count, err := collectionCourse.CountDocuments(ctx, bson.D{})
-		if err != nil {
-			return
-		}
-
-		cal1 := count / int64(perPage)
-		cal2 := count % int64(perPage)
-		if cal2 != 0 {
-			calCh <- cal1
-		}
-	}()
-
+	totalPages := (count + int64(perPage) - 1) / int64(perPage)
 	cursor, err := collectionCourse.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
-		return nil, 0, err
+		return nil, course_domain.DetailForManyResponse{}, err
 	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
+	defer func() {
 		err := cursor.Close(ctx)
 		if err != nil {
 			return
 		}
-	}(cursor, ctx)
+	}()
 
 	var courses []course_domain.CourseResponse
+	var wg sync.WaitGroup
+	var mu sync.Mutex // Mutex để bảo vệ courses
+
 	for cursor.Next(ctx) {
-		var course course_domain.Course
+		var course course_domain.CourseResponse
 		if err := cursor.Decode(&course); err != nil {
-			return nil, 0, err
+			return nil, course_domain.DetailForManyResponse{}, err
 		}
 
-		countLessonCh := make(chan int32)
-		countVocabularyCh := make(chan int32)
+		wg.Add(1)
+		go func(course course_domain.CourseResponse) {
+			defer wg.Done()
 
-		go func() {
-			defer close(countLessonCh)
 			countLesson, err := c.countLessonsByCourseID(ctx, course.Id)
 			if err != nil {
 				return
 			}
-			countLessonCh <- countLesson
-		}()
 
-		go func() {
-			defer close(countVocabularyCh)
-			countVocabulary, err := c.countVocabularyByCourseID(ctx, course.Id)
+			countVocab, err := c.countVocabularyByCourseID(ctx, course.Id)
 			if err != nil {
 				return
 			}
-			countVocabularyCh <- countVocabulary
-		}()
 
-		countLesson := <-countLessonCh
-		countVocab := <-countVocabularyCh
+			course.CountVocabulary = countVocab
+			course.CountLesson = countLesson
 
-		courseRes := course_domain.CourseResponse{
-			Id:              course.Id,
-			Name:            course.Name,
-			Description:     course.Description,
-			CreatedAt:       course.CreatedAt,
-			UpdatedAt:       course.UpdatedAt,
-			WhoUpdated:      course.WhoUpdated,
-			CountLesson:     countLesson,
-			CountVocabulary: countVocab,
-		}
-
-		courses = append(courses, courseRes)
+			mu.Lock()
+			courses = append(courses, course)
+			mu.Unlock()
+		}(course)
 	}
 
-	cal := <-calCh
+	wg.Wait()
 
-	return courses, cal, nil
+	detail := course_domain.DetailForManyResponse{
+		CountCourse: count,
+		Page:        totalPages,
+		CurrentPage: pageNumber,
+	}
+
+	c.cacheMutex.Lock()
+	c.courseManyCache["course"] = courses
+	c.courseResponseCache[page] = detail
+	c.courseCacheExpires["course"] = time.Now().Add(5 * time.Minute)
+	c.courseCacheExpires[page] = time.Now().Add(5 * time.Minute)
+	c.cacheMutex.Unlock()
+
+	return courses, detail, nil
 }
 
 func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {

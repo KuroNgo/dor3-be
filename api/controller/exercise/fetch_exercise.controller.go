@@ -44,7 +44,7 @@ func (e *ExerciseController) FetchManyByUnitID(ctx *gin.Context) {
 	}
 
 	unitID := ctx.Query("unit_id")
-	exercise, err := e.ExerciseUseCase.FetchManyByUnitID(ctx, unitID)
+	exercise, detail, err := e.ExerciseUseCase.FetchManyByUnitID(ctx, unitID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -55,6 +55,7 @@ func (e *ExerciseController) FetchManyByUnitID(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
+		"detail": detail,
 		"data":   exercise,
 	})
 }

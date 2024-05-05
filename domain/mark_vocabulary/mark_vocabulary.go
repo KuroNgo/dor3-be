@@ -17,6 +17,7 @@ type MarkToFavourite struct {
 }
 
 type Response struct {
+	Total           int               `json:"total" bson:"total"`
 	MarkToFavourite []MarkToFavourite `json:"mark_to_favourite" bson:"mark_to_favourite"`
 }
 

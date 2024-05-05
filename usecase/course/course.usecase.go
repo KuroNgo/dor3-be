@@ -31,16 +31,16 @@ func (c *courseUseCase) FetchByID(ctx context.Context, courseID string) (course_
 	return course, err
 }
 
-func (c *courseUseCase) FetchManyForEachCourse(ctx context.Context, page string) ([]course_domain.CourseResponse, int64, error) {
+func (c *courseUseCase) FetchManyForEachCourse(ctx context.Context, page string) ([]course_domain.CourseResponse, course_domain.DetailForManyResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
 
-	course, count, err := c.courseRepository.FetchManyForEachCourse(ctx, page)
+	course, detail, err := c.courseRepository.FetchManyForEachCourse(ctx, page)
 	if err != nil {
-		return []course_domain.CourseResponse{}, 0, err
+		return nil, course_domain.DetailForManyResponse{}, err
 	}
 
-	return course, count, err
+	return course, detail, nil
 }
 
 func (c *courseUseCase) CreateOne(ctx context.Context, course *course_domain.Course) error {

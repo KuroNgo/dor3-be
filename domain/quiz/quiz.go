@@ -44,8 +44,9 @@ type QuizResponse struct {
 }
 
 type Response struct {
-	Page int64  `bson:"page" json:"page"`
-	Quiz []Quiz `json:"quiz" bson:"quiz"`
+	Total       int64 `bson:"total" json:"total"`
+	Page        int64 `bson:"page" json:"page"`
+	CurrentPage int   `bson:"current_page" json:"current_page"`
 }
 
 type Statistics struct {
@@ -54,9 +55,10 @@ type Statistics struct {
 
 //go:generate mockery --name IQuizRepository
 type IQuizRepository interface {
-	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchManyByUnitID(ctx context.Context, unitID string) (Response, error)
-	FetchManyByLessonID(ctx context.Context, unitID string) (Response, error)
+	FetchMany(ctx context.Context, page string) ([]QuizResponse, Response, error)
+	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]QuizResponse, Response, error)
+	FetchManyByLessonID(ctx context.Context, unitID string, page string) ([]QuizResponse, Response, error)
+	FetchOneByUnitID(ctx context.Context, unitID string) (QuizResponse, error)
 
 	CreateOne(ctx context.Context, quiz *Quiz) error
 

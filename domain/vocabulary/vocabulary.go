@@ -35,8 +35,9 @@ type Vocabulary struct {
 }
 
 type Response struct {
-	Page       int64        `bson:"page" json:"page"`
-	Vocabulary []Vocabulary `bson:"vocabulary" json:"vocabulary"`
+	Page        int64        `bson:"page" json:"page"`
+	CurrentPage int          `bson:"current_page" json:"current_page"`
+	Vocabulary  []Vocabulary `bson:"vocabulary" json:"vocabulary"`
 }
 
 type SearchingResponse struct {

@@ -21,6 +21,16 @@ type exerciseRepository struct {
 	collectionQuestion   string
 }
 
+func (e *exerciseRepository) FetchManyByLessonID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewExerciseRepository(db *mongo.Database, collectionLesson string, collectionUnit string, collectionVocabulary string, collectionExercise string, collectionQuestion string) exercise_domain.IExerciseRepository {
 	return &exerciseRepository{
 		database:             db,
@@ -30,16 +40,6 @@ func NewExerciseRepository(db *mongo.Database, collectionLesson string, collecti
 		collectionExercise:   collectionExercise,
 		collectionQuestion:   collectionQuestion,
 	}
-}
-
-func (e *exerciseRepository) FetchManyByLessonID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, error) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (e *exerciseRepository) UpdateCompleted(ctx context.Context, exerciseID string, isComplete int) error {
@@ -108,66 +108,76 @@ func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string
 	return randomExercise, nil
 }
 
-func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exercise_domain.ExerciseResponse, int64, error) {
+func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
-		return nil, 0, errors.New("invalid page number")
+		return nil, exercise_domain.DetailResponse{}, errors.New("invalid page number")
 	}
 	perPage := 1
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
-	count, err := collectionExercise.CountDocuments(ctx, bson.D{})
-	if err != nil {
-		return nil, 0, err
-	}
+	calCh := make(chan int64)
+	countExerciseCh := make(chan int64)
+	go func() {
+		defer close(calCh)
+		defer close(countExerciseCh)
 
-	cal1 := count / int64(perPage)
-	cal2 := count % int64(perPage)
-	var cal int64 = 0
-	if cal2 != 0 {
-		cal = cal1 + 1
-	}
+		count, err := collectionExercise.CountDocuments(ctx, bson.D{})
+		if err != nil {
+			return
+		}
+
+		countExerciseCh <- count
+
+		cal1 := count / int64(perPage)
+		cal2 := count % int64(perPage)
+		if cal2 != 0 {
+			calCh <- cal1 + 1
+		}
+	}()
 
 	cursor, err := collectionExercise.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
-		return nil, 0, err
+		return nil, exercise_domain.DetailResponse{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	var exercises []exercise_domain.ExerciseResponse
 
 	for cursor.Next(ctx) {
-		var exercise exercise_domain.Exercise
+		var exercise exercise_domain.ExerciseResponse
 		if err := cursor.Decode(&exercise); err != nil {
-			return nil, 0, err
+			return nil, exercise_domain.DetailResponse{}, err
 		}
 
 		// Lấy thông tin liên quan cho mỗi khóa học
-		countQuest, err := e.countQuestionByExerciseID(ctx, exercise.Id)
+		countQuest, err := e.countQuestionByExerciseID(ctx, exercise.ID)
 		if err != nil {
-			return nil, 0, err
+			return nil, exercise_domain.DetailResponse{}, err
 		}
 
-		exerciseRes := exercise_domain.ExerciseResponse{
-			ID:            exercise.Id,
-			LessonID:      exercise.LessonID,
-			UnitID:        exercise.UnitID,
-			Title:         exercise.Title,
-			Description:   exercise.Description,
-			Duration:      exercise.Duration,
-			CreatedAt:     exercise.CreatedAt,
-			UpdatedAt:     exercise.UpdatedAt,
-			WhoUpdates:    exercise.WhoUpdates,
-			CountQuestion: countQuest,
-		}
+		exercise.CountQuestion = countQuest
 
-		exercises = append(exercises, exerciseRes)
+		exercises = append(exercises, exercise)
 	}
 
-	return exercises, cal, nil
+	cal := <-calCh
+	countExercise := <-countExerciseCh
+	detail := exercise_domain.DetailResponse{
+		CountExercise: countExercise,
+		Page:          cal,
+		CurrentPage:   pageNumber,
+	}
+
+	return exercises, detail, nil
 }
 
 func (e *exerciseRepository) UpdateOne(ctx context.Context, exercise *exercise_domain.Exercise) (*mongo.UpdateResult, error) {
