@@ -19,6 +19,16 @@ type lessonRepository struct {
 	collectionVocabulary string
 }
 
+func NewLessonRepository(db *mongo.Database, collectionLesson string, collectionCourse string, collectionUnit string, collectionVocabulary string) lesson_domain.ILessonRepository {
+	return &lessonRepository{
+		database:             db,
+		collectionLesson:     collectionLesson,
+		collectionCourse:     collectionCourse,
+		collectionUnit:       collectionUnit,
+		collectionVocabulary: collectionVocabulary,
+	}
+}
+
 func (l *lessonRepository) FetchByID(ctx context.Context, lessonID string) (lesson_domain.LessonResponse, error) {
 	collectionLesson := l.database.Collection(l.collectionLesson)
 
@@ -58,32 +68,10 @@ func (l *lessonRepository) FetchByID(ctx context.Context, lessonID string) (less
 
 	countUnit := <-countUnitCh
 	countVocabulary := <-countVocabularyCh
+	lesson.CountVocabulary = countVocabulary
+	lesson.CountUnit = countUnit
 
-	lessonRes := lesson_domain.LessonResponse{
-		ID:              lesson.ID,
-		CourseID:        lesson.CourseID,
-		Name:            lesson.Name,
-		Content:         lesson.Content,
-		ImageURL:        lesson.ImageURL,
-		Level:           lesson.Level,
-		IsCompleted:     lesson.IsCompleted,
-		CreatedAt:       lesson.CreatedAt,
-		UpdatedAt:       lesson.UpdatedAt,
-		WhoUpdates:      lesson.WhoUpdates,
-		CountUnit:       countUnit,
-		CountVocabulary: countVocabulary,
-	}
-	return lessonRes, nil
-}
-
-func NewLessonRepository(db *mongo.Database, collectionLesson string, collectionCourse string, collectionUnit string, collectionVocabulary string) lesson_domain.ILessonRepository {
-	return &lessonRepository{
-		database:             db,
-		collectionLesson:     collectionLesson,
-		collectionCourse:     collectionCourse,
-		collectionUnit:       collectionUnit,
-		collectionVocabulary: collectionVocabulary,
-	}
+	return lesson, nil
 }
 
 func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
@@ -108,7 +96,7 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string,
 		cal1 := count / int64(perPage)
 		cal2 := count % int64(perPage)
 		if cal2 != 0 {
-			calCh <- cal1
+			calCh <- cal1 + 1
 		}
 	}()
 
@@ -222,7 +210,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 	if err != nil {
 		return nil, lesson_domain.DetailResponse{}, errors.New("invalid page number")
 	}
-	perPage := 5
+	perPage := 10
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
@@ -238,7 +226,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 		cal1 := count / int64(perPage)
 		cal2 := count % int64(perPage)
 		if cal2 != 0 {
-			calCh <- cal1
+			calCh <- cal1 + 1
 		}
 	}()
 

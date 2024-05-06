@@ -45,9 +45,7 @@ func (l *LessonController) FetchByIdCourse(ctx *gin.Context) {
 
 func (l *LessonController) FetchById(ctx *gin.Context) {
 	idLesson := ctx.Query("_id")
-	page := ctx.DefaultQuery("page", "1")
-
-	lesson, detail, err := l.LessonUseCase.FetchByIdCourse(ctx, idLesson, page)
+	lesson, err := l.LessonUseCase.FetchByID(ctx, idLesson)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -58,7 +56,6 @@ func (l *LessonController) FetchById(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
-		"detail": detail,
 		"lesson": lesson,
 	})
 }
