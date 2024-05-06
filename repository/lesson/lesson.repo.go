@@ -326,12 +326,12 @@ func (l *lessonRepository) CreateOne(ctx context.Context, lesson *lesson_domain.
 	}
 
 	filterReference := bson.M{"_id": lesson.CourseID}
-	count, err = collectionCourse.CountDocuments(ctx, filterReference)
+	countParent, err := collectionCourse.CountDocuments(ctx, filterReference)
 	if err != nil {
 		return err
 	}
 
-	if count == 0 {
+	if countParent == 0 {
 		return errors.New("the course ID do not exist")
 	}
 

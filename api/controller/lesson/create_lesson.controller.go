@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -25,7 +26,8 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 		return
 	}
 
-	courseID, _ := primitive.ObjectIDFromHex("660b8a0c2aef1f3a28265523")
+	courseId := ctx.Request.FormValue("course_id")
+	idCourse, err := primitive.ObjectIDFromHex(courseId)
 
 	name := ctx.Request.FormValue("name")
 	content := ctx.Request.FormValue("content")
@@ -36,7 +38,7 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 	if err != nil {
 		lessonRes := &lesson_domain.Lesson{
 			ID:         primitive.NewObjectID(),
-			CourseID:   courseID,
+			CourseID:   idCourse,
 			Name:       name,
 			Content:    content,
 			Level:      level,
@@ -94,7 +96,7 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 	// Tạo bài học với thông tin hình ảnh từ Cloudinary
 	lessonRes := &lesson_domain.Lesson{
 		ID:         primitive.NewObjectID(),
-		CourseID:   courseID,
+		CourseID:   idCourse,
 		ImageURL:   result.ImageURL,
 		Name:       name,
 		Content:    content,
@@ -293,36 +295,57 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 		return
 	}
 
-	for _, lesson := range result {
-		// Tìm ID của khóa học từ tên khóa học
-		courseID, err := l.LessonUseCase.FindCourseIDByCourseName(ctx, lesson.CourseID)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+	var wg sync.WaitGroup
+	var mux sync.Mutex
+	errCh := make(chan error)
 
-		// Tạo bài học
-		le := lesson_domain.Lesson{
-			ID:          primitive.NewObjectID(),
-			CourseID:    courseID,
-			Name:        lesson.Name,
-			Level:       lesson.Level,
-			IsCompleted: 0,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-			WhoUpdates:  admin.FullName,
-		}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer close(errCh)
 
-		// Tạo bài học trong cơ sở dữ liệu
-		err = l.LessonUseCase.CreateOneByNameCourse(ctx, &le)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+		for _, lesson := range result {
+			// Tìm ID của khóa học từ tên khóa học
+			mux.Lock()
+			courseID, err := l.LessonUseCase.FindCourseIDByCourseName(ctx, lesson.CourseID)
+			if err != nil {
+				errCh <- err
+				return
+			}
 
+			// Tạo bài học
+			le := lesson_domain.Lesson{
+				ID:          primitive.NewObjectID(),
+				CourseID:    courseID,
+				Name:        lesson.Name,
+				Level:       lesson.Level,
+				IsCompleted: 0,
+				CreatedAt:   time.Now(),
+				UpdatedAt:   time.Now(),
+				WhoUpdates:  admin.FullName,
+			}
+
+			// Tạo bài học trong cơ sở dữ liệu
+			err = l.LessonUseCase.CreateOneByNameCourse(ctx, &le)
+			if err != nil {
+				errCh <- err
+				continue
+			}
+			mux.Unlock()
+		}
+	}()
+
+	wg.Done()
+
+	select {
+	case err := <-errCh:
+		ctx.JSON(http.StatusOK, gin.H{
+			"error": err.Error(),
+		})
+	default:
+		ctx.JSON(http.StatusOK, gin.H{
+			"status": "success",
+		})
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"status": "success",
-	})
 }

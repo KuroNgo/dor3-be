@@ -13,11 +13,6 @@ type vocabularyUseCase struct {
 	contextTimeout       time.Duration
 }
 
-func (v *vocabularyUseCase) DeleteMany(ctx context.Context, vocabularyID ...string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewVocabularyUseCase(vocabularyRepository vocabulary_domain.IVocabularyRepository, timeout time.Duration) vocabulary_domain.IVocabularyUseCase {
 	return &vocabularyUseCase{
 		vocabularyRepository: vocabularyRepository,
@@ -49,9 +44,16 @@ func (v *vocabularyUseCase) GetLatestVocabulary(ctx context.Context) ([]string, 
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) GetLatestVocabularyBatch(ctx context.Context) (vocabulary_domain.Response, error) {
-	//TODO implement me
-	panic("implement me")
+func (v *vocabularyUseCase) GetVocabularyById(ctx context.Context, id string) (vocabulary_domain.Vocabulary, error) {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+
+	vocabulary, err := v.vocabularyRepository.GetVocabularyById(ctx, id)
+	if err != nil {
+		return vocabulary_domain.Vocabulary{}, err
+	}
+
+	return vocabulary, err
 }
 
 func (v *vocabularyUseCase) FetchByIdUnit(ctx context.Context, idUnit string) (vocabulary_domain.Response, error) {
@@ -102,30 +104,6 @@ func (v *vocabularyUseCase) FetchMany(ctx context.Context, page string) (vocabul
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) UpdateOneAudio(c context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
-	ctx, cancel := context.WithTimeout(c, v.contextTimeout)
-	defer cancel()
-
-	err := v.vocabularyRepository.UpdateOneAudio(ctx, vocabulary)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (v *vocabularyUseCase) UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error {
-	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
-	defer cancel()
-
-	err := v.vocabularyRepository.UpdateIsFavourite(ctx, vocabularyID, isFavourite)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (v *vocabularyUseCase) GetAllVocabulary(ctx context.Context) ([]string, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
@@ -162,6 +140,18 @@ func (v *vocabularyUseCase) CreateOneByNameUnit(ctx context.Context, vocabulary 
 	return nil
 }
 
+func (v *vocabularyUseCase) CreateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+	err := v.vocabularyRepository.CreateOne(ctx, vocabulary)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (v *vocabularyUseCase) UpdateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
@@ -174,11 +164,23 @@ func (v *vocabularyUseCase) UpdateOne(ctx context.Context, vocabulary *vocabular
 	return data, err
 }
 
-func (v *vocabularyUseCase) CreateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
+func (v *vocabularyUseCase) UpdateOneAudio(c context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
+	ctx, cancel := context.WithTimeout(c, v.contextTimeout)
+	defer cancel()
+
+	err := v.vocabularyRepository.UpdateOneAudio(ctx, vocabulary)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (v *vocabularyUseCase) UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
-	err := v.vocabularyRepository.CreateOne(ctx, vocabulary)
 
+	err := v.vocabularyRepository.UpdateIsFavourite(ctx, vocabularyID, isFavourite)
 	if err != nil {
 		return err
 	}
@@ -196,4 +198,16 @@ func (v *vocabularyUseCase) DeleteOne(ctx context.Context, vocabularyID string) 
 	}
 
 	return err
+}
+
+func (v *vocabularyUseCase) DeleteMany(ctx context.Context, vocabularyID ...string) error {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+
+	err := v.vocabularyRepository.DeleteMany(ctx, vocabularyID...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

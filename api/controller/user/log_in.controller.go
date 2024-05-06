@@ -60,9 +60,10 @@ func (l *LoginFromRoleController) LoginFromRole(ctx *gin.Context) {
 		accessToken := <-accessTokenCh
 		refreshToken := <-refreshTokenCh
 
-		ctx.SetCookie("access_token", accessToken, l.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
-		ctx.SetCookie("refresh_token", refreshToken, l.Database.RefreshTokenMaxAge*60, "/", "localhost", false, true)
-		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
+		ctx.SetCookie("access_token", accessToken, l.Database.AccessTokenMaxAge*1000, "/", "localhost", false, true)
+		ctx.SetCookie("refresh_token", refreshToken, l.Database.RefreshTokenMaxAge*1000, "/", "localhost", false, true)
+		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*1000, "/", "localhost", false, false)
+		ctx.SetSameSite(http.SameSiteStrictMode) // Chỉ gửi cookie với các yêu cầu cùng nguồn
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":       "success",
@@ -108,6 +109,7 @@ func (l *LoginFromRoleController) LoginFromRole(ctx *gin.Context) {
 		ctx.SetCookie("access_token", accessToken, l.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
 		ctx.SetCookie("refresh_token", refreshToken, l.Database.RefreshTokenMaxAge*60, "/", "localhost", false, true)
 		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
+		ctx.SetSameSite(http.SameSiteStrictMode) // Chỉ gửi cookie với các yêu cầu cùng nguồn
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":       "success",
@@ -164,6 +166,7 @@ func (l *LoginFromRoleController) LoginUser(ctx *gin.Context) {
 		ctx.SetCookie("access_token", accessToken, l.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
 		ctx.SetCookie("refresh_token", refreshToken, l.Database.RefreshTokenMaxAge*60, "/", "localhost", false, true)
 		ctx.SetCookie("logged_in", "true", l.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
+		ctx.SetSameSite(http.SameSiteStrictMode) // Chỉ gửi cookie với các yêu cầu cùng nguồn
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":       "success",
@@ -227,9 +230,10 @@ func (a *LoginFromRoleController) LoginAdmin(ctx *gin.Context) {
 		accessToken := <-accessTokenCh
 		refreshToken := <-refreshTokenCh
 
-		ctx.SetCookie("access_token", accessToken, a.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
-		ctx.SetCookie("refresh_token", refreshToken, a.Database.RefreshTokenMaxAge*60, "/", "localhost", false, true)
+		ctx.SetCookie("access_token", accessToken, 0, "/", "localhost", false, true)
+		ctx.SetCookie("refresh_token", refreshToken, 0, "/", "localhost", false, true)
 		ctx.SetCookie("logged_in", "true", a.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
+		ctx.SetSameSite(http.SameSiteStrictMode)
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":       "success",
