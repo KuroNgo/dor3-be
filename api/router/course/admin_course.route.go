@@ -42,6 +42,8 @@ func AdminCourseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.
 	}
 
 	router := group.Group("/course")
+	router.GET("/fetch", course.FetchCourseInAdmin)
+	router.GET("/fetch/:_id", course.FetchCourseByIDInAdmin)
 	router.POST("/create", course.CreateOneCourse)
 	router.POST("/create/file", course.CreateCourseWithFile)
 	router.POST("/create/file/final", course.CreateLessonManagementWithFile)

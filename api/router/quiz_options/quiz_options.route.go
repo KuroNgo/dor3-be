@@ -27,5 +27,5 @@ func QuizOptionsRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.
 	}
 
 	router := group.Group("/quiz/options")
-	router.POST("/fetch", middleware.DeserializeUser(), options.FetchManyQuizOptions)
+	router.GET("/fetch", middleware.DeserializeUser(), options.FetchManyQuizOptions)
 }

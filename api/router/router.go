@@ -41,7 +41,6 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 
 	publicRouter := gin.Group("/api")
 	privateRouter := gin.Group("/api/admin/")
-	routerMid := gin.Group("/api")
 
 	// Middleware
 	publicRouter.Use(
@@ -64,12 +63,12 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	)
 
 	// This is a CORS method for check IP validation
-	publicRouter.OPTIONS("/*path", middleware.OptionMessagePublic, middleware.OptionMessagePrivate)
+	publicRouter.OPTIONS("/*path", middleware.OptionMessage)
 
 	// All Public APIs
 	user_route.GoogleAuthRoute(env, timeout, db, publicRouter)
 	user_route.UserRouter(env, timeout, db, publicRouter)
-	user_route.LoginFromRoleRoute(env, timeout, db, routerMid)
+	user_route.LoginFromRoleRoute(env, timeout, db, publicRouter)
 
 	feedback_route.FeedbackRoute(env, timeout, db, publicRouter)
 
