@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
+	"sync"
 )
 
 type examQuestionRepository struct {
@@ -62,46 +63,55 @@ func (e *examQuestionRepository) FetchMany(ctx context.Context, page string) (ex
 	}
 
 	var questions []exam_question_domain.ExamQuestionResponse
-	for cursor.Next(ctx) {
-		var question exam_question_domain.ExamQuestionResponse
-		if err := cursor.Decode(&question); err != nil {
-			return exam_question_domain.Response{}, err
-		}
 
-		pipeline := bson.A{
-			bson.D{
-				{"$lookup", bson.D{
-					{"from", "vocabulary"},
-					{"localField", "VocabularyID"},
-					{"foreignField", "_id"},
-					{"as", "vocabulary"},
-				}},
-			},
-		}
-
-		// Thực hiện truy vấn aggregation để thêm thông tin vocabulary cho câu hỏi
-		cursorV, err := collectVocabulary.Aggregate(ctx, pipeline)
-		if err != nil {
-			return exam_question_domain.Response{}, err
-		}
-
-		// Duyệt qua kết quả của truy vấn aggregation
-		var vocabularies []vocabulary_domain.Vocabulary
-		if err := cursorV.All(ctx, &vocabularies); err != nil {
-			return exam_question_domain.Response{}, err
-		}
-
-		// Gán vocabulary cho câu hỏi
-		if len(vocabularies) > 0 {
-			question.Vocabulary = vocabularies[0]
-		}
-
-		err = cursorV.Close(ctx)
-		if err != nil {
-			return exam_question_domain.Response{}, err
-		}
-		questions = append(questions, question)
+	pipeline := bson.A{
+		bson.D{
+			{"$lookup", bson.D{
+				{"from", "vocabulary"},
+				{"localField", "VocabularyID"},
+				{"foreignField", "_id"},
+				{"as", "vocabulary"},
+			}},
+		},
 	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			var question exam_question_domain.ExamQuestionResponse
+			if err := cursor.Decode(&question); err != nil {
+				return
+			}
+
+			// Thực hiện truy vấn aggregation để thêm thông tin vocabulary cho câu hỏi
+			cursorV, err := collectVocabulary.Aggregate(ctx, pipeline)
+			if err != nil {
+				return
+			}
+
+			// Duyệt qua kết quả của truy vấn aggregation
+			var vocabularies []vocabulary_domain.Vocabulary
+			if err := cursorV.All(ctx, &vocabularies); err != nil {
+				return
+			}
+
+			// Gán vocabulary cho câu hỏi
+			if len(vocabularies) > 0 {
+				question.Vocabulary = vocabularies[0]
+			}
+
+			err = cursorV.Close(ctx)
+			if err != nil {
+				return
+			}
+			questions = append(questions, question)
+		}
+
+	}()
+
+	wg.Wait()
 
 	cal := <-calCh
 
@@ -149,48 +159,57 @@ func (e *examQuestionRepository) FetchManyByExamID(ctx context.Context, examID s
 	}
 
 	var questions []exam_question_domain.ExamQuestionResponse
-	for cursor.Next(ctx) {
-		var question exam_question_domain.ExamQuestionResponse
-		if err := cursor.Decode(&question); err != nil {
-			return exam_question_domain.Response{}, err
-		}
-
-		question.ExamID = idExam
-
-		pipeline := bson.A{
-			bson.D{
-				{"$lookup", bson.D{
-					{"from", "vocabulary"},
-					{"localField", "VocabularyID"},
-					{"foreignField", "_id"},
-					{"as", "vocabulary"},
-				}},
-			},
-		}
-
-		// Thực hiện truy vấn aggregation để thêm thông tin vocabulary cho câu hỏi
-		cursorV, err := collectVocabulary.Aggregate(ctx, pipeline)
-		if err != nil {
-			return exam_question_domain.Response{}, err
-		}
-
-		// Duyệt qua kết quả của truy vấn aggregation
-		var vocabularies []vocabulary_domain.Vocabulary
-		if err := cursorV.All(ctx, &vocabularies); err != nil {
-			return exam_question_domain.Response{}, err
-		}
-
-		// Gán vocabulary cho câu hỏi
-		if len(vocabularies) > 0 {
-			question.Vocabulary = vocabularies[0]
-		}
-
-		err = cursorV.Close(ctx)
-		if err != nil {
-			return exam_question_domain.Response{}, err
-		}
-		questions = append(questions, question)
+	pipeline := bson.A{
+		bson.D{
+			{"$lookup", bson.D{
+				{"from", "vocabulary"},
+				{"localField", "VocabularyID"},
+				{"foreignField", "_id"},
+				{"as", "vocabulary"},
+			}},
+		},
 	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			var question exam_question_domain.ExamQuestionResponse
+			if err := cursor.Decode(&question); err != nil {
+				return
+			}
+
+			question.ExamID = idExam
+
+			// Thực hiện truy vấn aggregation để thêm thông tin vocabulary cho câu hỏi
+			cursorV, err := collectVocabulary.Aggregate(ctx, pipeline)
+			if err != nil {
+				return
+			}
+
+			// Duyệt qua kết quả của truy vấn aggregation
+			var vocabularies []vocabulary_domain.Vocabulary
+			if err := cursorV.All(ctx, &vocabularies); err != nil {
+				return
+			}
+
+			// Gán vocabulary cho câu hỏi
+			if len(vocabularies) > 0 {
+				question.Vocabulary = vocabularies[0]
+			}
+
+			err = cursorV.Close(ctx)
+			if err != nil {
+				return
+			}
+			questions = append(questions, question)
+		}
+
+	}()
+
+	wg.Wait()
 
 	var cal int64
 	calCh := make(chan int64)

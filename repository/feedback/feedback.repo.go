@@ -17,6 +17,13 @@ type feedbackRepository struct {
 	collectionFeedback string
 }
 
+func NewFeedbackRepository(db *mongo.Database, collectionFeedback string) feedback_domain.IFeedbackRepository {
+	return &feedbackRepository{
+		database:           db,
+		collectionFeedback: collectionFeedback,
+	}
+}
+
 func (f *feedbackRepository) FetchMany(ctx context.Context, page string) (feedback_domain.Response, error) {
 	collection := f.database.Collection(f.collectionFeedback)
 
@@ -200,11 +207,4 @@ func (f *feedbackRepository) DeleteOneByAdmin(ctx context.Context, feedbackID st
 
 	_, err = collectionFeedback.DeleteOne(ctx, filter)
 	return err
-}
-
-func NewFeedbackRepository(db *mongo.Database, collectionFeedback string) feedback_domain.IFeedbackRepository {
-	return &feedbackRepository{
-		database:           db,
-		collectionFeedback: collectionFeedback,
-	}
 }

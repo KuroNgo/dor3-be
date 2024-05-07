@@ -7,6 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"sync"
+	"time"
 )
 
 type examAnswerRepository struct {
@@ -14,6 +16,11 @@ type examAnswerRepository struct {
 	collectionQuestion string
 	collectionAnswer   string
 	collectionExam     string
+
+	answerManyCache    map[string]exam_answer_domain.ExamAnswer
+	answerOneCache     map[string]exam_answer_domain.Response
+	answerCacheExpires map[string]time.Time
+	cacheMutex         sync.RWMutex
 }
 
 func NewExamAnswerRepository(db *mongo.Database, collectionQuestion string, collectionAnswer string, collectionExam string) exam_answer_domain.IExamAnswerRepository {
@@ -22,6 +29,10 @@ func NewExamAnswerRepository(db *mongo.Database, collectionQuestion string, coll
 		collectionQuestion: collectionQuestion,
 		collectionAnswer:   collectionAnswer,
 		collectionExam:     collectionExam,
+
+		answerManyCache:    make(map[string]exam_answer_domain.ExamAnswer),
+		answerOneCache:     make(map[string]exam_answer_domain.Response),
+		answerCacheExpires: make(map[string]time.Time),
 	}
 }
 
@@ -50,16 +61,24 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 	}(cursor, ctx)
 
 	var answers []exam_answer_domain.ExamAnswer
-	for cursor.Next(ctx) {
-		var answer exam_answer_domain.ExamAnswer
-		if err = cursor.Decode(&answer); err != nil {
-			return exam_answer_domain.Response{}, err
-		}
 
-		// Gắn CourseID vào bài học
-		answer.QuestionID = idQuestion
-		answers = append(answers, answer)
-	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			var answer exam_answer_domain.ExamAnswer
+			if err = cursor.Decode(&answer); err != nil {
+				return
+			}
+
+			// Gắn CourseID vào bài học
+			answer.QuestionID = idQuestion
+			answers = append(answers, answer)
+		}
+	}()
+
+	wg.Wait()
 
 	response := exam_answer_domain.Response{
 		ExamAnswer: answers,
@@ -105,7 +124,29 @@ func (e *examAnswerRepository) DeleteOne(ctx context.Context, examID string) err
 	return err
 }
 
-func (e *examAnswerRepository) DeleteAllAnswerByExamID(ctx context.Context, examID string) error {
-	//TODO implement me
-	panic("implement me")
+func (e *examAnswerRepository) DeleteAllAnswerByExamID(ctx context.Context, examID ...string) error {
+	collectionAnswer := e.database.Collection(e.collectionAnswer)
+
+	for _, idExam := range examID {
+		objID, err := primitive.ObjectIDFromHex(idExam)
+		if err != nil {
+			return err
+		}
+
+		filter := bson.M{"_id": objID}
+		count, err := collectionAnswer.CountDocuments(ctx, filter)
+		if err != nil {
+			return err
+		}
+		if count == 0 {
+			return errors.New(`exam answer is removed`)
+		}
+
+		_, err = collectionAnswer.DeleteOne(ctx, filter)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
