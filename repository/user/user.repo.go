@@ -16,6 +16,13 @@ type userRepository struct {
 	collection string
 }
 
+func NewUserRepository(db *mongo.Database, collection string) user_domain.IUserRepository {
+	return &userRepository{
+		database:   db,
+		collection: collection,
+	}
+}
+
 func (u *userRepository) Update(ctx context.Context, user *user_domain.User) error {
 	collection := u.database.Collection(u.collection)
 
@@ -27,13 +34,6 @@ func (u *userRepository) Update(ctx context.Context, user *user_domain.User) err
 		return err
 	}
 	return nil
-}
-
-func NewUserRepository(db *mongo.Database, collection string) user_domain.IUserRepository {
-	return &userRepository{
-		database:   db,
-		collection: collection,
-	}
 }
 
 func (u *userRepository) UpdateImage(c context.Context, userID string, imageURL string) error {

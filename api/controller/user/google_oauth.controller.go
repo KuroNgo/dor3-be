@@ -98,6 +98,7 @@ func (auth *GoogleAuthController) GoogleLoginWithUser(c *gin.Context) {
 	c.SetCookie("access_token", accessToken, auth.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
 	c.SetCookie("refresh_token", refreshToken, auth.Database.RefreshTokenMaxAge*60, "/", "localhost", false, true)
 	c.SetCookie("logged_in", "true", auth.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
+	c.SetSameSite(http.SameSiteStrictMode) // Chỉ gửi cookie với các yêu cầu cùng nguồn
 
 	c.JSON(http.StatusOK, gin.H{"token": signedToken})
 }

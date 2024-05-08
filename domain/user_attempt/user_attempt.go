@@ -17,10 +17,11 @@ type UserProcess struct {
 	QuizID     primitive.ObjectID `bson:"quiz_id" json:"quiz_id"`
 	ExerciseID primitive.ObjectID `bson:"exercise_id" json:"exercise_id"`
 
-	Score         int       `bson:"score" json:"score"`
+	Score         float32   `bson:"score" json:"score"`
 	ProcessStatus int       `bson:"process_status" json:"process_status"`
 	CompletedDate time.Time `bson:"completed_date" json:"completed_date"`
 	CreatedAt     time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt     time.Time `bson:"updated_at" json:"updated_at"`
 }
 
 type Response struct {
@@ -36,8 +37,8 @@ type Statistics struct {
 }
 
 type IUserProcessRepository interface {
-	FetchManyByUserID(ctx context.Context) (Response, error)
-	CreateOneByUserID(ctx context.Context, userID string) error
-	UpdateAttemptByUserID(ctx context.Context, userID string) error
+	FetchManyByUserID(ctx context.Context, userID string) (Response, error)
+	CreateOneByUserID(ctx context.Context, userID UserProcess) error
+	UpdateAttemptByUserID(ctx context.Context, userID UserProcess) error
 	DeleteAllByUserID(ctx context.Context, userID string) error
 }
