@@ -29,9 +29,9 @@ func AdminLessonRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.
 	}
 
 	router := group.Group("/lesson")
-	router.GET("/fetch", lesson.FetchManyInAdmin)
-	router.GET("/fetch/_id", lesson.FetchByIdInAdmin)
-	router.GET("/fetch/course_id", lesson.FetchByIdCourseInAdmin)
+	router.GET("/fetch", lesson.FetchMany)
+	router.GET("/fetch/_id", lesson.FetchById)
+	router.GET("/fetch/course_id", lesson.FetchByIdCourse)
 	router.POST("/create", lesson.CreateOneLesson)
 	router.POST("/create/0/image", lesson.CreateOneLessonNotImage)
 	router.POST("/create/1/image", lesson.CreateOneLessonHaveImage)

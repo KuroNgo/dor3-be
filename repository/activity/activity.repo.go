@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -79,17 +80,26 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	}(cursor, ctx)
 
 	var activities []activity_log_domain.ActivityLog
-	for cursor.Next(ctx) {
-		var activity activity_log_domain.ActivityLog
-		if err := cursor.Decode(&activity); err != nil {
-			return activity_log_domain.Response{}, err
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			var activity activity_log_domain.ActivityLog
+			if err := cursor.Decode(&activity); err != nil {
+				return
+			}
+
+			activity.ActivityTime = activity.ActivityTime.Add(7 * time.Hour)
+
+			// Thêm activity vào slice activities
+			activities = append(activities, activity)
 		}
+	}()
 
-		activity.ActivityTime = activity.ActivityTime.Add(7 * time.Hour)
-
-		// Thêm activity vào slice activities
-		activities = append(activities, activity)
-	}
+	wg.Wait()
 
 	// Sắp xếp slice activities theo thời gian giảm dần (từ mới nhất đến cũ nhất)
 	sort.Slice(activities, func(i, j int) bool {

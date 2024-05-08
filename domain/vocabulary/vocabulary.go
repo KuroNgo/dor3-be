@@ -55,6 +55,7 @@ type IVocabularyRepository interface {
 	FetchByLesson(ctx context.Context, unitName string) (SearchingResponse, error)
 
 	GetAllVocabulary(ctx context.Context) ([]string, error)
+	GetVocabularyById(ctx context.Context, id string) (Vocabulary, error)
 	GetLatestVocabulary(ctx context.Context) ([]string, error)
 
 	CreateOne(ctx context.Context, vocabulary *Vocabulary) error

@@ -140,34 +140,38 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 	var wg sync.WaitGroup
 	var mu sync.Mutex // Mutex để bảo vệ courses
 
-	for cursor.Next(ctx) {
-		var course course_domain.CourseResponse
-		if err := cursor.Decode(&course); err != nil {
-			return nil, course_domain.DetailForManyResponse{}, err
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			var course course_domain.CourseResponse
+			if err := cursor.Decode(&course); err != nil {
+				return
+			}
+
+			wg.Add(1)
+			go func(course course_domain.CourseResponse) {
+				defer wg.Done()
+
+				countLesson, err := c.countLessonsByCourseID(ctx, course.Id)
+				if err != nil {
+					return
+				}
+
+				countVocab, err := c.countVocabularyByCourseID(ctx, course.Id)
+				if err != nil {
+					return
+				}
+
+				course.CountVocabulary = countVocab
+				course.CountLesson = countLesson
+
+				mu.Lock()
+				courses = append(courses, course)
+				mu.Unlock()
+			}(course)
 		}
-
-		wg.Add(1)
-		go func(course course_domain.CourseResponse) {
-			defer wg.Done()
-
-			countLesson, err := c.countLessonsByCourseID(ctx, course.Id)
-			if err != nil {
-				return
-			}
-
-			countVocab, err := c.countVocabularyByCourseID(ctx, course.Id)
-			if err != nil {
-				return
-			}
-
-			course.CountVocabulary = countVocab
-			course.CountLesson = countLesson
-
-			mu.Lock()
-			courses = append(courses, course)
-			mu.Unlock()
-		}(course)
-	}
+	}()
 
 	wg.Wait()
 
@@ -200,7 +204,12 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.
 		},
 	}
 
+	var mu sync.Mutex // Mutex để bảo vệ courses
+
+	mu.Lock()
 	data, err := collectionCourse.UpdateOne(ctx, filter, &update)
+	mu.Unlock()
+
 	if err != nil {
 		return nil, err
 	}

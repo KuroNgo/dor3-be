@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -151,18 +152,32 @@ func (e *examResultRepository) FetchManyByExamID(ctx context.Context, examID str
 	if err != nil {
 		return exam_result_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	var results []exam_result_domain.ExamResult
-	for cursor.Next(ctx) {
-		var result exam_result_domain.ExamResult
-		if err = cursor.Decode(&result); err != nil {
-			return exam_result_domain.Response{}, err
-		}
 
-		result.ExamID = idExam
-		results = append(results, result)
-	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			var result exam_result_domain.ExamResult
+			if err = cursor.Decode(&result); err != nil {
+				return
+			}
+
+			result.ExamID = idExam
+			results = append(results, result)
+		}
+	}()
+
+	wg.Wait()
 
 	resultRes := exam_result_domain.Response{
 		ExamResult: results,
@@ -255,9 +270,16 @@ func (e *examResultRepository) GetScoreByUser(ctx context.Context, userID string
 
 	// Tính tổng điểm
 	var totalScore int16 = 0
-	for _, result := range results.ExamResult {
-		totalScore += result.Score
-	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for _, result := range results.ExamResult {
+			totalScore += result.Score
+		}
+	}()
+
+	wg.Wait()
 
 	return totalScore, nil
 }

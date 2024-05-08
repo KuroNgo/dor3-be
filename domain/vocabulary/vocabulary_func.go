@@ -22,14 +22,6 @@ type Input struct {
 	LinkURL       string `bson:"link_url" json:"link_url"`
 }
 
-type FetchByWordInput struct {
-	Word string `bson:"word" json:"word"`
-}
-
-type FetchByLessonInput struct {
-	FieldOfIT string `bson:"field_of_it" json:"field_of_it"`
-}
-
 //go:generate mockery --name IVocabularyUseCase
 type IVocabularyUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
@@ -40,8 +32,8 @@ type IVocabularyUseCase interface {
 	FetchByLesson(ctx context.Context, lessonName string) (SearchingResponse, error)
 
 	GetAllVocabulary(ctx context.Context) ([]string, error)
+	GetVocabularyById(ctx context.Context, id string) (Vocabulary, error)
 	GetLatestVocabulary(ctx context.Context) ([]string, error)
-	GetLatestVocabularyBatch(ctx context.Context) (Response, error)
 
 	UpdateOne(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
 	UpdateOneAudio(ctx context.Context, vocabulary *Vocabulary) error

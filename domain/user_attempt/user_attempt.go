@@ -24,8 +24,8 @@ type UserProcess struct {
 }
 
 type Response struct {
-	Statistics  Statistics    `json:"statistics"`
-	UserProcess []UserProcess `bson:"user_process" json:"user_process"`
+	Statistics  Statistics  `json:"statistics"`
+	UserProcess UserProcess `bson:"user_process" json:"user_process"`
 }
 
 type Statistics struct {
@@ -38,5 +38,6 @@ type Statistics struct {
 type IUserProcessRepository interface {
 	FetchManyByUserID(ctx context.Context) (Response, error)
 	CreateOneByUserID(ctx context.Context, userID string) error
+	UpdateAttemptByUserID(ctx context.Context, userID string) error
 	DeleteAllByUserID(ctx context.Context, userID string) error
 }

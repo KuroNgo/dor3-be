@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"sync"
 )
 
 type examOptionsRepository struct {
@@ -38,16 +39,24 @@ func (e *examOptionsRepository) FetchManyByQuestionID(ctx context.Context, quest
 	defer cursor.Close(ctx)
 
 	var options []exam_options_domain.ExamOptions
-	for cursor.Next(ctx) {
-		var option exam_options_domain.ExamOptions
-		if err = cursor.Decode(&option); err != nil {
-			return exam_options_domain.Response{}, err
-		}
 
-		// Gắn CourseID vào bài học
-		option.QuestionID = idQuestion
-		options = append(options, option)
-	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			var option exam_options_domain.ExamOptions
+			if err = cursor.Decode(&option); err != nil {
+				return
+			}
+
+			// Gắn CourseID vào bài học
+			option.QuestionID = idQuestion
+			options = append(options, option)
+		}
+	}()
+
+	wg.Done()
 
 	response := exam_options_domain.Response{
 		ExamOptions: options,

@@ -22,7 +22,7 @@ type Statistics struct {
 }
 
 type IUserDetailRepository interface {
-	FetchByUserID(ctx context.Context) (UserDetail, error)
+	FetchByUserID(ctx context.Context, userid string) (UserDetail, error)
 	Create(ctx context.Context, user UserDetail) error
 	Update(ctx context.Context, user *UserDetail) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, userID string) error

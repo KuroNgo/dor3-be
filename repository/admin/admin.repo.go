@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"sync"
 	"time"
 )
 
@@ -17,11 +18,6 @@ type adminRepository struct {
 	database        *mongo.Database
 	collectionAdmin string
 	collectionUser  string
-}
-
-func (a *adminRepository) ChangeEmail(ctx context.Context, email string) (*mongo.UpdateResult, error) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func NewAdminRepository(db *mongo.Database, collectionAdmin string, collectionUser string) admin_domain.IAdminRepository {
@@ -56,18 +52,27 @@ func (a *adminRepository) FetchMany(c context.Context) (admin_domain.Response, e
 	}
 
 	var admins []admin_domain.Admin
-	for cursor.Next(c) {
-		var admin admin_domain.Admin
-		if err = cursor.Decode(&admin); err != nil {
-			return admin_domain.Response{}, err
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for cursor.Next(c) {
+			var admin admin_domain.Admin
+			if err = cursor.Decode(&admin); err != nil {
+				return
+			}
+
+			admin.CreatedAt = admin.CreatedAt.Add(7 + time.Hour)
+			admin.UpdatedAt = admin.UpdatedAt.Add(7 + time.Hour)
+
+			// Thêm lesson vào slice lessons
+			admins = append(admins, admin)
 		}
+	}()
 
-		admin.CreatedAt = admin.CreatedAt.Add(7 + time.Hour)
-		admin.UpdatedAt = admin.UpdatedAt.Add(7 + time.Hour)
+	wg.Wait()
 
-		// Thêm lesson vào slice lessons
-		admins = append(admins, admin)
-	}
 	adminRes := admin_domain.Response{
 		Admin: admins,
 	}
@@ -129,6 +134,24 @@ func (a *adminRepository) UpdateOne(ctx context.Context, admin *admin_domain.Adm
 			"phone":      admin.Phone,
 			"updated_at": admin.UpdatedAt,
 			"avatar":     admin.AvatarURL,
+		},
+	}
+
+	data, err := collection.UpdateOne(ctx, filter, &update)
+	if err != nil {
+		return nil, err
+	}
+	return data, err
+}
+
+func (a *adminRepository) ChangeEmail(ctx context.Context, admin *admin_domain.Admin) (*mongo.UpdateResult, error) {
+	collection := a.database.Collection(a.collectionAdmin)
+
+	filter := bson.M{"_id": admin.Id}
+	update := bson.M{
+		"$set": bson.M{
+			"email":      admin.Phone,
+			"updated_at": admin.UpdatedAt,
 		},
 	}
 
