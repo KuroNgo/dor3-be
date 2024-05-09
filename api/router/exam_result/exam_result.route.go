@@ -37,5 +37,5 @@ func ExamResultRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.D
 	router.GET("/fetch/user_id/exam_id", middleware.DeserializeUser(), result.GetResultsByUserIDAndExamID)
 	router.GET("/fetch/exam_id", middleware.DeserializeUser(), result.FetchResultByExamID)
 	router.POST("/create", middleware.DeserializeUser(), result.CreateOneExamResult)
-	router.DELETE("/delete/:_id", middleware.DeserializeUser(), result.DeleteOneExamResult)
+	router.DELETE("/delete/_id", middleware.DeserializeUser(), result.DeleteOneExamResult)
 }

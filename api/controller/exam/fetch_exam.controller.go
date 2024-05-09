@@ -65,8 +65,8 @@ func (e *ExamsController) FetchManyExamByUnitID(ctx *gin.Context) {
 }
 
 func (e *ExamsController) FetchOneExamByUnitID(ctx *gin.Context) {
-	_, err := ctx.Cookie("access_token")
-	if err != nil {
+	cookie, err := ctx.Cookie("access_token")
+	if err != nil || cookie == "" {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "fail",
 			"message": "You are not logged in",

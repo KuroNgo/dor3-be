@@ -30,6 +30,6 @@ func ExamAnswerRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.D
 	router := group.Group("/exam/answer")
 	router.GET("/fetch", middleware.DeserializeUser(), answer.FetchManyAnswerByUserIDAndQuestionID)
 	router.POST("/create", middleware.DeserializeUser(), answer.CreateOneExamAnswer)
-	router.DELETE("/delete", middleware.DeserializeUser(), answer.DeleteOneAnswer)
-	router.DELETE("/delete-all", middleware.DeserializeUser(), answer.DeleteAllAnswerInExamID)
+	router.DELETE("/1/delete", middleware.DeserializeUser(), answer.DeleteOneAnswer)
+	router.DELETE("/all/delete", middleware.DeserializeUser(), answer.DeleteAllAnswerInExamID)
 }

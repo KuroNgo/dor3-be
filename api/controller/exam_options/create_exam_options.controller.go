@@ -1,7 +1,6 @@
 package exam_options_controller
 
 import (
-	exam_answer_domain "clean-architecture/domain/exam_answer"
 	exam_options_domain "clean-architecture/domain/exam_options"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -28,7 +27,7 @@ func (e *ExamOptionsController) CreateOneExamOptions(ctx *gin.Context) {
 		return
 	}
 
-	var answerInput exam_answer_domain.Input
+	var answerInput exam_options_domain.Input
 	if err = ctx.ShouldBindJSON(&answerInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status": "error",
@@ -38,12 +37,13 @@ func (e *ExamOptionsController) CreateOneExamOptions(ctx *gin.Context) {
 	}
 
 	options := exam_options_domain.ExamOptions{
-		ID:         primitive.NewObjectID(),
-		QuestionID: answerInput.QuestionID,
-		Content:    answerInput.Content,
-		CreatedAt:  time.Now(),
-		UpdateAt:   time.Now(),
-		WhoUpdate:  admin.FullName,
+		ID:            primitive.NewObjectID(),
+		QuestionID:    answerInput.QuestionID,
+		Answer:        answerInput.Answer,
+		CorrectAnswer: answerInput.CorrectAnswer,
+		CreatedAt:     time.Now(),
+		UpdateAt:      time.Now(),
+		WhoUpdate:     admin.FullName,
 	}
 
 	err = e.ExamOptionsUseCase.CreateOne(ctx, &options)

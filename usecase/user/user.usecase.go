@@ -12,6 +12,42 @@ type userUseCase struct {
 	contextTimeout time.Duration
 }
 
+func NewUserUseCase(userRepository user_domain.IUserRepository, timeout time.Duration) user_domain.IUserUseCase {
+	return &userUseCase{
+		userRepository: userRepository,
+		contextTimeout: timeout,
+	}
+}
+
+func (u *userUseCase) UpdatePassword(ctx context.Context, user *user_domain.User) error {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+	err := u.userRepository.UpdatePassword(ctx, user)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userUseCase) GetByVerificationCode(ctx context.Context, verificationCode string) (*user_domain.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+	user, err := u.userRepository.GetByVerificationCode(ctx, verificationCode)
+	if err != nil {
+		return &user_domain.User{}, err
+	}
+	return user, nil
+}
+
+func (u *userUseCase) CheckVerify(ctx context.Context, verificationCode string) bool {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+	res := u.userRepository.CheckVerify(ctx, verificationCode)
+	return res
+}
+
 func (u *userUseCase) Update(ctx context.Context, user *user_domain.User) error {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
@@ -34,13 +70,6 @@ func (u *userUseCase) UpdateImage(c context.Context, userID string, imageURL str
 	}
 
 	return nil
-}
-
-func NewUserUseCase(userRepository user_domain.IUserRepository, timeout time.Duration) user_domain.IUserUseCase {
-	return &userUseCase{
-		userRepository: userRepository,
-		contextTimeout: timeout,
-	}
 }
 
 func (u *userUseCase) Create(c context.Context, user *user_domain.User) error {
@@ -125,4 +154,23 @@ func (u *userUseCase) Delete(ctx context.Context, userID string) error {
 	}
 
 	return nil
+}
+
+func (u *userUseCase) UniqueVerificationCode(ctx context.Context, verificationCode string) bool {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+	res := u.userRepository.UniqueVerificationCode(ctx, verificationCode)
+	return res
+}
+
+func (u *userUseCase) UpdateVerifyForChangePassword(ctx context.Context, user *user_domain.User) (*mongo.UpdateResult, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+	data, err := u.userRepository.UpdateVerifyForChangePassword(ctx, user)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }

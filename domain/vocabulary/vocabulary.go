@@ -66,5 +66,4 @@ type IVocabularyRepository interface {
 	UpdateOneAudio(ctx context.Context, vocabulary *Vocabulary) error
 
 	DeleteOne(ctx context.Context, vocabularyID string) error
-	DeleteMany(ctx context.Context, vocabularyID ...string) error
 }

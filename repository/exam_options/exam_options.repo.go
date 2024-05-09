@@ -36,7 +36,12 @@ func (e *examOptionsRepository) FetchManyByQuestionID(ctx context.Context, quest
 	if err != nil {
 		return exam_options_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	var options []exam_options_domain.ExamOptions
 
@@ -56,7 +61,7 @@ func (e *examOptionsRepository) FetchManyByQuestionID(ctx context.Context, quest
 		}
 	}()
 
-	wg.Done()
+	wg.Wait()
 
 	response := exam_options_domain.Response{
 		ExamOptions: options,
@@ -72,7 +77,7 @@ func (e *examOptionsRepository) UpdateOne(ctx context.Context, examOptions *exam
 	update := bson.M{
 		"$set": bson.M{
 			"question_id": examOptions.QuestionID,
-			"content":     examOptions.Content,
+			"answer":      examOptions.Answer,
 			"update_at":   examOptions.UpdateAt,
 			"who_update":  examOptions.WhoUpdate,
 		},
@@ -89,7 +94,7 @@ func (e *examOptionsRepository) CreateOne(ctx context.Context, examOptions *exam
 	collectionOptions := e.database.Collection(e.collectionOptions)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
-	filterQuestionID := bson.M{"question_id": examOptions.QuestionID}
+	filterQuestionID := bson.M{"_id": examOptions.QuestionID}
 	countLessonID, err := collectionQuestion.CountDocuments(ctx, filterQuestionID)
 	if err != nil {
 		return err
