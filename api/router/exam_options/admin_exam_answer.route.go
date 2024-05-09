@@ -29,5 +29,5 @@ func AdminExamOptionsRoute(env *bootstrap.Database, timeout time.Duration, db *m
 	router := group.Group("/exam/options")
 	router.POST("/create", options.CreateOneExamOptions)
 	router.PATCH("/update", options.UpdateOneExamOptions)
-	router.DELETE("/delete/:_id", options.DeleteOneExamOptions)
+	router.DELETE("/delete/_id", options.DeleteOneExamOptions)
 }

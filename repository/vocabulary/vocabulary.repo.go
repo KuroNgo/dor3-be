@@ -604,8 +604,3 @@ func (v *vocabularyRepository) DeleteOne(ctx context.Context, vocabularyID strin
 	_, err = collectionVocabulary.DeleteOne(ctx, filter)
 	return err
 }
-
-func (v *vocabularyRepository) DeleteMany(ctx context.Context, vocabularyID ...string) error {
-	//TODO implement me
-	panic("implement me")
-}

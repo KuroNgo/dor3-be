@@ -13,8 +13,15 @@ type examUseCase struct {
 }
 
 func (e *examUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.ExamResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	data, err := e.examRepository.FetchOneByUnitID(ctx, unitID)
+	if err != nil {
+		return exam_domain.ExamResponse{}, err
+	}
+
+	return data, nil
 }
 
 func NewExamUseCase(examRepository exam_domain.IExamRepository, timeout time.Duration) exam_domain.IExamUseCase {

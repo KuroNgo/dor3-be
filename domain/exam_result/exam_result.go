@@ -37,6 +37,7 @@ type IExamResultRepository interface {
 	GetResultsByUserIDAndExamID(ctx context.Context, userID string, examID string) (ExamResult, error)
 	GetAverageScoreByUser(ctx context.Context, userID string) (float64, error)
 	GetOverallPerformance(ctx context.Context, userID string) (float64, error)
+	GetResultByID(ctx context.Context, userID string) (ExamResult, error)
 
 	CreateOne(ctx context.Context, examResult *ExamResult) error
 	UpdateStatus(ctx context.Context, examResultID string, status int) (*mongo.UpdateResult, error)

@@ -55,6 +55,7 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 	if err != nil {
 		newUser := &user_domain.User{
 			ID:        primitive.NewObjectID(),
+			IP:        ctx.ClientIP(),
 			FullName:  fullName,
 			AvatarURL: avatarUrl,
 			Email:     email,
@@ -77,12 +78,18 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 			return
 		}
 
-		code := randstr.Dec(6)
+		var code string
+		for {
+			code = randstr.Dec(6)
+			if u.UserUseCase.UniqueVerificationCode(ctx, code) {
+				break
+			}
+		}
 
 		updUser := user_domain.User{
 			ID:               newUser.ID,
 			VerificationCode: code,
-			Verified:         true,
+			Verified:         false,
 			UpdatedAt:        time.Now(),
 		}
 
@@ -187,4 +194,54 @@ func (u *UserController) SignUp(ctx *gin.Context) {
 		"status": "success",
 	})
 	return
+}
+
+func (u *UserController) VerificationCode(ctx *gin.Context) {
+	var verificationCode user_domain.VerificationCode
+	if err := ctx.ShouldBindJSON(&verificationCode); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error()},
+		)
+		return
+	}
+
+	user, err := u.UserUseCase.GetByVerificationCode(ctx, verificationCode.VerificationCode)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error()},
+		)
+		return
+	}
+
+	res := u.UserUseCase.CheckVerify(ctx, verificationCode.VerificationCode)
+	if res != true {
+		ctx.JSON(http.StatusNotModified, gin.H{
+			"status":  "error",
+			"message": err.Error()},
+		)
+		return
+	}
+
+	updUser := user_domain.User{
+		ID:        user.ID,
+		Verified:  true,
+		UpdatedAt: time.Now(),
+	}
+
+	// Update User in Database
+	_, err = u.UserUseCase.UpdateVerify(ctx, &updUser)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error()},
+		)
+		return
+	}
+
+	// Trả về phản hồi thành công
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+	})
 }

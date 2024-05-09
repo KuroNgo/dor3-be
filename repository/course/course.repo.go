@@ -138,7 +138,6 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 
 	var courses []course_domain.CourseResponse
 	var wg sync.WaitGroup
-	var mu sync.Mutex // Mutex để bảo vệ courses
 
 	wg.Add(1)
 	go func() {
@@ -166,9 +165,7 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 				course.CountVocabulary = countVocab
 				course.CountLesson = countLesson
 
-				mu.Lock()
 				courses = append(courses, course)
-				mu.Unlock()
 			}(course)
 		}
 	}()

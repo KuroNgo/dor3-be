@@ -19,6 +19,23 @@ type examResultRepository struct {
 	collectionExam       string
 }
 
+func (e *examResultRepository) GetResultByID(ctx context.Context, id string) (exam_result_domain.ExamResult, error) {
+	collectionResult := e.database.Collection(e.collectionExamResult)
+
+	iD, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return exam_result_domain.ExamResult{}, err
+	}
+
+	filter := bson.M{"_id": iD}
+	var res exam_result_domain.ExamResult
+	err = collectionResult.FindOne(ctx, filter).Decode(&res)
+	if err != nil {
+		return exam_result_domain.ExamResult{}, err
+	}
+	return res, nil
+}
+
 func NewExamResultRepository(db *mongo.Database, collectionExamResult string, collectionExam string) exam_result_domain.IExamResultRepository {
 	return &examResultRepository{
 		database:             db,

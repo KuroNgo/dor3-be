@@ -30,5 +30,5 @@ func AdminExamQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *
 	router := group.Group("/exam/question")
 	router.POST("/create", question.CreateOneExamQuestions)
 	router.PATCH("/update", question.UpdateOneExamQuestion)
-	router.DELETE("/delete/:_id", question.DeleteOneExamQuestions)
+	router.DELETE("/delete/_id", question.DeleteOneExamQuestions)
 }

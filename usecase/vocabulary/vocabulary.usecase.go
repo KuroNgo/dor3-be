@@ -199,15 +199,3 @@ func (v *vocabularyUseCase) DeleteOne(ctx context.Context, vocabularyID string) 
 
 	return err
 }
-
-func (v *vocabularyUseCase) DeleteMany(ctx context.Context, vocabularyID ...string) error {
-	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
-	defer cancel()
-
-	err := v.vocabularyRepository.DeleteMany(ctx, vocabularyID...)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}

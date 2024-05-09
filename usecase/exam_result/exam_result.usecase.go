@@ -31,6 +31,18 @@ func (e *examResultUseCase) FetchMany(ctx context.Context, page string) (exam_re
 	return data, nil
 }
 
+func (e *examResultUseCase) GetResultByID(ctx context.Context, userID string) (exam_result_domain.ExamResult, error) {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	data, err := e.examResultRepository.GetResultByID(ctx, userID)
+	if err != nil {
+		return exam_result_domain.ExamResult{}, err
+	}
+
+	return data, nil
+}
+
 func (e *examResultUseCase) FetchManyByExamID(ctx context.Context, examID string) (exam_result_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()

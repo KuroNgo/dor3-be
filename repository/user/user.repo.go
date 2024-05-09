@@ -5,6 +5,7 @@ import (
 	"clean-architecture/internal"
 	"context"
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,6 +15,46 @@ import (
 type userRepository struct {
 	database   *mongo.Database
 	collection string
+}
+
+func (u *userRepository) UpdateVerifyForChangePassword(ctx context.Context, user *user_domain.User) (*mongo.UpdateResult, error) {
+	collection := u.database.Collection(u.collection)
+
+	filter := bson.D{{Key: "_id", Value: user.ID}}
+	update := bson.D{{Key: "$set", Value: bson.M{
+		"verified":   user.Verified,
+		"updated_at": user.UpdatedAt,
+	}}}
+
+	data, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func (u *userRepository) UpdatePassword(ctx context.Context, user *user_domain.User) error {
+	collection := u.database.Collection(u.collection)
+
+	filter := bson.D{{Key: "_id", Value: user.ID}}
+	update := bson.D{{Key: "$set", Value: bson.M{
+		"password":          user.Password,
+		"verification_code": user.VerificationCode,
+		"updated_at":        user.UpdatedAt,
+	}}}
+
+	_, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func NewUserRepository(db *mongo.Database, collection string) user_domain.IUserRepository {
+	return &userRepository{
+		database:   db,
+		collection: collection,
+	}
 }
 
 func (u *userRepository) Update(ctx context.Context, user *user_domain.User) error {
@@ -29,11 +70,32 @@ func (u *userRepository) Update(ctx context.Context, user *user_domain.User) err
 	return nil
 }
 
-func NewUserRepository(db *mongo.Database, collection string) user_domain.IUserRepository {
-	return &userRepository{
-		database:   db,
-		collection: collection,
+func (u *userRepository) CheckVerify(ctx context.Context, verificationCode string) bool {
+	collection := u.database.Collection(u.collection)
+
+	filter := bson.M{"verification_code": verificationCode}
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil || count == 0 {
+		return false
 	}
+
+	return true
+}
+
+func (u *userRepository) GetByVerificationCode(ctx context.Context, verificationCode string) (*user_domain.User, error) {
+	collection := u.database.Collection(u.collection)
+
+	filter := bson.M{"verification_code": verificationCode}
+
+	var user user_domain.User
+	err := collection.FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (u *userRepository) UpdateImage(c context.Context, userID string, imageURL string) error {
@@ -179,4 +241,15 @@ func (u *userRepository) UpsertOne(c context.Context, email string, user *user_d
 	} else {
 		return user, nil
 	}
+}
+
+func (u *userRepository) UniqueVerificationCode(ctx context.Context, verificationCode string) bool {
+	collection := u.database.Collection(u.collection)
+
+	filter := bson.M{"verification_code": verificationCode}
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil || count > 0 {
+		return false
+	}
+	return true
 }

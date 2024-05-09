@@ -119,19 +119,20 @@ func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_dom
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
 	calculate := make(chan int64)
-
+	countCh := make(chan int64)
 	go func() {
 		defer close(calculate)
+		defer close(countCh)
 		// Đếm tổng số lượng tài liệu trong collection
 		count, err := collection.CountDocuments(ctx, bson.D{})
 		if err != nil {
 			return
 		}
-
+		countCh <- count
 		cal1 := count / int64(perPage)
 		cal2 := count % int64(perPage)
 		if cal2 != 0 {
-			calculate <- cal1
+			calculate <- cal1 + 1
 		}
 	}()
 
@@ -143,19 +144,33 @@ func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_dom
 	// Lặp qua các tài liệu và tính tổng của trường FieldToSum
 	var size int64
 	var images []image_domain.Image
-	for cursor.Next(context.Background()) {
+	for cursor.Next(ctx) {
 		var doc image_domain.Image
 		if err = cursor.Decode(&doc); err != nil {
 			return image_domain.Response{}, errors.New("")
 		}
-		images = append(images, doc)
 		size += doc.Size
+
+		images = append(images, doc)
 	}
 
 	cal := <-calculate
+	count := <-countCh
+
+	statistics := image_domain.Statistics{
+		Count:           count,
+		MaxSizeMB:       1024 * 1024 * 1024,
+		MaxSizeKB:       1024 * 1024,
+		SizeKB:          size,
+		SizeMB:          size * 1024,
+		SizeRemainingKB: (1024 * 1024) - size,
+		SizeRemainingMB: (1024 * 1024 * 1024) - size,
+	}
+
 	response := image_domain.Response{
-		Image: images,
-		Page:  cal,
+		Image:      images,
+		Statistics: statistics,
+		Page:       cal,
 	}
 
 	return response, err

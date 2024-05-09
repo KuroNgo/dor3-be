@@ -102,6 +102,15 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 }
 
 func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exam_domain.ExamResponse, exam_domain.DetailResponse, error) {
+	e.cacheMutex.RLock()
+	cacheData, found := e.examManyCache[unitID]
+	cachedResponseData, found := e.examResponseCache[page]
+	e.cacheMutex.RUnlock()
+
+	if found {
+		return cacheData, cachedResponseData, nil
+	}
+
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -172,32 +181,46 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 		CurrentPage: pageNumber,
 		CountExam:   int64(len(exams)),
 	}
+
+	e.cacheMutex.Lock()
+	e.examManyCache[unitID] = exams
+	e.examResponseCache[page] = response
+	e.examCacheExpires[page] = time.Now().Add(5 * time.Minute)
+	e.examCacheExpires[unitID] = time.Now().Add(5 * time.Minute)
+	e.cacheMutex.Unlock()
 	return exams, response, nil
 }
 
 func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.ExamResponse, error) {
+	e.cacheMutex.RLock()
+	cacheData, found := e.examOneCache[unitID]
+	e.cacheMutex.RUnlock()
+
+	if found {
+		return cacheData, nil
+	}
+
 	collection := e.database.Collection(e.collectionExam)
 
-	filter := bson.M{"unit_id": unitID}
+	idUnit, err := primitive.ObjectIDFromHex(unitID)
+	if err != nil {
+		return exam_domain.ExamResponse{}, err
+	}
 
-	examCh := make(chan exam_domain.ExamResponse)
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer close(examCh)
-		var exam exam_domain.ExamResponse
-		err := collection.FindOne(ctx, filter).Decode(&exam)
-		if err != nil {
-			return
-		}
+	filter := bson.M{"unit_id": idUnit}
+	var exam exam_domain.ExamResponse
+	err = collection.FindOne(ctx, filter).Decode(&exam)
+	if err != nil {
+		return exam_domain.ExamResponse{}, err
+	}
 
-		countQuestion := e.CountQuestion(ctx, exam.ID.Hex())
-		exam.CountQuestion = countQuestion
-	}()
-	wg.Wait()
+	countQuestion := e.CountQuestion(ctx, exam.ID.Hex())
+	exam.CountQuestion = countQuestion
 
-	exam := <-examCh
+	e.cacheMutex.Lock()
+	e.examOneCache[unitID] = exam
+	e.examCacheExpires[unitID] = time.Now().Add(5 * time.Minute)
+	e.cacheMutex.Unlock()
 
 	return exam, nil
 }
