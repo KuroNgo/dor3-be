@@ -39,7 +39,6 @@ func (e *ExerciseOptionsController) UpdateOneExerciseOptions(ctx *gin.Context) {
 		ID:         answerInput.ID,
 		QuestionID: answerInput.QuestionID,
 		Content:    answerInput.Content,
-		BlankIndex: 0,
 		UpdateAt:   time.Now(),
 		WhoUpdate:  admin.FullName,
 	}

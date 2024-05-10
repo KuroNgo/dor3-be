@@ -2,7 +2,9 @@ package user_domain
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"time"
 )
 
 type SignUp struct {
@@ -39,6 +41,19 @@ type Input struct {
 	AvatarURL  string `bson:"avatar_url"  json:"avatar_url"`
 	Specialize string `bson:"specialize"  json:"specialize"`
 	Phone      string `bson:"phone"   json:"phone"`
+}
+
+type UserInput struct {
+	ID        primitive.ObjectID `bson:"_id"  json:"_id"`
+	FullName  string             `bson:"full_name"  json:"full_name"`
+	Email     string             `bson:"email"  json:"email"`
+	Role      string             `bson:"role" json:"role"`
+	AvatarURL string             `bson:"avatar_url"  json:"avatar_url"`
+	Phone     string             `bson:"phone"   json:"phone"`
+	Verified  bool               `bson:"verify"   json:"verify"`
+	Provider  string             `bson:"provider" json:"provider"`
+	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
 //go:generate mockery --name IUserUseCase

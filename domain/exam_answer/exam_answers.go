@@ -15,7 +15,7 @@ type ExamAnswer struct {
 	UserID     primitive.ObjectID `bson:"user_id" json:"user_id"`
 	QuestionID primitive.ObjectID `bson:"question_id" json:"question_id"`
 
-	Content     string    `bson:"content" json:"content"`
+	Answer      string    `bson:"answer" json:"answer"`
 	IsCorrect   int       `bson:"correct" json:"correct"`
 	SubmittedAt time.Time `bson:"submitted_at" json:"submitted_at"`
 }

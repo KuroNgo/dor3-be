@@ -208,7 +208,7 @@ func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.Use
 	return &user, err
 }
 
-func (u *userRepository) UpsertOne(c context.Context, email string, user *user_domain.User) (*user_domain.User, error) {
+func (u *userRepository) UpsertOne(c context.Context, email string, user *user_domain.UserInput) (*user_domain.User, error) {
 	collection := u.database.Collection(u.collection)
 
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
@@ -216,12 +216,9 @@ func (u *userRepository) UpsertOne(c context.Context, email string, user *user_d
 	update := bson.D{{Key: "$set", Value: bson.M{
 		"full_name":  user.FullName,
 		"email":      user.Email,
-		"password":   user.Password,
 		"avatar_url": user.AvatarURL,
-		"asset_id":   user.AssetID,
 		"phone":      user.Phone,
 		"provider":   user.Provider,
-		"verified":   user.Verified,
 		"created_at": user.CreatedAt,
 		"updated_at": user.UpdatedAt,
 		"role":       user.Role,
@@ -236,11 +233,7 @@ func (u *userRepository) UpsertOne(c context.Context, email string, user *user_d
 		return nil, err
 	}
 
-	if updatedUser != nil {
-		return updatedUser, nil
-	} else {
-		return user, nil
-	}
+	return updatedUser, nil
 }
 
 func (u *userRepository) UniqueVerificationCode(ctx context.Context, verificationCode string) bool {

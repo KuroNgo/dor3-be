@@ -7,10 +7,10 @@ import (
 )
 
 type Input struct {
-	ID         primitive.ObjectID `bson:"_id" json:"_id"`
-	QuestionID primitive.ObjectID `bson:"question_id" json:"question_id"`
-	Content    string             `bson:"content" json:"content"`
-	BlankIndex int                `bson:"blank_index" json:"blank_index"`
+	ID            primitive.ObjectID `bson:"_id" json:"_id"`
+	QuestionID    primitive.ObjectID `bson:"question_id" json:"question_id"`
+	Content       string             `bson:"content" json:"content"`
+	CorrectAnswer string             `bson:"correct_answer" json:"correct_answer"`
 }
 
 type IExerciseOptionUseCase interface {

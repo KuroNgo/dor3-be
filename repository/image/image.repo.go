@@ -9,7 +9,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"strconv"
+	"sync"
 )
 
 type imageRepository struct {
@@ -114,55 +116,54 @@ func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_dom
 	if err != nil {
 		return image_domain.Response{}, errors.New("invalid page number")
 	}
+
 	perPage := 7
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
-	calculate := make(chan int64)
-	countCh := make(chan int64)
-	go func() {
-		defer close(calculate)
-		defer close(countCh)
-		// Đếm tổng số lượng tài liệu trong collection
-		count, err := collection.CountDocuments(ctx, bson.D{})
-		if err != nil {
-			return
-		}
-		countCh <- count
-		cal1 := count / int64(perPage)
-		cal2 := count % int64(perPage)
-		if cal2 != 0 {
-			calculate <- cal1 + 1
-		}
-	}()
+	var count, size int64
+	var images []image_domain.Image
+	var mu sync.Mutex
+
+	// Đồng bộ hóa việc đếm số lượng tài liệu và tính toán
+	mu.Lock()
+	defer mu.Unlock()
+
+	// Đếm tổng số lượng tài liệu trong collection
+	count, err = collection.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return image_domain.Response{}, fmt.Errorf("error counting documents: %v", err)
+	}
 
 	cursor, err := collection.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
-		return image_domain.Response{}, err
+		return image_domain.Response{}, fmt.Errorf("error finding documents: %v", err)
 	}
-
-	// Lặp qua các tài liệu và tính tổng của trường FieldToSum
-	var size int64
-	var images []image_domain.Image
-	for cursor.Next(ctx) {
-		var doc image_domain.Image
-		if err = cursor.Decode(&doc); err != nil {
-			return image_domain.Response{}, errors.New("")
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
 		}
-		size += doc.Size
+	}(cursor, ctx)
 
-		images = append(images, doc)
-	}
-
-	cal := <-calculate
-	count := <-countCh
+	go func() {
+		for cursor.Next(ctx) {
+			var doc image_domain.Image
+			if err := cursor.Decode(&doc); err != nil {
+				log.Println("Error decoding document:", err)
+				continue
+			}
+			size += doc.Size
+			images = append(images, doc)
+		}
+	}()
 
 	statistics := image_domain.Statistics{
 		Count:           count,
-		MaxSizeMB:       1024 * 1024 * 1024,
+		MaxSizeMB:       1024 / 1024,
 		MaxSizeKB:       1024 * 1024,
 		SizeKB:          size,
-		SizeMB:          size * 1024,
+		SizeMB:          size / 1024,
 		SizeRemainingKB: (1024 * 1024) - size,
 		SizeRemainingMB: (1024 * 1024 * 1024) - size,
 	}
@@ -170,10 +171,10 @@ func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_dom
 	response := image_domain.Response{
 		Image:      images,
 		Statistics: statistics,
-		Page:       cal,
+		Page:       count/int64(perPage) + 1,
 	}
 
-	return response, err
+	return response, nil
 }
 
 func (i *imageRepository) UpdateOne(ctx context.Context, imageID string, updatedImage *image_domain.Image) error {

@@ -5,10 +5,10 @@ import (
 	"clean-architecture/bootstrap"
 	admin_domain "clean-architecture/domain/admin"
 	exam_domain "clean-architecture/domain/exam"
+	exam_question_domain "clean-architecture/domain/exam_question"
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
 	user_domain "clean-architecture/domain/user"
-	vocabulary_domain "clean-architecture/domain/vocabulary"
 	admin_repository "clean-architecture/repository/admin"
 	exam_repository "clean-architecture/repository/exam"
 	user_repository "clean-architecture/repository/user"
@@ -21,7 +21,7 @@ import (
 )
 
 func ExamRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	ex := exam_repository.NewExamRepository(db, exam_domain.CollectionExam, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
+	ex := exam_repository.NewExamRepository(db, exam_domain.CollectionExam, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, exam_question_domain.CollectionExamQuestion)
 	users := user_repository.NewUserRepository(db, user_domain.CollectionUser)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 

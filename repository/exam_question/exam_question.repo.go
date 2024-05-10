@@ -264,7 +264,7 @@ func (e *examQuestionRepository) CreateOne(ctx context.Context, examQuestion *ex
 		return err
 	}
 	if countExamID == 0 {
-		return errors.New("the examID do not exist")
+		return errors.New("the examID does not exist")
 	}
 
 	filterVocabularyID := bson.M{"_id": examQuestion.VocabularyID}
@@ -273,9 +273,23 @@ func (e *examQuestionRepository) CreateOne(ctx context.Context, examQuestion *ex
 		return err
 	}
 	if countVocabularyID == 0 {
-		return errors.New("the vocabularyID do not exist")
+		return errors.New("the vocabularyID does not exist")
 	}
+
+	filterParent := bson.M{"exam_id": examQuestion.ExamID}
+	count, err := collectionQuestion.CountDocuments(ctx, filterParent)
+	if err != nil {
+		return err
+	}
+	if count >= 10 {
+		return errors.New("the question id is not added in one exam")
+	}
+
+	// Thêm câu hỏi vào cơ sở dữ liệu nếu không có lỗi
 	_, err = collectionQuestion.InsertOne(ctx, examQuestion)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

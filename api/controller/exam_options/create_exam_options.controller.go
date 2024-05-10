@@ -39,7 +39,7 @@ func (e *ExamOptionsController) CreateOneExamOptions(ctx *gin.Context) {
 	options := exam_options_domain.ExamOptions{
 		ID:            primitive.NewObjectID(),
 		QuestionID:    answerInput.QuestionID,
-		Answer:        answerInput.Answer,
+		Options:       answerInput.Options,
 		CorrectAnswer: answerInput.CorrectAnswer,
 		CreatedAt:     time.Now(),
 		UpdateAt:      time.Now(),

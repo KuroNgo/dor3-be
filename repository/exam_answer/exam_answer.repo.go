@@ -2,6 +2,7 @@ package exam_answer_repository
 
 import (
 	exam_answer_domain "clean-architecture/domain/exam_answer"
+	exam_options_domain "clean-architecture/domain/exam_options"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,6 +16,7 @@ type examAnswerRepository struct {
 	database           *mongo.Database
 	collectionQuestion string
 	collectionAnswer   string
+	collectionOptions  string
 	collectionExam     string
 
 	answerManyCache    map[string]exam_answer_domain.ExamAnswer
@@ -23,11 +25,12 @@ type examAnswerRepository struct {
 	cacheMutex         sync.RWMutex
 }
 
-func NewExamAnswerRepository(db *mongo.Database, collectionQuestion string, collectionAnswer string, collectionExam string) exam_answer_domain.IExamAnswerRepository {
+func NewExamAnswerRepository(db *mongo.Database, collectionQuestion string, collectionOptions string, collectionAnswer string, collectionExam string) exam_answer_domain.IExamAnswerRepository {
 	return &examAnswerRepository{
 		database:           db,
 		collectionQuestion: collectionQuestion,
 		collectionAnswer:   collectionAnswer,
+		collectionOptions:  collectionOptions,
 		collectionExam:     collectionExam,
 
 		answerManyCache:    make(map[string]exam_answer_domain.ExamAnswer),
@@ -89,6 +92,7 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 
 func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_answer_domain.ExamAnswer) error {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
+	collectionOptions := e.database.Collection(e.collectionOptions)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
 	filterQuestionID := bson.M{"question_id": examAnswer.QuestionID}
@@ -100,7 +104,25 @@ func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_a
 		return errors.New("the question ID do not exist")
 	}
 
+	var options exam_options_domain.ExamOptions
+	if err := collectionOptions.FindOne(ctx, filterQuestionID).Decode(&options); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return errors.New("no options found for the question ID")
+		}
+		return err
+	}
+
+	if examAnswer.Answer == options.CorrectAnswer {
+		examAnswer.IsCorrect = 1 //đúng
+	} else {
+		examAnswer.IsCorrect = 0 //sai
+	}
+
 	_, err = collectionAnswer.InsertOne(ctx, examAnswer)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

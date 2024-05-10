@@ -53,7 +53,7 @@ type IUserRepository interface {
 	UpdatePassword(ctx context.Context, user *User) error
 	UpdateVerify(ctx context.Context, user *User) (*mongo.UpdateResult, error)
 	UpdateVerifyForChangePassword(ctx context.Context, user *User) (*mongo.UpdateResult, error)
-	UpsertOne(ctx context.Context, email string, user *User) (*User, error)
+	UpsertOne(ctx context.Context, email string, user *UserInput) (*User, error)
 	UpdateImage(ctx context.Context, userID string, imageURL string) error
 
 	UniqueVerificationCode(ctx context.Context, verificationCode string) bool

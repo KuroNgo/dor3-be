@@ -82,15 +82,25 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 	}
 
 	var exams []exam_domain.ExamResponse
-	for cursor.Next(ctx) {
-		var exam exam_domain.ExamResponse
-		if err = cursor.Decode(&exam); err != nil {
-			return nil, exam_domain.DetailResponse{}, err
-		}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			var exam exam_domain.ExamResponse
+			if err = cursor.Decode(&exam); err != nil {
+				return
+			}
 
-		// Thêm lesson vào slice lessons
-		exams = append(exams, exam)
-	}
+			countQuest := e.CountQuestion(ctx, exam.ID.Hex())
+			exam.CountQuestion = countQuest
+
+			// Thêm lesson vào slice lessons
+			exams = append(exams, exam)
+		}
+	}()
+
+	wg.Wait()
 
 	cal := <-calCh
 	detail := exam_domain.DetailResponse{
