@@ -6,5 +6,5 @@ import (
 
 //go:generate mockery --name IGoogleAuthUseCase
 type IGoogleAuthUseCase interface {
-	UpsertUser(ctx context.Context, email string, user *User) (*User, error)
+	UpsertUser(ctx context.Context, email string, user *UserInput) (*User, error)
 }

@@ -9,7 +9,7 @@ import (
 type Input struct {
 	ID            primitive.ObjectID `bson:"_id" json:"_id"`
 	QuestionID    primitive.ObjectID `bson:"question_id" json:"question_id"`
-	Answer        []string           `bson:"answer" json:"answer"`
+	Options       []string           `bson:"options" json:"options"`
 	CorrectAnswer string             `bson:"correct_answer" json:"correct_answer"`
 }
 

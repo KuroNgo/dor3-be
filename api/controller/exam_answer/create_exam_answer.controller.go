@@ -40,7 +40,7 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 		ID:          primitive.NewObjectID(),
 		UserID:      user.ID,
 		QuestionID:  answerInput.QuestionID,
-		Content:     answerInput.Content,
+		Answer:      answerInput.Answer,
 		SubmittedAt: time.Now(),
 	}
 

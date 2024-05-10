@@ -50,7 +50,7 @@ func (auth *GoogleAuthController) GoogleLoginWithUser(c *gin.Context) {
 	fullName := userInfo["name"].(string)
 	avatarURL := userInfo["picture"].(string)
 	verifiedEmail := userInfo["verified_email"].(bool)
-	resBody := &user_domain.User{
+	resBody := &user_domain.UserInput{
 		ID:        primitive.NewObjectID(),
 		Email:     email,
 		FullName:  fullName,

@@ -38,7 +38,7 @@ func (e *ExamOptionsController) UpdateOneExamOptions(ctx *gin.Context) {
 	exam := exam_options_domain.ExamOptions{
 		ID:         examInput.ID,
 		QuestionID: examInput.QuestionID,
-		Answer:     examInput.Answer,
+		Options:    examInput.Options,
 		UpdateAt:   time.Now(),
 		WhoUpdate:  admin.FullName,
 	}

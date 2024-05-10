@@ -16,6 +16,7 @@ import (
 type examResultRepository struct {
 	database             *mongo.Database
 	collectionExamResult string
+	collectionAnswer     string
 	collectionExam       string
 }
 

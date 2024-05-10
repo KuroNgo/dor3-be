@@ -2,11 +2,13 @@ package exam_options_repository
 
 import (
 	exam_options_domain "clean-architecture/domain/exam_options"
+	exam_question_domain "clean-architecture/domain/exam_question"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"strings"
 	"sync"
 )
 
@@ -77,7 +79,7 @@ func (e *examOptionsRepository) UpdateOne(ctx context.Context, examOptions *exam
 	update := bson.M{
 		"$set": bson.M{
 			"question_id": examOptions.QuestionID,
-			"answer":      examOptions.Answer,
+			"options":     examOptions.Options,
 			"update_at":   examOptions.UpdateAt,
 			"who_update":  examOptions.WhoUpdate,
 		},
@@ -99,13 +101,58 @@ func (e *examOptionsRepository) CreateOne(ctx context.Context, examOptions *exam
 	if err != nil {
 		return err
 	}
-
 	if countLessonID == 0 {
 		return errors.New("the question ID do not exist")
 	}
 
+	var question exam_question_domain.ExamQuestion
+	if err := collectionQuestion.FindOne(ctx, filterQuestionID).Decode(&question); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return errors.New("no question found for the question ID")
+		}
+		return err
+	}
+
+	if strings.ToLower(question.Type) == "true/false" {
+		examOptions.Options = []string{"true", "false"}
+		_, err = collectionOptions.InsertOne(ctx, examOptions)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if strings.ToLower(question.Type) == "choose" && len(examOptions.Options) > 1 {
+		_, err = collectionOptions.InsertOne(ctx, examOptions)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if strings.ToLower(question.Type) == "listen" || strings.ToLower(question.Type) == "fill" {
+		examOptions.Options = []string{}
+		_, err = collectionOptions.InsertOne(ctx, examOptions)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if strings.ToLower(question.Type) == "sentence" {
+		_, err = collectionOptions.InsertOne(ctx, examOptions)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
 	_, err = collectionOptions.InsertOne(ctx, examOptions)
-	return nil
+	if err != nil {
+		return err
+	}
+
+	return errors.New("the options has error")
 }
 
 func (e *examOptionsRepository) DeleteOne(ctx context.Context, optionsID string) error {
