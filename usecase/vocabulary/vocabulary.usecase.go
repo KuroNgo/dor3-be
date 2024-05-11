@@ -164,6 +164,18 @@ func (v *vocabularyUseCase) UpdateOne(ctx context.Context, vocabulary *vocabular
 	return data, err
 }
 
+func (v *vocabularyUseCase) UpdateOneImage(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
+	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
+	defer cancel()
+
+	data, err := v.vocabularyRepository.UpdateOneImage(ctx, vocabulary)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, err
+}
+
 func (v *vocabularyUseCase) UpdateOneAudio(c context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
 	ctx, cancel := context.WithTimeout(c, v.contextTimeout)
 	defer cancel()

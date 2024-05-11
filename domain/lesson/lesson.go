@@ -18,6 +18,7 @@ type Lesson struct {
 	Name        string `bson:"name" json:"name"`
 	Content     string `bson:"content" json:"content"`
 	ImageURL    string `bson:"image_url" json:"image_url"`
+	AssetURL    string `bson:"asset_url" json:"asset_url"`
 	Level       int    `bson:"level" json:"level"`
 	IsCompleted int    `bson:"is_completed" json:"is_completed"`
 
@@ -46,8 +47,9 @@ type LessonResponse struct {
 }
 
 type DetailResponse struct {
-	Page        int64 `json:"page"`
-	CurrentPage int   `json:"current_page"`
+	Page        int64      `json:"page"`
+	CurrentPage int        `json:"current_page"`
+	Statistics  Statistics `json:"statistics"`
 }
 
 type Statistics struct {
@@ -65,9 +67,10 @@ type ILessonRepository interface {
 	CreateOne(ctx context.Context, lesson *Lesson) error
 	CreateOneByNameCourse(ctx context.Context, lesson *Lesson) error
 
-	UpdateOne(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, lessonID string) error
 
+	UpdateImage(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
+	UpdateOne(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
 	// UpdateComplete automation
 	UpdateComplete(ctx context.Context, lessonID string, lesson Lesson) error
 }

@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
+	"sync"
 )
 
 type unitRepository struct {
@@ -16,7 +17,14 @@ type unitRepository struct {
 	collectionUnit       string
 	collectionLesson     string
 	collectionVocabulary string
+	errCh                chan error
 }
+
+var (
+	wg    sync.WaitGroup
+	units []unit_domain.UnitResponse
+	unit  unit_domain.UnitResponse
+)
 
 func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLesson string, collectionVocabulary string) unit_domain.IUnitRepository {
 	return &unitRepository{
@@ -24,6 +32,7 @@ func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLess
 		collectionUnit:       collectionUnit,
 		collectionLesson:     collectionLesson,
 		collectionVocabulary: collectionVocabulary,
+		errCh:                make(chan error),
 	}
 }
 
@@ -39,15 +48,13 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
 	calCh := make(chan int64)
-	countUnitCh := make(chan int64)
+	count, err := collectionUnit.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return nil, unit_domain.DetailResponse{}, err
+	}
 
 	go func() {
 		defer close(calCh)
-		defer close(countUnitCh)
-		count, err := collectionUnit.CountDocuments(ctx, bson.D{})
-		if err != nil {
-			return
-		}
 
 		cal1 := count / int64(perPage)
 		cal2 := count % int64(perPage)
@@ -67,26 +74,29 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 		}
 	}(cursor, ctx)
 
-	var units []unit_domain.UnitResponse
-	for cursor.Next(ctx) {
-		var unit unit_domain.UnitResponse
-		if err = cursor.Decode(&unit); err != nil {
-			return nil, unit_domain.DetailResponse{}, err
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			if err = cursor.Decode(&unit); err != nil {
+				return
+			}
+
+			countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
+			if err != nil {
+				return
+			}
+
+			unit.CountVocabulary = countVocabulary
+			units = append(units, unit)
 		}
 
-		countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
-		if err != nil {
-			return nil, unit_domain.DetailResponse{}, err
-		}
-
-		unit.CountVocabulary = countVocabulary
-		units = append(units, unit)
-	}
+	}()
+	wg.Wait()
 
 	cal := <-calCh
-	countUnit := <-countUnitCh
 	detail := unit_domain.DetailResponse{
-		CountUnit:   countUnit,
+		CountUnit:   count,
 		Page:        cal,
 		CurrentPage: pageNumber,
 	}
@@ -210,38 +220,56 @@ func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, p
 	return units, response, nil
 }
 
-func (u *unitRepository) UpdateComplete(ctx context.Context, updateData unit_domain.Update) error {
-	collection := u.database.Collection(u.collectionUnit)
+func (u *unitRepository) UpdateComplete(ctx context.Context, updateData *unit_domain.Unit) error {
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		collection := u.database.Collection(u.collectionUnit)
 
-	filter := bson.D{{Key: "_id", Value: updateData.UnitID}}
-	update := bson.D{{Key: "$set", Value: bson.D{
-		{Key: "is_complete", Value: updateData.IsComplete},
-		{Key: "who_updates", Value: updateData.WhoUpdate},
-	}}}
+		filter := bson.D{{Key: "_id", Value: updateData.ID}}
+		update := bson.D{{Key: "$set", Value: bson.D{
+			{Key: "is_complete", Value: updateData.IsComplete},
+			{Key: "who_updates", Value: updateData.WhoUpdates},
+		}}}
+		_, err := collection.UpdateOne(ctx, filter, &update)
+		if err != nil {
+			u.errCh <- err
+			return
+		}
+	}()
 
-	_, err := collection.UpdateOne(ctx, filter, update)
-	if err != nil {
+	go func() {
+		defer wg.Done()
+		isLessonComplete, err := u.CheckLessonComplete(ctx, updateData.LessonID)
+		if err != nil {
+			u.errCh <- err
+			return
+		}
+
+		lessonCollection := u.database.Collection(u.collectionLesson)
+		if err != nil {
+			u.errCh <- err
+			return
+		}
+
+		lessonUpdate := bson.D{{Key: "$set", Value: bson.D{{Key: "is_complete", Value: isLessonComplete}}}}
+		lessonFilter := bson.D{{Key: "_id", Value: updateData.LessonID}}
+		_, err = lessonCollection.UpdateOne(ctx, lessonFilter, &lessonUpdate)
+		if err != nil {
+			u.errCh <- err
+			return
+		}
+	}()
+
+	wg.Wait()
+	close(u.errCh)
+
+	select {
+	case err := <-u.errCh:
 		return err
+	default:
+		return nil
 	}
-
-	isLessonComplete, err := u.CheckLessonComplete(ctx, updateData.LessonID)
-	if err != nil {
-		return err
-	}
-
-	lessonCollection := u.database.Collection(u.collectionLesson)
-	if err != nil {
-		return err
-	}
-
-	lessonUpdate := bson.D{{Key: "$set", Value: bson.D{{Key: "is_complete", Value: isLessonComplete}}}}
-	lessonFilter := bson.D{{Key: "_id", Value: updateData.LessonID}}
-	_, err = lessonCollection.UpdateOne(ctx, lessonFilter, lessonUpdate)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (u *unitRepository) CheckLessonComplete(ctx context.Context, lessonID primitive.ObjectID) (bool, error) {
@@ -349,8 +377,8 @@ func (u *unitRepository) DeleteOne(ctx context.Context, unitID string) error {
 }
 
 // countLessonsByCourseID counts the number of lessons associated with a course.
-func (l *unitRepository) countVocabularyByUnitID(ctx context.Context, unitID primitive.ObjectID) (int32, error) {
-	collectionVocabulary := l.database.Collection(l.collectionVocabulary)
+func (u *unitRepository) countVocabularyByUnitID(ctx context.Context, unitID primitive.ObjectID) (int32, error) {
+	collectionVocabulary := u.database.Collection(u.collectionVocabulary)
 
 	filter := bson.M{"unit_id": unitID}
 	count, err := collectionVocabulary.CountDocuments(ctx, filter)

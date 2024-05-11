@@ -34,9 +34,10 @@ type ILessonUseCase interface {
 	CreateOne(ctx context.Context, lesson *Lesson) error
 	CreateOneByNameCourse(ctx context.Context, lesson *Lesson) error
 
-	UpdateOne(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, lessonID string) error
 
+	UpdateImage(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
+	UpdateOne(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
 	// UpdateComplete automation
 	UpdateComplete(ctx context.Context, lessonID string, lesson Lesson) error
 }

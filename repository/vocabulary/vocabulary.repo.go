@@ -27,24 +27,6 @@ type vocabularyRepository struct {
 	cacheMutex             sync.RWMutex
 }
 
-func (v *vocabularyRepository) GetVocabularyById(ctx context.Context, id string) (vocabulary_domain.Vocabulary, error) {
-	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
-	idVocabulary, err := primitive.ObjectIDFromHex(id)
-
-	filter := bson.M{"_id": idVocabulary}
-	if err != nil {
-		return vocabulary_domain.Vocabulary{}, err
-	}
-
-	var vocabulary vocabulary_domain.Vocabulary
-	err = collectionVocabulary.FindOne(ctx, filter).Decode(&vocabulary)
-	if !errors.Is(err, mongo.ErrNoDocuments) {
-		return vocabulary_domain.Vocabulary{}, err
-	}
-
-	return vocabulary, nil
-}
-
 func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, collectionMark string, collectionUnit string) vocabulary_domain.IVocabularyRepository {
 	return &vocabularyRepository{
 		database:             db,
@@ -137,6 +119,24 @@ func (v *vocabularyRepository) GetLatestVocabulary(ctx context.Context) ([]strin
 	}
 
 	return vocabularies, nil
+}
+
+func (v *vocabularyRepository) GetVocabularyById(ctx context.Context, id string) (vocabulary_domain.Vocabulary, error) {
+	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
+	idVocabulary, err := primitive.ObjectIDFromHex(id)
+
+	filter := bson.M{"_id": idVocabulary}
+	if err != nil {
+		return vocabulary_domain.Vocabulary{}, err
+	}
+
+	var vocabulary vocabulary_domain.Vocabulary
+	err = collectionVocabulary.FindOne(ctx, filter).Decode(&vocabulary)
+	if !errors.Is(err, mongo.ErrNoDocuments) {
+		return vocabulary_domain.Vocabulary{}, err
+	}
+
+	return vocabulary, nil
 }
 
 func (v *vocabularyRepository) GetAllVocabulary(ctx context.Context) ([]string, error) {
@@ -403,6 +403,11 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 	//v.cacheMutex.Unlock()
 
 	return vocabularyRes, nil
+}
+
+func (v *vocabularyRepository) UpdateOneImage(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (v *vocabularyRepository) UpdateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {

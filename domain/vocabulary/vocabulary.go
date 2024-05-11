@@ -62,6 +62,7 @@ type IVocabularyRepository interface {
 	CreateOneByNameUnit(ctx context.Context, vocabulary *Vocabulary) error
 
 	UpdateOne(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
+	UpdateOneImage(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
 	UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error
 	UpdateOneAudio(ctx context.Context, vocabulary *Vocabulary) error
 

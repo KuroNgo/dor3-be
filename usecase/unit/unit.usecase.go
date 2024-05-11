@@ -91,7 +91,7 @@ func (u *unitUseCase) UpdateOne(ctx context.Context, unit *unit_domain.Unit) (*m
 	return data, nil
 }
 
-func (u *unitUseCase) UpdateComplete(ctx context.Context, update unit_domain.Update) error {
+func (u *unitUseCase) UpdateComplete(ctx context.Context, update *unit_domain.Unit) error {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 

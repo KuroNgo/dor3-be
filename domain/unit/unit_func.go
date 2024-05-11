@@ -13,6 +13,11 @@ type Input struct {
 	Level    int                `bson:"level" json:"level"`
 }
 
+type CompleteInput struct {
+	ID         primitive.ObjectID `bson:"_id" json:"_id"`
+	IsComplete int                `bson:"is_complete" json:"is_complete"`
+}
+
 type Update struct {
 	UnitID     primitive.ObjectID `bson:"_id" json:"_id"`
 	LessonID   primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
@@ -33,5 +38,5 @@ type IUnitUseCase interface {
 	DeleteOne(ctx context.Context, unitID string) error
 
 	// UpdateComplete automation
-	UpdateComplete(ctx context.Context, update Update) error
+	UpdateComplete(ctx context.Context, update *Unit) error
 }

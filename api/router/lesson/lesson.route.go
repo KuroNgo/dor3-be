@@ -4,11 +4,17 @@ import (
 	lesson_controller "clean-architecture/api/controller/lesson"
 	"clean-architecture/bootstrap"
 	course_domain "clean-architecture/domain/course"
+	image_domain "clean-architecture/domain/image"
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
+	user_domain "clean-architecture/domain/user"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
+	image_repository "clean-architecture/repository/image"
 	lesson_repository "clean-architecture/repository/lesson"
+	user_repository "clean-architecture/repository/user"
+	image_usecase "clean-architecture/usecase/image"
 	lesson_usecase "clean-architecture/usecase/lesson"
+	usecase "clean-architecture/usecase/user"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
@@ -16,8 +22,13 @@ import (
 
 func LessonRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	le := lesson_repository.NewLessonRepository(db, lesson_domain.CollectionLesson, course_domain.CollectionCourse, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
+	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
+	im := image_repository.NewImageRepository(db, image_domain.CollectionImage)
+
 	lesson := &lesson_controller.LessonController{
 		LessonUseCase: lesson_usecase.NewLessonUseCase(le, timeout),
+		ImageUseCase:  image_usecase.NewImageUseCase(im, timeout),
+		UserUseCase:   usecase.NewUserUseCase(ur, timeout),
 		Database:      env,
 	}
 

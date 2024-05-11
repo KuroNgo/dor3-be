@@ -38,6 +38,7 @@ type IVocabularyUseCase interface {
 	UpdateOne(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
 	UpdateOneAudio(ctx context.Context, vocabulary *Vocabulary) error
 	UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error
+	UpdateOneImage(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
 
 	CreateOne(ctx context.Context, vocabulary *Vocabulary) error
 	CreateOneByNameUnit(ctx context.Context, vocabulary *Vocabulary) error
