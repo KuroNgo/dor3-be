@@ -27,5 +27,5 @@ func AdminFeedbackRoute(env *bootstrap.Database, timeout time.Duration, db *mong
 
 	router := group.Group("/feedback")
 	router.GET("/fetch", feedback.FetchMany)
-	router.DELETE("/delete", feedback.DeleteOneFeedback)
+	router.DELETE("/delete/_id", feedback.DeleteOneFeedback)
 }

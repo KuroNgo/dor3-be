@@ -29,5 +29,5 @@ func AdminQuizOptionsRoute(env *bootstrap.Database, timeout time.Duration, db *m
 	router := group.Group("/quiz/options")
 	router.POST("/create", options.CreateOneQuizOptions)
 	router.PATCH("/update", options.UpdateOneQuizOptions)
-	router.DELETE("/delete/:_id", options.DeleteOneQuizOptions)
+	router.DELETE("/delete/_id", options.DeleteOneQuizOptions)
 }

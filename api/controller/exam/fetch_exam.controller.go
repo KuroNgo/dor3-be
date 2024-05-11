@@ -35,11 +35,20 @@ func (e *ExamsController) FetchManyExam(ctx *gin.Context) {
 }
 
 func (e *ExamsController) FetchManyExamByUnitID(ctx *gin.Context) {
-	_, err := ctx.Cookie("access_token")
-	if err != nil {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "fail",
-			"message": "You are not logged in",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
 		})
 		return
 	}
