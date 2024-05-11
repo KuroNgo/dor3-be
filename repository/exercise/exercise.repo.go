@@ -21,16 +21,6 @@ type exerciseRepository struct {
 	collectionQuestion   string
 }
 
-func (e *exerciseRepository) FetchManyByLessonID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewExerciseRepository(db *mongo.Database, collectionLesson string, collectionUnit string, collectionVocabulary string, collectionExercise string, collectionQuestion string) exercise_domain.IExerciseRepository {
 	return &exerciseRepository{
 		database:             db,
@@ -42,7 +32,12 @@ func NewExerciseRepository(db *mongo.Database, collectionLesson string, collecti
 	}
 }
 
-func (e *exerciseRepository) UpdateCompleted(ctx context.Context, exerciseID string, isComplete int) error {
+func (e *exerciseRepository) FetchManyByLessonID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -69,31 +64,20 @@ func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string
 
 	var exercises []exercise_domain.ExerciseResponse
 	for cursor.Next(ctx) {
-		var exercise exercise_domain.Exercise
+		var exercise exercise_domain.ExerciseResponse
 		if err = cursor.Decode(&exercise); err != nil {
 			return exercise_domain.ExerciseResponse{}, err
 		}
 
 		// Lấy thông tin liên quan cho mỗi khóa học
-		countQuest, err := e.countQuestionByExerciseID(ctx, exercise.Id)
+		countQuest, err := e.countQuestionByExerciseID(ctx, exercise.ID)
 		if err != nil {
 			return exercise_domain.ExerciseResponse{}, err
 		}
 
-		exerciseRes := exercise_domain.ExerciseResponse{
-			ID:            exercise.Id,
-			LessonID:      exercise.LessonID,
-			UnitID:        exercise.UnitID,
-			Title:         exercise.Title,
-			Description:   exercise.Description,
-			Duration:      exercise.Duration,
-			CreatedAt:     exercise.CreatedAt,
-			UpdatedAt:     exercise.UpdatedAt,
-			WhoUpdates:    exercise.WhoUpdates,
-			CountQuestion: countQuest,
-		}
+		exercise.CountQuestion = countQuest
 
-		exercises = append(exercises, exerciseRes)
+		exercises = append(exercises, exercise)
 	}
 
 	// Kiểm tra nếu danh sách exercises không rỗng
@@ -200,6 +184,11 @@ func (e *exerciseRepository) UpdateOne(ctx context.Context, exercise *exercise_d
 		return nil, err
 	}
 	return data, nil
+}
+
+func (e *exerciseRepository) UpdateCompleted(ctx context.Context, exerciseID string, isComplete int) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (e *exerciseRepository) CreateOne(ctx context.Context, exercise *exercise_domain.Exercise) error {

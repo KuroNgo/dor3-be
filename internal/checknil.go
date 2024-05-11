@@ -19,7 +19,7 @@ func IsValidQuiz(quiz quiz_domain.Input) error {
 		return errors.New("description cannot be empty")
 	}
 
-	if quiz.Duration == 0 {
+	if quiz.Duration == "" {
 		return errors.New("time duration cannot be empty")
 	}
 	return nil

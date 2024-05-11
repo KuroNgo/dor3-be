@@ -16,9 +16,9 @@ type Quiz struct {
 	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 
-	Title       string        `bson:"title" json:"title"`
-	Description string        `bson:"description" json:"description"`
-	Duration    time.Duration `bson:"duration" json:"duration"`
+	Title       string `bson:"title" json:"title"`
+	Description string `bson:"description" json:"description"`
+	Duration    string `bson:"duration" json:"duration"`
 
 	IsComplete int       `bson:"is_complete" json:"is_complete"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
@@ -31,9 +31,9 @@ type QuizResponse struct {
 	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 
-	Title       string        `bson:"title" json:"title"`
-	Description string        `bson:"description" json:"description"`
-	Duration    time.Duration `bson:"duration" json:"duration"`
+	Title       string `bson:"title" json:"title"`
+	Description string `bson:"description" json:"description"`
+	Duration    string `bson:"duration" json:"duration"`
 
 	IsComplete int       `bson:"is_complete" json:"is_complete"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`

@@ -12,11 +12,6 @@ type exerciseUseCase struct {
 	contextTimeout     time.Duration
 }
 
-func (e *exerciseUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewExerciseUseCase(exerciseRepository exercise_domain.IExerciseRepository, timeout time.Duration) exercise_domain.IExerciseUseCase {
 	return &exerciseUseCase{
 		exerciseRepository: exerciseRepository,
@@ -34,6 +29,18 @@ func (e *exerciseUseCase) FetchManyByLessonID(ctx context.Context, unitID string
 	}
 
 	return vocabulary, detail, err
+}
+
+func (e *exerciseUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	vocabulary, err := e.exerciseRepository.FetchOneByUnitID(ctx, unitID)
+	if err != nil {
+		return exercise_domain.ExerciseResponse{}, err
+	}
+
+	return vocabulary, err
 }
 
 func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
