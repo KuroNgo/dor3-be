@@ -34,6 +34,5 @@ func ExamRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Databas
 
 	router := group.Group("/exam")
 	router.GET("/fetch", exam.FetchManyExam)
-	router.GET("fetch/n/unit_id", exam.FetchManyExamByUnitID)
 	router.GET("fetch/1/unit_id", exam.FetchOneExamByUnitID)
 }
