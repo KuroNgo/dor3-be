@@ -100,14 +100,14 @@ func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (cour
 }
 
 func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page string) ([]course_domain.CourseResponse, course_domain.DetailForManyResponse, error) {
-	c.cacheMutex.RLock()
-	cachedData, found := c.courseManyCache["course"]
-	cachedResponseData, found := c.courseResponseCache[page]
-	c.cacheMutex.RUnlock()
-
-	if found {
-		return cachedData, cachedResponseData, nil
-	}
+	//c.cacheMutex.RLock()
+	//cachedData, foundData := c.courseManyCache["course"]
+	//cachedResponseData, foundRes := c.courseResponseCache[page]
+	//c.cacheMutex.RUnlock()
+	//
+	//if foundData && foundRes {
+	//	return cachedData, cachedResponseData, nil
+	//}
 
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
@@ -149,23 +149,20 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 			}
 
 			wg.Add(1)
-			go func(course course_domain.CourseResponse) {
+			go func(course2 course_domain.CourseResponse) {
 				defer wg.Done()
-
-				countLesson, err := c.countLessonsByCourseID(ctx, course.Id)
+				countLesson, err := c.countLessonsByCourseID(ctx, course2.Id)
 				if err != nil {
 					return
 				}
 
-				countVocab, err := c.countVocabularyByCourseID(ctx, course.Id)
+				countVocab, err := c.countVocabularyByCourseID(ctx, course2.Id)
 				if err != nil {
 					return
 				}
-
-				course.CountVocabulary = countVocab
-				course.CountLesson = countLesson
-
-				courses = append(courses, course)
+				course2.CountVocabulary = countVocab
+				course2.CountLesson = countLesson
+				courses = append(courses, course2)
 			}(course)
 		}
 	}()
@@ -178,12 +175,12 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 		CurrentPage: pageNumber,
 	}
 
-	c.cacheMutex.Lock()
-	c.courseManyCache["course"] = courses
-	c.courseResponseCache[page] = detail
-	c.courseCacheExpires["course"] = time.Now().Add(5 * time.Minute)
-	c.courseCacheExpires[page] = time.Now().Add(5 * time.Minute)
-	c.cacheMutex.Unlock()
+	//c.cacheMutex.Lock()
+	//c.courseManyCache["course"] = courses
+	//c.courseResponseCache[page] = detail
+	//c.courseCacheExpires["course"] = time.Now().Add(5 * time.Minute)
+	//c.courseCacheExpires[page] = time.Now().Add(5 * time.Minute)
+	//c.cacheMutex.Unlock()
 
 	return courses, detail, nil
 }
@@ -206,11 +203,14 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.
 	mu.Lock()
 	data, err := collectionCourse.UpdateOne(ctx, filter, &update)
 	mu.Unlock()
-
 	if err != nil {
 		return nil, err
 	}
 
+	//c.cacheMutex.Lock()
+	//delete(c.courseOneCache, course.Id.Hex())
+	//c.courseCacheExpires[course.Id.Hex()] = time.Now().Add(-1 * time.Second)
+	//c.cacheMutex.Unlock()
 	return data, nil
 }
 
@@ -218,17 +218,25 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
 	filter := bson.M{"name": course.Name}
-	// check exists with CountDocuments
 	count, err := collectionCourse.CountDocuments(ctx, filter)
 	if err != nil {
 		return err
 	}
 	if count > 0 {
-		return errors.New("the course name did exist")
+		return errors.New("the course name already exists")
 	}
 
 	_, err = collectionCourse.InsertOne(ctx, course)
-	return err
+	if err != nil {
+		return err
+	}
+
+	//c.cacheMutex.Lock()
+	//delete(c.courseManyCache, "course")
+	//c.courseCacheExpires = make(map[string]time.Time)
+	//c.cacheMutex.Unlock()
+
+	return nil
 }
 
 func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error {
@@ -269,7 +277,10 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 	if result == nil {
 		return errors.New("the course was not found or already deleted")
 	}
-
+	//c.cacheMutex.Lock()
+	//delete(c.courseOneCache, courseID)
+	//c.courseCacheExpires[courseID] = time.Now().Add(-1 * time.Second)
+	//c.cacheMutex.Unlock()
 	return nil
 }
 

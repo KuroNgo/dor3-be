@@ -43,12 +43,12 @@ func NewLessonRepository(db *mongo.Database, collectionLesson string, collection
 }
 
 func (l *lessonRepository) FetchByID(ctx context.Context, lessonID string) (lesson_domain.LessonResponse, error) {
-	l.cacheMutex.RLock()
-	cachedData, found := l.lessonOneCache[lessonID]
-	l.cacheMutex.RUnlock()
-	if found {
-		return cachedData, nil
-	}
+	//l.cacheMutex.RLock()
+	//cachedData, found := l.lessonOneCache[lessonID]
+	//l.cacheMutex.RUnlock()
+	//if found {
+	//	return cachedData, nil
+	//}
 
 	collectionLesson := l.database.Collection(l.collectionLesson)
 
@@ -91,22 +91,22 @@ func (l *lessonRepository) FetchByID(ctx context.Context, lessonID string) (less
 	lesson.CountVocabulary = countVocabulary
 	lesson.CountUnit = countUnit
 
-	l.cacheMutex.Lock()
-	l.lessonOneCache[lessonID] = lesson
-	l.lessonCacheExpires[lessonID] = time.Now().Add(5 * time.Minute)
-	l.cacheMutex.Unlock()
+	//l.cacheMutex.Lock()
+	//l.lessonOneCache[lessonID] = lesson
+	//l.lessonCacheExpires[lessonID] = time.Now().Add(5 * time.Minute)
+	//l.cacheMutex.Unlock()
 
 	return lesson, nil
 }
 
 func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
-	l.cacheMutex.RLock()
-	cachedData, found := l.lessonManyCache[idCourse]
-	cachedResponseData, found := l.lessonResponseCache[page]
-	l.cacheMutex.RUnlock()
-	if found {
-		return cachedData, cachedResponseData, nil
-	}
+	//l.cacheMutex.RLock()
+	//cachedData, found := l.lessonManyCache[idCourse]
+	//cachedResponseData, found := l.lessonResponseCache[page]
+	//l.cacheMutex.RUnlock()
+	//if found {
+	//	return cachedData, cachedResponseData, nil
+	//}
 
 	collectionLesson := l.database.Collection(l.collectionLesson)
 
@@ -201,12 +201,12 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string,
 		CurrentPage: pageNumber,
 	}
 
-	l.cacheMutex.Lock()
-	l.lessonManyCache[idCourse] = lessons
-	l.lessonResponseCache[page] = response
-	l.lessonCacheExpires[idCourse] = time.Now().Add(5 * time.Minute)
-	l.lessonCacheExpires[page] = time.Now().Add(5 * time.Minute)
-	l.cacheMutex.Unlock()
+	//l.cacheMutex.Lock()
+	//l.lessonManyCache[idCourse] = lessons
+	//l.lessonResponseCache[page] = response
+	//l.lessonCacheExpires[idCourse] = time.Now().Add(5 * time.Minute)
+	//l.lessonCacheExpires[page] = time.Now().Add(5 * time.Minute)
+	//l.cacheMutex.Unlock()
 
 	return lessons, response, nil
 }
@@ -244,13 +244,13 @@ func (l *lessonRepository) UpdateComplete(ctx context.Context, lessonID string, 
 }
 
 func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
-	l.cacheMutex.RLock()
-	cachedData, found := l.lessonManyCache[page]
-	cachedResponseData, found := l.lessonResponseCache[page]
-	l.cacheMutex.RUnlock()
-	if found {
-		return cachedData, cachedResponseData, nil
-	}
+	//l.cacheMutex.RLock()
+	//cachedData, found := l.lessonManyCache[page]
+	//cachedResponseData, found := l.lessonResponseCache[page]
+	//l.cacheMutex.RUnlock()
+	//if found {
+	//	return cachedData, cachedResponseData, nil
+	//}
 
 	collectionLesson := l.database.Collection(l.collectionLesson)
 
@@ -335,11 +335,11 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 		CurrentPage: pageNumber,
 	}
 
-	l.cacheMutex.Lock()
-	l.lessonManyCache[page] = lessons
-	l.lessonResponseCache[page] = response
-	l.lessonCacheExpires[page] = time.Now().Add(5 * time.Minute)
-	l.cacheMutex.Unlock()
+	//l.cacheMutex.Lock()
+	//l.lessonManyCache[page] = lessons
+	//l.lessonResponseCache[page] = response
+	//l.lessonCacheExpires[page] = time.Now().Add(5 * time.Minute)
+	//l.cacheMutex.Unlock()
 
 	return lessons, response, err
 }

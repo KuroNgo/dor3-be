@@ -51,7 +51,7 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	}
 	perPage := 7
 	skip := (pageNumber - 1) * perPage
-	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip)).SetSort(bson.D{{"_id", -1}})
 
 	cal := make(chan int64)
 
