@@ -94,9 +94,6 @@
 │       ├───unit
 │       ├───user
 │       ├───user_attempt
-│       ├───user_exam_attempt
-│       ├───user_exercise_attempt
-│       ├───user_quiz_attempt
 │       └───vocabulary
 ├───assets
 │   └───images
@@ -105,6 +102,7 @@
 ├───domain
 │   ├───activity_log
 │   ├───admin
+│   ├───box
 │   ├───config_system
 │   ├───course
 │   ├───exam
@@ -130,6 +128,7 @@
 │   ├───unit
 │   ├───user
 │   ├───user_attempt
+│   ├───user_detail
 │   └───vocabulary
 ├───infrastructor
 │   ├───mongo
@@ -140,7 +139,8 @@
 │   │   ├───firebase
 │   │   │   └───audio
 │   │   └───google
-│   │       └───const
+│   │       ├───const
+│   │       └───mail
 │   ├───file
 │   │   └───excel
 │   └───oauth2
@@ -172,6 +172,7 @@
 │   ├───unit
 │   ├───user
 │   ├───user_attempt
+│   ├───user_detail
 │   └───vocabulary
 ├───templates
 └───usecase

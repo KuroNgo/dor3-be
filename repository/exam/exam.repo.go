@@ -43,14 +43,14 @@ func NewExamRepository(db *mongo.Database, collectionExam string, collectionLess
 }
 
 func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_domain.ExamResponse, exam_domain.DetailResponse, error) {
-	e.cacheMutex.RLock()
-	cacheData, found := e.examManyCache["exam"]
-	cachedResponseData, found := e.examResponseCache[page]
-	e.cacheMutex.RUnlock()
-
-	if found {
-		return cacheData, cachedResponseData, nil
-	}
+	//e.cacheMutex.RLock()
+	//cacheData, found := e.examManyCache["exam"]
+	//cachedResponseData, found := e.examResponseCache[page]
+	//e.cacheMutex.RUnlock()
+	//
+	//if found {
+	//	return cacheData, cachedResponseData, nil
+	//}
 
 	collectionExam := e.database.Collection(e.collectionExam)
 
@@ -112,14 +112,14 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 }
 
 func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exam_domain.ExamResponse, exam_domain.DetailResponse, error) {
-	e.cacheMutex.RLock()
-	cacheData, found := e.examManyCache[unitID]
-	cachedResponseData, found := e.examResponseCache[page]
-	e.cacheMutex.RUnlock()
-
-	if found {
-		return cacheData, cachedResponseData, nil
-	}
+	//e.cacheMutex.RLock()
+	//cacheData, found := e.examManyCache[unitID]
+	//cachedResponseData, found := e.examResponseCache[page]
+	//e.cacheMutex.RUnlock()
+	//
+	//if found {
+	//	return cacheData, cachedResponseData, nil
+	//}
 
 	collectionExam := e.database.Collection(e.collectionExam)
 
@@ -192,23 +192,23 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 		CountExam:   int64(len(exams)),
 	}
 
-	e.cacheMutex.Lock()
-	e.examManyCache[unitID] = exams
-	e.examResponseCache[page] = response
-	e.examCacheExpires[page] = time.Now().Add(5 * time.Minute)
-	e.examCacheExpires[unitID] = time.Now().Add(5 * time.Minute)
-	e.cacheMutex.Unlock()
+	//e.cacheMutex.Lock()
+	//e.examManyCache[unitID] = exams
+	//e.examResponseCache[page] = response
+	//e.examCacheExpires[page] = time.Now().Add(5 * time.Minute)
+	//e.examCacheExpires[unitID] = time.Now().Add(5 * time.Minute)
+	//e.cacheMutex.Unlock()
 	return exams, response, nil
 }
 
 func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.ExamResponse, error) {
-	e.cacheMutex.RLock()
-	cacheData, found := e.examOneCache[unitID]
-	e.cacheMutex.RUnlock()
+	//e.cacheMutex.RLock()
+	//cacheData, found := e.examOneCache[unitID]
+	//e.cacheMutex.RUnlock()
 
-	if found {
-		return cacheData, nil
-	}
+	//if found {
+	//	return cacheData, nil
+	//}
 
 	collection := e.database.Collection(e.collectionExam)
 
@@ -227,10 +227,10 @@ func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (e
 	countQuestion := e.CountQuestion(ctx, exam.ID.Hex())
 	exam.CountQuestion = countQuestion
 
-	e.cacheMutex.Lock()
-	e.examOneCache[unitID] = exam
-	e.examCacheExpires[unitID] = time.Now().Add(5 * time.Minute)
-	e.cacheMutex.Unlock()
+	//e.cacheMutex.Lock()
+	//e.examOneCache[unitID] = exam
+	//e.examCacheExpires[unitID] = time.Now().Add(5 * time.Minute)
+	//e.cacheMutex.Unlock()
 
 	return exam, nil
 }
