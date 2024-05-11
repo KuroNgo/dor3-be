@@ -59,10 +59,10 @@ type IUnitRepository interface {
 	CreateOne(ctx context.Context, unit *Unit) error
 	CreateOneByNameLesson(ctx context.Context, unit *Unit) error
 
-	UpdateOne(ctx context.Context, unit *Unit) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, unitID string) error
 
 	// UpdateComplete automation
-	UpdateComplete(ctx context.Context, update Update) error
+	UpdateComplete(ctx context.Context, update *Unit) error
+	UpdateOne(ctx context.Context, unit *Unit) (*mongo.UpdateResult, error)
 	CheckLessonComplete(ctx context.Context, lessonID primitive.ObjectID) (bool, error)
 }

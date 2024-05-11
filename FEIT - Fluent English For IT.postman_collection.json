@@ -1,0 +1,3131 @@
+{
+	"info": {
+		"_postman_id": "090223d8-4879-4cc2-97c6-a04ae7dcb6b4",
+		"name": "FEIT | Fluent English For IT",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26002693",
+		"_collection_link": "https://gold-zodiac-93167.postman.co/workspace/KURO~61a79b39-dbd5-4b79-8f95-73e2cd4faa91/collection/26002693-090223d8-4879-4cc2-97c6-a04ae7dcb6b4?action=share&source=collection_link&creator=26002693"
+	},
+	"item": [
+		{
+			"name": "user",
+			"item": [
+				{
+					"name": "user",
+					"item": [
+						{
+							"name": "logout",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{HostUser}}/logout",
+									"host": [
+										"{{HostUser}}"
+									],
+									"path": [
+										"logout"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get info user",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostUser}}/info",
+									"host": [
+										"{{HostUser}}"
+									],
+									"path": [
+										"info"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sign_up",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "full_name",
+											"value": "Dinh Hoang",
+											"type": "text"
+										},
+										{
+											"key": "email",
+											"value": "kurokaze1106@gmail.com",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "01012002Phong.",
+											"type": "text"
+										},
+										{
+											"key": "avatar_url",
+											"value": "https://example.com/avatar.jpg",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "specialize",
+											"value": "Software Engineering",
+											"type": "text"
+										},
+										{
+											"key": "phone",
+											"value": "0329245971",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{HostUser}}/signup",
+									"host": [
+										"{{HostUser}}"
+									],
+									"path": [
+										"signup"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/update",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "verification",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"verification_code\":\"663343\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Host}}/user/verify",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"user",
+										"verify"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "forget_password",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"email\":\"dinhhoang026@gmail.com\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostUser}}/forget",
+									"host": [
+										"{{HostUser}}"
+									],
+									"path": [
+										"forget"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "verify password",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"verification_code\":\"389200\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Host}}/user/verify/password",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"user",
+										"verify",
+										"password"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "forget password",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"password\":\"01012002Phong\",\r\n    \"password_compare\":\"01012002Phong\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostUser}}/password/forget",
+									"host": [
+										"{{HostUser}}"
+									],
+									"path": [
+										"password",
+										"forget"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "google_login",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": []
+						},
+						"url": {
+							"raw": "https://localhost:8080/api/auth/google-callback",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"auth",
+								"google-callback"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "refresh_token",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{HostUser}}/refresh",
+							"host": [
+								"{{HostUser}}"
+							],
+							"path": [
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"kurodev@gmail.com\",\r\n    \"password\":\"01012002Phong\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{Host}}/login/role",
+							"host": [
+								"{{Host}}"
+							],
+							"path": [
+								"login",
+								"role"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get mail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{HostUser}}/get/mail",
+							"host": [
+								"{{HostUser}}"
+							],
+							"path": [
+								"get",
+								"mail"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "admin",
+			"item": [
+				{
+					"name": "sign up",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"full_name\": \"John Doe\",\r\n  \"email\": \"kurodev@gmail.com\",\r\n  \"password\": \"01012002Phong\",\r\n  \"avatar_url\": \"https://example.com/avatar.jpg\",\r\n  \"specialize\": \"Software Engineering\",\r\n  \"phone\": \"0329245971\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{HostAdmin}}/signup",
+							"host": [
+								"{{HostAdmin}}"
+							],
+							"path": [
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get me",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{HostAdmin}}/get-me",
+							"host": [
+								"{{HostAdmin}}"
+							],
+							"path": [
+								"get-me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "refreshtoken",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{HostAdmin}}/refresh",
+							"host": [
+								"{{HostAdmin}}"
+							],
+							"path": [
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "logout",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{HostAdmin}}/logout",
+							"host": [
+								"{{HostAdmin}}"
+							],
+							"path": [
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{Host}}/login/admin",
+							"host": [
+								"{{Host}}"
+							],
+							"path": [
+								"login",
+								"admin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{HostAdmin}}/update",
+							"host": [
+								"{{HostAdmin}}"
+							],
+							"path": [
+								"update"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "course",
+			"item": [
+				{
+					"name": "admin",
+					"item": [
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "fetch in admin",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/course/fetch",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"course",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\":\"English for IT 10\",\r\n    \"description\":\"English\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/course/create",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"course",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create with file",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/D:/Product/major/2023-2024/Đồ án tốt nghiệp/Báo cáo/excel/course.xlsx"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/course/create/file",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"course",
+										"create",
+										"file"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create lesson management",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "files",
+											"type": "file",
+											"src": "postman-cloud:///1eef036f-9554-47c0-9750-b85c25bf0fcc"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/course/create/file/final",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"course",
+										"create",
+										"file",
+										"final"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update object",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"_id\":\"661fdcac76c8c841321a643b\",\r\n    \"name\":\"English for IT 3\",\r\n    \"description\":\"English\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/course/update",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"course",
+										"update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/course/delete/:_id?_id=661be9afd068e536622af66f",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"course",
+										"delete",
+										":_id"
+									],
+									"query": [
+										{
+											"key": "_id",
+											"value": "661be9afd068e536622af66f"
+										}
+									],
+									"variable": [
+										{
+											"key": "_id",
+											"value": "661bac0df44549bf1bebcb03"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "user",
+					"item": [
+						{
+							"name": "fetch",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/course/fetch?page=1",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"course",
+										"fetch"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "statictis",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{Host}}/course/statistic",
+							"host": [
+								"{{Host}}"
+							],
+							"path": [
+								"course",
+								"statistic"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "fetch by courseid",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{Host}}/course/fetch/_id?_id=6634a51606dcd67a743cd963",
+							"host": [
+								"{{Host}}"
+							],
+							"path": [
+								"course",
+								"fetch",
+								"_id"
+							],
+							"query": [
+								{
+									"key": "_id",
+									"value": "6634a51606dcd67a743cd963"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "lesson",
+			"item": [
+				{
+					"name": "admin",
+					"item": [
+						{
+							"name": "fetch-many",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/lesson/fetch?page=1",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"lesson",
+										"fetch"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"course_id\": \"6634a51606dcd67a743cd963\",\r\n  \"name\": \"Network 2\",\r\n  \"content\": \"Introduces fundamental concepts in computer networking.\",\r\n  \"level\": 2\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/lesson/create",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"lesson",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"_id\":\"661e94b29570433c92f0b25e\",\r\n  \"course_id\":\"660b8a0c2aef1f3a28265523\",\r\n  \"name\": \"Net Word\",\r\n  \"content\": \"Introduces fundamental concepts in computer networking.\",\r\n  \"level\": 6\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/lesson/update",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"lesson",
+										"update"
+									],
+									"query": [
+										{
+											"key": "",
+											"value": null,
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/lesson/delete/:_id",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"lesson",
+										"delete",
+										":_id"
+									],
+									"variable": [
+										{
+											"key": "_id",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create with file",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "files",
+											"type": "file",
+											"src": "postman-cloud:///1eef036f-9554-47c0-9750-b85c25bf0fcc"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/lesson/create/file",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"lesson",
+										"create",
+										"file"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "user",
+					"item": [
+						{
+							"name": "fetch-courseId",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "course_id",
+											"value": "65f50363b9cc1ac7a5e84e89"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/lesson/fetch/:course_id?course_id=660b8a0c2aef1f3a28265523",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"lesson",
+										"fetch",
+										":course_id"
+									],
+									"query": [
+										{
+											"key": "course_id",
+											"value": "660b8a0c2aef1f3a28265523"
+										}
+									],
+									"variable": [
+										{
+											"key": "course_id",
+											"value": "65f50363b9cc1ac7a5e84e89"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch-id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/lesson/fetch/_id?_id=6638b36d780b69091d6178aa",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"lesson",
+										"fetch",
+										"_id"
+									],
+									"query": [
+										{
+											"key": "_id",
+											"value": "6638b36d780b69091d6178aa"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "vocabulary",
+			"item": [
+				{
+					"name": "admin",
+					"item": [
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"word\": \"Function\",\r\n  \"unit_id\": \"660ae15d1298127ed00c2acd\",\r\n  \"part_of_speech\": \"noun\",\r\n  \"pronunciation\": \"ˈfəNG(k)SHən\",\r\n  \"example\": \"A named block of code that performs a specific task when called.\",\r\n  \"field_of_it\": \"computer science\",\r\n  \"link_url\": \"https://en.wikipedia.org/wiki/Algorithm\"\r\n}\r\n\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/vocabulary/create",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"vocabulary",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"\":\"\",\r\n  \"word\": \"Hello Nhoa\",\r\n  \"unit_id\": \"660ae15d1298127ed00c2acd\",\r\n  \"part_of_speech\": \"noun\",\r\n  \"pronunciation\": \"ˈfəNG(k)SHən\",\r\n  \"example\": \"A named block of code that performs a specific task when called.\",\r\n  \"field_of_it\": \"computer science\",\r\n  \"link_url\": \"https://en.wikipedia.org/wiki/Algorithm\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/vocabulary/update",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"vocabulary",
+										"update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/vocabulary/delete/1/_id",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"vocabulary",
+										"delete",
+										"1",
+										"_id"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch latest 1 hour",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/vocabulary/fetch/latest",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"vocabulary",
+										"fetch",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create with file",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "files",
+											"type": "file",
+											"src": "postman-cloud:///1eef036f-9554-47c0-9750-b85c25bf0fcc"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/vocabulary/create/file",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"vocabulary",
+										"create",
+										"file"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create audio",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"word\":\" when called. \"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/vocabulary/create/audio",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"vocabulary",
+										"create",
+										"audio"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete audio",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/vocabulary/delete/folder",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"vocabulary",
+										"delete",
+										"folder"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete many",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/vocabulary/delete/n/_id?_id=6638ba9d4fc42f9e085c6ef9&_id=6638ba9d4fc42f9e085c6efa",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"vocabulary",
+										"delete",
+										"n",
+										"_id"
+									],
+									"query": [
+										{
+											"key": "_id",
+											"value": "6638ba9d4fc42f9e085c6ef9"
+										},
+										{
+											"key": "_id",
+											"value": "6638ba9d4fc42f9e085c6efa"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "user",
+					"item": [
+						{
+							"name": "get word",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Host}}/vocabulary/fetch-by-word?word=syntax",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"vocabulary",
+										"fetch-by-word"
+									],
+									"query": [
+										{
+											"key": "word",
+											"value": "syntax"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get lesson",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "field_of_it",
+											"value": "Algorithm",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{Host}}/vocabulary/fetch-by-lesson?field_of_it=Algorithm",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"vocabulary",
+										"fetch-by-lesson"
+									],
+									"query": [
+										{
+											"key": "field_of_it",
+											"value": "Algorithm"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/vocabulary/fetch",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"vocabulary",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch-idUnit",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text",
+										"disabled": true
+									},
+									{
+										"key": "Content-Length",
+										"value": "<calculated when request is sent>",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/vocabulary/fetch/unit?unit_id=660da03b518b4cc110dfe8ca",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"vocabulary",
+										"fetch",
+										"unit"
+									],
+									"query": [
+										{
+											"key": "unit_id",
+											"value": "660da03b518b4cc110dfe8ca"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch all word",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/vocabulary/fetch-all",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"vocabulary",
+										"fetch-all"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch latest",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/vocabulary/fetch/latest",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"vocabulary",
+										"fetch",
+										"latest"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "unit",
+			"item": [
+				{
+					"name": "admin",
+					"item": [
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"lesson_id\": \"65f506278b890513f2957ace\",\r\n  \"name\": \"Unit 1\",\r\n  \"content\": \"Introduction to Computer Networks\",\r\n  \"is_complete\": 0\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/unit/create",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"unit",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/unit/delete",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"unit",
+										"delete"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create with file",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "files",
+											"type": "file",
+											"src": "postman-cloud:///1eef036f-9554-47c0-9750-b85c25bf0fcc"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/unit/create/file",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"unit",
+										"create",
+										"file"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "user",
+					"item": [
+						{
+							"name": "fetch",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/unit/fetch",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"unit",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch-idlesson",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "",
+										"variables": ""
+									}
+								},
+								"url": {
+									"raw": "{{Host}}/unit/fetch/:lesson_id?lesson_id=6634a51e06dcd67a743cd966",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"unit",
+										"fetch",
+										":lesson_id"
+									],
+									"query": [
+										{
+											"key": "lesson_id",
+											"value": "6634a51e06dcd67a743cd966"
+										}
+									],
+									"variable": [
+										{
+											"key": "lesson_id",
+											"value": "660ad8e884f5d3b2d42a7772"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update complete",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"_id\":\"\",\r\n    \"is_complete\":1\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Host}}/unit/update/complete",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"unit",
+										"update",
+										"complete"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "activity_log",
+			"item": [
+				{
+					"name": "admin",
+					"item": [
+						{
+							"name": "fetch all",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/activity/fetch",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"activity",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "image",
+			"item": [
+				{
+					"name": "upload many",
+					"item": [
+						{
+							"name": "upload static",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/pngwing.com.png"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/image/files/upload/many/static",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"image",
+										"files",
+										"upload",
+										"many",
+										"static"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "upload quiz",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/image/files/upload/many/quiz",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"image",
+										"files",
+										"upload",
+										"many",
+										"quiz"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "upload lesson",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/image/files/upload/many/lesson",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"image",
+										"files",
+										"upload",
+										"many",
+										"lesson"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "upload exam",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/image/files/upload/many/exam",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"image",
+										"files",
+										"upload",
+										"many",
+										"exam"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "upload user",
+							"protocolProfileBehavior": {
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/FEIT/Chương/Chương 9.png"
+										},
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/google-logo-9808.png"
+										},
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/FEIT/Chương/Chương 2.png"
+										},
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/FEIT/Chương/Chương 3.png"
+										},
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/FEIT/Chương/Chương 4.png"
+										},
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/FEIT/Chương/Chương 5.png"
+										},
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/FEIT/Chương/Chương 6.png"
+										},
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/FEIT/Chương/Chương 7.png"
+										},
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/FEIT/Chương/Chương 8.png"
+										},
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/FEIT/Chương/Chương 10.png"
+										},
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/FEIT/Chương/Chương 1.png"
+										},
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/FEIT/Chương/Chương 9.png"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/admin/image/files/upload/many/user",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"admin",
+										"image",
+										"files",
+										"upload",
+										"many",
+										"user"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "upload one",
+					"item": [
+						{
+							"name": "upload static",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/FEIT/Chương/Chương 1.png"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/image/file/upload/1/static",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"image",
+										"file",
+										"upload",
+										"1",
+										"static"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "upload quiz",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/image/file/upload/1/quiz",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"image",
+										"file",
+										"upload",
+										"1",
+										"quiz"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "upload lesson",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/image/file/1/lesson",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"image",
+										"file",
+										"1",
+										"lesson"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "upload user",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/user.png"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/image/file/upload/1/user",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"image",
+										"file",
+										"upload",
+										"1",
+										"user"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "upload exam",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/image/file/upload/1/exam",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"image",
+										"file",
+										"upload",
+										"1",
+										"exam"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "fetch many static",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/image/fetch",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"image",
+								"fetch"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "mark list",
+			"item": [
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "mark vocabulary",
+			"item": [
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "quiz",
+			"item": [
+				{
+					"name": "quiz",
+					"item": [
+						{
+							"name": "New Folder",
+							"item": []
+						},
+						{
+							"name": "New Folder",
+							"item": []
+						},
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"question\": \"What is the capital of France?\",\r\n  \"options\": [\"London\", \"Paris\", \"Berlin\", \"Madrid\"],\r\n  \"correct_answer\": \"Paris\",\r\n  \"explanation\": \"Paris is the capital city of France.\",\r\n  \"question_type\": \"checkbox\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/quiz/create",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"quiz",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/quiz/fetch",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"quiz",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/quiz/delete/:_id?_id=66119f67dc1c43c107c8186e",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"quiz",
+										"delete",
+										":_id"
+									],
+									"query": [
+										{
+											"key": "_id",
+											"value": "66119f67dc1c43c107c8186e"
+										}
+									],
+									"variable": [
+										{
+											"key": "_id",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "upsert",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"question\": \"What is the capital of France?\",\r\n                \"options\": [\r\n                    \"Phong\",\r\n                    \"London\",\r\n                    \"Berlin\",\r\n                    \"Rome\"\r\n                ],\r\n                \"correct_answer\": \"London\",\r\n                \"explanation\": \"\",\r\n                \"question_type\": \"checkbox\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/quiz/upsert/:_id?_id=6611a3c017dae17cd8ca050b",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"quiz",
+										"upsert",
+										":_id"
+									],
+									"query": [
+										{
+											"key": "_id",
+											"value": "6611a3c017dae17cd8ca050b"
+										}
+									],
+									"variable": [
+										{
+											"key": "_id",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"question\": \"What is the capital of France?\",\r\n    \"options\": [\r\n        \"Paris\",\r\n        \"London\",\r\n        \"Berlin\",\r\n        \"Rome\"\r\n    ],\r\n    \"correct_answer\": \"Rome\",\r\n    \"explanation\": \"\",\r\n    \"question_type\": \"checkbox\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/quiz/update?_id=65d2208af228f5c6e3b7122f",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"quiz",
+										"update"
+									],
+									"query": [
+										{
+											"key": "_id",
+											"value": "65d2208af228f5c6e3b7122f"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "quiz_questions",
+					"item": [
+						{
+							"name": "New Folder",
+							"item": []
+						},
+						{
+							"name": "New Folder",
+							"item": []
+						}
+					]
+				},
+				{
+					"name": "quiz_options",
+					"item": [
+						{
+							"name": "New Folder",
+							"item": []
+						},
+						{
+							"name": "New Folder",
+							"item": []
+						}
+					]
+				},
+				{
+					"name": "quiz_answer",
+					"item": [
+						{
+							"name": "New Folder",
+							"item": []
+						}
+					]
+				},
+				{
+					"name": "quiz_result",
+					"item": [
+						{
+							"name": "New Folder",
+							"item": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "exercise",
+			"item": [
+				{
+					"name": "exercise",
+					"item": [
+						{
+							"name": "fetch",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exercise/fetch",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exercise",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch by unit id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exercise/fetch/unit",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exercise",
+										"fetch",
+										"unit"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update any element",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exercise/update",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exercise",
+										"update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"lesson_id\": \"661e94b29570433c92f0b25b\",\r\n  \"unit_id\": \"661e9545bf5e01057936ab84\",\r\n  \"title\": \"Sample Title\",\r\n  \"description\": \"This is a sample description.\",\r\n  \"duration\": \"1h30m\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/exercise/create",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"exercise",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exercise/delete",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exercise",
+										"delete"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "exercise_questions",
+					"item": [
+						{
+							"name": "fetch",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exercise/question/fetch",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exercise",
+										"question",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exercise/question/update",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exercise",
+										"question",
+										"update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exercise/question/create",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exercise",
+										"question",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exercise/question/delete",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exercise",
+										"question",
+										"delete"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "exercise_options",
+					"item": [
+						{
+							"name": "fetch",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exercise/options/fetch",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exercise",
+										"options",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exercise/options/create",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exercise",
+										"options",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exercise/options/update",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exercise",
+										"options",
+										"update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exercise/options/delete",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exercise",
+										"options",
+										"delete"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "exercise_answer",
+					"item": [
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "exercise_result",
+					"item": [
+						{
+							"name": "fetch",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exercise/result/get",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exercise",
+										"result",
+										"get"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "exam",
+			"item": [
+				{
+					"name": "exam",
+					"item": [
+						{
+							"name": "fetch",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exam/fetch",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exam",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch one by unit",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exam/fetch/n/unit_id?unit_id=6638ba944fc42f9e085c6e5a",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exam",
+										"fetch",
+										"n",
+										"unit_id"
+									],
+									"query": [
+										{
+											"key": "unit_id",
+											"value": "6638ba944fc42f9e085c6e5a"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch many by unit",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exam/fetch/1/unit_id?unit_id=6638ba944fc42f9e085c6e5a",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exam",
+										"fetch",
+										"1",
+										"unit_id"
+									],
+									"query": [
+										{
+											"key": "unit_id",
+											"value": "6638ba944fc42f9e085c6e5a"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"lesson_id\": \"6638b36d780b69091d6178a0\",\r\n  \"unit_id\": \"6638ba944fc42f9e085c6e5a\",\r\n    \"title\": \"Programming\",\r\n  \"description\": \"Explain the software development lifecycle and its phases.\",\r\n  \"duration\": \"1 minute\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/exam/create",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"exam",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"_id\":\"6634f2de73c0d6c04bd2dfcc\",\r\n  \"lesson_id\": \"6634a51e06dcd67a743cd966\",\r\n  \"unit_id\": \"6634a53a06dcd67a743cd987\",\r\n    \"title\": \"Languages Programming\",\r\n  \"description\": \"Explain the software development lifecycle and its phases.\",\r\n  \"duration\": \"1 minute\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/exam/update",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"exam",
+										"update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/exam/delete/_id?_id=6634f34373c0d6c04bd2dfcf",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"exam",
+										"delete",
+										"_id"
+									],
+									"query": [
+										{
+											"key": "_id",
+											"value": "6634f34373c0d6c04bd2dfcf"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "exam_questions",
+					"item": [
+						{
+							"name": "fetch",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exam/question/fetch",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exam",
+										"question",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch by exam id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exam/question/fetch/exam_id?exam_id=6634f2de73c0d6c04bd2dfcc",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exam",
+										"question",
+										"fetch",
+										"exam_id"
+									],
+									"query": [
+										{
+											"key": "exam_id",
+											"value": "6634f2de73c0d6c04bd2dfcc"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"exam_id\": \"663c984271e38d173f2354ef\",\r\n  \"vocabulary_id\": \"6638ba9d4fc42f9e085c6ea8\",\r\n  \"content\": \"Listen to the following and choose the correct answer\",\r\n  \"type\": \"Listen\",\r\n  \"level\": 1\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/exam/question/create",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"exam",
+										"question",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"_id\": \"6634fd946da4ee99ccf75895\",\r\n  \"exam_id\": \"6634f2de73c0d6c04bd2dfcc\",\r\n  \"vocabulary_id\": \"663613c091fea8603e7125f7\",\r\n  \"content\": \"What does 'hello' mean in Vietnamese?\",\r\n  \"type\": \"Question\",\r\n  \"level\": 1\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/exam/question/update",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"exam",
+										"question",
+										"update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/exam/question/delete/_id?_id=6634fd946da4ee99ccf75895",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"exam",
+										"question",
+										"delete",
+										"_id"
+									],
+									"query": [
+										{
+											"key": "_id",
+											"value": "6634fd946da4ee99ccf75895"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "exam_options",
+					"item": [
+						{
+							"name": "fetch",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exam/options/fetch?question_id=663dab07fedc37b587f0cb38",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exam",
+										"options",
+										"fetch"
+									],
+									"query": [
+										{
+											"key": "question_id",
+											"value": "663dab07fedc37b587f0cb38"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"question_id\": \"663dab07fedc37b587f0cb38\",\r\n  \"options\": [\"Paris\"],\r\n  \"correct_answer\": \"Paris\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/exam/options/create",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"exam",
+										"options",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exam/options/update",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exam",
+										"options",
+										"update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": []
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "exam_answer",
+					"item": [
+						{
+							"name": "fetch",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exam/answer/fetch",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exam",
+										"answer",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"answer\":\"\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Host}}/exam/answer/fetch",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exam",
+										"answer",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exam/answer/delete",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exam",
+										"answer",
+										"delete"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete all",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exam/answer/delete-all",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exam",
+										"answer",
+										"delete-all"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "exam_result",
+					"item": [
+						{
+							"name": "fetch by userid and examid",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exam/result/fetch",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exam",
+										"result",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch by exam",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/exam/result/fetch/:exam_id",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"exam",
+										"result",
+										"fetch",
+										":exam_id"
+									],
+									"variable": [
+										{
+											"key": "exam_id",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "feedback",
+			"item": [
+				{
+					"name": "New Folder",
+					"item": []
+				},
+				{
+					"name": "New Folder",
+					"item": []
+				},
+				{
+					"name": "create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n      \"title\": \"Example Title\",\r\n      \"content\": \"Example Content\",\r\n      \"feeling\": \"happy\",\r\n      \"is_love_web\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{Host}}/feedback/create",
+							"host": [
+								"{{Host}}"
+							],
+							"path": [
+								"feedback",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "fetch",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{HostAdmin}}/feedback/fetch",
+							"host": [
+								"{{HostAdmin}}"
+							],
+							"path": [
+								"feedback",
+								"fetch"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

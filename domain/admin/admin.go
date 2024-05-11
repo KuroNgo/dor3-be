@@ -15,7 +15,8 @@ type Admin struct {
 	Id        primitive.ObjectID `bson:"_id" json:"_id"`
 	FullName  string             `bson:"full_name" json:"full_name"`
 	Password  string             `bson:"password" json:"password"`
-	AvatarURL string             `bson:"avatar" json:"avatar"`
+	AvatarURL string             `bson:"avatar_url" json:"avatar_url"`
+	AssetURL  string             `bson:"asset_url" json:"asset_url"`
 	Address   string             `bson:"address" json:"address"`
 	Role      string             `bson:"role" json:"role"`
 	Phone     string             `bson:"phone" json:"phone"`

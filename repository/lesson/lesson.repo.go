@@ -2,6 +2,7 @@ package lesson_repository
 
 import (
 	lesson_domain "clean-architecture/domain/lesson"
+	unit_domain "clean-architecture/domain/unit"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -253,6 +254,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 	//}
 
 	collectionLesson := l.database.Collection(l.collectionLesson)
+	collectionUnit := l.database.Collection(l.collectionUnit)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -290,44 +292,78 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 	}(cursor, ctx)
 
 	var lessons []lesson_domain.LessonResponse
-	for cursor.Next(ctx) {
-		var lesson lesson_domain.LessonResponse
-		if err = cursor.Decode(&lesson); err != nil {
-			return nil, lesson_domain.DetailResponse{}, err
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			var lesson lesson_domain.LessonResponse
+			if err = cursor.Decode(&lesson); err != nil {
+				return
+			}
+
+			countUnitCh := make(chan int32)
+			go func() {
+				defer close(countUnitCh)
+				// Lấy thông tin liên quan cho mỗi chủ đề
+				countUnit, err := l.countUnitsByLessonsID(ctx, lesson.ID)
+				if err != nil {
+					return
+				}
+
+				countUnitCh <- countUnit
+			}()
+
+			countVocabularyCh := make(chan int32)
+			go func() {
+				defer close(countVocabularyCh)
+				countVocabulary, err := l.countVocabularyByLessonID(ctx, lesson.ID)
+				if err != nil {
+					return
+				}
+
+				countVocabularyCh <- countVocabulary
+			}()
+
+			countUnit := <-countUnitCh
+			countVocabulary := <-countVocabularyCh
+
+			lesson.CountUnit = countUnit
+			lesson.CountVocabulary = countVocabulary
+
+			// Thêm lesson vào slice lessons
+			lessons = append(lessons, lesson)
 		}
 
-		countUnitCh := make(chan int32)
-		go func() {
-			defer close(countUnitCh)
-			// Lấy thông tin liên quan cho mỗi chủ đề
-			countUnit, err := l.countUnitsByLessonsID(ctx, lesson.ID)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			var lesson lesson_domain.LessonResponse
+			if err = cursor.Decode(&lesson); err != nil {
+				return
+			}
+
+			var unit unit_domain.UnitResponse
+			filter := bson.M{"lesson_id": lesson.ID}
+			err := collectionUnit.FindOne(ctx, filter).Decode(&unit)
 			if err != nil {
 				return
 			}
 
-			countUnitCh <- countUnit
-		}()
+			var arrIsComplete []int
+			arrIsComplete = append(arrIsComplete, unit.IsComplete)
 
-		countVocabularyCh := make(chan int32)
-		go func() {
-			defer close(countVocabularyCh)
-			countVocabulary, err := l.countVocabularyByLessonID(ctx, lesson.ID)
-			if err != nil {
-				return
-			}
+			lesson.UnitIsComplete = arrIsComplete
+			lessons = append(lessons, lesson)
+		}
 
-			countVocabularyCh <- countVocabulary
-		}()
+	}()
 
-		countUnit := <-countUnitCh
-		countVocabulary := <-countVocabularyCh
-
-		lesson.CountUnit = countUnit
-		lesson.CountVocabulary = countVocabulary
-
-		// Thêm lesson vào slice lessons
-		lessons = append(lessons, lesson)
-	}
+	wg.Wait()
 
 	cal := <-calCh
 	response := lesson_domain.DetailResponse{
@@ -351,9 +387,33 @@ func (l *lessonRepository) UpdateOne(ctx context.Context, lesson *lesson_domain.
 
 	update := bson.M{
 		"$set": bson.M{
-			"name":    lesson.Name,
-			"content": lesson.Content,
-			"image":   lesson.ImageURL,
+			"name":        lesson.Name,
+			"content":     lesson.Content,
+			"image_url":   lesson.ImageURL,
+			"updated_at":  lesson.UpdatedAt,
+			"who_updates": lesson.WhoUpdates,
+		},
+	}
+
+	data, err := collection.UpdateOne(ctx, filter, &update)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, err
+}
+
+func (l *lessonRepository) UpdateImage(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {
+	collection := l.database.Collection(l.collectionLesson)
+
+	filter := bson.M{"_id": lesson.ID}
+
+	update := bson.M{
+		"$set": bson.M{
+			"image_url":   lesson.ImageURL,
+			"asset_url":   lesson.AssetURL,
+			"updated_at":  lesson.UpdatedAt,
+			"who_updates": lesson.WhoUpdates,
 		},
 	}
 

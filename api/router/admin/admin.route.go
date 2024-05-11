@@ -23,6 +23,7 @@ func AdminRouter(env *bootstrap.Database, timeout time.Duration, db *mongo.Datab
 	router := group.Group("")
 	router.POST("/signup", admin.SignUp)
 	router.GET("/get-me", middleware.DeserializeUser(), admin.GetMe)
+	router.PUT("/update", admin.UpdateAdmin)
 	router.GET("/refresh", admin.RefreshToken)
 	router.GET("/logout", middleware.DeserializeUser(), admin.Logout)
 }
