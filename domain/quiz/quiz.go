@@ -57,7 +57,6 @@ type Statistics struct {
 type IQuizRepository interface {
 	FetchMany(ctx context.Context, page string) ([]QuizResponse, Response, error)
 	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]QuizResponse, Response, error)
-	FetchManyByLessonID(ctx context.Context, unitID string, page string) ([]QuizResponse, Response, error)
 	FetchOneByUnitID(ctx context.Context, unitID string) (QuizResponse, error)
 
 	CreateOne(ctx context.Context, quiz *Quiz) error

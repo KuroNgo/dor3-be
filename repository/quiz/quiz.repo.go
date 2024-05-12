@@ -12,47 +12,53 @@ import (
 )
 
 type quizRepository struct {
-	database             *mongo.Database
-	collectionLesson     string
-	collectionUnit       string
-	collectionVocabulary string
-	collectionQuiz       string
+	database         *mongo.Database
+	collectionQuiz   string
+	collectionLesson string
+	collectionUnit   string
+}
+
+func NewQuizRepository(db *mongo.Database, collectionQuiz string, collectionLesson string, collectionUnit string) quiz_domain.IQuizRepository {
+	return &quizRepository{
+		database:         db,
+		collectionQuiz:   collectionQuiz,
+		collectionLesson: collectionLesson,
+		collectionUnit:   collectionUnit,
+	}
 }
 
 func (q *quizRepository) FetchOneByUnitID(ctx context.Context, unitID string) (quiz_domain.QuizResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
+	//e.cacheMutex.RLock()
+	//cacheData, found := e.examOneCache[unitID]
+	//e.cacheMutex.RUnlock()
 
-func NewQuizRepository(db *mongo.Database, collectionQuiz string, collectionLesson string, collectionUnit string, collectionVocabulary string) quiz_domain.IQuizRepository {
-	return &quizRepository{
-		database:             db,
-		collectionQuiz:       collectionQuiz,
-		collectionLesson:     collectionLesson,
-		collectionUnit:       collectionUnit,
-		collectionVocabulary: collectionVocabulary,
-	}
-}
-func (q *quizRepository) FetchManyByLessonID(ctx context.Context, unitID string, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
-	//TODO implement me
-	panic("implement me")
-}
+	//if found {
+	//	return cacheData, nil
+	//}
 
-func (q *quizRepository) UpdateCompleted(ctx context.Context, quiz *quiz_domain.Quiz) error {
-	collection := q.database.Collection(q.collectionUnit)
+	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
-	filter := bson.D{{Key: "_id", Value: quiz.ID}}
-	update := bson.M{"$set": bson.M{
-		"is_complete": quiz.IsComplete,
-		"who_updates": quiz.WhoUpdates,
-	}}
-
-	_, err := collection.UpdateOne(ctx, filter, &update)
+	idUnit, err := primitive.ObjectIDFromHex(unitID)
 	if err != nil {
-		return err
+		return quiz_domain.QuizResponse{}, err
 	}
 
-	return nil
+	filter := bson.M{"unit_id": idUnit}
+	var quiz quiz_domain.QuizResponse
+	err = collectionQuiz.FindOne(ctx, filter).Decode(&quiz)
+	if err != nil {
+		return quiz_domain.QuizResponse{}, err
+	}
+
+	countQuestion := q.countQuestion(ctx, quiz.ID.Hex())
+	quiz.CountQuestion = countQuestion
+
+	//e.cacheMutex.Lock()
+	//e.examOneCache[unitID] = exam
+	//e.examCacheExpires[unitID] = time.Now().Add(5 * time.Minute)
+	//e.cacheMutex.Unlock()
+
+	return quiz, nil
 }
 
 func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
@@ -128,11 +134,6 @@ func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 	return quizz, response, nil
 }
 
-func (q *quizRepository) FetchTenQuizButEnoughAllSkill(ctx context.Context) ([]quiz_domain.Response, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (q *quizRepository) FetchMany(ctx context.Context, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
@@ -171,11 +172,12 @@ func (q *quizRepository) FetchMany(ctx context.Context, page string) ([]quiz_dom
 	var quiz []quiz_domain.QuizResponse
 
 	for cursor.Next(ctx) {
-		var q quiz_domain.QuizResponse
-		if err := cursor.Decode(&q); err != nil {
+		var quizRes quiz_domain.QuizResponse
+		if err = cursor.Decode(&quizRes); err != nil {
 			return nil, quiz_domain.Response{}, err
 		}
-		quiz = append(quiz, q)
+
+		quiz = append(quiz, quizRes)
 	}
 
 	detail := quiz_domain.Response{
@@ -198,6 +200,23 @@ func (q *quizRepository) UpdateOne(ctx context.Context, quiz *quiz_domain.Quiz) 
 		return nil, err
 	}
 	return data, nil
+}
+
+func (q *quizRepository) UpdateCompleted(ctx context.Context, quiz *quiz_domain.Quiz) error {
+	collection := q.database.Collection(q.collectionUnit)
+
+	filter := bson.D{{Key: "_id", Value: quiz.ID}}
+	update := bson.M{"$set": bson.M{
+		"is_complete": quiz.IsComplete,
+		"who_updates": quiz.WhoUpdates,
+	}}
+
+	_, err := collection.UpdateOne(ctx, filter, &update)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (q *quizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) error {
@@ -237,4 +256,21 @@ func (q *quizRepository) DeleteOne(ctx context.Context, quizID string) error {
 	}
 	_, err = collectionQuiz.DeleteOne(ctx, filter)
 	return err
+}
+
+func (q *quizRepository) countQuestion(ctx context.Context, examID string) int64 {
+	collectionExamQuestion := q.database.Collection(q.collectionQuiz)
+
+	idExam, err := primitive.ObjectIDFromHex(examID)
+	if err != nil {
+		return 0
+	}
+
+	filter := bson.M{"quiz_id": idExam}
+	count, err := collectionExamQuestion.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0
+	}
+
+	return count
 }

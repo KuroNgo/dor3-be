@@ -33,16 +33,6 @@ func NewExerciseRepository(db *mongo.Database, collectionLesson string, collecti
 	}
 }
 
-func (e *exerciseRepository) FetchManyByLessonID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
 
@@ -93,6 +83,80 @@ func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string
 	return randomExercise, nil
 }
 
+func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
+	collectionExercise := e.database.Collection(e.collectionExercise)
+
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return nil, exercise_domain.DetailResponse{}, errors.New("invalid page number")
+	}
+	perPage := 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip)).SetSort(bson.D{{"_id", -1}})
+
+	calCh := make(chan int64)
+	countCh := make(chan int64)
+	go func() {
+		count, err := collectionExercise.CountDocuments(ctx, bson.D{})
+		if err != nil {
+			return
+		}
+		countCh <- count
+
+		cal1 := count / int64(perPage)
+		cal2 := count % int64(perPage)
+		if cal2 != 0 {
+			calCh <- cal1
+		}
+	}()
+
+	idUnit, err := primitive.ObjectIDFromHex(unitID)
+	if err != nil {
+		return nil, exercise_domain.DetailResponse{}, err
+	}
+
+	filter := bson.M{"unit_id": idUnit}
+	cursor, err := collectionExercise.Find(ctx, filter, findOptions)
+	if err != nil {
+		return nil, exercise_domain.DetailResponse{}, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
+
+	var exercises []exercise_domain.ExerciseResponse
+	for cursor.Next(ctx) {
+		var exercise exercise_domain.ExerciseResponse
+		if err = cursor.Decode(&exercise); err != nil {
+			return nil, exercise_domain.DetailResponse{}, err
+		}
+
+		// Lấy thông tin liên quan cho mỗi khóa học
+		countQuest, err := e.countQuestionByExerciseID(ctx, exercise.ID)
+		if err != nil {
+			return nil, exercise_domain.DetailResponse{}, err
+		}
+
+		exercise.CountQuestion = countQuest
+
+		exercises = append(exercises, exercise)
+	}
+
+	cal := <-calCh
+	countExercise := <-countCh
+
+	detail := exercise_domain.DetailResponse{
+		CountExercise: countExercise,
+		Page:          cal,
+		CurrentPage:   pageNumber,
+	}
+
+	return exercises, detail, nil
+}
+
 func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
 
@@ -106,6 +170,7 @@ func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exer
 
 	calCh := make(chan int64)
 	countExerciseCh := make(chan int64)
+
 	go func() {
 		defer close(calCh)
 		defer close(countExerciseCh)
@@ -156,6 +221,7 @@ func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exer
 
 	cal := <-calCh
 	countExercise := <-countExerciseCh
+
 	detail := exercise_domain.DetailResponse{
 		CountExercise: countExercise,
 		Page:          cal,

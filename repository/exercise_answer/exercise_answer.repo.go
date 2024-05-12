@@ -3,6 +3,8 @@ package exercise_answer_repository
 import (
 	"clean-architecture/domain/exercise_answer"
 	exercise_options_domain "clean-architecture/domain/exercise_options"
+	exercise_questions_domain "clean-architecture/domain/exercise_questions"
+	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -28,6 +30,8 @@ func NewExerciseAnswerRepository(db *mongo.Database, collectionQuestion string, 
 
 func (e *exerciseAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (exercise_answer_domain.Response, error) {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
+	collectionQuestion := e.database.Collection(e.collectionQuestion)
+	collectionOptions := e.database.Collection(e.collectionOptions)
 
 	idQuestion, err := primitive.ObjectIDFromHex(questionID)
 	if err != nil {
@@ -40,6 +44,7 @@ func (e *exerciseAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx cont
 	}
 
 	filter := bson.M{"question_id": idQuestion, "user_id": idUser}
+
 	cursor, err := collectionAnswer.Find(ctx, filter)
 	if err != nil {
 		return exercise_answer_domain.Response{}, err
@@ -51,20 +56,51 @@ func (e *exerciseAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx cont
 		}
 	}(cursor, ctx)
 
-	var answers []exercise_answer_domain.ExerciseAnswer
-	for cursor.Next(ctx) {
-		var answer exercise_answer_domain.ExerciseAnswer
-		if err = cursor.Decode(&answer); err != nil {
-			return exercise_answer_domain.Response{}, err
-		}
+	var answers []exercise_answer_domain.ExerciseAnswerResponse
+	internal.Wg.Add(1)
+	go func() {
+		defer internal.Wg.Done()
+		for cursor.Next(ctx) {
+			var answer exercise_answer_domain.ExerciseAnswer
+			if err = cursor.Decode(&answer); err != nil {
+				return
+			}
 
-		// Gắn CourseID vào bài học
-		answer.QuestionID = idQuestion
-		answers = append(answers, answer)
-	}
+			var question exercise_questions_domain.ExerciseQuestion
+			filterQuestion := bson.M{"_id": answer.QuestionID}
+			err = collectionQuestion.FindOne(ctx, filterQuestion).Decode(&question)
+			if err != nil {
+				return
+			}
+
+			var options exercise_options_domain.ExerciseOptions
+			filterOptions := bson.M{"question_id": question.ID}
+			err = collectionOptions.FindOne(ctx, filterOptions).Decode(&options)
+			if err != nil {
+				return
+			}
+
+			var answerRes exercise_answer_domain.ExerciseAnswerResponse
+			if err = cursor.Decode(&answerRes); err != nil {
+				return
+			}
+
+			answerRes.ID = answer.ID
+			answerRes.UserID = answer.UserID
+			answerRes.Question = question
+			answerRes.Options = options
+			answerRes.IsCorrect = answer.IsCorrect
+			answerRes.BlankIndex = answer.BlankIndex
+			answerRes.SubmittedAt = answer.SubmittedAt
+
+			answers = append(answers, answerRes)
+		}
+	}()
+
+	internal.Wg.Wait()
 
 	response := exercise_answer_domain.Response{
-		ExerciseAnswer: answers,
+		ExerciseAnswerResponse: answers,
 	}
 
 	return response, nil

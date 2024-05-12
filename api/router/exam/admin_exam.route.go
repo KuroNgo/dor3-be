@@ -29,8 +29,10 @@ func AdminExamRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Da
 	}
 
 	router := group.Group("/exam")
+	router.GET("fetch/n/unit_id", exam.FetchManyExamInAdmin)
+	router.GET("fetch/n/unit_id", exam.FetchManyExamByUnitIDInAdmin)
+	router.GET("fetch/1/unit_id", exam.FetchOneExamByUnitIDInAdmin)
 	router.POST("/create", exam.CreateOneExam)
-	router.GET("fetch/n/unit_id", exam.FetchManyExamByUnitID)
 	router.PATCH("/update", exam.UpdateOneExam)
 	router.DELETE("/delete/_id", exam.DeleteOneExam)
 }
