@@ -13,18 +13,6 @@ type lessonUseCase struct {
 	contextTimeout   time.Duration
 }
 
-func (l *lessonUseCase) UpdateImage(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {
-	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
-	defer cancel()
-
-	data, err := l.lessonRepository.UpdateImage(ctx, lesson)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
 func NewLessonUseCase(lessonRepository lesson_domain.ILessonRepository, timeout time.Duration) lesson_domain.ILessonUseCase {
 	return &lessonUseCase{
 		lessonRepository: lessonRepository,
@@ -90,6 +78,18 @@ func (l *lessonUseCase) UpdateComplete(ctx context.Context, lessonID string, les
 	}
 
 	return err
+}
+
+func (l *lessonUseCase) UpdateImage(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {
+	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
+	defer cancel()
+
+	data, err := l.lessonRepository.UpdateImage(ctx, lesson)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 func (l *lessonUseCase) FetchMany(ctx context.Context, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {

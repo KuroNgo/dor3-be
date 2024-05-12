@@ -12,6 +12,30 @@ type markListUseCase struct {
 	contextTimeout     time.Duration
 }
 
+func (m *markListUseCase) FetchMany(ctx context.Context) (markList_domain.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
+	defer cancel()
+
+	markList, err := m.markListRepository.FetchMany(ctx)
+	if err != nil {
+		return markList_domain.Response{}, err
+	}
+
+	return markList, err
+}
+
+func (m *markListUseCase) FetchById(ctx context.Context, id string) (markList_domain.MarkList, error) {
+	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
+	defer cancel()
+
+	markList, err := m.markListRepository.FetchById(ctx, id)
+	if err != nil {
+		return markList_domain.MarkList{}, err
+	}
+
+	return markList, err
+}
+
 func (m *markListUseCase) FetchManyByUserID(ctx context.Context, userId string) (markList_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()

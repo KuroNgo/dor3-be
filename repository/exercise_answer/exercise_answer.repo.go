@@ -2,6 +2,7 @@ package exercise_answer_repository
 
 import (
 	"clean-architecture/domain/exercise_answer"
+	exercise_options_domain "clean-architecture/domain/exercise_options"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,13 +14,15 @@ type exerciseAnswerRepository struct {
 	database           *mongo.Database
 	collectionQuestion string
 	collectionAnswer   string
+	collectionOptions  string
 }
 
-func NewExerciseAnswerRepository(db *mongo.Database, collectionQuestion string, collectionAnswer string) exercise_answer_domain.IExerciseAnswerRepository {
+func NewExerciseAnswerRepository(db *mongo.Database, collectionQuestion string, collectionAnswer string, collectionOptions string) exercise_answer_domain.IExerciseAnswerRepository {
 	return &exerciseAnswerRepository{
 		database:           db,
 		collectionQuestion: collectionQuestion,
 		collectionAnswer:   collectionAnswer,
+		collectionOptions:  collectionOptions,
 	}
 }
 
@@ -69,16 +72,32 @@ func (e *exerciseAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx cont
 
 func (e *exerciseAnswerRepository) CreateOne(ctx context.Context, exerciseAnswer *exercise_answer_domain.ExerciseAnswer) error {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
+	collectionOptions := e.database.Collection(e.collectionOptions)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
+	// kiểm tra questionId có tồn tại
 	filterQuestionID := bson.M{"question_id": exerciseAnswer.QuestionID}
 	countLessonID, err := collectionQuestion.CountDocuments(ctx, filterQuestionID)
 	if err != nil {
 		return err
 	}
-
 	if countLessonID == 0 {
 		return errors.New("the question ID do not exist")
+	}
+
+	// kiểm tra answer có bằng với đáp án
+	var options exercise_options_domain.ExerciseOptions
+	if err := collectionOptions.FindOne(ctx, filterQuestionID).Decode(&options); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return errors.New("no options found for the question ID")
+		}
+		return err
+	}
+
+	if exerciseAnswer.Answer == options.CorrectAnswer {
+		exerciseAnswer.IsCorrect = 1 //đúng
+	} else {
+		exerciseAnswer.IsCorrect = 0 //sai
 	}
 
 	_, err = collectionAnswer.InsertOne(ctx, exerciseAnswer)
@@ -103,4 +122,29 @@ func (e *exerciseAnswerRepository) DeleteOne(ctx context.Context, exerciseID str
 
 	_, err = collectionExercise.DeleteOne(ctx, filter)
 	return err
+}
+
+func (e *exerciseAnswerRepository) DeleteAllAnswerByExerciseID(ctx context.Context, exerciseId string) error {
+	collectionAnswer := e.database.Collection(e.collectionAnswer)
+
+	objID, err := primitive.ObjectIDFromHex(exerciseId)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"exercise_id": objID}
+	count, err := collectionAnswer.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return errors.New(`exercise answer is removed`)
+	}
+
+	_, err = collectionAnswer.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

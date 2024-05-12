@@ -229,7 +229,7 @@ func (u *unitRepository) UpdateComplete(ctx context.Context, updateData *unit_do
 		filter := bson.D{{Key: "_id", Value: updateData.ID}}
 		update := bson.D{{Key: "$set", Value: bson.D{
 			{Key: "is_complete", Value: updateData.IsComplete},
-			{Key: "who_updates", Value: updateData.WhoUpdates},
+			{Key: "learner", Value: updateData.Learner},
 		}}}
 		_, err := collection.UpdateOne(ctx, filter, &update)
 		if err != nil {
@@ -279,7 +279,12 @@ func (u *unitRepository) CheckLessonComplete(ctx context.Context, lessonID primi
 	if err != nil {
 		return false, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	if !cursor.Next(ctx) {
 		return false, nil

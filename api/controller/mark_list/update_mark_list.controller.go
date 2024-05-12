@@ -36,10 +36,10 @@ func (m *MarkListController) UpdateOneMarkList(ctx *gin.Context) {
 	}
 
 	markListReq := mark_list_domain.MarkList{
+		ID:          markListInput.ID,
 		UserID:      user.ID,
 		NameList:    markListInput.NameList,
 		Description: markListInput.Description,
-		WhoCreated:  user.FullName,
 	}
 
 	data, err := m.MarkListUseCase.UpdateOne(ctx, &markListReq)

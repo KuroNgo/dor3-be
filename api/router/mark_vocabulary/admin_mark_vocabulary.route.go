@@ -4,14 +4,15 @@ import (
 	mark_vocabulary_route "clean-architecture/api/controller/mark_vocabulary"
 	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
+	admin_domain "clean-architecture/domain/admin"
 	mark_list_domain "clean-architecture/domain/mark_list"
 	mark_vocabulary_domain "clean-architecture/domain/mark_vocabulary"
 	user_domain "clean-architecture/domain/user"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
+	admin_repository "clean-architecture/repository/admin"
 	mark_vacabulary_repository "clean-architecture/repository/mark_vacabulary"
-	user_repository "clean-architecture/repository/user"
+	admin_usecase "clean-architecture/usecase/admin"
 	mark_vacabulary_usecase "clean-architecture/usecase/mark_vocabulary"
-	usecase "clean-architecture/usecase/user"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
@@ -19,14 +20,14 @@ import (
 
 func AdminMarkVocabularyRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	ma := mark_vacabulary_repository.NewMarkVocabularyRepository(db, mark_list_domain.CollectionMarkList, vocabulary_domain.CollectionVocabulary, mark_vocabulary_domain.CollectionMark)
-	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
+	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
 	markVocabulary := &mark_vocabulary_route.MarkVocabularyController{
 		MarkVocabularyUseCase: mark_vacabulary_usecase.NewMarkVocabularyUseCase(ma, timeout),
-		UserUseCase:           usecase.NewUserUseCase(ur, timeout),
+		AdminUseCase:          admin_usecase.NewAdminUseCase(ad, timeout),
 		Database:              env,
 	}
 
 	router := group.Group("/mark_vocabulary")
-	router.GET("/fetch/_id", middleware.DeserializeUser(), markVocabulary.FetchManyByMarkListIdAndUserId)
+	router.GET("/fetch/mark_list_id", middleware.DeserializeUser(), markVocabulary.FetchManyByMarkListIdInAdmin)
 }

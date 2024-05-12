@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
+	"time"
 )
 
 func (m *MarkListController) CreateOneMarkList(ctx *gin.Context) {
@@ -40,6 +41,7 @@ func (m *MarkListController) CreateOneMarkList(ctx *gin.Context) {
 		UserID:      user.ID,
 		NameList:    markListInput.NameList,
 		Description: markListInput.Description,
+		CreatedAt:   time.Now(),
 		WhoCreated:  user.FullName,
 	}
 

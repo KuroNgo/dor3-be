@@ -29,7 +29,8 @@ func AdminExerciseRoute(env *bootstrap.Database, timeout time.Duration, db *mong
 	}
 
 	router := group.Group("/exercise")
+	router.GET("/fetch/n/unit", exercise.FetchManyByUnitID)
 	router.POST("/create", exercise.CreateOneExercise)
 	router.PATCH("/update", exercise.UpdateOneExercise)
-	router.DELETE("/delete/:_id", exercise.DeleteOneExercise)
+	router.DELETE("/delete/_id", exercise.DeleteOneExercise)
 }

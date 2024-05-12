@@ -12,19 +12,22 @@ import (
 )
 
 type markListRepository struct {
-	database           *mongo.Database
-	collectionMarkList string
+	database                 *mongo.Database
+	collectionMarkList       string
+	collectionMarkVocabulary string
 }
 
-func NewListRepository(db *mongo.Database, collectionMarkList string) mark_list_domain.IMarkListRepository {
+func NewListRepository(db *mongo.Database, collectionMarkList string, collectionMarkVocabulary string) mark_list_domain.IMarkListRepository {
 	return &markListRepository{
-		database:           db,
-		collectionMarkList: collectionMarkList,
+		database:                 db,
+		collectionMarkList:       collectionMarkList,
+		collectionMarkVocabulary: collectionMarkVocabulary,
 	}
 }
 
 func (m *markListRepository) FetchManyByUserID(ctx context.Context, userID string) (mark_list_domain.Response, error) {
 	collectionMarkList := m.database.Collection(m.collectionMarkList)
+	collectionMarkVocabulary := m.database.Collection(m.collectionMarkVocabulary)
 
 	idUser, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -36,7 +39,21 @@ func (m *markListRepository) FetchManyByUserID(ctx context.Context, userID strin
 	if err != nil {
 		return mark_list_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
+
+	count, err := collectionMarkList.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return mark_list_domain.Response{}, err
+	}
+	countVocabulary, err := collectionMarkVocabulary.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return mark_list_domain.Response{}, err
+	}
 
 	var markLists []mark_list_domain.MarkList
 
@@ -53,10 +70,30 @@ func (m *markListRepository) FetchManyByUserID(ctx context.Context, userID strin
 	}
 
 	response := mark_list_domain.Response{
-		MarkList: markLists,
+		Total:           count,
+		CountVocabulary: countVocabulary,
+		MarkList:        markLists,
 	}
 
 	return response, nil
+}
+
+func (m *markListRepository) FetchById(ctx context.Context, id string) (mark_list_domain.MarkList, error) {
+	collectionMarkList := m.database.Collection(m.collectionMarkList)
+
+	idMarkList, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return mark_list_domain.MarkList{}, err
+	}
+
+	filter := bson.M{"_id": idMarkList}
+	var markList mark_list_domain.MarkList
+	err = collectionMarkList.FindOne(ctx, filter).Decode(&markList)
+	if err != nil {
+		return mark_list_domain.MarkList{}, err
+	}
+
+	return markList, err
 }
 
 func (m *markListRepository) FetchMany(ctx context.Context) (mark_list_domain.Response, error) {
@@ -88,7 +125,7 @@ func (m *markListRepository) FetchMany(ctx context.Context) (mark_list_domain.Re
 func (m *markListRepository) UpdateOne(ctx context.Context, markList *mark_list_domain.MarkList) (*mongo.UpdateResult, error) {
 	collectionMarkList := m.database.Collection(m.collectionMarkList)
 
-	filter := bson.M{"_id": markList.ID}
+	filter := bson.M{"_id": markList.ID, "user_id": markList.UserID}
 	update := bson.M{
 		"$set": bson.M{
 			"name_list":   markList.NameList,
@@ -96,7 +133,7 @@ func (m *markListRepository) UpdateOne(ctx context.Context, markList *mark_list_
 		},
 	}
 
-	data, err := collectionMarkList.UpdateOne(ctx, filter, update)
+	data, err := collectionMarkList.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return nil, err
 	}

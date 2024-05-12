@@ -16,14 +16,15 @@ type Exercise struct {
 	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 
-	Title       string        `bson:"title" json:"title"`
-	Description string        `bson:"description" json:"description"`
-	Duration    time.Duration `bson:"duration" json:"duration"`
+	Title       string `bson:"title" json:"title"`
+	Description string `bson:"description" json:"description"`
+	Duration    string `bson:"duration" json:"duration"`
 
 	IsComplete int       `bson:"is_complete" json:"is_complete"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
 	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
+	Learner    string    `bson:"learner" json:"learner"`
 }
 
 type ExerciseResponse struct {
@@ -31,14 +32,16 @@ type ExerciseResponse struct {
 	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 
-	Title       string        `bson:"title" json:"title"`
-	Description string        `bson:"description" json:"description"`
-	Duration    time.Duration `bson:"duration" json:"duration"`
+	Title       string `bson:"title" json:"title"`
+	Description string `bson:"description" json:"description"`
+	Duration    string `bson:"duration" json:"duration"`
 
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
 	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
+	Learner    string    `bson:"learner" json:"learner"`
 
+	IsComplete    int   `bson:"is_complete" json:"is_complete"`
 	CountQuestion int32 `bson:"count_question" json:"count_question"`
 }
 
@@ -56,7 +59,7 @@ type IExerciseRepository interface {
 	CreateOne(ctx context.Context, exercise *Exercise) error
 
 	UpdateOne(ctx context.Context, exercise *Exercise) (*mongo.UpdateResult, error)
-	UpdateCompleted(ctx context.Context, exerciseID string, isComplete int) error
+	UpdateCompleted(ctx context.Context, exercise *Exercise) error
 
 	DeleteOne(ctx context.Context, exerciseID string) error
 }

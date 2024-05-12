@@ -115,13 +115,14 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string,
 	if err != nil {
 		return nil, lesson_domain.DetailResponse{}, errors.New("invalid page number")
 	}
-	perPage := 5
+	perPage := 10
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
 	calCh := make(chan int64)
 
 	go func() {
+		defer close(calCh)
 		count, err := collectionLesson.CountDocuments(ctx, bson.D{})
 		if err != nil {
 			return
@@ -153,47 +154,53 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string,
 	}(cursor, ctx)
 
 	var lessons []lesson_domain.LessonResponse
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			var lesson lesson_domain.LessonResponse
+			if err = cursor.Decode(&lesson); err != nil {
+				return
+			}
 
-	for cursor.Next(ctx) {
-		var lesson lesson_domain.LessonResponse
-		if err = cursor.Decode(&lesson); err != nil {
-			return nil, lesson_domain.DetailResponse{}, err
+			countUnitCh := make(chan int32)
+			go func() {
+				defer close(countUnitCh)
+				// Lấy thông tin liên quan cho mỗi chủ đề
+				countUnit, err := l.countUnitsByLessonsID(ctx, lesson.ID)
+				if err != nil {
+					return
+				}
+
+				countUnitCh <- countUnit
+			}()
+
+			countVocabularyCh := make(chan int32)
+			go func() {
+				defer close(countVocabularyCh)
+				countVocabulary, err := l.countVocabularyByLessonID(ctx, lesson.ID)
+				if err != nil {
+					return
+				}
+
+				countVocabularyCh <- countVocabulary
+			}()
+
+			countUnit := <-countUnitCh
+
+			countVocabulary := <-countVocabularyCh
+
+			// Gắn CourseID vào bài học
+			lesson.CourseID = idCourse2
+			lesson.CountVocabulary = countVocabulary
+			lesson.CountUnit = countUnit
+
+			lessons = append(lessons, lesson)
 		}
 
-		countUnitCh := make(chan int32)
-		go func() {
-			defer close(countUnitCh)
-			// Lấy thông tin liên quan cho mỗi chủ đề
-			countUnit, err := l.countUnitsByLessonsID(ctx, lesson.ID)
-			if err != nil {
-				return
-			}
-
-			countUnitCh <- countUnit
-		}()
-
-		countVocabularyCh := make(chan int32)
-		go func() {
-			defer close(countVocabularyCh)
-			countVocabulary, err := l.countVocabularyByLessonID(ctx, lesson.ID)
-			if err != nil {
-				return
-			}
-
-			countVocabularyCh <- countVocabulary
-		}()
-
-		countUnit := <-countUnitCh
-
-		countVocabulary := <-countVocabularyCh
-
-		// Gắn CourseID vào bài học
-		lesson.CourseID = idCourse2
-		lesson.CountVocabulary = countVocabulary
-		lesson.CountUnit = countUnit
-
-		lessons = append(lessons, lesson)
-	}
+	}()
+	wg.Wait()
 
 	cal := <-calCh
 

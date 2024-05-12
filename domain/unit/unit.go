@@ -22,7 +22,8 @@ type Unit struct {
 	IsComplete int       `bson:"is_complete" json:"is_complete"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
-	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
+	WhoCreate  string    `bson:"who_create" json:"who_create"`
+	Learner    string    `bson:"learner" json:"learner"`
 }
 
 type UnitResponse struct {
@@ -36,7 +37,8 @@ type UnitResponse struct {
 	IsComplete int       `bson:"is_complete" json:"is_complete"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
-	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
+	WhoCreate  string    `bson:"who_create" json:"who_create"`
+	Learner    string    `bson:"learner" json:"learner"`
 
 	ExamIsComplete     int   `bson:"exam_is_complete" json:"exam_is_complete"`
 	ExerciseIsComplete int   `bson:"exercise_is_complete" json:"exercise_is_complete"`

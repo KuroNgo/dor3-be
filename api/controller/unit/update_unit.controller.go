@@ -17,8 +17,8 @@ func (u *UnitController) UpdateCompleteUnit(ctx *gin.Context) {
 		})
 		return
 	}
-	admin, err := u.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
-	if err != nil || admin == nil {
+	user, err := u.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
 			"message": "You are not authorized to perform this action!",
@@ -39,7 +39,7 @@ func (u *UnitController) UpdateCompleteUnit(ctx *gin.Context) {
 		ID:         unitInput.ID,
 		IsComplete: unitInput.IsComplete,
 		UpdatedAt:  time.Now(),
-		WhoUpdates: admin.FullName,
+		Learner:    user.FullName,
 	}
 
 	err = u.UnitUseCase.UpdateComplete(ctx, updateUnit)

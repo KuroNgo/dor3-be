@@ -95,6 +95,7 @@ func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_a
 	collectionOptions := e.database.Collection(e.collectionOptions)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
+	// kiểm tra questionId có tồn tại
 	filterQuestionID := bson.M{"question_id": examAnswer.QuestionID}
 	countQuestionID, err := collectionQuestion.CountDocuments(ctx, filterQuestionID)
 	if err != nil {
@@ -104,6 +105,7 @@ func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_a
 		return errors.New("the question ID do not exist")
 	}
 
+	// kiểm tra answer có bằng với đáp án
 	var options exam_options_domain.ExamOptions
 	if err := collectionOptions.FindOne(ctx, filterQuestionID).Decode(&options); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -118,6 +120,7 @@ func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_a
 		examAnswer.IsCorrect = 0 //sai
 	}
 
+	// thêm answer vào CSDL
 	_, err = collectionAnswer.InsertOne(ctx, examAnswer)
 	if err != nil {
 		return err
@@ -146,28 +149,26 @@ func (e *examAnswerRepository) DeleteOne(ctx context.Context, examID string) err
 	return err
 }
 
-func (e *examAnswerRepository) DeleteAllAnswerByExamID(ctx context.Context, examID ...string) error {
+func (e *examAnswerRepository) DeleteAllAnswerByExamID(ctx context.Context, examID string) error {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
 
-	for _, idExam := range examID {
-		objID, err := primitive.ObjectIDFromHex(idExam)
-		if err != nil {
-			return err
-		}
+	objID, err := primitive.ObjectIDFromHex(examID)
+	if err != nil {
+		return err
+	}
 
-		filter := bson.M{"_id": objID}
-		count, err := collectionAnswer.CountDocuments(ctx, filter)
-		if err != nil {
-			return err
-		}
-		if count == 0 {
-			return errors.New(`exam answer is removed`)
-		}
+	filter := bson.M{"exam_id": objID}
+	count, err := collectionAnswer.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return errors.New(`exam answer is removed`)
+	}
 
-		_, err = collectionAnswer.DeleteOne(ctx, filter)
-		if err != nil {
-			return err
-		}
+	_, err = collectionAnswer.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
 	}
 
 	return nil
