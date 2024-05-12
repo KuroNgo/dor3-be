@@ -42,13 +42,13 @@ func (u *UnitController) CreateOneUnit(ctx *gin.Context) {
 	}
 
 	unitRes := &unit_domain.Unit{
-		ID:         primitive.NewObjectID(),
-		LessonID:   unitInput.LessonID,
-		Name:       unitInput.Name,
-		Level:      unitInput.Level,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
-		WhoUpdates: admin.FullName,
+		ID:        primitive.NewObjectID(),
+		LessonID:  unitInput.LessonID,
+		Name:      unitInput.Name,
+		Level:     unitInput.Level,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		WhoCreate: admin.FullName,
 	}
 
 	err = u.UnitUseCase.CreateOne(ctx, unitRes)
@@ -143,7 +143,7 @@ func (u *UnitController) CreateUnitWithFile(ctx *gin.Context) {
 				IsComplete: 0,
 				CreatedAt:  time.Now(),
 				UpdatedAt:  time.Now(),
-				WhoUpdates: user.FullName,
+				WhoCreate:  user.FullName,
 			}
 
 			// Tạo đơn vị trong cơ sở dữ liệu

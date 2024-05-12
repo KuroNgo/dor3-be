@@ -122,4 +122,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	lesson_route.AdminLessonRoute(env, timeout, db, privateRouter)
 	unit_route.AdminUnitRouter(env, timeout, db, privateRouter)
 	vocabulary_route.AdminVocabularyRoute(env, timeout, db, privateRouter)
+
+	mark_list_route.AdminMarkListRoute(env, timeout, db, privateRouter)
+	mark_vocabulary_route.AdminMarkVocabularyRoute(env, timeout, db, privateRouter)
 }

@@ -309,7 +309,7 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 			IsComplete: 0,
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
-			WhoUpdates: admin.FullName,
+			WhoCreate:  admin.FullName,
 		}
 
 		err = c.UnitUseCase.CreateOneByNameLesson(ctx, &elUnit)

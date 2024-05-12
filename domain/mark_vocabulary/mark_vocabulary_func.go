@@ -6,7 +6,7 @@ import (
 
 type Input struct {
 	MarkListID   string `bson:"mark_list_id" json:"mark_list_id"`
-	VocabularyID string `bson:"mark_vocabulary_id" json:"mark_vocabulary_id"`
+	VocabularyID string `bson:"vocabulary_id" json:"vocabulary_id"`
 }
 
 type IMarkToFavouriteUseCase interface {

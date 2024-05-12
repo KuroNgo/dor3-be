@@ -32,7 +32,6 @@ func (a *adminRepository) GetByID(c context.Context, id string) (*admin_domain.A
 	collection := a.database.Collection(a.collectionAdmin)
 
 	var admin admin_domain.Admin
-
 	idHex, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return &admin, err

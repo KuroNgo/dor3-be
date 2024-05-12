@@ -138,19 +138,20 @@ func (l *LessonController) CreateOneLessonNotImage(ctx *gin.Context) {
 		return
 	}
 
-	courseID, _ := primitive.ObjectIDFromHex("660b8a0c2aef1f3a28265523")
-
-	name := ctx.Request.FormValue("name")
-	content := ctx.Request.FormValue("content")
-	le := ctx.Request.FormValue("level")
-	level, _ := strconv.Atoi(le)
+	var inputLesson lesson_domain.Input
+	if err := ctx.ShouldBindJSON(&inputLesson); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid data",
+		})
+		return
+	}
 
 	lessonRes := &lesson_domain.Lesson{
 		ID:         primitive.NewObjectID(),
-		CourseID:   courseID,
-		Name:       name,
-		Content:    content,
-		Level:      level,
+		CourseID:   inputLesson.CourseID,
+		Name:       inputLesson.Name,
+		Content:    inputLesson.Content,
+		Level:      inputLesson.Level,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 		WhoUpdates: admin.FullName,
@@ -180,7 +181,8 @@ func (l *LessonController) CreateOneLessonHaveImage(ctx *gin.Context) {
 		return
 	}
 
-	courseID, _ := primitive.ObjectIDFromHex("660b8a0c2aef1f3a28265523")
+	courseID := ctx.Request.FormValue("course_id")
+	idCourse, err := primitive.ObjectIDFromHex(courseID)
 
 	name := ctx.Request.FormValue("name")
 	content := ctx.Request.FormValue("content")
@@ -224,7 +226,7 @@ func (l *LessonController) CreateOneLessonHaveImage(ctx *gin.Context) {
 	// Tạo bài học với thông tin hình ảnh từ Cloudinary
 	lessonRes := &lesson_domain.Lesson{
 		ID:         primitive.NewObjectID(),
-		CourseID:   courseID,
+		CourseID:   idCourse,
 		ImageURL:   result.ImageURL,
 		Name:       name,
 		Content:    content,

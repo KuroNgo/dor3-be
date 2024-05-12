@@ -7,8 +7,7 @@ import (
 )
 
 type Input struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	UserID      primitive.ObjectID `bson:"user_id" json:"user_id"`
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
 	NameList    string             `bson:"name_list" json:"name_list"`
 	Description string             `bson:"description" json:"description"`
 }

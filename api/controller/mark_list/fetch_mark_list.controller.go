@@ -24,7 +24,7 @@ func (m *MarkListController) FetchManyMarkListByUserID(ctx *gin.Context) {
 		return
 	}
 
-	markList, err := m.MarkListUseCase.FetchManyByUserID(ctx, fmt.Sprint(user.ID))
+	markList, err := m.MarkListUseCase.FetchManyByUserID(ctx, user.ID.Hex())
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

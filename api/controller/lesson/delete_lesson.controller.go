@@ -25,7 +25,7 @@ func (l *LessonController) DeleteOneLesson(ctx *gin.Context) {
 		return
 	}
 
-	lessonID := ctx.Param("_id")
+	lessonID := ctx.Query("_id")
 
 	err = l.LessonUseCase.DeleteOne(ctx, lessonID)
 	if err != nil {
