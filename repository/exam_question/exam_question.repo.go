@@ -3,6 +3,7 @@ package exam_question_repository
 import (
 	exam_question_domain "clean-architecture/domain/exam_question"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
+	"clean-architecture/internal"
 	"context"
 	"errors"
 	"fmt"
@@ -11,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
-	"sync"
 )
 
 type examQuestionRepository struct {
@@ -75,10 +75,9 @@ func (e *examQuestionRepository) FetchMany(ctx context.Context, page string) (ex
 		},
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	internal.Wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			var question exam_question_domain.ExamQuestionResponse
 			if err := cursor.Decode(&question); err != nil {
@@ -111,7 +110,7 @@ func (e *examQuestionRepository) FetchMany(ctx context.Context, page string) (ex
 
 	}()
 
-	wg.Wait()
+	internal.Wg.Wait()
 
 	cal := <-calCh
 
@@ -170,11 +169,10 @@ func (e *examQuestionRepository) FetchManyByExamID(ctx context.Context, examID s
 		},
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	internal.Wg.Add(1)
 
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			var question exam_question_domain.ExamQuestionResponse
 			if err := cursor.Decode(&question); err != nil {
@@ -209,7 +207,7 @@ func (e *examQuestionRepository) FetchManyByExamID(ctx context.Context, examID s
 
 	}()
 
-	wg.Wait()
+	internal.Wg.Wait()
 
 	var cal int64
 	calCh := make(chan int64)

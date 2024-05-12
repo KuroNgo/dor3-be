@@ -2,6 +2,7 @@ package course_repository
 
 import (
 	course_domain "clean-architecture/domain/course"
+	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -137,20 +138,19 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 	}()
 
 	var courses []course_domain.CourseResponse
-	var wg sync.WaitGroup
 
-	wg.Add(1)
+	internal.Wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			var course course_domain.CourseResponse
 			if err := cursor.Decode(&course); err != nil {
 				return
 			}
 
-			wg.Add(1)
+			internal.Wg.Add(1)
 			go func(course2 course_domain.CourseResponse) {
-				defer wg.Done()
+				defer internal.Wg.Done()
 				countLesson, err := c.countLessonsByCourseID(ctx, course2.Id)
 				if err != nil {
 					return
@@ -167,7 +167,7 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 		}
 	}()
 
-	wg.Wait()
+	internal.Wg.Wait()
 
 	detail := course_domain.DetailForManyResponse{
 		CountCourse: count,

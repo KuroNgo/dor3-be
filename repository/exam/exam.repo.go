@@ -2,6 +2,7 @@ package exam_repository
 
 import (
 	exam_domain "clean-architecture/domain/exam"
+	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -82,10 +83,10 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 	}
 
 	var exams []exam_domain.ExamResponse
-	var wg sync.WaitGroup
-	wg.Add(1)
+
+	internal.Wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			var exam exam_domain.ExamResponse
 			if err = cursor.Decode(&exam); err != nil {
@@ -100,7 +101,7 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 		}
 	}()
 
-	wg.Wait()
+	internal.Wg.Wait()
 
 	cal := <-calCh
 	detail := exam_domain.DetailResponse{
@@ -164,10 +165,9 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 
 	var exams []exam_domain.ExamResponse
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	internal.Wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			var exam exam_domain.ExamResponse
 			if err = cursor.Decode(&exam); err != nil {
@@ -183,7 +183,7 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 		}
 	}()
 
-	wg.Wait()
+	internal.Wg.Wait()
 
 	cal := <-calCh
 	response := exam_domain.DetailResponse{
