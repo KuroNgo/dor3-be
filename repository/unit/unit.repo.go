@@ -2,6 +2,7 @@ package unit_repo
 
 import (
 	unit_domain "clean-architecture/domain/unit"
+	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -9,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
-	"sync"
 )
 
 type unitRepository struct {
@@ -21,7 +21,6 @@ type unitRepository struct {
 }
 
 var (
-	wg    sync.WaitGroup
 	units []unit_domain.UnitResponse
 	unit  unit_domain.UnitResponse
 )
@@ -74,9 +73,9 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 		}
 	}(cursor, ctx)
 
-	wg.Add(1)
+	internal.Wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			if err = cursor.Decode(&unit); err != nil {
 				return
@@ -92,7 +91,7 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 		}
 
 	}()
-	wg.Wait()
+	internal.Wg.Wait()
 
 	cal := <-calCh
 	detail := unit_domain.DetailResponse{
@@ -221,9 +220,9 @@ func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, p
 }
 
 func (u *unitRepository) UpdateComplete(ctx context.Context, updateData *unit_domain.Unit) error {
-	wg.Add(2)
+	internal.Wg.Add(2)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		collection := u.database.Collection(u.collectionUnit)
 
 		filter := bson.D{{Key: "_id", Value: updateData.ID}}
@@ -239,7 +238,7 @@ func (u *unitRepository) UpdateComplete(ctx context.Context, updateData *unit_do
 	}()
 
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		isLessonComplete, err := u.CheckLessonComplete(ctx, updateData.LessonID)
 		if err != nil {
 			u.errCh <- err
@@ -261,7 +260,7 @@ func (u *unitRepository) UpdateComplete(ctx context.Context, updateData *unit_do
 		}
 	}()
 
-	wg.Wait()
+	internal.Wg.Wait()
 	close(u.errCh)
 
 	select {

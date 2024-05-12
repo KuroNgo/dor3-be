@@ -371,7 +371,12 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 	if err != nil {
 		return vocabulary_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	var vocabularies []vocabulary_domain.Vocabulary
 

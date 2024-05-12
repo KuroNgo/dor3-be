@@ -3,6 +3,7 @@ package lesson_repository
 import (
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
+	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -154,10 +155,10 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string,
 	}(cursor, ctx)
 
 	var lessons []lesson_domain.LessonResponse
-	var wg sync.WaitGroup
-	wg.Add(1)
+
+	internal.Wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			var lesson lesson_domain.LessonResponse
 			if err = cursor.Decode(&lesson); err != nil {
@@ -200,7 +201,7 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string,
 		}
 
 	}()
-	wg.Wait()
+	internal.Wg.Wait()
 
 	cal := <-calCh
 

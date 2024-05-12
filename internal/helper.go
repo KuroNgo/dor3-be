@@ -2,6 +2,7 @@ package internal
 
 import (
 	"go.mongodb.org/mongo-driver/bson"
+	"sync"
 )
 
 func ToDoc(v interface{}) (doc *bson.D, err error) {
@@ -13,3 +14,7 @@ func ToDoc(v interface{}) (doc *bson.D, err error) {
 	err = bson.Unmarshal(data, &doc)
 	return
 }
+
+var (
+	Wg sync.WaitGroup
+)

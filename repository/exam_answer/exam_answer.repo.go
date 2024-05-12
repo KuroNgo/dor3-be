@@ -3,6 +3,7 @@ package exam_answer_repository
 import (
 	exam_answer_domain "clean-architecture/domain/exam_answer"
 	exam_options_domain "clean-architecture/domain/exam_options"
+	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -65,10 +66,9 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 
 	var answers []exam_answer_domain.ExamAnswer
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	internal.Wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			var answer exam_answer_domain.ExamAnswer
 			if err = cursor.Decode(&answer); err != nil {
@@ -81,7 +81,7 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 		}
 	}()
 
-	wg.Wait()
+	internal.Wg.Wait()
 
 	response := exam_answer_domain.Response{
 		ExamAnswer: answers,

@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"sync"
 )
 
 type markVocabularyRepository struct {
@@ -56,10 +55,10 @@ func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Co
 	}(cursor, ctx)
 
 	var markVocabularies []mark_vocabulary_domain.MarkToFavouriteResponse
-	var wg sync.WaitGroup
-	wg.Add(1)
+
+	internal.Wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			var markVocabulary mark_vocabulary_domain.MarkToFavourite
 			if err = cursor.Decode(&markVocabulary); err != nil {
@@ -95,7 +94,7 @@ func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Co
 		}
 	}()
 
-	wg.Wait()
+	internal.Wg.Wait()
 
 	// Tạo và trả về response
 	response := mark_vocabulary_domain.Response{
@@ -137,10 +136,10 @@ func (m *markVocabularyRepository) FetchManyByMarkList(ctx context.Context, mark
 	}(cursor, ctx)
 
 	var markVocabularies []mark_vocabulary_domain.MarkToFavouriteResponse
-	var wg sync.WaitGroup
-	wg.Add(1)
+
+	internal.Wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			var markVocabulary mark_vocabulary_domain.MarkToFavourite
 			if err = cursor.Decode(&markVocabulary); err != nil {
@@ -172,7 +171,7 @@ func (m *markVocabularyRepository) FetchManyByMarkList(ctx context.Context, mark
 		}
 	}()
 
-	wg.Wait()
+	internal.Wg.Wait()
 
 	response := mark_vocabulary_domain.Response{
 		Total:                   len(markVocabularies),

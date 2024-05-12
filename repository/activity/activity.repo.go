@@ -2,6 +2,7 @@ package activity_repository
 
 import (
 	activity_log_domain "clean-architecture/domain/activity_log"
+	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -9,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"sort"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -81,11 +81,9 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 
 	var activities []activity_log_domain.ActivityLog
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-
+	internal.Wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			var activity activity_log_domain.ActivityLog
 			if err := cursor.Decode(&activity); err != nil {
@@ -99,7 +97,7 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 		}
 	}()
 
-	wg.Wait()
+	internal.Wg.Wait()
 
 	// Sắp xếp slice activities theo thời gian giảm dần (từ mới nhất đến cũ nhất)
 	sort.Slice(activities, func(i, j int) bool {

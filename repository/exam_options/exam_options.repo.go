@@ -3,13 +3,13 @@ package exam_options_repository
 import (
 	exam_options_domain "clean-architecture/domain/exam_options"
 	exam_question_domain "clean-architecture/domain/exam_question"
+	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"strings"
-	"sync"
 )
 
 type examOptionsRepository struct {
@@ -47,10 +47,9 @@ func (e *examOptionsRepository) FetchManyByQuestionID(ctx context.Context, quest
 
 	var options []exam_options_domain.ExamOptions
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	internal.Wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			var option exam_options_domain.ExamOptions
 			if err = cursor.Decode(&option); err != nil {
@@ -63,7 +62,7 @@ func (e *examOptionsRepository) FetchManyByQuestionID(ctx context.Context, quest
 		}
 	}()
 
-	wg.Wait()
+	internal.Wg.Wait()
 
 	response := exam_options_domain.Response{
 		ExamOptions: options,

@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"sync"
 	"time"
 )
 
@@ -52,10 +51,9 @@ func (a *adminRepository) FetchMany(c context.Context) (admin_domain.Response, e
 
 	var admins []admin_domain.Admin
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	internal.Wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(c) {
 			var admin admin_domain.Admin
 			if err = cursor.Decode(&admin); err != nil {
@@ -70,7 +68,7 @@ func (a *adminRepository) FetchMany(c context.Context) (admin_domain.Response, e
 		}
 	}()
 
-	wg.Wait()
+	internal.Wg.Wait()
 
 	adminRes := admin_domain.Response{
 		Admin: admins,
