@@ -18,6 +18,18 @@ func NewMarkVocabularyUseCase(markVocabularyRepository mark_vocabulary_domain.IM
 	}
 }
 
+func (m *markVocabularyUseCase) FetchManyByMarkList(ctx context.Context, markListId string) (mark_vocabulary_domain.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
+	defer cancel()
+
+	markVocabulary, err := m.markVocabularyRepository.FetchManyByMarkList(ctx, markListId)
+	if err != nil {
+		return mark_vocabulary_domain.Response{}, err
+	}
+
+	return markVocabulary, err
+}
+
 func (m *markVocabularyUseCase) FetchManyByMarkListIDAndUserId(ctx context.Context, markListId string, userId string) (mark_vocabulary_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()

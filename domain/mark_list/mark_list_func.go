@@ -15,6 +15,8 @@ type Input struct {
 
 type IMarkListUseCase interface {
 	FetchManyByUserID(ctx context.Context, userId string) (Response, error)
+	FetchMany(ctx context.Context) (Response, error)
+	FetchById(ctx context.Context, id string) (MarkList, error)
 
 	CreateOne(ctx context.Context, markList *MarkList) error
 	UpdateOne(ctx context.Context, markList *MarkList) (*mongo.UpdateResult, error)

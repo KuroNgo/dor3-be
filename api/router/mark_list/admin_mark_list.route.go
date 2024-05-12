@@ -26,5 +26,5 @@ func AdminMarkListRoute(env *bootstrap.Database, timeout time.Duration, db *mong
 	}
 
 	router := group.Group("/mark_list")
-	router.GET("/fetch/user/_id", middleware.DeserializeUser(), markList.FetchManyMarkListByUserID)
+	router.GET("/fetch", middleware.DeserializeUser(), markList.FetchManyMarkListByUserID)
 }

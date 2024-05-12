@@ -59,6 +59,24 @@ func (m *markListRepository) FetchManyByUserID(ctx context.Context, userID strin
 	return response, nil
 }
 
+func (m *markListRepository) FetchById(ctx context.Context, id string) (mark_list_domain.MarkList, error) {
+	collectionMarkList := m.database.Collection(m.collectionMarkList)
+
+	idMarkList, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return mark_list_domain.MarkList{}, err
+	}
+
+	filter := bson.M{"_id": idMarkList}
+	var markList mark_list_domain.MarkList
+	err = collectionMarkList.FindOne(ctx, filter).Decode(&markList)
+	if err != nil {
+		return mark_list_domain.MarkList{}, err
+	}
+
+	return markList, err
+}
+
 func (m *markListRepository) FetchMany(ctx context.Context) (mark_list_domain.Response, error) {
 	collectionMarkList := m.database.Collection(m.collectionMarkList)
 

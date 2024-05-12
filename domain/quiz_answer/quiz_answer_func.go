@@ -11,7 +11,7 @@ type Input struct {
 	UserID     primitive.ObjectID `bson:"user_id" json:"user_id"`
 	QuestionID primitive.ObjectID `bson:"question_id" json:"question_id"`
 
-	Content     string    `bson:"content" json:"content"`
+	Answer      string    `bson:"content" json:"content"`
 	SubmittedAt time.Time `bson:"submitted_at" json:"submitted_at"`
 }
 
@@ -19,4 +19,5 @@ type IQuizAnswerUseCase interface {
 	FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (Response, error)
 	CreateOne(ctx context.Context, quizAnswer *QuizAnswer) error
 	DeleteOne(ctx context.Context, quizID string) error
+	DeleteAllAnswerByQuizID(ctx context.Context, quizId string) error
 }

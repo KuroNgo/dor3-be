@@ -53,3 +53,15 @@ func (e *exerciseAnswerUseCase) DeleteOne(ctx context.Context, exerciseID string
 
 	return nil
 }
+
+func (e *exerciseAnswerUseCase) DeleteAllAnswerByExerciseID(ctx context.Context, exerciseId string) error {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	err := e.exerciseAnswerRepository.DeleteAllAnswerByExerciseID(ctx, exerciseId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

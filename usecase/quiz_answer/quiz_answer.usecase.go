@@ -11,6 +11,18 @@ type quizResultUseCase struct {
 	contextTimeout       time.Duration
 }
 
+func (q *quizResultUseCase) DeleteAllAnswerByQuizID(ctx context.Context, quizId string) error {
+	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
+	defer cancel()
+
+	err := q.quizAnswerRepository.DeleteAllAnswerByQuizID(ctx, quizId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (q *quizResultUseCase) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (quiz_answer_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()

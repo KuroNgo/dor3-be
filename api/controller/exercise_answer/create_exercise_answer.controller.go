@@ -41,7 +41,7 @@ func (e *ExerciseAnswerController) CreateOneExerciseAnswer(ctx *gin.Context) {
 		ID:          primitive.NewObjectID(),
 		UserID:      user.ID,
 		QuestionID:  answerInput.QuestionID,
-		Content:     answerInput.Content,
+		Answer:      answerInput.Answer,
 		BlankIndex:  0,
 		SubmittedAt: time.Now(),
 	}

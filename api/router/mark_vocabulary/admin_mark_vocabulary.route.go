@@ -28,5 +28,5 @@ func AdminMarkVocabularyRoute(env *bootstrap.Database, timeout time.Duration, db
 	}
 
 	router := group.Group("/mark_vocabulary")
-	router.GET("/fetch/_id", middleware.DeserializeUser(), markVocabulary.FetchManyByMarkListIdAndUserId)
+	router.GET("/fetch", middleware.DeserializeUser(), markVocabulary.FetchManyByMarkListIdAndUserId)
 }

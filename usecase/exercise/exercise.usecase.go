@@ -55,11 +55,11 @@ func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string) 
 	return vocabulary, detail, err
 }
 
-func (e *exerciseUseCase) UpdateCompleted(ctx context.Context, exerciseID string, isComplete int) error {
+func (e *exerciseUseCase) UpdateCompleted(ctx context.Context, exercise *exercise_domain.Exercise) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.exerciseRepository.UpdateCompleted(ctx, exerciseID, isComplete)
+	err := e.exerciseRepository.UpdateCompleted(ctx, exercise)
 	if err != nil {
 		return err
 	}

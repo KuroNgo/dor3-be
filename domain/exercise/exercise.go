@@ -24,6 +24,7 @@ type Exercise struct {
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
 	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
+	Learner    string    `bson:"learner" json:"learner"`
 }
 
 type ExerciseResponse struct {
@@ -38,7 +39,9 @@ type ExerciseResponse struct {
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
 	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
+	Learner    string    `bson:"learner" json:"learner"`
 
+	IsComplete    int   `bson:"is_complete" json:"is_complete"`
 	CountQuestion int32 `bson:"count_question" json:"count_question"`
 }
 
@@ -56,7 +59,7 @@ type IExerciseRepository interface {
 	CreateOne(ctx context.Context, exercise *Exercise) error
 
 	UpdateOne(ctx context.Context, exercise *Exercise) (*mongo.UpdateResult, error)
-	UpdateCompleted(ctx context.Context, exerciseID string, isComplete int) error
+	UpdateCompleted(ctx context.Context, exercise *Exercise) error
 
 	DeleteOne(ctx context.Context, exerciseID string) error
 }
