@@ -19,8 +19,8 @@ func (q *QuizController) CreateOneQuiz(ctx *gin.Context) {
 		})
 		return
 	}
-	user, err := q.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
-	if err != nil || user == nil {
+	admin, err := q.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
 			"message": "You are not authorized to perform this action!",
@@ -55,7 +55,7 @@ func (q *QuizController) CreateOneQuiz(ctx *gin.Context) {
 		Duration:    quizInput.Duration,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-		WhoUpdates:  user.FullName,
+		WhoUpdates:  admin.FullName,
 	}
 
 	err = q.QuizUseCase.CreateOne(ctx, quizRes)
