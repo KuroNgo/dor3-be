@@ -31,18 +31,6 @@ func (q *quizUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page
 	return quiz, detail, nil
 }
 
-func (q *quizUseCase) FetchManyByLessonID(ctx context.Context, unitID string, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
-	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
-	defer cancel()
-
-	quiz, detail, err := q.quizRepository.FetchManyByLessonID(ctx, unitID, page)
-	if err != nil {
-		return nil, quiz_domain.Response{}, err
-	}
-
-	return quiz, detail, nil
-}
-
 func (q *quizUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (quiz_domain.QuizResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()

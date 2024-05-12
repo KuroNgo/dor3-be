@@ -55,7 +55,6 @@ func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Co
 	}(cursor, ctx)
 
 	var markVocabularies []mark_vocabulary_domain.MarkToFavouriteResponse
-
 	internal.Wg.Add(1)
 	go func() {
 		defer internal.Wg.Done()

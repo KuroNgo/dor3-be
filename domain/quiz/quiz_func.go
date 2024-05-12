@@ -26,7 +26,6 @@ type Completed struct {
 type IQuizUseCase interface {
 	FetchMany(ctx context.Context, page string) ([]QuizResponse, Response, error)
 	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]QuizResponse, Response, error)
-	FetchManyByLessonID(ctx context.Context, unitID string, page string) ([]QuizResponse, Response, error)
 	FetchOneByUnitID(ctx context.Context, unitID string) (QuizResponse, error)
 
 	UpdateOne(ctx context.Context, quiz *Quiz) (*mongo.UpdateResult, error)

@@ -3,12 +3,12 @@ package quiz_answer_repository
 import (
 	quiz_answer_domain "clean-architecture/domain/quiz_answer"
 	quiz_options_domain "clean-architecture/domain/quiz_options"
+	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"sync"
 )
 
 type quizAnswerRepository struct {
@@ -55,10 +55,9 @@ func (q *quizAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 	}(cursor, ctx)
 
 	var answers []quiz_answer_domain.QuizAnswer
-	var wg sync.WaitGroup
-	wg.Add(1)
+	internal.Wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			var answer quiz_answer_domain.QuizAnswer
 			if err = cursor.Decode(&answer); err != nil {
@@ -70,8 +69,8 @@ func (q *quizAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 			answers = append(answers, answer)
 		}
 	}()
-	wg.Wait()
-	
+	internal.Wg.Wait()
+
 	response := quiz_answer_domain.Response{
 		QuizAnswer: answers,
 	}

@@ -19,18 +19,6 @@ func NewExerciseUseCase(exerciseRepository exercise_domain.IExerciseRepository, 
 	}
 }
 
-func (e *exerciseUseCase) FetchManyByLessonID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
-	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
-	defer cancel()
-
-	vocabulary, detail, err := e.exerciseRepository.FetchManyByLessonID(ctx, unitID)
-	if err != nil {
-		return nil, exercise_domain.DetailResponse{}, err
-	}
-
-	return vocabulary, detail, err
-}
-
 func (e *exerciseUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
@@ -43,11 +31,11 @@ func (e *exerciseUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (
 	return vocabulary, err
 }
 
-func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
+func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	vocabulary, detail, err := e.exerciseRepository.FetchManyByUnitID(ctx, unitID)
+	vocabulary, detail, err := e.exerciseRepository.FetchManyByUnitID(ctx, unitID, page)
 	if err != nil {
 		return nil, exercise_domain.DetailResponse{}, err
 	}

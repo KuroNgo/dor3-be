@@ -82,7 +82,12 @@ func (e *exerciseQuestionRepository) FetchManyByExerciseID(ctx context.Context, 
 	if err != nil {
 		return exercise_questions_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	var questions []exercise_questions_domain.ExerciseQuestion
 	for cursor.Next(ctx) {
@@ -100,6 +105,24 @@ func (e *exerciseQuestionRepository) FetchManyByExerciseID(ctx context.Context, 
 	}
 
 	return questionsRes, nil
+}
+
+func (e *exerciseQuestionRepository) CreateOne(ctx context.Context, exerciseQuestion *exercise_questions_domain.ExerciseQuestion) error {
+	collectionQuestion := e.database.Collection(e.collectionQuestion)
+	collectionExercise := e.database.Collection(e.collectionExercise)
+
+	filterExerciseID := bson.M{"exercise_id": exerciseQuestion.ExerciseID}
+	countExerciseID, err := collectionExercise.CountDocuments(ctx, filterExerciseID)
+	if err != nil {
+		return err
+	}
+
+	if countExerciseID == 0 {
+		return errors.New("the exerciseID do not exist")
+	}
+
+	_, err = collectionQuestion.InsertOne(ctx, exerciseQuestion)
+	return nil
 }
 
 func (e *exerciseQuestionRepository) UpdateOne(ctx context.Context, exerciseQuestion *exercise_questions_domain.ExerciseQuestion) (*mongo.UpdateResult, error) {
@@ -121,24 +144,6 @@ func (e *exerciseQuestionRepository) UpdateOne(ctx context.Context, exerciseQues
 		return nil, err
 	}
 	return data, nil
-}
-
-func (e *exerciseQuestionRepository) CreateOne(ctx context.Context, exerciseQuestion *exercise_questions_domain.ExerciseQuestion) error {
-	collectionQuestion := e.database.Collection(e.collectionQuestion)
-	collectionExercise := e.database.Collection(e.collectionExercise)
-
-	filterExerciseID := bson.M{"exercise_id": exerciseQuestion.ExerciseID}
-	countExerciseID, err := collectionExercise.CountDocuments(ctx, filterExerciseID)
-	if err != nil {
-		return err
-	}
-
-	if countExerciseID == 0 {
-		return errors.New("the exerciseID do not exist")
-	}
-
-	_, err = collectionQuestion.InsertOne(ctx, exerciseQuestion)
-	return nil
 }
 
 func (e *exerciseQuestionRepository) DeleteOne(ctx context.Context, exerciseID string) error {

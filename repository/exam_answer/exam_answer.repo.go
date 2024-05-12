@@ -65,7 +65,6 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 	}(cursor, ctx)
 
 	var answers []exam_answer_domain.ExamAnswer
-
 	internal.Wg.Add(1)
 	go func() {
 		defer internal.Wg.Done()

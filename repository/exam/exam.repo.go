@@ -105,8 +105,9 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 
 	cal := <-calCh
 	detail := exam_domain.DetailResponse{
-		Page:      cal,
-		CountExam: count,
+		Page:        cal,
+		CurrentPage: pageNumber,
+		CountExam:   count,
 	}
 
 	return exams, detail, nil

@@ -50,11 +50,11 @@ type DetailResponse struct {
 	Page          int64 `json:"page" bson:"page"`
 	CurrentPage   int   `json:"current_page" bson:"current_page"`
 }
+
 type IExerciseRepository interface {
 	FetchMany(ctx context.Context, page string) ([]ExerciseResponse, DetailResponse, error)
-	FetchManyByLessonID(ctx context.Context, unitID string) ([]ExerciseResponse, DetailResponse, error)
 	FetchOneByUnitID(ctx context.Context, unitID string) (ExerciseResponse, error)
-	FetchManyByUnitID(ctx context.Context, unitID string) ([]ExerciseResponse, DetailResponse, error)
+	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]ExerciseResponse, DetailResponse, error)
 
 	CreateOne(ctx context.Context, exercise *Exercise) error
 
