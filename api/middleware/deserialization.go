@@ -35,7 +35,6 @@ func DeserializeUser() gin.HandlerFunc {
 		env := app.Env
 
 		sub, err := internal.ValidateToken(accessToken, env.AccessTokenPublicKey)
-
 		if err != nil {
 			fmt.Println("The err is: ", err)
 			ctx.JSON(http.StatusUnauthorized, gin.H{

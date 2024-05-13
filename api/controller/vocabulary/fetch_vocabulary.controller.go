@@ -77,6 +77,24 @@ func (v *VocabularyController) FetchByIdUnit(ctx *gin.Context) {
 	})
 }
 
+func (v *VocabularyController) FetchByIdVocabulary(ctx *gin.Context) {
+	idVocabulary := ctx.Query("vocabulary_id")
+
+	vocabulary, err := v.VocabularyUseCase.GetVocabularyById(ctx, idVocabulary)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":     "success",
+		"vocabulary": vocabulary,
+	})
+}
+
 func (v *VocabularyController) FetchAllVocabulary(ctx *gin.Context) {
 	vocabulary, err := v.VocabularyUseCase.GetAllVocabulary(ctx)
 	if err != nil {

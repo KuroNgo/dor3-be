@@ -2,6 +2,7 @@ package exam_route
 
 import (
 	exam_controller "clean-architecture/api/controller/exam"
+	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
 	admin_domain "clean-architecture/domain/admin"
 	exam_domain "clean-architecture/domain/exam"
@@ -33,6 +34,8 @@ func ExamRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Databas
 	}
 
 	router := group.Group("/exam")
+	router.Use(middleware.DeserializeUser())
+
 	router.GET("/fetch", exam.FetchManyExam)
 	router.GET("fetch/1/unit_id", exam.FetchOneExamByUnitID)
 	router.GET("fetch/n/unit_id", exam.FetchManyExamByUnitID)

@@ -1,8 +1,10 @@
 package exam_answer_repository
 
 import (
+	exam_domain "clean-architecture/domain/exam"
 	exam_answer_domain "clean-architecture/domain/exam_answer"
 	exam_options_domain "clean-architecture/domain/exam_options"
+	exam_question_domain "clean-architecture/domain/exam_question"
 	"clean-architecture/internal"
 	"context"
 	"errors"
@@ -42,6 +44,9 @@ func NewExamAnswerRepository(db *mongo.Database, collectionQuestion string, coll
 
 func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (exam_answer_domain.Response, error) {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
+	collectionQuestion := e.database.Collection(e.collectionQuestion)
+	collectionExam := e.database.Collection(e.collectionExam)
+
 	idQuestion, err := primitive.ObjectIDFromHex(questionID)
 	if err != nil {
 		return exam_answer_domain.Response{}, err
@@ -64,7 +69,7 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 		}
 	}(cursor, ctx)
 
-	var answers []exam_answer_domain.ExamAnswer
+	var answers []exam_answer_domain.ExamAnswerResponse
 	internal.Wg.Add(1)
 	go func() {
 		defer internal.Wg.Done()
@@ -74,16 +79,35 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 				return
 			}
 
-			// Gắn CourseID vào bài học
+			var question exam_question_domain.ExamQuestion
+			filterQuestion := bson.M{"_id": answer.QuestionID}
+			err = collectionQuestion.FindOne(ctx, filterQuestion).Decode(&question)
+			if err = cursor.Decode(&answer); err != nil {
+				return
+			}
+
+			var exam exam_domain.Exam
+			filterExam := bson.M{"_id": question.ExamID}
+			err = collectionExam.FindOne(ctx, filterExam).Decode(&exam)
+
+			var answerRes exam_answer_domain.ExamAnswerResponse
+			answerRes.ID = answer.ID
+			answerRes.UserID = answer.UserID
+			answerRes.Question = question
+			answerRes.Exam = exam
+			answerRes.Answer = answer.Answer
+			answerRes.SubmittedAt = answer.SubmittedAt
+			answerRes.IsCorrect = answer.IsCorrect
+
 			answer.QuestionID = idQuestion
-			answers = append(answers, answer)
+			answers = append(answers, answerRes)
 		}
 	}()
 
 	internal.Wg.Wait()
 
 	response := exam_answer_domain.Response{
-		ExamAnswer: answers,
+		ExamAnswerResponse: answers,
 	}
 
 	return response, nil
