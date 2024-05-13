@@ -10,8 +10,7 @@ type Input struct {
 	UserID     primitive.ObjectID `bson:"user_id" json:"user_id"`
 	QuestionID primitive.ObjectID `bson:"question_id" json:"question_id"`
 
-	Answer    string `bson:"answer" json:"answer"`
-	IsCorrect int    `bson:"correct" json:"correct"`
+	Answer string `bson:"answer" json:"answer"`
 }
 
 type IExamAnswerUseCase interface {

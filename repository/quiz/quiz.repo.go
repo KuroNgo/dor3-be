@@ -221,16 +221,26 @@ func (q *quizRepository) UpdateCompleted(ctx context.Context, quiz *quiz_domain.
 
 func (q *quizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) error {
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
+	collectionUnit := q.database.Collection(q.collectionUnit)
+	collectionLesson := q.database.Collection(q.collectionLesson)
 
-	filter := bson.M{"lesson_id": quiz.LessonID}
+	filterLesson := bson.M{"_id": quiz.LessonID}
 
-	// check exists with Count Documents
-	count, err := collectionQuiz.CountDocuments(ctx, filter)
+	countL, err := collectionLesson.CountDocuments(ctx, filterLesson)
 	if err != nil {
 		return err
 	}
-	if count > 0 {
-		return errors.New("the question did exist")
+	if countL > 0 {
+		return errors.New("the lesson id do not exist!")
+	}
+
+	filterUnit := bson.M{"_id": quiz.UnitID}
+	countN, err := collectionUnit.CountDocuments(ctx, filterUnit)
+	if err != nil {
+		return err
+	}
+	if countN > 0 {
+		return errors.New("the unit id do not exist!")
 	}
 
 	_, err = collectionQuiz.InsertOne(ctx, quiz)

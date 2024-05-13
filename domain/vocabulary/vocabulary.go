@@ -26,6 +26,7 @@ type Vocabulary struct {
 	ExplainEng    string `bson:"explain_eng" json:"explain_eng"`
 	FieldOfIT     string `bson:"field_of_it" json:"field_of_it"`
 	LinkURL       string `bson:"link_url" json:"link_url"`
+	VideoURL      string `bson:"video_url" json:"video_url"`
 	ImageURL      string `bson:"image_url" json:"image_url"`
 
 	IsFavourite int       `bson:"is_favourite" json:"is_favourite"`

@@ -8,7 +8,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"sort"
 	"strconv"
 	"time"
 )
@@ -56,6 +55,7 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	cal := make(chan int64)
 
 	go func() {
+		defer close(cal)
 		count, err := collection.CountDocuments(ctx, bson.D{})
 		if err != nil {
 			return
@@ -98,11 +98,6 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	}()
 
 	internal.Wg.Wait()
-
-	// Sắp xếp slice activities theo thời gian giảm dần (từ mới nhất đến cũ nhất)
-	sort.Slice(activities, func(i, j int) bool {
-		return activities[i].ActivityTime.After(activities[j].ActivityTime)
-	})
 
 	count := <-cal
 	activityRes := activity_log_domain.Response{

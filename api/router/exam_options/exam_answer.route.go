@@ -27,5 +27,6 @@ func ExamOptionsRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.
 	}
 
 	router := group.Group("/exam/options")
+	router.Use(middleware.DeserializeUser())
 	router.GET("/fetch", middleware.DeserializeUser(), options.FetchManyExamOptions)
 }

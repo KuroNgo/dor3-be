@@ -21,6 +21,14 @@ type examResultRepository struct {
 	collectionExam       string
 }
 
+func NewExamResultRepository(db *mongo.Database, collectionExamResult string, collectionExam string) exam_result_domain.IExamResultRepository {
+	return &examResultRepository{
+		database:             db,
+		collectionExamResult: collectionExamResult,
+		collectionExam:       collectionExam,
+	}
+}
+
 func (e *examResultRepository) GetResultByID(ctx context.Context, id string) (exam_result_domain.ExamResult, error) {
 	collectionResult := e.database.Collection(e.collectionExamResult)
 
@@ -36,14 +44,6 @@ func (e *examResultRepository) GetResultByID(ctx context.Context, id string) (ex
 		return exam_result_domain.ExamResult{}, err
 	}
 	return res, nil
-}
-
-func NewExamResultRepository(db *mongo.Database, collectionExamResult string, collectionExam string) exam_result_domain.IExamResultRepository {
-	return &examResultRepository{
-		database:             db,
-		collectionExamResult: collectionExamResult,
-		collectionExam:       collectionExam,
-	}
 }
 
 func (e *examResultRepository) FetchManyByUserID(ctx context.Context, userID string) (exam_result_domain.Response, error) {
