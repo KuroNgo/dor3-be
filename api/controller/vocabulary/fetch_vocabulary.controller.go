@@ -78,7 +78,7 @@ func (v *VocabularyController) FetchByIdUnit(ctx *gin.Context) {
 }
 
 func (v *VocabularyController) FetchByIdVocabulary(ctx *gin.Context) {
-	idVocabulary := ctx.Query("vocabulary_id")
+	idVocabulary := ctx.Query("_id")
 
 	vocabulary, err := v.VocabularyUseCase.GetVocabularyById(ctx, idVocabulary)
 	if err != nil {

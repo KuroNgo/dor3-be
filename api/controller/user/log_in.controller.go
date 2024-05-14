@@ -62,7 +62,6 @@ func (l *LoginFromRoleController) LoginFromRole(ctx *gin.Context) {
 		ctx.SetCookie("access_token", accessToken, 0, "/", "localhost", false, true)
 		ctx.SetCookie("refresh_token", refreshToken, 0, "/", "localhost", false, true)
 		ctx.SetCookie("logged_in", "true", 0, "/", "localhost", false, false)
-		ctx.SetSameSite(http.SameSiteStrictMode) // Chỉ gửi cookie với các yêu cầu cùng nguồn
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":       "success",
@@ -108,7 +107,6 @@ func (l *LoginFromRoleController) LoginFromRole(ctx *gin.Context) {
 		ctx.SetCookie("access_token", accessToken, 0, "/", "localhost", false, true)
 		ctx.SetCookie("refresh_token", refreshToken, 0, "/", "localhost", false, true)
 		ctx.SetCookie("logged_in", "true", 0, "/", "localhost", false, false)
-		ctx.SetSameSite(http.SameSiteStrictMode) // Chỉ gửi cookie với các yêu cầu cùng nguồn
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":       "success",
@@ -165,7 +163,6 @@ func (l *LoginFromRoleController) LoginUser(ctx *gin.Context) {
 		ctx.SetCookie("access_token", accessToken, 0, "/", "localhost", false, true)
 		ctx.SetCookie("refresh_token", refreshToken, 0, "/", "localhost", false, true)
 		ctx.SetCookie("logged_in", "true", 0, "/", "localhost", false, false)
-		ctx.SetSameSite(http.SameSiteStrictMode) // Chỉ gửi cookie với các yêu cầu cùng nguồn
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":       "success",
@@ -232,7 +229,6 @@ func (a *LoginFromRoleController) LoginAdmin(ctx *gin.Context) {
 		ctx.SetCookie("access_token", accessToken, 0, "/", "localhost", false, true)
 		ctx.SetCookie("refresh_token", refreshToken, 0, "/", "localhost", false, true)
 		ctx.SetCookie("logged_in", "true", 0, "/", "localhost", false, false)
-		ctx.SetSameSite(http.SameSiteStrictMode)
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":       "success",
