@@ -160,7 +160,12 @@ func (u *userRepository) FetchMany(c context.Context) (user_domain.Response, err
 		return user_domain.Response{}, err
 	}
 
-	return user_domain.Response{}, err
+	response := user_domain.Response{
+		User:  users,
+		Total: int64(len(users)),
+	}
+
+	return response, err
 }
 
 func (u *userRepository) DeleteOne(c context.Context, userID string) error {

@@ -30,11 +30,8 @@ type User struct {
 }
 
 type Response struct {
-	User []User `bson:"user" json:"user"`
-}
-
-type Statistics struct {
-	Total int64 `bson:"total" json:"total"`
+	Total int64  `bson:"total" json:"total"`
+	User  []User `bson:"user" json:"user"`
 }
 
 //go:generate mockery --name IUserRepository

@@ -436,8 +436,10 @@ func (l *lessonRepository) UpdateImage(ctx context.Context, lesson *lesson_domai
 func (l *lessonRepository) CreateOne(ctx context.Context, lesson *lesson_domain.Lesson) error {
 	collectionLesson := l.database.Collection(l.collectionLesson)
 	collectionCourse := l.database.Collection(l.collectionCourse)
+	collectionUnit := l.database.Collection(l.collectionUnit)
 
 	filter := bson.M{"name": lesson.Name}
+
 	// check exists with CountDocuments
 	count, err := collectionLesson.CountDocuments(ctx, filter)
 	if err != nil {
@@ -447,17 +449,41 @@ func (l *lessonRepository) CreateOne(ctx context.Context, lesson *lesson_domain.
 		return errors.New("the lesson name did exist")
 	}
 
-	filterReference := bson.M{"_id": lesson.CourseID}
-	countParent, err := collectionCourse.CountDocuments(ctx, filterReference)
+	filterCourse := bson.M{"_id": lesson.CourseID}
+	countParent, err := collectionCourse.CountDocuments(ctx, filterCourse)
 	if err != nil {
 		return err
 	}
-
 	if countParent == 0 {
 		return errors.New("the course ID do not exist")
 	}
 
 	_, err = collectionLesson.InsertOne(ctx, lesson)
+
+	data, err := l.getLastLesson(ctx)
+	filterUnit := bson.M{"lesson_id": data.ID}
+	countUnit, err := collectionUnit.CountDocuments(ctx, filterUnit)
+	if err != nil {
+		return err
+	}
+
+	unit := unit_domain.Unit{
+		ID:         primitive.NewObjectID(),
+		LessonID:   data.ID,
+		Name:       "Unit 1",
+		Level:      1,
+		IsComplete: 0,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+		WhoCreate:  lesson.WhoUpdates,
+	}
+	if countUnit == 0 {
+		_, err := collectionUnit.InsertOne(ctx, unit)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -566,4 +592,27 @@ func (l *lessonRepository) countVocabularyByLessonID(ctx context.Context, lesson
 	}
 
 	return result.TotalVocabulary, nil
+}
+
+// CountUnitsByLessonID đếm số lượng unit trong lesson dựa trên lessonID
+func (l *lessonRepository) countUnitsByLessonID(ctx context.Context, lessonID primitive.ObjectID) (int64, error) {
+	collectionLesson := l.database.Collection(l.collectionLesson)
+
+	filter := bson.M{"lesson_id": lessonID}
+	count, err := collectionLesson.CountDocuments(ctx, filter)
+	return count, err
+}
+
+// getLastLesson lấy unit cuối cùng từ collection
+func (l *lessonRepository) getLastLesson(ctx context.Context) (*lesson_domain.Lesson, error) {
+	collectionLesson := l.database.Collection(l.collectionLesson)
+	findOptions := options.FindOne().SetSort(bson.D{{"_id", -1}})
+
+	var lesson lesson_domain.Lesson
+	err := collectionLesson.FindOne(ctx, bson.D{}, findOptions).Decode(&lesson)
+	if err != nil {
+		return nil, err
+	}
+
+	return &lesson, nil
 }

@@ -312,37 +312,36 @@ func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) 
 
 	filterUnit := bson.M{"name": unit.Name, "lesson_id": unit.LessonID}
 	filterLess := bson.M{"_id": unit.LessonID}
-	findOptions := options.FindOne().SetSort(bson.M{"_id": -1})
 
 	// check exists with CountDocuments
 	countLess, err := collectionLesson.CountDocuments(ctx, filterLess)
 	if err != nil {
 		return err
 	}
+	if countLess == 0 {
+		return errors.New("the lesson ID do not exist")
+	}
 
+	// đếm số lượng document trong unit
 	countUnit, err := collectionUnit.CountDocuments(ctx, filterUnit)
 	if err != nil {
 		return err
 	}
-
-	countVocabulary, err := collectionVocabulary.CountDocuments(ctx, findOptions)
-	if err != nil {
-		return err
-	}
-
 	if countUnit > 0 {
 		return errors.New("the unit name in lesson did exist")
 	}
-	if countLess == 0 {
-		return errors.New("the lesson ID do not exist")
-	}
-	if countVocabulary == 0 {
-		return errors.New("the vocabulary in database is null")
-	}
-	if countVocabulary > 5 {
 
+	// tạo unit dựa trên vocabulary
+	data, err := u.getLastUnit(ctx)
+	filterVocabulary := bson.M{"unit_id": data.ID}
+	countVocabulary, err := collectionVocabulary.CountDocuments(ctx, filterVocabulary)
+	if err != nil {
+		return err
 	}
-	_, err = collectionUnit.InsertOne(ctx, unit)
+	if countVocabulary == 0 || countVocabulary > 5 {
+		_, err = collectionUnit.InsertOne(ctx, unit)
+	}
+
 	return nil
 }
 
@@ -405,4 +404,18 @@ func (u *unitRepository) countVocabularyByUnitID(ctx context.Context, unitID pri
 	}
 
 	return int32(count), nil
+}
+
+// getLastUnit lấy unit cuối cùng từ collection
+func (u *unitRepository) getLastUnit(ctx context.Context) (*unit_domain.Unit, error) {
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	findOptions := options.FindOne().SetSort(bson.D{{"_id", -1}})
+
+	var unit unit_domain.Unit
+	err := collectionUnit.FindOne(ctx, bson.D{}, findOptions).Decode(&unit)
+	if err != nil {
+		return nil, err
+	}
+
+	return &unit, nil
 }
