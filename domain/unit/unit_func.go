@@ -30,13 +30,9 @@ type IUnitUseCase interface {
 	FetchMany(ctx context.Context, page string) ([]UnitResponse, DetailResponse, error)
 	FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error)
 	FetchByIdLesson(ctx context.Context, idLesson string, page string) ([]UnitResponse, DetailResponse, error)
-
 	CreateOne(ctx context.Context, unit *Unit) error
 	CreateOneByNameLesson(ctx context.Context, unit *Unit) error
-
 	UpdateOne(ctx context.Context, unit *Unit) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, unitID string) error
-
-	// UpdateComplete automation
 	UpdateComplete(ctx context.Context, update *Unit) error
 }

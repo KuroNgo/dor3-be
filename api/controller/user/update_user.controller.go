@@ -31,7 +31,9 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
+	fullName := ctx.Request.FormValue("full_name")
 	phone := ctx.Request.FormValue("phone")
+	email := ctx.Request.FormValue("email")
 
 	result, err := u.UserUseCase.GetByID(ctx, fmt.Sprint(sub))
 	if err != nil {
@@ -45,8 +47,8 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		userResponse := user_domain.User{
-			FullName:  result.FullName,
-			Email:     result.Email,
+			FullName:  fullName,
+			Email:     email,
 			Phone:     phone,
 			Role:      result.Role,
 			UpdatedAt: time.Now(),

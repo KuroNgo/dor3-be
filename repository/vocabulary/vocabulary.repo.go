@@ -132,7 +132,7 @@ func (v *vocabularyRepository) GetVocabularyById(ctx context.Context, id string)
 
 	var vocabulary vocabulary_domain.Vocabulary
 	err = collectionVocabulary.FindOne(ctx, filter).Decode(&vocabulary)
-	if !errors.Is(err, mongo.ErrNoDocuments) {
+	if errors.Is(err, mongo.ErrNoDocuments) {
 		return vocabulary_domain.Vocabulary{}, err
 	}
 
@@ -411,8 +411,21 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 }
 
 func (v *vocabularyRepository) UpdateOneImage(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
-	//TODO implement me
-	panic("implement me")
+	collection := v.database.Collection(v.collectionVocabulary)
+
+	filter := bson.D{{Key: "_id", Value: vocabulary.Id}}
+	update := bson.M{
+		"$set": bson.M{
+			"image_url": vocabulary.LinkURL,
+		},
+	}
+
+	data, err := collection.UpdateOne(ctx, filter, &update)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 func (v *vocabularyRepository) UpdateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {

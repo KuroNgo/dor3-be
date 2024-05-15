@@ -38,6 +38,7 @@ func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLess
 func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 
+	// pagination
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
 		return nil, unit_domain.DetailResponse{}, errors.New("invalid page number")
@@ -46,6 +47,7 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
+	// count unit
 	calCh := make(chan int64)
 	count, err := collectionUnit.CountDocuments(ctx, bson.D{})
 	if err != nil {
@@ -54,7 +56,6 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 
 	go func() {
 		defer close(calCh)
-
 		cal1 := count / int64(perPage)
 		cal2 := count % int64(perPage)
 		if cal2 != 0 {
@@ -303,12 +304,15 @@ func (u *unitRepository) CheckLessonComplete(ctx context.Context, lessonID primi
 	return true, nil
 }
 
+// CreateOne: hệ thống sẽ tự tạo unit nếu số lượng vocabulary là 5
 func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) error {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 	collectionLesson := u.database.Collection(u.collectionLesson)
+	collectionVocabulary := u.database.Collection(u.collectionVocabulary)
 
 	filterUnit := bson.M{"name": unit.Name, "lesson_id": unit.LessonID}
 	filterLess := bson.M{"_id": unit.LessonID}
+	findOptions := options.FindOne().SetSort(bson.M{"_id": -1})
 
 	// check exists with CountDocuments
 	countLess, err := collectionLesson.CountDocuments(ctx, filterLess)
@@ -321,13 +325,23 @@ func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) 
 		return err
 	}
 
+	countVocabulary, err := collectionVocabulary.CountDocuments(ctx, findOptions)
+	if err != nil {
+		return err
+	}
+
 	if countUnit > 0 {
 		return errors.New("the unit name in lesson did exist")
 	}
 	if countLess == 0 {
 		return errors.New("the lesson ID do not exist")
 	}
+	if countVocabulary == 0 {
+		return errors.New("the vocabulary in database is null")
+	}
+	if countVocabulary > 5 {
 
+	}
 	_, err = collectionUnit.InsertOne(ctx, unit)
 	return nil
 }
