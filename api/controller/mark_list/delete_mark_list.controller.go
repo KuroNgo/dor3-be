@@ -1,6 +1,7 @@
 package marklist_controller
 
 import (
+	"clean-architecture/internal"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -36,6 +37,31 @@ func (m *MarkListController) DeleteOneMarkList(ctx *gin.Context) {
 		return
 	}
 
+	data, err := m.MarkVocabularyUseCase.FetchManyByMarkListID(ctx, markListID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	internal.Wg.Add(1)
+	go func() {
+		defer internal.Wg.Done()
+		for _, elMarkVocab := range data {
+			err = m.MarkVocabularyUseCase.DeleteOne(ctx, elMarkVocab.ID.Hex())
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"status":  "error",
+					"message": err.Error(),
+				})
+				return
+			}
+		}
+	}()
+
+	internal.Wg.Wait()
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})

@@ -42,6 +42,18 @@ func (m *markVocabularyUseCase) FetchManyByMarkListIDAndUserId(ctx context.Conte
 	return markVocabulary, err
 }
 
+func (m *markVocabularyUseCase) FetchManyByMarkListID(ctx context.Context, markListId string) ([]mark_vocabulary_domain.MarkToFavourite, error) {
+	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
+	defer cancel()
+
+	markVocabulary, err := m.markVocabularyRepository.FetchManyByMarkListID(ctx, markListId)
+	if err != nil {
+		return nil, err
+	}
+
+	return markVocabulary, err
+}
+
 func (m *markVocabularyUseCase) UpdateOne(ctx context.Context, markVocabularyID string, markVocabulary mark_vocabulary_domain.MarkToFavourite) error {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()
