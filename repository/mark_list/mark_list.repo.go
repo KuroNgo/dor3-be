@@ -190,25 +190,11 @@ func (m *markListRepository) UpsertOne(ctx context.Context, id string, markList 
 
 func (m *markListRepository) DeleteOne(ctx context.Context, markListID string) error {
 	collectionMarkList := m.database.Collection(m.collectionMarkList)
-	collectionMarkVocabulary := m.database.Collection(m.collectionMarkList)
 
 	// Convert courseID string to ObjectID
 	objID, err := primitive.ObjectIDFromHex(markListID)
 	if err != nil {
 		return err
-	}
-
-	filterChildren := bson.M{
-		"mark_list_id": markListID,
-	}
-
-	//Check if any lesson is associated with the course
-	countFK, err := collectionMarkVocabulary.CountDocuments(ctx, filterChildren)
-	if err != nil {
-		return err
-	}
-	if countFK > 0 {
-		return errors.New("the mark list cannot be deleted because it is associated with mark vocabulary")
 	}
 
 	// Delete the mark list

@@ -19,6 +19,34 @@ type markVocabularyRepository struct {
 	collectionMarkVocabulary string
 }
 
+func (m *markVocabularyRepository) FetchManyByMarkListID(ctx context.Context, markListId string) ([]mark_vocabulary_domain.MarkToFavourite, error) {
+	collectionMarkVocabulary := m.database.Collection(m.collectionMarkList)
+
+	// Tạo các bộ lọc
+	filterMarkList := bson.D{{Key: "mark_list_id", Value: markListId}}
+	_, err := collectionMarkVocabulary.Find(ctx, filterMarkList)
+	if err != nil {
+		return nil, err
+	}
+
+	cursor, err := collectionMarkVocabulary.Find(ctx, filterMarkList)
+	if err != nil {
+		return nil, err
+	}
+
+	var markVocabs []mark_vocabulary_domain.MarkToFavourite
+	for cursor.Next(ctx) {
+		var markVocab mark_vocabulary_domain.MarkToFavourite
+		if err = cursor.Decode(&markVocab); err != nil {
+			return nil, err
+		}
+
+		markVocabs = append(markVocabs, markVocab)
+	}
+
+	return markVocabs, nil
+}
+
 func NewMarkVocabularyRepository(db *mongo.Database, collectionMarkList string, collectionVocabulary string, collectionMarkVocabulary string) mark_vocabulary_domain.IMarkToFavouriteRepository {
 	return &markVocabularyRepository{
 		database:                 db,
