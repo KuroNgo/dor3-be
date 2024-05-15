@@ -38,6 +38,7 @@ func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLess
 func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 
+	// pagination
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
 		return nil, unit_domain.DetailResponse{}, errors.New("invalid page number")
@@ -46,6 +47,7 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
+	// count unit
 	calCh := make(chan int64)
 	count, err := collectionUnit.CountDocuments(ctx, bson.D{})
 	if err != nil {
@@ -54,7 +56,6 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 
 	go func() {
 		defer close(calCh)
-
 		cal1 := count / int64(perPage)
 		cal2 := count % int64(perPage)
 		if cal2 != 0 {
@@ -95,7 +96,6 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 
 	cal := <-calCh
 	detail := unit_domain.DetailResponse{
-		CountUnit:   count,
 		Page:        cal,
 		CurrentPage: pageNumber,
 	}
@@ -209,10 +209,8 @@ func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, p
 	}
 
 	cal := <-calCh
-	countUnit := <-countUnitCh
 
 	response := unit_domain.DetailResponse{
-		CountUnit:   countUnit,
 		Page:        cal,
 		CurrentPage: pageNumber,
 	}
@@ -303,9 +301,11 @@ func (u *unitRepository) CheckLessonComplete(ctx context.Context, lessonID primi
 	return true, nil
 }
 
+// CreateOne: hệ thống sẽ tự tạo unit nếu số lượng vocabulary là 5
 func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) error {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 	collectionLesson := u.database.Collection(u.collectionLesson)
+	collectionVocabulary := u.database.Collection(u.collectionVocabulary)
 
 	filterUnit := bson.M{"name": unit.Name, "lesson_id": unit.LessonID}
 	filterLess := bson.M{"_id": unit.LessonID}
@@ -315,20 +315,30 @@ func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) 
 	if err != nil {
 		return err
 	}
-
-	countUnit, err := collectionUnit.CountDocuments(ctx, filterUnit)
-	if err != nil {
-		return err
-	}
-
-	if countUnit > 0 {
-		return errors.New("the unit name in lesson did exist")
-	}
 	if countLess == 0 {
 		return errors.New("the lesson ID do not exist")
 	}
 
-	_, err = collectionUnit.InsertOne(ctx, unit)
+	// đếm số lượng document trong unit
+	countUnit, err := collectionUnit.CountDocuments(ctx, filterUnit)
+	if err != nil {
+		return err
+	}
+	if countUnit > 0 {
+		return errors.New("the unit name in lesson did exist")
+	}
+
+	// tạo unit dựa trên vocabulary
+	data, err := u.getLastUnit(ctx)
+	filterVocabulary := bson.M{"unit_id": data.ID}
+	countVocabulary, err := collectionVocabulary.CountDocuments(ctx, filterVocabulary)
+	if err != nil {
+		return err
+	}
+	if countVocabulary == 0 || countVocabulary > 5 {
+		_, err = collectionUnit.InsertOne(ctx, unit)
+	}
+
 	return nil
 }
 
@@ -391,4 +401,18 @@ func (u *unitRepository) countVocabularyByUnitID(ctx context.Context, unitID pri
 	}
 
 	return int32(count), nil
+}
+
+// getLastUnit lấy unit cuối cùng từ collection
+func (u *unitRepository) getLastUnit(ctx context.Context) (*unit_domain.Unit, error) {
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	findOptions := options.FindOne().SetSort(bson.D{{"_id", -1}})
+
+	var unit unit_domain.Unit
+	err := collectionUnit.FindOne(ctx, bson.D{}, findOptions).Decode(&unit)
+	if err != nil {
+		return nil, err
+	}
+
+	return &unit, nil
 }

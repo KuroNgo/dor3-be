@@ -47,9 +47,12 @@ type UnitResponse struct {
 }
 
 type DetailResponse struct {
-	CountUnit   int64 `json:"count_unit"`
 	Page        int64 `json:"page"`
 	CurrentPage int   `json:"current_page"`
+}
+
+type Statistics struct {
+	CountUnit int64 `json:"count_unit"`
 }
 
 //go:generate mockery --name IUnitRepository

@@ -70,8 +70,17 @@ func (a *adminRepository) FetchMany(c context.Context) (admin_domain.Response, e
 
 	internal.Wg.Wait()
 
+	statisticsCh := make(chan admin_domain.Statistics)
+	go func() {
+		statistics, _ := a.Statistics(c)
+		statisticsCh <- statistics
+	}()
+
+	statistics := <-statisticsCh
+
 	adminRes := admin_domain.Response{
-		Admin: admins,
+		Admin:      admins,
+		Statistics: statistics,
 	}
 
 	return adminRes, err
@@ -215,4 +224,19 @@ func (a *adminRepository) UpsertOne(c context.Context, email string, admin *admi
 	}
 
 	return nil
+}
+
+func (a *adminRepository) Statistics(ctx context.Context) (admin_domain.Statistics, error) {
+	collectionAdmin := a.database.Collection(a.collectionAdmin)
+
+	count, err := collectionAdmin.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return admin_domain.Statistics{}, err
+	}
+
+	statistics := admin_domain.Statistics{
+		Total: count,
+	}
+
+	return statistics, nil
 }

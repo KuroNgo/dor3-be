@@ -42,9 +42,14 @@ type ExamResponse struct {
 }
 
 type DetailResponse struct {
-	CountExam   int64 `bson:"count_exam" json:"count_exam"`
-	Page        int64 `json:"page" bson:"page"`
-	CurrentPage int   `json:"current_page"`
+	CountExam   int64      `bson:"count_exam" json:"count_exam"`
+	Page        int64      `json:"page" bson:"page"`
+	CurrentPage int        `json:"current_page"`
+	Statistics  Statistics `json:"statistics" bson:"statistics"`
+}
+
+type Statistics struct {
+	Total int64 `bson:"total" json:"total"`
 }
 
 type IExamRepository interface {
@@ -57,4 +62,5 @@ type IExamRepository interface {
 	DeleteOne(ctx context.Context, examID string) error
 
 	CountQuestion(ctx context.Context, examID string) int64
+	Statistics(ctx context.Context) (Statistics, error)
 }

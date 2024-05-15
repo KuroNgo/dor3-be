@@ -7,6 +7,7 @@ import (
 	quiz_domain "clean-architecture/domain/quiz"
 	quiz_result_domain "clean-architecture/domain/quiz_result"
 	user_domain "clean-architecture/domain/user"
+	user_detail_domain "clean-architecture/domain/user_detail"
 	"clean-architecture/repository/quiz_result"
 	user_repository "clean-architecture/repository/user"
 	quiz_result_usecase "clean-architecture/usecase/quiz_result"
@@ -18,7 +19,7 @@ import (
 
 func QuizResultRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	res := quiz_result_repository.NewQuizResultRepository(db, quiz_result_domain.CollectionQuizResult, quiz_domain.CollectionQuiz)
-	users := user_repository.NewUserRepository(db, user_domain.CollectionUser)
+	users := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 
 	result := &quiz_result_controller.QuizResultController{
 		QuizResultUseCase: quiz_result_usecase.NewQuizQuestionUseCase(res, timeout),

@@ -44,9 +44,9 @@ type QuizResponse struct {
 }
 
 type Response struct {
-	Total       int64 `bson:"total" json:"total"`
-	Page        int64 `bson:"page" json:"page"`
-	CurrentPage int   `bson:"current_page" json:"current_page"`
+	Page        int64      `bson:"page" json:"page"`
+	CurrentPage int        `bson:"current_page" json:"current_page"`
+	Statistics  Statistics `bson:"statistics" json:"statistics"`
 }
 
 type Statistics struct {
@@ -65,4 +65,5 @@ type IQuizRepository interface {
 	UpdateCompleted(ctx context.Context, quiz *Quiz) error
 
 	DeleteOne(ctx context.Context, quizID string) error
+	Statistics(ctx context.Context) (Statistics, error)
 }

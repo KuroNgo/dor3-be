@@ -4,7 +4,6 @@ import (
 	exam_question_domain "clean-architecture/domain/exam_question"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"time"
 )
@@ -37,7 +36,7 @@ func (e *ExamQuestionsController) UpdateOneExamQuestion(ctx *gin.Context) {
 	}
 
 	questions := exam_question_domain.ExamQuestion{
-		ID:           primitive.NewObjectID(),
+		ID:           questionInput.ID,
 		ExamID:       questionInput.ExamID,
 		VocabularyID: questionInput.VocabularyID,
 		Content:      questionInput.Content,
@@ -47,7 +46,7 @@ func (e *ExamQuestionsController) UpdateOneExamQuestion(ctx *gin.Context) {
 		WhoUpdate:    admin.FullName,
 	}
 
-	_, err = e.ExamQuestionUseCase.UpdateOne(ctx, &questions)
+	data, err := e.ExamQuestionUseCase.UpdateOne(ctx, &questions)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -58,5 +57,6 @@ func (e *ExamQuestionsController) UpdateOneExamQuestion(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
+		"data":   data,
 	})
 }

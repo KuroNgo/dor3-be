@@ -100,10 +100,33 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	internal.Wg.Wait()
 
 	count := <-cal
+	statisticsCh := make(chan activity_log_domain.Statistics)
+	go func() {
+		statistics, _ := a.Statistics(ctx)
+		statisticsCh <- statistics
+	}()
+
+	statistics := <-statisticsCh
+
 	activityRes := activity_log_domain.Response{
 		Page:        count,
 		PageCurrent: int64(pageNumber),
+		Statistics:  statistics,
 		ActivityLog: activities,
 	}
 	return activityRes, nil
+}
+
+func (a *activityRepository) Statistics(ctx context.Context) (activity_log_domain.Statistics, error) {
+	collection := a.database.Collection(a.collectionActivity)
+
+	count, err := collection.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return activity_log_domain.Statistics{}, err
+	}
+
+	statistics := activity_log_domain.Statistics{
+		Total: count,
+	}
+	return statistics, nil
 }

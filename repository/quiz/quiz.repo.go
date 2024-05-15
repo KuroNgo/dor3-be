@@ -125,9 +125,7 @@ func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 	}
 
 	cal := <-calCh
-	totalUnit := <-countUnitCh
 	response := quiz_domain.Response{
-		Total:       totalUnit,
 		Page:        cal,
 		CurrentPage: pageNumber,
 	}
@@ -180,10 +178,17 @@ func (q *quizRepository) FetchMany(ctx context.Context, page string) ([]quiz_dom
 		quiz = append(quiz, quizRes)
 	}
 
+	statisticsCh := make(chan quiz_domain.Statistics)
+	go func() {
+		statistics, _ := q.Statistics(ctx)
+		statisticsCh <- statistics
+	}()
+
+	statistics := <-statisticsCh
 	detail := quiz_domain.Response{
-		Total:       count,
 		Page:        cal,
 		CurrentPage: pageNumber,
+		Statistics:  statistics,
 	}
 
 	return quiz, detail, nil
@@ -283,4 +288,20 @@ func (q *quizRepository) countQuestion(ctx context.Context, examID string) int64
 	}
 
 	return count
+}
+
+func (q *quizRepository) Statistics(ctx context.Context) (quiz_domain.Statistics, error) {
+	collectionQuiz := q.database.Collection(q.collectionQuiz)
+
+	// Đếm tổng số lượng tài liệu trong collection
+	count, err := collectionQuiz.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return quiz_domain.Statistics{}, err
+	}
+
+	statistics := quiz_domain.Statistics{
+		Total: count,
+	}
+
+	return statistics, nil
 }

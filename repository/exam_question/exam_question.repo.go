@@ -238,13 +238,14 @@ func (e *examQuestionRepository) UpdateOne(ctx context.Context, examQuestion *ex
 		"$set": bson.M{
 			"exam_id":    examQuestion.ExamID,
 			"content":    examQuestion.Content,
+			"type":       examQuestion.Type,
 			"level":      examQuestion.Level,
 			"update_at":  examQuestion.UpdateAt,
 			"who_update": examQuestion.WhoUpdate,
 		},
 	}
 
-	data, err := collection.UpdateOne(ctx, filter, &update)
+	data, err := collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return nil, err
 	}

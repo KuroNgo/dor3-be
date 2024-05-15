@@ -27,7 +27,7 @@ func NewListRepository(db *mongo.Database, collectionMarkList string, collection
 
 func (m *markListRepository) FetchManyByUserID(ctx context.Context, userID string) (mark_list_domain.Response, error) {
 	collectionMarkList := m.database.Collection(m.collectionMarkList)
-	collectionMarkVocabulary := m.database.Collection(m.collectionMarkVocabulary)
+	//collectionMarkVocabulary := m.database.Collection(m.collectionMarkVocabulary)
 
 	idUser, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -46,14 +46,14 @@ func (m *markListRepository) FetchManyByUserID(ctx context.Context, userID strin
 		}
 	}(cursor, ctx)
 
-	count, err := collectionMarkList.CountDocuments(ctx, bson.M{})
-	if err != nil {
-		return mark_list_domain.Response{}, err
-	}
-	countVocabulary, err := collectionMarkVocabulary.CountDocuments(ctx, bson.M{})
-	if err != nil {
-		return mark_list_domain.Response{}, err
-	}
+	//count, err := collectionMarkList.CountDocuments(ctx, bson.M{})
+	//if err != nil {
+	//	return mark_list_domain.Response{}, err
+	//}
+	//countVocabulary, err := collectionMarkVocabulary.CountDocuments(ctx, bson.M{})
+	//if err != nil {
+	//	return mark_list_domain.Response{}, err
+	//}
 
 	var markLists []mark_list_domain.MarkList
 
@@ -70,9 +70,7 @@ func (m *markListRepository) FetchManyByUserID(ctx context.Context, userID strin
 	}
 
 	response := mark_list_domain.Response{
-		Total:           count,
-		CountVocabulary: countVocabulary,
-		MarkList:        markLists,
+		MarkList: markLists,
 	}
 
 	return response, nil
@@ -114,12 +112,20 @@ func (m *markListRepository) FetchMany(ctx context.Context) (mark_list_domain.Re
 		// Thêm lesson vào slice lessons
 		markLists = append(markLists, markList)
 	}
-	err = cursor.All(ctx, &markLists)
-	courseRes := mark_list_domain.Response{
-		MarkList: markLists,
+
+	statisticsCh := make(chan mark_list_domain.Statistics)
+	go func() {
+		statistics, _ := m.Statistics(ctx)
+		statisticsCh <- statistics
+	}()
+	statistics := <-statisticsCh
+
+	markListRes := mark_list_domain.Response{
+		MarkList:   markLists,
+		Statistics: statistics,
 	}
 
-	return courseRes, err
+	return markListRes, err
 }
 
 func (m *markListRepository) UpdateOne(ctx context.Context, markList *mark_list_domain.MarkList) (*mongo.UpdateResult, error) {
@@ -229,4 +235,25 @@ func (m *markListRepository) countMarkVocabularyByMarkListID(ctx context.Context
 		return 0, err
 	}
 	return count, nil
+}
+
+func (m *markListRepository) Statistics(ctx context.Context) (mark_list_domain.Statistics, error) {
+	collectionMarkList := m.database.Collection(m.collectionMarkList)
+	collectionMarkVocabulary := m.database.Collection(m.collectionMarkVocabulary)
+
+	countMarkList, err := collectionMarkList.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return mark_list_domain.Statistics{}, err
+	}
+
+	countMarkVocabulary, err := collectionMarkVocabulary.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return mark_list_domain.Statistics{}, err
+	}
+
+	statistics := mark_list_domain.Statistics{
+		Total:           countMarkList,
+		CountVocabulary: countMarkVocabulary,
+	}
+	return statistics, nil
 }

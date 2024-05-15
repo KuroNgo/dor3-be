@@ -2,6 +2,7 @@ package user
 
 import (
 	"clean-architecture/domain/user"
+	user_detail_domain "clean-architecture/domain/user_detail"
 	"clean-architecture/internal"
 	"context"
 	"errors"
@@ -13,19 +14,21 @@ import (
 )
 
 type userRepository struct {
-	database   *mongo.Database
-	collection string
+	database             *mongo.Database
+	collectionUser       string
+	collectionUserDetail string
 }
 
-func NewUserRepository(db *mongo.Database, collection string) user_domain.IUserRepository {
+func NewUserRepository(db *mongo.Database, collectionUser string, collectionUserDetail string) user_domain.IUserRepository {
 	return &userRepository{
-		database:   db,
-		collection: collection,
+		database:             db,
+		collectionUser:       collectionUser,
+		collectionUserDetail: collectionUserDetail,
 	}
 }
 
 func (u *userRepository) UpdateVerifyForChangePassword(ctx context.Context, user *user_domain.User) (*mongo.UpdateResult, error) {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 
 	filter := bson.D{{Key: "_id", Value: user.ID}}
 	update := bson.D{{Key: "$set", Value: bson.M{
@@ -33,7 +36,7 @@ func (u *userRepository) UpdateVerifyForChangePassword(ctx context.Context, user
 		"updated_at": user.UpdatedAt,
 	}}}
 
-	data, err := collection.UpdateOne(ctx, filter, update)
+	data, err := collectionUser.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +44,7 @@ func (u *userRepository) UpdateVerifyForChangePassword(ctx context.Context, user
 }
 
 func (u *userRepository) UpdatePassword(ctx context.Context, user *user_domain.User) error {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 
 	filter := bson.D{{Key: "_id", Value: user.ID}}
 	update := bson.D{{Key: "$set", Value: bson.M{
@@ -50,7 +53,12 @@ func (u *userRepository) UpdatePassword(ctx context.Context, user *user_domain.U
 		"updated_at":        user.UpdatedAt,
 	}}}
 
-	_, err := collection.UpdateOne(ctx, filter, update)
+	filterUnique := bson.M{"email": user.Email}
+	count, err := collectionUser.CountDocuments(ctx, filterUnique)
+	if count > 0 {
+		return errors.New("the email must be unique")
+	}
+	_, err = collectionUser.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
@@ -58,12 +66,16 @@ func (u *userRepository) UpdatePassword(ctx context.Context, user *user_domain.U
 }
 
 func (u *userRepository) Update(ctx context.Context, user *user_domain.User) error {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 
 	filter := bson.D{{Key: "_id", Value: user.ID}}
-	update := bson.D{{Key: "$set", Value: user}}
+	update := bson.D{{Key: "$set", Value: bson.M{
+		"full_name":  user.FullName,
+		"phone":      user.Phone,
+		"updated_at": user.UpdatedAt,
+	}}}
 
-	_, err := collection.UpdateOne(ctx, filter, update)
+	_, err := collectionUser.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
@@ -71,10 +83,10 @@ func (u *userRepository) Update(ctx context.Context, user *user_domain.User) err
 }
 
 func (u *userRepository) CheckVerify(ctx context.Context, verificationCode string) bool {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 
 	filter := bson.M{"verification_code": verificationCode}
-	count, err := collection.CountDocuments(ctx, filter)
+	count, err := collectionUser.CountDocuments(ctx, filter)
 	if err != nil || count == 0 {
 		return false
 	}
@@ -83,12 +95,12 @@ func (u *userRepository) CheckVerify(ctx context.Context, verificationCode strin
 }
 
 func (u *userRepository) GetByVerificationCode(ctx context.Context, verificationCode string) (*user_domain.User, error) {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 
 	filter := bson.M{"verification_code": verificationCode}
 
 	var user user_domain.User
-	err := collection.FindOne(ctx, filter).Decode(&user)
+	err := collectionUser.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, fmt.Errorf("user not found")
@@ -99,19 +111,19 @@ func (u *userRepository) GetByVerificationCode(ctx context.Context, verification
 }
 
 func (u *userRepository) UpdateImage(c context.Context, userID string, imageURL string) error {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 	doc, err := internal.ToDoc(imageURL)
 	objID, err := primitive.ObjectIDFromHex(userID)
 
 	filter := bson.D{{Key: "_id", Value: objID}}
 	update := bson.D{{Key: "$set", Value: doc}}
 
-	_, err = collection.UpdateOne(c, filter, update)
+	_, err = collectionUser.UpdateOne(c, filter, update)
 	return err
 }
 
 func (u *userRepository) UpdateVerify(ctx context.Context, user *user_domain.User) (*mongo.UpdateResult, error) {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 
 	filter := bson.D{{Key: "_id", Value: user.ID}}
 	update := bson.D{{Key: "$set", Value: bson.M{
@@ -120,7 +132,7 @@ func (u *userRepository) UpdateVerify(ctx context.Context, user *user_domain.Use
 		"updated_at":        user.UpdatedAt,
 	}}}
 
-	data, err := collection.UpdateOne(ctx, filter, update)
+	data, err := collectionUser.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return nil, err
 	}
@@ -128,10 +140,10 @@ func (u *userRepository) UpdateVerify(ctx context.Context, user *user_domain.Use
 }
 
 func (u *userRepository) Create(c context.Context, user *user_domain.User) error {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 
 	filter := bson.M{"email": user.Email}
-	count, err := collection.CountDocuments(c, filter)
+	count, err := collectionUser.CountDocuments(c, filter)
 	if err != nil {
 		return err
 	}
@@ -139,15 +151,15 @@ func (u *userRepository) Create(c context.Context, user *user_domain.User) error
 	if count > 0 {
 		return errors.New("the email do not unique")
 	}
-	_, err = collection.InsertOne(c, &user)
+	_, err = collectionUser.InsertOne(c, &user)
 	return err
 }
 
 func (u *userRepository) FetchMany(c context.Context) (user_domain.Response, error) {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 
 	opts := options.Find().SetProjection(bson.D{{Key: "password", Value: 0}})
-	cursor, err := collection.Find(c, bson.D{}, opts)
+	cursor, err := collectionUser.Find(c, bson.D{}, opts)
 
 	if err != nil {
 		return user_domain.Response{}, err
@@ -160,11 +172,24 @@ func (u *userRepository) FetchMany(c context.Context) (user_domain.Response, err
 		return user_domain.Response{}, err
 	}
 
-	return user_domain.Response{}, err
+	var statisticsCh = make(chan user_domain.Statistics)
+	go func() {
+		defer close(statisticsCh)
+		statistics, _ := u.Statistics(c)
+		statisticsCh <- statistics
+	}()
+
+	statistics := <-statisticsCh
+	response := user_domain.Response{
+		User:       users,
+		Statistics: statistics,
+	}
+
+	return response, err
 }
 
 func (u *userRepository) DeleteOne(c context.Context, userID string) error {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 	objID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return err
@@ -173,14 +198,14 @@ func (u *userRepository) DeleteOne(c context.Context, userID string) error {
 	filter := bson.M{
 		"_id": objID,
 	}
-	_, err = collection.DeleteOne(c, filter)
+	_, err = collectionUser.DeleteOne(c, filter)
 	return err
 }
 
 func (u *userRepository) GetByEmail(c context.Context, email string) (*user_domain.User, error) {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 	var user user_domain.User
-	err := collection.FindOne(c, bson.M{"email": email}).Decode(&user)
+	err := collectionUser.FindOne(c, bson.M{"email": email}).Decode(&user)
 	return &user, err
 }
 
@@ -195,7 +220,7 @@ func (u *userRepository) Login(c context.Context, request user_domain.SignIn) (*
 }
 
 func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.User, error) {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 
 	var user user_domain.User
 
@@ -204,12 +229,12 @@ func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.Use
 		return &user, err
 	}
 
-	err = collection.FindOne(c, bson.M{"_id": idHex}).Decode(&user)
+	err = collectionUser.FindOne(c, bson.M{"_id": idHex}).Decode(&user)
 	return &user, err
 }
 
 func (u *userRepository) UpsertOne(c context.Context, email string, user *user_domain.UserInput) (*user_domain.User, error) {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
 	filter := bson.D{{Key: "email", Value: email}}
@@ -223,7 +248,7 @@ func (u *userRepository) UpsertOne(c context.Context, email string, user *user_d
 		"updated_at": user.UpdatedAt,
 		"role":       user.Role,
 	}}}
-	res := collection.FindOneAndUpdate(c, filter, update, opts)
+	res := collectionUser.FindOneAndUpdate(c, filter, update, opts)
 
 	var updatedUser *user_domain.User
 	if err := res.Decode(&updatedUser); err != nil {
@@ -237,12 +262,65 @@ func (u *userRepository) UpsertOne(c context.Context, email string, user *user_d
 }
 
 func (u *userRepository) UniqueVerificationCode(ctx context.Context, verificationCode string) bool {
-	collection := u.database.Collection(u.collection)
+	collectionUser := u.database.Collection(u.collectionUser)
 
 	filter := bson.M{"verification_code": verificationCode}
-	count, err := collection.CountDocuments(ctx, filter)
+	count, err := collectionUser.CountDocuments(ctx, filter)
 	if err != nil || count > 0 {
 		return false
 	}
 	return true
+}
+
+func (u *userRepository) Statistics(ctx context.Context) (user_domain.Statistics, error) {
+	collectionUser := u.database.Collection(u.collectionUser)
+	collectionUserDetail := u.database.Collection(u.collectionUserDetail)
+
+	// Đếm tổng số lượng tài liệu trong collection
+	count, err := collectionUser.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return user_domain.Statistics{}, err
+	}
+
+	cursor, err := collectionUserDetail.Find(ctx, bson.D{})
+	if err != nil {
+		return user_domain.Statistics{}, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
+
+	var (
+		countOutside int64 = 0
+		countInside  int64 = 0
+		countStudent int64 = 0
+	)
+	for cursor.Next(ctx) {
+		var user user_detail_domain.UserDetail
+		if err := cursor.Decode(&user); err != nil {
+			return user_domain.Statistics{}, err
+		}
+
+		if user.Specialize == "inside" {
+			countInside++
+		}
+		if user.Specialize == "outside" {
+			countOutside++
+		}
+		if user.Specialize == "student" {
+			countStudent++
+		}
+	}
+
+	statistics := user_domain.Statistics{
+		CountInside:  countInside,
+		CountOutside: countOutside,
+		CountStudent: countStudent,
+		Total:        count,
+	}
+
+	return statistics, nil
 }

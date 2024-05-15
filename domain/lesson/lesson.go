@@ -53,8 +53,8 @@ type DetailResponse struct {
 }
 
 type Statistics struct {
-	CountVocabulary int32 `json:"count_vocabulary"`
-	CountUnit       int32 `json:"count_unit"`
+	CountVocabulary int64 `json:"count_vocabulary"`
+	CountUnit       int64 `json:"count_unit"`
 }
 
 //go:generate mockery --name ILessonRepository
@@ -73,4 +73,5 @@ type ILessonRepository interface {
 	UpdateOne(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
 	// UpdateComplete automation
 	UpdateComplete(ctx context.Context, lessonID string, lesson Lesson) error
+	Statistics(ctx context.Context) (Statistics, error)
 }

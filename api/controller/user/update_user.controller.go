@@ -2,7 +2,6 @@ package user_controller
 
 import (
 	user_domain "clean-architecture/domain/user"
-	"clean-architecture/internal"
 	"clean-architecture/internal/cloud/cloudinary"
 	file_internal "clean-architecture/internal/file"
 	"encoding/json"
@@ -13,42 +12,33 @@ import (
 )
 
 func (u *UserController) UpdateUser(ctx *gin.Context) {
-	cookie, err := ctx.Cookie("access_token")
-	if err != nil {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "fail",
-			"message": "You are not login!",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	user, err := u.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
 		})
 		return
 	}
 
-	sub, err := internal.ValidateToken(cookie, u.Database.AccessTokenPublicKey)
-	if err != nil {
-		ctx.JSON(http.StatusForbidden, gin.H{
-			"status":  "fail",
-			"message": err.Error(),
-		})
-		return
-	}
-
+	fullName := ctx.Request.FormValue("full_name")
 	phone := ctx.Request.FormValue("phone")
-
-	result, err := u.UserUseCase.GetByID(ctx, fmt.Sprint(sub))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "fail",
-			"message": err.Error(),
-		})
-		return
-	}
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		userResponse := user_domain.User{
-			FullName:  result.FullName,
-			Email:     result.Email,
+			ID:        user.ID,
+			FullName:  fullName,
 			Phone:     phone,
-			Role:      result.Role,
+			Role:      user.Role,
 			UpdatedAt: time.Now(),
 		}
 
@@ -94,12 +84,11 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
-	resultString, err := json.Marshal(result)
+	resultString, err := json.Marshal(user)
 	userResponse := user_domain.User{
-		FullName:  result.FullName,
-		Email:     result.Email,
-		Phone:     result.Phone,
-		Role:      result.Role,
+		FullName:  fullName,
+		Phone:     phone,
+		Role:      user.Role,
 		AvatarURL: imageURL.ImageURL,
 		AssetID:   imageURL.AssetID,
 		UpdatedAt: time.Now(),

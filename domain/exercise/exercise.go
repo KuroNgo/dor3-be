@@ -46,9 +46,14 @@ type ExerciseResponse struct {
 }
 
 type DetailResponse struct {
-	CountExercise int64 `bson:"count_exercise" json:"count_exercise"`
-	Page          int64 `json:"page" bson:"page"`
-	CurrentPage   int   `json:"current_page" bson:"current_page"`
+	CountExercise int64      `bson:"count_exercise" json:"count_exercise"`
+	Page          int64      `json:"page" bson:"page"`
+	CurrentPage   int        `json:"current_page" bson:"current_page"`
+	Statistics    Statistics `json:"statistics" bson:"statistics"`
+}
+
+type Statistics struct {
+	Total int64 `bson:"total" json:"total"`
 }
 
 type IExerciseRepository interface {
@@ -62,4 +67,5 @@ type IExerciseRepository interface {
 	UpdateCompleted(ctx context.Context, exercise *Exercise) error
 
 	DeleteOne(ctx context.Context, exerciseID string) error
+	Statistics(ctx context.Context) (Statistics, error)
 }

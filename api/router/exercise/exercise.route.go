@@ -7,6 +7,7 @@ import (
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
 	user_domain "clean-architecture/domain/user"
+	user_detail_domain "clean-architecture/domain/user_detail"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	exercise_repository "clean-architecture/repository/exercise"
 	user_repository "clean-architecture/repository/user"
@@ -19,7 +20,7 @@ import (
 
 func ExerciseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	ex := exercise_repository.NewExerciseRepository(db, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary, exercise_domain.CollectionExercise, exercise_domain.CollectionExercise)
-	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
+	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 
 	exercise := &exercise_controller.ExerciseController{
 		ExerciseUseCase: exercise_usecase.NewExerciseUseCase(ex, timeout),

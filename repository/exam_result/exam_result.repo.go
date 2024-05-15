@@ -207,7 +207,7 @@ func (e *examResultRepository) CreateOne(ctx context.Context, examResult *exam_r
 	collectionResult := e.database.Collection(e.collectionExamResult)
 	collectionExam := e.database.Collection(e.collectionExam)
 
-	filterExamID := bson.M{"exam_id": examResult.ExamID}
+	filterExamID := bson.M{"_id": examResult.ExamID}
 	countLessonID, err := collectionExam.CountDocuments(ctx, filterExamID)
 	if err != nil {
 		return err

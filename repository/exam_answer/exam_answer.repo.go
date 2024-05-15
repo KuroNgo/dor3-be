@@ -119,7 +119,7 @@ func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_a
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
 	// kiểm tra questionId có tồn tại
-	filterQuestionID := bson.M{"question_id": examAnswer.QuestionID}
+	filterQuestionID := bson.M{"_id": examAnswer.QuestionID}
 	countQuestionID, err := collectionQuestion.CountDocuments(ctx, filterQuestionID)
 	if err != nil {
 		return err
@@ -130,7 +130,8 @@ func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_a
 
 	// kiểm tra answer có bằng với đáp án
 	var options exam_options_domain.ExamOptions
-	if err := collectionOptions.FindOne(ctx, filterQuestionID).Decode(&options); err != nil {
+	filterQuestionId := bson.M{"question_id": examAnswer.QuestionID}
+	if err := collectionOptions.FindOne(ctx, filterQuestionId).Decode(&options); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return errors.New("no options found for the question ID")
 		}
