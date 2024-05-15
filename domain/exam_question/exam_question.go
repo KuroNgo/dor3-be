@@ -41,13 +41,14 @@ type ExamQuestionResponse struct {
 }
 
 type Response struct {
-	Count                int64                  `bson:"count" json:"count"`
 	Page                 int64                  `bson:"page" json:"page"`
+	CurrentPage          int                    `bson:"current_page" json:"current_page"`
+	Statistics           Statistics             `bson:"statistics" json:"statistics"`
 	ExamQuestionResponse []ExamQuestionResponse `json:"exam_question_response" bson:"exam_question_response"`
 }
 
 type Statistics struct {
-	Count int `bson:"count" json:"count"`
+	Count int64 `bson:"count" json:"count"`
 }
 
 type IExamQuestionRepository interface {

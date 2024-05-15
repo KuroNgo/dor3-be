@@ -28,7 +28,12 @@ type QuizQuestion struct {
 type Response struct {
 	Page         int64          `bson:"page" json:"page"`
 	CurrentPage  int64          `bson:"current_page" json:"current_page"`
+	Statistics   Statistics     `bson:"statistics" json:"statistics"`
 	QuizQuestion []QuizQuestion `json:"quiz_question" bson:"quiz_question"`
+}
+
+type Statistics struct {
+	Count int64 `bson:"count" json:"count"`
 }
 
 type IQuizQuestionRepository interface {

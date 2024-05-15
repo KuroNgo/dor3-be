@@ -50,7 +50,3 @@ type IFeedbackRepository interface {
 
 	Statistics(ctx context.Context) (Statistics, error)
 }
-
-//API Feedback trong có field cảm xúc (thất vọng, tạm được, hài lòng, quá tuyệt)
-//hoặc lưu theo cách nào tối ưu cũng được.
-//Field ý kiến và field (có muố ở lại trang web không) trả về 0,1 hay true false cũng dc
