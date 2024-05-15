@@ -372,11 +372,18 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 	}()
 
 	wg.Wait()
+	statisticsCh := make(chan lesson_domain.Statistics)
+	go func() {
+		statistics, _ := l.Statistics(ctx)
+		statisticsCh <- statistics
+	}()
+	statistics := <-statisticsCh
 
 	cal := <-calCh
 	response := lesson_domain.DetailResponse{
 		Page:        cal,
 		CurrentPage: pageNumber,
+		Statistics:  statistics,
 	}
 
 	//l.cacheMutex.Lock()
@@ -615,4 +622,25 @@ func (l *lessonRepository) getLastLesson(ctx context.Context) (*lesson_domain.Le
 	}
 
 	return &lesson, nil
+}
+
+func (l *lessonRepository) Statistics(ctx context.Context) (lesson_domain.Statistics, error) {
+	collectionUnit := l.database.Collection(l.collectionUnit)
+	collectionVocabulary := l.database.Collection(l.collectionVocabulary)
+
+	countUnit, err := collectionUnit.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return lesson_domain.Statistics{}, err
+	}
+
+	countVocabulary, err := collectionVocabulary.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return lesson_domain.Statistics{}, err
+	}
+
+	statistics := lesson_domain.Statistics{
+		CountUnit:       countUnit,
+		CountVocabulary: countVocabulary,
+	}
+	return statistics, nil
 }

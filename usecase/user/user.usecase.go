@@ -12,6 +12,18 @@ type userUseCase struct {
 	contextTimeout time.Duration
 }
 
+func (u *userUseCase) FetchMany(ctx context.Context) (user_domain.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+	data, err := u.userRepository.FetchMany(ctx)
+
+	if err != nil {
+		return user_domain.Response{}, err
+	}
+
+	return data, nil
+}
+
 func NewUserUseCase(userRepository user_domain.IUserRepository, timeout time.Duration) user_domain.IUserUseCase {
 	return &userUseCase{
 		userRepository: userRepository,

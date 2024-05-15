@@ -221,11 +221,18 @@ func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exer
 
 	cal := <-calCh
 	countExercise := <-countExerciseCh
+	statisticsCh := make(chan exercise_domain.Statistics)
+	go func() {
+		statistics, _ := e.Statistics(ctx)
+		statisticsCh <- statistics
+	}()
+	statistics := <-statisticsCh
 
 	detail := exercise_domain.DetailResponse{
 		CountExercise: countExercise,
 		Page:          cal,
 		CurrentPage:   pageNumber,
+		Statistics:    statistics,
 	}
 
 	return exercises, detail, nil
@@ -313,4 +320,18 @@ func (e *exerciseRepository) countQuestionByExerciseID(ctx context.Context, exer
 	}
 
 	return int32(count), nil
+}
+
+func (e *exerciseRepository) Statistics(ctx context.Context) (exercise_domain.Statistics, error) {
+	collectionExercise := e.database.Collection(e.collectionExercise)
+
+	count, err := collectionExercise.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return exercise_domain.Statistics{}, err
+	}
+
+	statistics := exercise_domain.Statistics{
+		Total: count,
+	}
+	return statistics, nil
 }

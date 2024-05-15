@@ -102,12 +102,19 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 	}()
 
 	internal.Wg.Wait()
+	statisticsCh := make(chan exam_domain.Statistics)
+	go func() {
+		statistics, _ := e.Statistics(ctx)
+		statisticsCh <- statistics
+	}()
+	statistics := <-statisticsCh
 
 	cal := <-calCh
 	detail := exam_domain.DetailResponse{
 		Page:        cal,
 		CurrentPage: pageNumber,
 		CountExam:   count,
+		Statistics:  statistics,
 	}
 
 	return exams, detail, nil
@@ -322,4 +329,18 @@ func (e *examRepository) CountQuestion(ctx context.Context, examID string) int64
 	}
 
 	return count
+}
+
+func (e *examRepository) Statistics(ctx context.Context) (exam_domain.Statistics, error) {
+	collectionExam := e.database.Collection(e.collectionExam)
+
+	count, err := collectionExam.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return exam_domain.Statistics{}, err
+	}
+
+	statistics := exam_domain.Statistics{
+		Total: count,
+	}
+	return statistics, nil
 }

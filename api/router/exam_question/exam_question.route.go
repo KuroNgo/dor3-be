@@ -7,6 +7,7 @@ import (
 	exam_domain "clean-architecture/domain/exam"
 	exam_question_domain "clean-architecture/domain/exam_question"
 	user_domain "clean-architecture/domain/user"
+	user_detail_domain "clean-architecture/domain/user_detail"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	exam_question_repository "clean-architecture/repository/exam_question"
 	user_repository "clean-architecture/repository/user"
@@ -19,7 +20,7 @@ import (
 
 func ExamQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	quest := exam_question_repository.NewExamQuestionRepository(db, exam_question_domain.CollectionExamQuestion, exam_domain.CollectionExam, vocabulary_domain.CollectionVocabulary)
-	users := user_repository.NewUserRepository(db, user_domain.CollectionUser)
+	users := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 
 	question := &exam_question_controller.ExamQuestionsController{
 		ExamQuestionUseCase: exam_question_usecase.NewExamQuestionUseCase(quest, timeout),

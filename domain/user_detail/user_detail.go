@@ -14,6 +14,12 @@ type UserDetail struct {
 	ID         primitive.ObjectID `bson:"_id" json:"_id"`
 	UserID     primitive.ObjectID `bson:"user_id" json:"user_id"`
 	Specialize string             `bson:"specialize"  json:"specialize"`
+	Detail     string             `bson:"detail"  json:"detail"`
+}
+
+type Response struct {
+	UserDetail []UserDetail `bson:"user_detail" json:"user_detail"`
+	Statistics Statistics   `bson:"statistics" json:"statistics"`
 }
 
 type Statistics struct {

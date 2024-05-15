@@ -8,6 +8,7 @@ import (
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
 	user_domain "clean-architecture/domain/user"
+	user_detail_domain "clean-architecture/domain/user_detail"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	image_repository "clean-architecture/repository/image"
 	lesson_repository "clean-architecture/repository/lesson"
@@ -22,7 +23,7 @@ import (
 
 func LessonRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	le := lesson_repository.NewLessonRepository(db, lesson_domain.CollectionLesson, course_domain.CollectionCourse, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
-	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
+	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 	im := image_repository.NewImageRepository(db, image_domain.CollectionImage)
 
 	lesson := &lesson_controller.LessonController{

@@ -7,6 +7,7 @@ import (
 	exercise_domain "clean-architecture/domain/exercise"
 	quiz_options_domain "clean-architecture/domain/quiz_options"
 	user_domain "clean-architecture/domain/user"
+	user_detail_domain "clean-architecture/domain/user_detail"
 	quiz_options_repository "clean-architecture/repository/quiz_options"
 	user_repository "clean-architecture/repository/user"
 	quiz_options_usecase "clean-architecture/usecase/quiz_options"
@@ -18,7 +19,7 @@ import (
 
 func QuizOptionsRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	opt := quiz_options_repository.NewQuizOptionsRepository(db, exercise_domain.CollectionExercise, quiz_options_domain.CollectionQuizOptions)
-	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
+	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 
 	options := &quiz_options_controller.QuizOptionsController{
 		QuizOptionsUseCase: quiz_options_usecase.NewQuizOptionsUseCase(opt, timeout),

@@ -58,6 +58,7 @@ type UserInput struct {
 
 //go:generate mockery --name IUserUseCase
 type IUserUseCase interface {
+	FetchMany(ctx context.Context) (Response, error)
 	GetByEmail(ctx context.Context, email string) (*User, error)
 	GetByID(ctx context.Context, id string) (*User, error)
 	CheckVerify(ctx context.Context, verificationCode string) bool

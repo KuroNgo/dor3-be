@@ -29,9 +29,15 @@ type Response struct {
 	PageCurrent int64         `json:"page_current" bson:"page_current"`
 	Page        int64         `json:"page" bson:"page"`
 	ActivityLog []ActivityLog `json:"activity_log" bson:"activity_log"`
+	Statistics  Statistics    `json:"statistics" bson:"statistics"`
+}
+
+type Statistics struct {
+	Total int64 `json:"total" bson:"total"`
 }
 
 type IActivityRepository interface {
 	CreateOne(ctx context.Context, log ActivityLog) error
 	FetchMany(ctx context.Context, page string) (Response, error)
+	Statistics(ctx context.Context) (Statistics, error)
 }

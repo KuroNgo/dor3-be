@@ -6,6 +6,7 @@ import (
 	activity_log_domain "clean-architecture/domain/activity_log"
 	admin_domain "clean-architecture/domain/admin"
 	user_domain "clean-architecture/domain/user"
+	user_detail_domain "clean-architecture/domain/user_detail"
 	activity_repository "clean-architecture/repository/activity"
 	admin_repository "clean-architecture/repository/admin"
 	user_repository "clean-architecture/repository/user"
@@ -19,7 +20,7 @@ import (
 
 func ActivityRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database) *activity_controller.ActivityController {
 	ac := activity_repository.NewActivityRepository(db, activity_log_domain.CollectionActivityLog)
-	users := user_repository.NewUserRepository(db, user_domain.CollectionUser)
+	users := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
 	activity := &activity_controller.ActivityController{

@@ -5,6 +5,7 @@ import (
 	"clean-architecture/bootstrap"
 	admin_domain "clean-architecture/domain/admin"
 	user_domain "clean-architecture/domain/user"
+	user_detail_domain "clean-architecture/domain/user_detail"
 	admin_repository "clean-architecture/repository/admin"
 	user_repository "clean-architecture/repository/user"
 	admin_usecase "clean-architecture/usecase/admin"
@@ -15,7 +16,7 @@ import (
 )
 
 func LoginFromRoleRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
+	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
 	login := &user_controller.LoginFromRoleController{

@@ -21,9 +21,8 @@ type MarkList struct {
 }
 
 type Response struct {
-	Total           int64      `json:"total"`
-	CountVocabulary int64      `json:"count_vocabulary"`
-	MarkList        []MarkList `json:"mark_list" bson:"mark_list"`
+	Statistics Statistics `json:"statistics" bson:"statistics"`
+	MarkList   []MarkList `json:"mark_list" bson:"mark_list"`
 }
 
 type Statistics struct {
@@ -39,4 +38,6 @@ type IMarkListRepository interface {
 	CreateOne(ctx context.Context, markList *MarkList) error
 	UpdateOne(ctx context.Context, markList *MarkList) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, markListID string) error
+
+	Statistics(ctx context.Context) (Statistics, error)
 }

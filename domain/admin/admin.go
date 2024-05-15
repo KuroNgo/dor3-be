@@ -26,7 +26,12 @@ type Admin struct {
 }
 
 type Response struct {
-	Admin []Admin `json:"admin" bson:"admin"`
+	Admin      []Admin    `json:"admin" bson:"admin"`
+	Statistics Statistics `json:"statistics" bson:"statistics"`
+}
+
+type Statistics struct {
+	Total int64 `json:"admin" bson:"admin"`
 }
 
 type IAdminRepository interface {
@@ -39,4 +44,5 @@ type IAdminRepository interface {
 	ChangeEmail(ctx context.Context, admin *Admin) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, adminID string) error
 	UpsertOne(ctx context.Context, email string, admin *Admin) error
+	Statistics(ctx context.Context) (Statistics, error)
 }

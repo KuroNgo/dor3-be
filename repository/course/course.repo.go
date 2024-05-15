@@ -169,9 +169,17 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 
 	internal.Wg.Wait()
 
+	statisticsCh := make(chan course_domain.Statistics)
+	go func() {
+		statistics, _ := c.Statistics(ctx)
+		statisticsCh <- statistics
+	}()
+	statistics := <-statisticsCh
+
 	detail := course_domain.DetailForManyResponse{
 		CountCourse: count,
 		Page:        totalPages,
+		Statistics:  statistics,
 		CurrentPage: pageNumber,
 	}
 
@@ -241,16 +249,6 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 
 func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error {
 	collectionCourse := c.database.Collection(c.collectionCourse)
-
-	// Default the Course for iT cannot delete
-	objID2, err := primitive.ObjectIDFromHex("660b8a0c2aef1f3a28265523")
-	if err != nil {
-		return err
-	}
-	countIn, err := collectionCourse.CountDocuments(ctx, objID2)
-	if countIn > 0 {
-		return errors.New("the course cannot be deleted")
-	}
 
 	// Convert courseID string to ObjectID
 	objID, err := primitive.ObjectIDFromHex(courseID)
@@ -347,4 +345,18 @@ func (c *courseRepository) countVocabularyByCourseID(ctx context.Context, course
 	}
 
 	return result.TotalVocabulary, nil
+}
+
+func (c *courseRepository) Statistics(ctx context.Context) (course_domain.Statistics, error) {
+	collectionCourse := c.database.Collection(c.collectionCourse)
+
+	count, err := collectionCourse.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return course_domain.Statistics{}, err
+	}
+
+	statistics := course_domain.Statistics{
+		Total: count,
+	}
+	return statistics, nil
 }

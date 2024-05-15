@@ -27,6 +27,7 @@ type QuizQuestion struct {
 
 type Response struct {
 	Page         int64          `bson:"page" json:"page"`
+	CurrentPage  int64          `bson:"current_page" json:"current_page"`
 	QuizQuestion []QuizQuestion `json:"quiz_question" bson:"quiz_question"`
 }
 

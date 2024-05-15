@@ -29,9 +29,35 @@ type User struct {
 	UpdatedAt        time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
+type UserResponse struct {
+	ID               primitive.ObjectID `bson:"_id" json:"_id"`
+	IP               string             `bson:"ip" json:"ip"`
+	FullName         string             `bson:"full_name"  json:"full_name"`
+	Email            string             `bson:"email"  json:"email"`
+	Password         string             `bson:"password"  json:"password"`
+	Role             string             `bson:"role" json:"role"`
+	CoverURL         string             `bson:"cover_url" json:"cover_url"`
+	AvatarURL        string             `bson:"avatar_url"  json:"avatar_url"`
+	AssetID          string             `bson:"asset_id"  json:"asset_id"`
+	Phone            string             `bson:"phone"   json:"phone"`
+	Specialize       string             `bson:"specialize"  json:"specialize"`
+	Provider         string             `bson:"provider" json:"provider"`
+	Verified         bool               `bson:"verified" json:"verified"`
+	VerificationCode string             `bson:"verification_code" json:"verification_code"`
+	CreatedAt        time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt        time.Time          `bson:"updated_at" json:"updated_at"`
+}
+
 type Response struct {
-	Total int64  `bson:"total" json:"total"`
-	User  []User `bson:"user" json:"user"`
+	User       []User     `bson:"user" json:"user"`
+	Statistics Statistics `bson:"statistics" json:"statistics"`
+}
+
+type Statistics struct {
+	CountOutside int64 `bson:"count_outside" json:"count_outside"`
+	CountInside  int64 `bson:"count_inside" json:"count_inside"`
+	CountStudent int64 `bson:"count_student" json:"count_student"`
+	Total        int64 `bson:"total" json:"total"`
 }
 
 //go:generate mockery --name IUserRepository
@@ -51,4 +77,5 @@ type IUserRepository interface {
 	UpsertOne(ctx context.Context, email string, user *UserInput) (*User, error)
 	UpdateImage(ctx context.Context, userID string, imageURL string) error
 	UniqueVerificationCode(ctx context.Context, verificationCode string) bool
+	Statistics(ctx context.Context) (Statistics, error)
 }

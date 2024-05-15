@@ -96,7 +96,6 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 
 	cal := <-calCh
 	detail := unit_domain.DetailResponse{
-		CountUnit:   count,
 		Page:        cal,
 		CurrentPage: pageNumber,
 	}
@@ -210,10 +209,8 @@ func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, p
 	}
 
 	cal := <-calCh
-	countUnit := <-countUnitCh
 
 	response := unit_domain.DetailResponse{
-		CountUnit:   countUnit,
 		Page:        cal,
 		CurrentPage: pageNumber,
 	}

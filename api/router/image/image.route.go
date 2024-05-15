@@ -5,6 +5,7 @@ import (
 	"clean-architecture/bootstrap"
 	image_domain "clean-architecture/domain/image"
 	user_domain "clean-architecture/domain/user"
+	user_detail_domain "clean-architecture/domain/user_detail"
 	image_repository "clean-architecture/repository/image"
 	user_repository "clean-architecture/repository/user"
 	image_usecase "clean-architecture/usecase/image"
@@ -16,7 +17,7 @@ import (
 
 func ImageRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	im := image_repository.NewImageRepository(db, image_domain.CollectionImage)
-	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser)
+	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 
 	image := &image_controller.ImageController{
 		ImageUseCase: image_usecase.NewImageUseCase(im, timeout),
