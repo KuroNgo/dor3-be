@@ -31,8 +31,8 @@ type Exercise struct {
 
 type ExerciseResponse struct {
 	ID     primitive.ObjectID   `bson:"_id" json:"_id"`
-	Lesson lesson_domain.Lesson `bson:"lesson_id" json:"lesson_id"`
-	Unit   unit_domain.Unit     `bson:"unit_id" json:"unit_id"`
+	Lesson lesson_domain.Lesson `bson:"lesson" json:"lesson"`
+	Unit   unit_domain.Unit     `bson:"unit" json:"unit"`
 
 	Title       string `bson:"title" json:"title"`
 	Description string `bson:"description" json:"description"`

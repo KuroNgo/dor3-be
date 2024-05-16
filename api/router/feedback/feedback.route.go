@@ -27,5 +27,6 @@ func FeedbackRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Dat
 	}
 
 	router := group.Group("/feedback")
-	router.POST("/create", middleware.DeserializeUser(), feedback.CreateOneFeedback)
+	router.Use(middleware.DeserializeUser())
+	router.POST("/create", feedback.CreateOneFeedback)
 }
