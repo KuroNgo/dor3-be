@@ -2,6 +2,7 @@ package exercise_options_route
 
 import (
 	exercise_options_controller "clean-architecture/api/controller/exercise_options"
+	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
 	exercise_options_domain "clean-architecture/domain/exercise_options"
 	exercise_questions_domain "clean-architecture/domain/exercise_questions"
@@ -27,5 +28,6 @@ func ExerciseOptionsRoute(env *bootstrap.Database, timeout time.Duration, db *mo
 	}
 
 	router := group.Group("/exercise/options")
+	router.Use(middleware.DeserializeUser())
 	router.GET("/fetch", options.FetchManyExerciseOptions)
 }

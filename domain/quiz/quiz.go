@@ -1,6 +1,8 @@
 package quiz_domain
 
 import (
+	lesson_domain "clean-architecture/domain/lesson"
+	unit_domain "clean-architecture/domain/unit"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -12,7 +14,7 @@ const (
 )
 
 type Quiz struct {
-	ID       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Id       primitive.ObjectID `bson:"_id" json:"_id"`
 	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
 	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
 
@@ -24,23 +26,25 @@ type Quiz struct {
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
 	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
+	Learner    string    `bson:"learner" json:"learner"`
 }
 
 type QuizResponse struct {
-	ID       primitive.ObjectID `bson:"_id" json:"_id"`
-	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
-	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
+	ID     primitive.ObjectID   `bson:"_id" json:"_id"`
+	Lesson lesson_domain.Lesson `bson:"lesson" json:"lesson"`
+	Unit   unit_domain.Unit     `bson:"unit" json:"unit"`
 
 	Title       string `bson:"title" json:"title"`
 	Description string `bson:"description" json:"description"`
 	Duration    string `bson:"duration" json:"duration"`
 
-	IsComplete int       `bson:"is_complete" json:"is_complete"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
 	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
+	Learner    string    `bson:"learner" json:"learner"`
 
-	CountQuestion int64 `bson:"count_question" json:"count_question"`
+	IsComplete    int   `bson:"is_complete" json:"is_complete"`
+	CountQuestion int32 `bson:"count_question" json:"count_question"`
 }
 
 type Response struct {
@@ -61,7 +65,6 @@ type IQuizRepository interface {
 	FetchOneByUnitID(ctx context.Context, unitID string) (QuizResponse, error)
 
 	CreateOne(ctx context.Context, quiz *Quiz) error
-
 	UpdateOne(ctx context.Context, quiz *Quiz) (*mongo.UpdateResult, error)
 	UpdateCompleted(ctx context.Context, quiz *Quiz) error
 

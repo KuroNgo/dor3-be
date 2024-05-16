@@ -28,8 +28,9 @@ func ExerciseResultRoute(env *bootstrap.Database, timeout time.Duration, db *mon
 	}
 
 	router := group.Group("/exercise/result")
-	router.GET("/fetch/exercise_id", middleware.DeserializeUser(), result.GetResultsByUserIDAndExerciseID)
-	router.GET("/fetch/0/exercise_id", middleware.DeserializeUser(), result.FetchResultByExerciseID)
-	router.POST("/create", middleware.DeserializeUser(), result.CreateOneExercise)
-	router.DELETE("/delete/_id", middleware.DeserializeUser(), result.DeleteOneExercise)
+	router.Use(middleware.DeserializeUser())
+	router.GET("/fetch/exercise_id", result.GetResultsByUserIDAndExerciseID)
+	router.GET("/fetch/0/exercise_id", result.FetchResultByExerciseID)
+	router.POST("/create", result.CreateOneExercise)
+	router.DELETE("/delete/_id", result.DeleteOneExercise)
 }

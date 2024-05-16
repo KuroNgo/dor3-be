@@ -2,6 +2,7 @@ package exercise_question_route
 
 import (
 	exercise_quesiton_controller "clean-architecture/api/controller/exercise_quesiton"
+	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
 	exercise_domain "clean-architecture/domain/exercise"
 	exercise_questions_domain "clean-architecture/domain/exercise_questions"
@@ -27,5 +28,6 @@ func ExerciseQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *m
 	}
 
 	router := group.Group("/exercise/question")
+	router.Use(middleware.DeserializeUser())
 	router.GET("/fetch", question.FetchManyExerciseOptions)
 }
