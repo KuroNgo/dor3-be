@@ -281,7 +281,6 @@ func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string)
 		return nil, err
 	}
 
-	// Find documents based on the filter
 	filter := bson.M{"unit_id": unit.ID}
 	cursor, err := collectionVocabulary.Find(ctx, filter)
 	if err != nil {
@@ -293,21 +292,16 @@ func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string)
 		}
 	}()
 
-	// Slice to hold the vocabulary results
 	var vocabularies []vocabulary_domain.Vocabulary
 
-	// Iterate over the cursor
 	for cursor.Next(ctx) {
 		var vocabulary vocabulary_domain.Vocabulary
 		if err = cursor.Decode(&vocabulary); err != nil {
 			return nil, errors.New("failed to decode vocabulary")
 		}
 
-		// No need to set vocabulary.UnitID as it is already in the document fetched
 		vocabularies = append(vocabularies, vocabulary)
 	}
-
-	// Check if there were any errors during the iteration
 	if err := cursor.Err(); err != nil {
 		return nil, errors.New("cursor iteration error: ")
 	}
