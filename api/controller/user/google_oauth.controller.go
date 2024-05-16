@@ -4,7 +4,7 @@ import (
 	"clean-architecture/bootstrap"
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal"
-	google_utils "clean-architecture/internal/oauth2/google"
+	google_utils "clean-architecture/internal/Oauth2/google"
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
