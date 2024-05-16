@@ -30,6 +30,11 @@ type examRepository struct {
 	cacheMutex        sync.RWMutex
 }
 
+func (e *examRepository) UpdateCompleted(ctx context.Context, exam *exam_domain.Exam) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionExamQuestion string) exam_domain.IExamRepository {
 	return &examRepository{
 		database:               db,
@@ -94,11 +99,9 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 			if err = cursor.Decode(&exam); err != nil {
 				return
 			}
-
 			countQuest := e.CountQuestion(ctx, exam.ID.Hex())
 			exam.CountQuestion = countQuest
 
-			// Thêm lesson vào slice lessons
 			exams = append(exams, exam)
 		}
 	}()

@@ -73,7 +73,6 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	feedback_route.FeedbackRoute(env, timeout, db, publicRouter)
 
 	exam_route.ExamRoute(env, timeout, db, publicRouter)
-	exam_route.ExamRoute(env, timeout, db, privateRouter)
 	exam_answer_route.ExamAnswerRoute(env, timeout, db, publicRouter)
 	exam_question_route.ExamQuestionRoute(env, timeout, db, publicRouter)
 	exam_options_route.ExamOptionsRoute(env, timeout, db, publicRouter)

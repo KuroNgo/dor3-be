@@ -80,7 +80,7 @@ type IVocabularyRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FindUnitIDByUnitLevel(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error)
 	FindVocabularyIDByVocabularyConfig(ctx context.Context, word string) (primitive.ObjectID, error)
-	FetchByIdUnit(ctx context.Context, idUnit string) (Response, error)
+	FetchByIdUnit(ctx context.Context, idUnit string) ([]Vocabulary, error)
 	FetchByWord(ctx context.Context, word string) (SearchingResponse, error)
 	FetchByLesson(ctx context.Context, unitName string) (SearchingResponse, error)
 
