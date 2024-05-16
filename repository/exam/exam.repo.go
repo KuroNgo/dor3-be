@@ -30,6 +30,11 @@ type examRepository struct {
 	cacheMutex        sync.RWMutex
 }
 
+func (e *examRepository) UpdateCompleted(ctx context.Context, exam *exam_domain.Exam) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionExamQuestion string) exam_domain.IExamRepository {
 	return &examRepository{
 		database:               db,
