@@ -2,16 +2,15 @@ package excel
 
 import (
 	"clean-architecture/internal/file"
-	"errors"
 	"fmt"
 	"github.com/xuri/excelize/v2"
 )
 
-func ReadFileForCourse(filename string) ([]file_internal.Course, error) {
+func ReadFileForCourse(filename string) (file_internal.Course, error) {
 	f, err := excelize.OpenFile(filename)
 
 	if err != nil {
-		return nil, err
+		return file_internal.Course{}, err
 	}
 	defer func() {
 		if err := f.Close(); err != nil { // Kiểm tra lỗi khi đóng tệp
@@ -19,28 +18,10 @@ func ReadFileForCourse(filename string) ([]file_internal.Course, error) {
 		}
 	}()
 
-	sheetName := f.GetSheetName(0)
-	if sheetName == "" {
-		return nil, errors.New("empty sheet name")
+	course := file_internal.Course{
+		Name:        "English for IT",
+		Description: "",
 	}
 
-	rows, err := f.GetRows(sheetName)
-	if err != nil {
-		return nil, err
-	}
-
-	for i, row := range rows {
-		if i == 0 {
-			continue
-		}
-		if len(row) >= 2 {
-			c := file_internal.Course{
-				Name:        row[0],
-				Description: row[1],
-			}
-			courses = append(courses, c)
-		}
-	}
-
-	return courses, nil
+	return course, nil
 }

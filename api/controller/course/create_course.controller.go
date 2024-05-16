@@ -10,7 +10,6 @@ import (
 	"clean-architecture/internal/cloud/google"
 	file_internal "clean-architecture/internal/file"
 	"clean-architecture/internal/file/excel"
-	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,7 +17,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -132,60 +130,27 @@ func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
 		return
 	}
 
-	var courses []course_domain.Course
-	for _, course := range result {
-		c := course_domain.Course{
-			Id:          primitive.NewObjectID(),
-			Description: course.Description,
-			Name:        course.Name,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-			WhoUpdated:  admin.FullName,
-		}
-		courses = append(courses, c)
+	course := course_domain.Course{
+		Id:          primitive.NewObjectID(),
+		Name:        result.Name,
+		Description: "",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		WhoUpdated:  admin.FullName,
 	}
 
-	var wg sync.WaitGroup
-	successCount := 0
-	errChan := make(chan error)
-
-	for _, course := range courses {
-		wg.Add(1)
-		go func(course course_domain.Course) {
-			defer wg.Done()
-			err := c.CourseUseCase.CreateOne(ctx, &course)
-			if err != nil {
-				_ = os.Remove(file.Filename)
-				errChan <- err
-				return
-			}
-			successCount++
-		}(course)
-	}
-
-	// Wait for all goroutines to finish
-	go func() {
-		wg.Wait()
-		close(errChan)
-	}()
-
-	if successCount == 0 {
-		_ = os.Remove(file.Filename)
-		errChan <- errors.New("failed to create any course")
-		return
-	}
-
-	select {
-	case err := <-errChan:
+	err = c.CourseUseCase.CreateOne(ctx, &course)
+	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"Error creating course: %v\n": err,
 		})
-	default:
-		ctx.JSON(http.StatusOK, gin.H{
-			"status":        "success",
-			"success_count": successCount,
-		})
+		_ = os.Remove(file.Filename)
+		return
 	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+	})
 
 }
 
@@ -233,7 +198,14 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		}
 	}()
 
-	resC, resL, resU, resV, err := excel.ReadFileForLessonManagementSystem(file.Filename)
+	//resC, resL, resU, resV, err := excel.ReadFileForLessonManagementSystem(file.Filename)
+	//if err != nil {
+	//	_ = os.Remove(file.Filename)
+	//	ctx.JSON(500, gin.H{"error": err.Error()})
+	//	return
+	//}
+
+	resCourse, err := excel.ReadFileForCourse(file.Filename)
 	if err != nil {
 		_ = os.Remove(file.Filename)
 		ctx.JSON(500, gin.H{"error": err.Error()})
@@ -243,12 +215,13 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 	ctx.SSEvent("running", "Start create course")
 	course := course_domain.Course{
 		Id:          primitive.NewObjectID(),
-		Name:        resC.Name,
+		Name:        resCourse.Name,
 		Description: "",
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 		WhoUpdated:  admin.FullName,
 	}
+
 	err = c.CourseUseCase.CreateOne(ctx, &course)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": err.Error()})
@@ -258,9 +231,10 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		"status": "create success course",
 	})
 
+	resLesson, err := excel.ReadFileForLesson(file.Filename)
 	ctx.SSEvent("running", "Start create lesson")
-	for _, lesson := range resL {
-		courseID, errL := c.LessonUseCase.FindCourseIDByCourseName(ctx, lesson.CourseID)
+	for _, data := range resLesson {
+		courseID, errL := c.LessonUseCase.FindCourseIDByCourseName(ctx, data.CourseID)
 		if errL != nil {
 			_ = os.Remove(file.Filename)
 			ctx.JSON(500, gin.H{"error": err.Error()})
@@ -270,8 +244,8 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		l := lesson_domain.Lesson{
 			ID:          primitive.NewObjectID(),
 			CourseID:    courseID,
-			Name:        lesson.Name,
-			Level:       lesson.Level,
+			Name:        data.Name,
+			Level:       data.Level,
 			IsCompleted: 0,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
@@ -292,7 +266,8 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 	})
 
 	ctx.SSEvent("running", "Start create unit")
-	for _, unit := range resU {
+	resUnit, err := excel.ReadFileForUnit(file.Filename)
+	for _, unit := range resUnit {
 		lessonID, errN := c.UnitUseCase.FindLessonIDByLessonName(ctx, unit.LessonID)
 		if errN != nil {
 			_ = os.Remove(file.Filename)
@@ -325,8 +300,9 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 	var vocabularies []vocabulary_domain.Vocabulary
 
 	ctx.SSEvent("running", "Start create vocabulary")
-	for _, vocabulary := range resV {
-		unitID, errV := c.VocabularyUseCase.FindUnitIDByUnitLevel(ctx, vocabulary.UnitLevel)
+	resVocabulary, err := excel.ReadFileForVocabulary(file.Filename)
+	for _, vocabulary := range resVocabulary {
+		unitID, errV := c.VocabularyUseCase.FindUnitIDByUnitLevel(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
 		if errV != nil {
 			_ = os.Remove(file.Filename)
 			ctx.JSON(500, gin.H{"error": err.Error()})

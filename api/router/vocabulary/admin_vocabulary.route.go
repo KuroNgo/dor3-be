@@ -5,6 +5,7 @@ import (
 	"clean-architecture/bootstrap"
 	admin_domain "clean-architecture/domain/admin"
 	image_domain "clean-architecture/domain/image"
+	lesson_domain "clean-architecture/domain/lesson"
 	mark_domain "clean-architecture/domain/mark_vocabulary"
 	unit_domain "clean-architecture/domain/unit"
 	user_domain "clean-architecture/domain/user"
@@ -21,7 +22,7 @@ import (
 )
 
 func AdminVocabularyRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	vo := vocabulary_repository.NewVocabularyRepository(db, vocabulary_domain.CollectionVocabulary, mark_domain.CollectionMark, unit_domain.CollectionUnit)
+	vo := vocabulary_repository.NewVocabularyRepository(db, vocabulary_domain.CollectionVocabulary, mark_domain.CollectionMark, unit_domain.CollectionUnit, lesson_domain.CollectionLesson)
 	im := image_repository.NewImageRepository(db, image_domain.CollectionImage)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 

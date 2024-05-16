@@ -3,17 +3,22 @@ package excel
 import (
 	"clean-architecture/internal/file"
 	"errors"
+	"fmt"
 	"github.com/xuri/excelize/v2"
 )
 
 func ReadFileForLesson(filename string) ([]file_internal.Lesson, error) {
-	// khởi tạo channel
 	lessonCh := make(chan file_internal.Lesson)
 
 	f, err := excelize.OpenFile(filename)
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Printf("Failed to close file: %v\n", err)
+		}
+	}()
 
 	sheetList := f.GetSheetList()
 	if sheetList == nil {
@@ -22,17 +27,17 @@ func ReadFileForLesson(filename string) ([]file_internal.Lesson, error) {
 
 	go func() {
 		defer close(lessonCh)
-		for i, elementSheet := range sheetList {
-			l := file_internal.Lesson{
+		for i, sheetName := range sheetList {
+			lesson := file_internal.Lesson{
 				CourseID: "English for IT",
-				Name:     elementSheet,
-				Level:    i,
+				Name:     sheetName,
+				Level:    i + 1,
 			}
-			lessonCh <- l
+			lessonCh <- lesson
 		}
 	}()
 
-	// nhận dữ liệu từ các kênh bai học
+	var lessons []file_internal.Lesson
 	for lesson := range lessonCh {
 		lessons = append(lessons, lesson)
 	}

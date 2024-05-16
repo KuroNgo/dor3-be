@@ -19,7 +19,7 @@ import (
 )
 
 func ActivityRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database) *activity_controller.ActivityController {
-	ac := activity_repository.NewActivityRepository(db, activity_log_domain.CollectionActivityLog)
+	ac := activity_repository.NewActivityRepository(db, activity_log_domain.CollectionActivityLog, admin_domain.CollectionAdmin)
 	users := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
@@ -34,7 +34,7 @@ func ActivityRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Dat
 }
 
 func AdminActivityRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	ac := activity_repository.NewActivityRepository(db, activity_log_domain.CollectionActivityLog)
+	ac := activity_repository.NewActivityRepository(db, activity_log_domain.CollectionActivityLog, admin_domain.CollectionAdmin)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
 	activity := &activity_controller.ActivityController{

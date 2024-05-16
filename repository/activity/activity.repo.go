@@ -2,6 +2,7 @@ package activity_repository
 
 import (
 	activity_log_domain "clean-architecture/domain/activity_log"
+	admin_domain "clean-architecture/domain/admin"
 	"clean-architecture/internal"
 	"context"
 	"errors"
@@ -15,12 +16,14 @@ import (
 type activityRepository struct {
 	database           *mongo.Database
 	collectionActivity string
+	collectionAdmin    string
 }
 
-func NewActivityRepository(db *mongo.Database, collectionActivity string) activity_log_domain.IActivityRepository {
+func NewActivityRepository(db *mongo.Database, collectionActivity string, collectionAdmin string) activity_log_domain.IActivityRepository {
 	return &activityRepository{
 		database:           db,
 		collectionActivity: collectionActivity,
+		collectionAdmin:    collectionAdmin,
 	}
 }
 
@@ -43,6 +46,7 @@ func (a *activityRepository) CreateOne(ctx context.Context, log activity_log_dom
 
 func (a *activityRepository) FetchMany(ctx context.Context, page string) (activity_log_domain.Response, error) {
 	collection := a.database.Collection(a.collectionActivity)
+	collectionAdmin := a.database.Collection(a.collectionAdmin)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -64,7 +68,7 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 		cal1 := count / int64(perPage)
 		cal2 := count % int64(perPage)
 		if cal2 != 0 {
-			cal <- cal1
+			cal <- cal1 + 1
 		}
 	}()
 
@@ -79,7 +83,7 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 		}
 	}(cursor, ctx)
 
-	var activities []activity_log_domain.ActivityLog
+	var activities []activity_log_domain.ActivityLogResponse
 
 	internal.Wg.Add(1)
 	go func() {
@@ -89,11 +93,30 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 			if err := cursor.Decode(&activity); err != nil {
 				return
 			}
-
 			activity.ActivityTime = activity.ActivityTime.Add(7 * time.Hour)
 
+			var admin admin_domain.Admin
+			filterUser := bson.M{"_id": activity.UserID}
+			err = collectionAdmin.FindOne(ctx, filterUser).Decode(&admin)
+			if err != nil {
+				return
+			}
+
+			var activityResponse activity_log_domain.ActivityLogResponse
+			activityResponse.LogID = activity.LogID
+			activityResponse.UserID = admin
+			activityResponse.ClientIP = activity.ClientIP
+			activityResponse.Method = activity.Method
+			activityResponse.StatusCode = activity.StatusCode
+			activityResponse.BodySize = activity.BodySize
+			activityResponse.Path = activity.Path
+			activityResponse.Latency = activity.Latency
+			activityResponse.Error = activity.Error
+			activityResponse.ActivityTime = activity.ActivityTime
+			activityResponse.ExpireAt = activity.ExpireAt
+
 			// Thêm activity vào slice activities
-			activities = append(activities, activity)
+			activities = append(activities, activityResponse)
 		}
 	}()
 
@@ -105,7 +128,6 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 		statistics, _ := a.Statistics(ctx)
 		statisticsCh <- statistics
 	}()
-
 	statistics := <-statisticsCh
 
 	activityRes := activity_log_domain.Response{

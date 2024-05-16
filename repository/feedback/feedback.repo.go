@@ -2,6 +2,7 @@ package feedback_repository
 
 import (
 	feedback_domain "clean-architecture/domain/feedback"
+	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal"
 	"context"
 	"errors"
@@ -16,17 +17,20 @@ import (
 type feedbackRepository struct {
 	database           *mongo.Database
 	collectionFeedback string
+	collectionUser     string
 }
 
-func NewFeedbackRepository(db *mongo.Database, collectionFeedback string) feedback_domain.IFeedbackRepository {
+func NewFeedbackRepository(db *mongo.Database, collectionFeedback string, collectionUser string) feedback_domain.IFeedbackRepository {
 	return &feedbackRepository{
 		database:           db,
 		collectionFeedback: collectionFeedback,
+		collectionUser:     collectionUser,
 	}
 }
 
 func (f *feedbackRepository) FetchMany(ctx context.Context, page string) (feedback_domain.Response, error) {
 	collection := f.database.Collection(f.collectionFeedback)
+	collectionUser := f.database.Collection(f.collectionUser)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -53,18 +57,35 @@ func (f *feedbackRepository) FetchMany(ctx context.Context, page string) (feedba
 		return feedback_domain.Response{}, err
 	}
 
-	var feedbacks []feedback_domain.Feedback
+	var feedbacks []feedback_domain.FeedbackResponse
 	internal.Wg.Add(1)
-
 	go func() {
 		defer internal.Wg.Done()
 		for cursor.Next(ctx) {
 			var feedback feedback_domain.Feedback
-			if err := cursor.Decode(&feedback); err != nil {
+			if err = cursor.Decode(&feedback); err != nil {
 				return
 			}
 
-			feedbacks = append(feedbacks, feedback)
+			var user user_domain.User
+			filterUser := bson.M{"_id": feedback.UserID}
+			err = collectionUser.FindOne(ctx, filterUser).Decode(&user)
+			if err != nil {
+				return
+			}
+
+			var feedbackRes feedback_domain.FeedbackResponse
+			feedbackRes.ID = feedback.ID
+			feedbackRes.User = user
+			feedbackRes.Feeling = feedback.Feeling
+			feedbackRes.Content = feedback.Content
+			feedbackRes.Title = feedback.Title
+			feedbackRes.IsSeen = feedback.IsSeen
+			feedbackRes.SeenAt = feedback.SeenAt
+			feedbackRes.IsLoveWeb = feedback.IsLoveWeb
+			feedbackRes.SubmittedDate = feedback.SubmittedDate
+
+			feedbacks = append(feedbacks, feedbackRes)
 		}
 	}()
 
@@ -90,6 +111,7 @@ func (f *feedbackRepository) FetchMany(ctx context.Context, page string) (feedba
 
 func (f *feedbackRepository) FetchByUserID(ctx context.Context, userID string, page string) (feedback_domain.Response, error) {
 	collection := f.database.Collection(f.collectionFeedback)
+	collectionUser := f.database.Collection(f.collectionUser)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -122,21 +144,53 @@ func (f *feedbackRepository) FetchByUserID(ctx context.Context, userID string, p
 		return feedback_domain.Response{}, err
 	}
 
-	var feedbacks []feedback_domain.Feedback
-	for cursor.Next(ctx) {
-		var feedback feedback_domain.Feedback
-		if err := cursor.Decode(&feedback); err != nil {
-			return feedback_domain.Response{}, err
+	var feedbacks []feedback_domain.FeedbackResponse
+	internal.Wg.Add(1)
+	go func() {
+		defer internal.Wg.Done()
+		for cursor.Next(ctx) {
+			var feedback feedback_domain.Feedback
+			if err := cursor.Decode(&feedback); err != nil {
+				return
+			}
+
+			feedback.UserID = idUser
+			var user user_domain.User
+			filterUser := bson.M{"_id": feedback.UserID}
+			err = collectionUser.FindOne(ctx, filterUser).Decode(&user)
+			if err != nil {
+				return
+			}
+
+			var feedbackRes feedback_domain.FeedbackResponse
+			feedbackRes.ID = feedback.ID
+			feedbackRes.User = user
+			feedbackRes.Feeling = feedback.Feeling
+			feedbackRes.Content = feedback.Content
+			feedbackRes.Title = feedback.Title
+			feedbackRes.IsSeen = feedback.IsSeen
+			feedbackRes.SeenAt = feedback.SeenAt
+			feedbackRes.IsLoveWeb = feedback.IsLoveWeb
+			feedbackRes.SubmittedDate = feedback.SubmittedDate
+
+			feedbacks = append(feedbacks, feedbackRes)
 		}
+	}()
+	internal.Wg.Wait()
 
-		feedback.UserID = idUser
-
-		feedbacks = append(feedbacks, feedback)
-	}
+	var statisticsCh = make(chan feedback_domain.Statistics)
+	go func() {
+		defer close(statisticsCh)
+		statistics, _ := f.Statistics(ctx)
+		statisticsCh <- statistics
+	}()
+	statistics := <-statisticsCh
 
 	feedbackRes := feedback_domain.Response{
-		Page:     cal,
-		Feedback: feedbacks,
+		Page:        cal,
+		CurrentPage: int64(pageNumber),
+		Feedback:    feedbacks,
+		Statistics:  statistics,
 	}
 
 	return feedbackRes, nil
@@ -190,7 +244,6 @@ func (f *feedbackRepository) FetchBySubmittedDate(ctx context.Context, date stri
 	feedbackRes := feedback_domain.Response{
 		CurrentPage: int64(pageNumber),
 		Page:        cal,
-		Feedback:    feedbacks,
 	}
 
 	return feedbackRes, nil
@@ -200,6 +253,25 @@ func (f *feedbackRepository) CreateOneByUser(ctx context.Context, feedback *feed
 	collectionFeedback := f.database.Collection(f.collectionFeedback)
 	_, err := collectionFeedback.InsertOne(ctx, feedback)
 	return err
+}
+
+func (f *feedbackRepository) UpdateSeen(ctx context.Context, id string, isSeen int) error {
+	collection := f.database.Collection(f.collectionFeedback)
+
+	ID, _ := primitive.ObjectIDFromHex(id)
+	filter := bson.D{{Key: "_id", Value: ID}}
+	update := bson.M{
+		"$set": bson.M{
+			"is_seen": isSeen,
+			"seen_at": time.Now(),
+		},
+	}
+
+	_, err := collection.UpdateOne(ctx, filter, &update)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (f *feedbackRepository) DeleteOneByAdmin(ctx context.Context, feedbackID string) error {

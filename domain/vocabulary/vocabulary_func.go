@@ -26,10 +26,10 @@ type Input struct {
 type IVocabularyUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchByIdUnit(ctx context.Context, idUnit string) (Response, error)
-	FindUnitIDByUnitLevel(ctx context.Context, unitLevel int) (primitive.ObjectID, error)
+	FindUnitIDByUnitLevel(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error)
 	FindVocabularyIDByVocabularyName(ctx context.Context, word string) (primitive.ObjectID, error)
 	FetchByWord(ctx context.Context, word string) (SearchingResponse, error)
-	FetchByLesson(ctx context.Context, lessonName string) (SearchingResponse, error)
+	FetchByLesson(ctx context.Context, unitName string) (SearchingResponse, error)
 
 	GetAllVocabulary(ctx context.Context) ([]string, error)
 	GetVocabularyById(ctx context.Context, id string) (Vocabulary, error)

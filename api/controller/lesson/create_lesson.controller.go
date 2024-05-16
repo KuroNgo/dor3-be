@@ -305,17 +305,15 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 	}
 
 	var wg sync.WaitGroup
-	var mux sync.Mutex
-	errCh := make(chan error)
+	errCh := make(chan error, len(result)) // Buffer channel to avoid goroutine leak
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer close(errCh)
+		defer close(errCh) // Close the error channel once all work is done
 
 		for _, lesson := range result {
 			// Tìm ID của khóa học từ tên khóa học
-			mux.Lock()
 			courseID, err := l.LessonUseCase.FindCourseIDByCourseName(ctx, lesson.CourseID)
 			if err != nil {
 				errCh <- err
@@ -340,11 +338,10 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 				errCh <- err
 				continue
 			}
-			mux.Unlock()
 		}
 	}()
 
-	wg.Done()
+	wg.Wait() // Wait for the goroutine to finish
 
 	select {
 	case err := <-errCh:
@@ -356,5 +353,4 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 			"status": "success",
 		})
 	}
-
 }

@@ -16,7 +16,7 @@ import (
 )
 
 func AdminFeedbackRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	fe := feedback_repository.NewFeedbackRepository(db, feedback_domain.CollectionFeedback)
+	fe := feedback_repository.NewFeedbackRepository(db, feedback_domain.CollectionFeedback, user_domain.CollectionUser)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
 	feedback := &feedback_controller.FeedbackController{
@@ -27,5 +27,6 @@ func AdminFeedbackRoute(env *bootstrap.Database, timeout time.Duration, db *mong
 
 	router := group.Group("/feedback")
 	router.GET("/fetch", feedback.FetchMany)
+	router.PATCH("/update/is_seen", feedback.UpdateSeen)
 	router.DELETE("/delete/_id", feedback.DeleteOneFeedback)
 }
