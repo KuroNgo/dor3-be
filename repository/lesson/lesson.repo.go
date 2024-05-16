@@ -302,50 +302,50 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 	var lessons []lesson_domain.LessonResponse
 
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for cursor.Next(ctx) {
-			var lesson lesson_domain.LessonResponse
-			if err = cursor.Decode(&lesson); err != nil {
+	//wg.Add(1)
+	//go func() {
+	//	defer wg.Done()
+	for cursor.Next(ctx) {
+		var lesson lesson_domain.LessonResponse
+		if err = cursor.Decode(&lesson); err != nil {
+			return nil, lesson_domain.DetailResponse{}, err
+		}
+
+		countUnitCh := make(chan int32)
+		go func() {
+			defer close(countUnitCh)
+			// Lấy thông tin liên quan cho mỗi chủ đề
+			countUnit, err := l.countUnitsByLessonsID(ctx, lesson.ID)
+			if err != nil {
 				return
 			}
 
-			countUnitCh := make(chan int32)
-			go func() {
-				defer close(countUnitCh)
-				// Lấy thông tin liên quan cho mỗi chủ đề
-				countUnit, err := l.countUnitsByLessonsID(ctx, lesson.ID)
-				if err != nil {
-					return
-				}
+			countUnitCh <- countUnit
+		}()
 
-				countUnitCh <- countUnit
-			}()
+		countVocabularyCh := make(chan int32)
+		go func() {
+			defer close(countVocabularyCh)
+			countVocabulary, err := l.countVocabularyByLessonID(ctx, lesson.ID)
+			if err != nil {
+				return
+			}
 
-			countVocabularyCh := make(chan int32)
-			go func() {
-				defer close(countVocabularyCh)
-				countVocabulary, err := l.countVocabularyByLessonID(ctx, lesson.ID)
-				if err != nil {
-					return
-				}
+			countVocabularyCh <- countVocabulary
+		}()
 
-				countVocabularyCh <- countVocabulary
-			}()
+		countUnit := <-countUnitCh
+		countVocabulary := <-countVocabularyCh
 
-			countUnit := <-countUnitCh
-			countVocabulary := <-countVocabularyCh
+		lesson.CountUnit = countUnit
+		lesson.CountVocabulary = countVocabulary
 
-			lesson.CountUnit = countUnit
-			lesson.CountVocabulary = countVocabulary
-
-			// Thêm lesson vào slice lessons
-			lessons = append(lessons, lesson)
-		}
-
-	}()
-
+		// Thêm lesson vào slice lessons
+		lessons = append(lessons, lesson)
+	}
+	//
+	//}()
+	//
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -372,6 +372,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 	}()
 
 	wg.Wait()
+
 	statisticsCh := make(chan lesson_domain.Statistics)
 	go func() {
 		statistics, _ := l.Statistics(ctx)
@@ -380,6 +381,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 	statistics := <-statisticsCh
 
 	cal := <-calCh
+
 	response := lesson_domain.DetailResponse{
 		Page:        cal,
 		CurrentPage: pageNumber,

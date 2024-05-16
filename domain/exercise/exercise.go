@@ -1,6 +1,8 @@
 package exercise_domain
 
 import (
+	lesson_domain "clean-architecture/domain/lesson"
+	unit_domain "clean-architecture/domain/unit"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -28,9 +30,9 @@ type Exercise struct {
 }
 
 type ExerciseResponse struct {
-	ID       primitive.ObjectID `bson:"_id" json:"_id"`
-	LessonID primitive.ObjectID `bson:"lesson_id" json:"lesson_id"`
-	UnitID   primitive.ObjectID `bson:"unit_id" json:"unit_id"`
+	ID     primitive.ObjectID   `bson:"_id" json:"_id"`
+	Lesson lesson_domain.Lesson `bson:"lesson_id" json:"lesson_id"`
+	Unit   unit_domain.Unit     `bson:"unit_id" json:"unit_id"`
 
 	Title       string `bson:"title" json:"title"`
 	Description string `bson:"description" json:"description"`
@@ -62,10 +64,9 @@ type IExerciseRepository interface {
 	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]ExerciseResponse, DetailResponse, error)
 
 	CreateOne(ctx context.Context, exercise *Exercise) error
-
 	UpdateOne(ctx context.Context, exercise *Exercise) (*mongo.UpdateResult, error)
-	UpdateCompleted(ctx context.Context, exercise *Exercise) error
-
 	DeleteOne(ctx context.Context, exerciseID string) error
+
+	UpdateCompleted(ctx context.Context, exercise *Exercise) error
 	Statistics(ctx context.Context) (Statistics, error)
 }
