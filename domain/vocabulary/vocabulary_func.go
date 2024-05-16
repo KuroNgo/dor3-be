@@ -25,7 +25,7 @@ type Input struct {
 //go:generate mockery --name IVocabularyUseCase
 type IVocabularyUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchByIdUnit(ctx context.Context, idUnit string) (Response, error)
+	FetchByIdUnit(ctx context.Context, idUnit string) ([]Vocabulary, error)
 	FindUnitIDByUnitLevel(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error)
 	FindVocabularyIDByVocabularyName(ctx context.Context, word string) (primitive.ObjectID, error)
 	FetchByWord(ctx context.Context, word string) (SearchingResponse, error)

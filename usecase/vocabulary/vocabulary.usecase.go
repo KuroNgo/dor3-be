@@ -56,13 +56,13 @@ func (v *vocabularyUseCase) GetVocabularyById(ctx context.Context, id string) (v
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) FetchByIdUnit(ctx context.Context, idUnit string) (vocabulary_domain.Response, error) {
+func (v *vocabularyUseCase) FetchByIdUnit(ctx context.Context, idUnit string) ([]vocabulary_domain.Vocabulary, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
 	vocabulary, err := v.vocabularyRepository.FetchByIdUnit(ctx, idUnit)
 	if err != nil {
-		return vocabulary_domain.Response{}, err
+		return nil, err
 	}
 
 	return vocabulary, err

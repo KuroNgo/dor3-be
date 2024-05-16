@@ -27,7 +27,12 @@ func (e *exerciseOptionsRepository) FetchManyByQuestionID(ctx context.Context, q
 	if err != nil {
 		return exercise_options_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	var options []exercise_options_domain.ExerciseOptions
 	for cursor.Next(ctx) {

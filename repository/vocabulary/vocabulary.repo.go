@@ -6,10 +6,12 @@ import (
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"context"
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -262,40 +264,55 @@ func (v *vocabularyRepository) CreateOneByNameUnit(ctx context.Context, vocabula
 	return nil
 }
 
-func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string) (vocabulary_domain.Response, error) {
+func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string) ([]vocabulary_domain.Vocabulary, error) {
+	// Get the collection
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
+	collectionUnit := v.database.Collection(v.collectionUnit)
 
-	idUnit2, err := primitive.ObjectIDFromHex(idUnit)
+	unitID, err := primitive.ObjectIDFromHex(idUnit)
 	if err != nil {
-		return vocabulary_domain.Response{}, err
+		return nil, fmt.Errorf("invalid unit id: %w", err)
 	}
 
-	filter := bson.M{"unit_id": idUnit2}
+	filterUnit := bson.M{"_id": unitID}
+	var unit unit_domain.Unit
+	err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
+	if err != nil {
+		return nil, err
+	}
 
+	// Find documents based on the filter
+	filter := bson.M{"unit_id": unit.ID}
 	cursor, err := collectionVocabulary.Find(ctx, filter)
 	if err != nil {
-		return vocabulary_domain.Response{}, err
+		return nil, fmt.Errorf("failed to find vocabularies: %w", err)
 	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
-		if err != nil {
-			return
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			log.Printf("failed to close cursor: %v", err)
 		}
-	}(cursor, ctx)
+	}()
 
+	// Slice to hold the vocabulary results
 	var vocabularies []vocabulary_domain.Vocabulary
 
+	// Iterate over the cursor
 	for cursor.Next(ctx) {
 		var vocabulary vocabulary_domain.Vocabulary
 		if err = cursor.Decode(&vocabulary); err != nil {
-			return vocabulary_domain.Response{}, err
+			return nil, errors.New("failed to decode vocabulary")
 		}
-		vocabulary.UnitID = idUnit2
+
+		// No need to set vocabulary.UnitID as it is already in the document fetched
 		vocabularies = append(vocabularies, vocabulary)
 	}
 
-	response := vocabulary_domain.Response{}
-	return response, nil
+	// Check if there were any errors during the iteration
+	if err := cursor.Err(); err != nil {
+		return nil, errors.New("cursor iteration error: ")
+	}
+
+	return vocabularies, nil
 }
 
 func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) (vocabulary_domain.SearchingResponse, error) {
