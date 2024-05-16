@@ -116,11 +116,11 @@ func (v *vocabularyUseCase) GetAllVocabulary(ctx context.Context) ([]string, err
 	return vocabulary, nil
 }
 
-func (v *vocabularyUseCase) FindUnitIDByUnitLevel(ctx context.Context, unitLevel int) (primitive.ObjectID, error) {
+func (v *vocabularyUseCase) FindUnitIDByUnitLevel(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	unitID, err := v.vocabularyRepository.FindUnitIDByUnitLevel(ctx, unitLevel)
+	unitID, err := v.vocabularyRepository.FindUnitIDByUnitLevel(ctx, unitLevel, fieldOfIT)
 	if err != nil {
 		return primitive.NilObjectID, err
 	}

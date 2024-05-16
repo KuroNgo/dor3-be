@@ -27,7 +27,13 @@ type ExerciseQuestion struct {
 
 type Response struct {
 	Page             int64              `bson:"page" json:"page"`
+	CurrentPage      int                `bson:"current_page" json:"current_page"`
+	Statistics       Statistics         `bson:"statistics" json:"statistics"`
 	ExerciseQuestion []ExerciseQuestion `json:"exercise_question" bson:"exercise_question"`
+}
+
+type Statistics struct {
+	Count int64 `bson:"count" json:"count"`
 }
 
 type IExerciseQuestionRepository interface {

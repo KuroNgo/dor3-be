@@ -21,4 +21,5 @@ type IFeedbackUseCase interface {
 	FetchBySubmittedDate(ctx context.Context, date string, page string) (Response, error)
 	CreateOneByUser(ctx context.Context, feedback *Feedback) error
 	DeleteOneByAdmin(ctx context.Context, feedbackID string) error
+	UpdateSeen(ctx context.Context, id string, isSeen int) error
 }

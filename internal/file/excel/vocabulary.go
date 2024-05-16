@@ -10,7 +10,7 @@ import (
 const maximumVocabulary = 5
 
 func ReadFileForVocabulary(filename string) ([]file_internal.Vocabulary, error) {
-	vocabularyCh := make(chan file_internal.Vocabulary)
+	//vocabularyCh := make(chan file_internal.Vocabulary)
 
 	f, err := excelize.OpenFile(filename)
 	if err != nil {
@@ -26,56 +26,46 @@ func ReadFileForVocabulary(filename string) ([]file_internal.Vocabulary, error) 
 	if sheetList == nil {
 		return nil, errors.New("empty sheet name")
 	}
+	var vocabularies []file_internal.Vocabulary
 
-	go func() {
-		defer close(vocabularyCh)
-		for i, elementSheet := range sheetList {
-			unitCount := 1 // Reset unitCount for each lesson
+	//go func() {
+	//	defer close(vocabularyCh)
+	for _, elementSheet := range sheetList {
+		unitCount := 1
+		rows, err := f.GetRows(elementSheet)
+		if err != nil {
+			continue
+		}
 
-			rows, err := f.GetRows(elementSheet)
-			if err != nil {
-				return
+		for i, row := range rows {
+			if len(row) >= 8 {
+				vocabulary := file_internal.Vocabulary{
+					Word:          row[0],
+					PartOfSpeech:  row[1],
+					Pronunciation: row[2],
+					Example:       row[3],
+					ExplainVie:    row[4],
+					ExplainEng:    row[5],
+					ExampleVie:    row[6],
+					ExampleEng:    row[7],
+					FieldOfIT:     elementSheet,
+					UnitLevel:     unitCount,
+				}
+				vocabularies = append(vocabularies, vocabulary)
 			}
 
-			vocabCount := 0 // Initialize vocabulary count for the current unit
-
-			for j, row := range rows {
-				if j == 0 {
-					continue
-				}
-
-				if len(row) >= 8 {
-					v := file_internal.Vocabulary{
-						Word:          row[0],
-						PartOfSpeech:  row[1],
-						Pronunciation: row[2],
-						Example:       row[3],
-						ExplainVie:    row[4],
-						ExplainEng:    row[5],
-						ExampleVie:    row[6],
-						ExampleEng:    row[7],
-						FieldOfIT:     sheetList[i],
-						UnitLevel:     unitCount,
-					}
-
-					vocabularyCh <- v
-
-					// Increase vocabulary count for the current unit
-					vocabCount++
-
-					// If vocabCount reaches the maximum vocabulary, create a new unit
-					if vocabCount == maximumVocabulary {
-						unitCount++
-						vocabCount = 1 // Reset vocabCount for the new unit
-					}
-				}
+			if (i+1)%5 == 0 {
+				unitCount++
 			}
 		}
-	}()
-
-	for vocabulary := range vocabularyCh {
-		vocabularies = append(vocabularies, vocabulary)
 	}
+
+	//}()
+
+	//var vocabularies []file_internal.Vocabulary
+	//for vocab := range vocabularyCh {
+	//	vocabularies = append(vocabularies, vocab)
+	//}
 
 	return vocabularies, nil
 }

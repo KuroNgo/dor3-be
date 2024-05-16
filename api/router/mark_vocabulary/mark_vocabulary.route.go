@@ -4,6 +4,7 @@ import (
 	mark_vocabulary_route "clean-architecture/api/controller/mark_vocabulary"
 	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
+	lesson_domain "clean-architecture/domain/lesson"
 	mark_list_domain "clean-architecture/domain/mark_list"
 	mark_vocabulary_domain "clean-architecture/domain/mark_vocabulary"
 	unit_domain "clean-architecture/domain/unit"
@@ -24,7 +25,7 @@ import (
 func MarkVocabularyRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	ma := mark_vacabulary_repository.NewMarkVocabularyRepository(db, mark_list_domain.CollectionMarkList, vocabulary_domain.CollectionVocabulary, mark_vocabulary_domain.CollectionMark)
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
-	vo := vocabulary_repository.NewVocabularyRepository(db, vocabulary_domain.CollectionVocabulary, mark_vocabulary_domain.CollectionMark, unit_domain.CollectionUnit)
+	vo := vocabulary_repository.NewVocabularyRepository(db, vocabulary_domain.CollectionVocabulary, mark_vocabulary_domain.CollectionMark, unit_domain.CollectionUnit, lesson_domain.CollectionLesson)
 
 	markVocabulary := &mark_vocabulary_route.MarkVocabularyController{
 		MarkVocabularyUseCase: mark_vacabulary_usecase.NewMarkVocabularyUseCase(ma, timeout),

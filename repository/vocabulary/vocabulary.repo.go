@@ -1,9 +1,9 @@
 package vocabulary_repository
 
 import (
+	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,6 +20,7 @@ type vocabularyRepository struct {
 	collectionVocabulary string
 	collectionMark       string
 	collectionUnit       string
+	collectionLesson     string
 
 	vocabularyManyCache    map[string]vocabulary_domain.Response
 	vocabularyOneCache     map[string][]vocabulary_domain.Vocabulary
@@ -27,12 +28,13 @@ type vocabularyRepository struct {
 	cacheMutex             sync.RWMutex
 }
 
-func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, collectionMark string, collectionUnit string) vocabulary_domain.IVocabularyRepository {
+func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, collectionMark string, collectionUnit string, collectionLesson string) vocabulary_domain.IVocabularyRepository {
 	return &vocabularyRepository{
 		database:             db,
 		collectionVocabulary: collectionVocabulary,
 		collectionMark:       collectionMark,
 		collectionUnit:       collectionUnit,
+		collectionLesson:     collectionLesson,
 
 		vocabularyManyCache:    make(map[string]vocabulary_domain.Response),
 		vocabularyOneCache:     make(map[string][]vocabulary_domain.Vocabulary),
@@ -40,37 +42,57 @@ func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, co
 	}
 }
 
-func (v *vocabularyRepository) FindUnitIDByUnitLevel(ctx context.Context, unitLevel int) (primitive.ObjectID, error) {
+func (v *vocabularyRepository) FindUnitIDByUnitLevel(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error) {
+	//collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
+	collectionLesson := v.database.Collection(v.collectionLesson)
 
 	// Tìm kiếm unit có cùng level
-	filter := bson.M{"level": unitLevel}
-	var existingUnit struct {
-		Id primitive.ObjectID `bson:"_id"`
+	//filter := bson.M{"level": unitLevel}
+	//var existingUnit struct {
+	//	Id primitive.ObjectID `bson:"_id"`
+	//}
+
+	// Tìm lesson
+	var lessons []lesson_domain.Lesson
+	cursor, err := collectionLesson.Find(ctx, bson.D{})
+	for cursor.Next(ctx) {
+		var lesson lesson_domain.Lesson
+		if err := cursor.Decode(&lesson); err != nil {
+			return primitive.NilObjectID, err
+		}
+
+		lessons = append(lessons, lesson)
 	}
 
-	err := collectionUnit.FindOne(ctx, filter).Decode(&existingUnit)
-	if err == nil {
-		return existingUnit.Id, nil
-	} else if !errors.Is(err, mongo.ErrNoDocuments) {
-		return primitive.NilObjectID, err
+	var unitMain unit_domain.Unit
+	for _, data := range lessons {
+		if fieldOfIT == data.Name {
+			var lesson lesson_domain.Lesson
+			filterLesson := bson.M{"name": fieldOfIT}
+			err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
+			if err != nil {
+				return primitive.NilObjectID, err
+			}
+
+			var unit unit_domain.Unit
+			filterUnit := bson.M{"lesson_id": lesson.ID, "level": unitLevel}
+			err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
+			if err != nil {
+				return primitive.NilObjectID, err
+			}
+
+			unitMain = unit
+			break
+		}
 	}
 
-	newUnit := unit_domain.Unit{
-		ID:         primitive.NewObjectID(),
-		Name:       "Unit " + strconv.Itoa(unitLevel),
-		Level:      unitLevel,
-		IsComplete: 0,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
-	}
+	//err = collectionUnit.FindOne(ctx, filter).Decode(&existingUnit)
+	//if err != nil {
+	//	return primitive.NilObjectID, err
+	//}
 
-	_, err = collectionUnit.InsertOne(ctx, newUnit)
-	if err != nil {
-		return primitive.NilObjectID, err
-	}
-
-	return newUnit.ID, nil
+	return unitMain.ID, nil
 }
 
 func (v *vocabularyRepository) FindVocabularyIDByVocabularyConfig(ctx context.Context, word string) (primitive.ObjectID, error) {
@@ -171,32 +193,72 @@ func (v *vocabularyRepository) GetAllVocabulary(ctx context.Context) ([]string, 
 }
 
 func (v *vocabularyRepository) CreateOneByNameUnit(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
+	// Xét vocabulary với trường field of it để tìm lesson phù hợp
+	// Từ lesson, mình tìm unit của lesson đó thông qua id của lesson
+	// Từ đó gắn giá trị vocabulary vào unit thích hợp
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
+	collectionLesson := v.database.Collection(v.collectionLesson)
 
-	filter := bson.M{"word": vocabulary.Word, "unit_id": vocabulary.UnitID}
-
-	filterParent := bson.M{"_id": vocabulary.UnitID}
-	countParent, err := collectionUnit.CountDocuments(ctx, filterParent)
+	// tìm lesson
+	filterUnit := bson.M{"_id": vocabulary.UnitID}
+	var unit unit_domain.Unit
+	err := collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
 	if err != nil {
 		return err
 	}
-	if countParent == 0 {
-		return errors.New("parent unit not found")
-	}
+	//
+	//filterLesson := bson.M{"_id": unit.LessonID}
+	//var lesson lesson_domain.Lesson
+	//err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
+	//if err != nil {
+	//	return err
+	//}
 
-	count, err := collectionVocabulary.CountDocuments(ctx, filter)
+	cursor, err := collectionLesson.Find(ctx, bson.D{})
 	if err != nil {
 		return err
 	}
-	if count > 0 {
-		return errors.New("the vocabulary already exists in the lesson")
+
+	var lessons []lesson_domain.Lesson
+	for cursor.Next(ctx) {
+		var lesson lesson_domain.Lesson
+		if err = cursor.Decode(&lesson); err != nil {
+			return err
+		}
+
+		lessons = append(lessons, lesson)
 	}
 
-	_, err = collectionVocabulary.InsertOne(ctx, vocabulary)
-	if err != nil {
-		return err
+	for _, data := range lessons {
+		if vocabulary.FieldOfIT == data.Name {
+			filterUnit2 := bson.M{"_id": vocabulary.UnitID, "lesson_id": unit.LessonID}
+			countUnit, err := collectionUnit.CountDocuments(ctx, filterUnit2)
+			if err != nil {
+				return err
+			}
+			if countUnit == 0 {
+				return errors.New("parent unit not found")
+			}
+
+			filter := bson.M{"word": vocabulary.Word, "unit_id": vocabulary.UnitID, "lesson_id": unit.LessonID}
+			count, err := collectionVocabulary.CountDocuments(ctx, filter)
+			if err != nil {
+				return err
+			}
+			if count > 0 {
+				return errors.New("the vocabulary already exists in the lesson")
+			}
+
+			_, err = collectionVocabulary.InsertOne(ctx, vocabulary)
+			if err != nil {
+				return err
+			}
+
+			break
+		}
 	}
+
 	return nil
 }
 
@@ -232,9 +294,7 @@ func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string)
 		vocabularies = append(vocabularies, vocabulary)
 	}
 
-	response := vocabulary_domain.Response{
-		Vocabulary: vocabularies,
-	}
+	response := vocabulary_domain.Response{}
 	return response, nil
 }
 
@@ -341,6 +401,7 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
+	collectionLesson := v.database.Collection(v.collectionLesson)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -378,28 +439,52 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 		}
 	}(cursor, ctx)
 
-	var vocabularies []vocabulary_domain.Vocabulary
+	var vocabularies []vocabulary_domain.VocabularyResponse
 
 	for cursor.Next(ctx) {
 		var vocabulary vocabulary_domain.Vocabulary
-
 		if err := cursor.Decode(&vocabulary); err != nil {
 			return vocabulary_domain.Response{}, err
 		}
 
 		var unit unit_domain.Unit
-		if err := collectionUnit.FindOne(ctx, bson.M{"_id": vocabulary.UnitID}).Decode(&unit); err != nil {
+		filterUnit := bson.M{"_id": vocabulary.UnitID}
+		if err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit); err != nil {
 			return vocabulary_domain.Response{}, err
 		}
 
-		vocabulary.UnitID = unit.ID
-		vocabularies = append(vocabularies, vocabulary)
+		var lesson lesson_domain.Lesson
+		filterLesson := bson.M{"_id": unit.LessonID}
+		if err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson); err != nil {
+			return vocabulary_domain.Response{}, err
+		}
+
+		var vocabularyRes vocabulary_domain.VocabularyResponse
+		vocabularyRes.Id = vocabulary.Id
+		vocabularyRes.Unit = unit
+		vocabularyRes.Lesson = lesson
+		vocabularyRes.Word = vocabulary.Word
+		vocabularyRes.PartOfSpeech = vocabulary.PartOfSpeech
+		vocabularyRes.Mean = vocabulary.Mean
+		vocabularyRes.Pronunciation = vocabulary.Pronunciation
+		vocabularyRes.ExampleVie = vocabulary.ExampleVie
+		vocabularyRes.ExplainVie = vocabulary.ExplainVie
+		vocabularyRes.ExampleEng = vocabulary.ExampleEng
+		vocabularyRes.ExplainEng = vocabulary.ExplainEng
+		vocabularyRes.FieldOfIT = vocabulary.FieldOfIT
+		vocabularyRes.LinkURL = vocabulary.LinkURL
+		vocabularyRes.VideoURL = vocabulary.ImageURL
+		vocabularyRes.ImageURL = vocabulary.ImageURL
+		vocabularyRes.IsFavourite = vocabulary.IsFavourite
+
+		vocabularies = append(vocabularies, vocabularyRes)
 	}
 
 	cal := <-calCh
 	vocabularyRes := vocabulary_domain.Response{
-		Page:       cal,
-		Vocabulary: vocabularies,
+		Page:               cal,
+		CurrentPage:        pageNumber,
+		VocabularyResponse: vocabularies,
 	}
 
 	//v.cacheMutex.Lock()
@@ -560,40 +645,6 @@ func (v *vocabularyRepository) CreateOne(ctx context.Context, vocabulary *vocabu
 	}
 
 	return nil
-}
-
-func (v *vocabularyRepository) UpsertOne(ctx context.Context, id string, vocabulary *vocabulary_domain.Vocabulary) (vocabulary_domain.Response, error) {
-	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
-	collectionUnit := v.database.Collection(v.collectionUnit)
-
-	filterReference := bson.M{"_id": vocabulary.UnitID}
-	count, err := collectionUnit.CountDocuments(ctx, filterReference)
-	if err != nil {
-		return vocabulary_domain.Response{}, err
-	}
-
-	if count == 0 {
-		return vocabulary_domain.Response{}, errors.New("the lesson ID do not exist")
-	}
-
-	doc, err := internal.ToDoc(vocabulary)
-
-	idHex, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return vocabulary_domain.Response{}, err
-	}
-
-	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(1)
-	query := bson.D{{Key: "_id", Value: idHex}}
-	update := bson.D{{Key: "$set", Value: doc}}
-	res := collectionVocabulary.FindOneAndUpdate(ctx, query, update, opts)
-
-	var updatePost vocabulary_domain.Response
-	if err := res.Decode(&updatePost); err != nil {
-		return vocabulary_domain.Response{}, err
-	}
-
-	return updatePost, nil
 }
 
 func (v *vocabularyRepository) DeleteOne(ctx context.Context, vocabularyID string) error {

@@ -77,3 +77,15 @@ func (f *feedbackUseCase) DeleteOneByAdmin(ctx context.Context, feedbackID strin
 
 	return nil
 }
+
+func (f *feedbackUseCase) UpdateSeen(ctx context.Context, id string, isSeen int) error {
+	ctx, cancel := context.WithTimeout(ctx, f.contextTimeout)
+	defer cancel()
+
+	err := f.feedbackRepository.UpdateSeen(ctx, id, isSeen)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

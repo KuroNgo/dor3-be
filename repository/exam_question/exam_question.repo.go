@@ -113,10 +113,17 @@ func (e *examQuestionRepository) FetchMany(ctx context.Context, page string) (ex
 	internal.Wg.Wait()
 
 	cal := <-calCh
+	statisticsCh := make(chan exam_question_domain.Statistics)
+	go func() {
+		statistics, _ := e.Statistics(ctx)
+		statisticsCh <- statistics
+	}()
+	statistics := <-statisticsCh
 
 	questionsRes := exam_question_domain.Response{
-		Count:                count,
+		Statistics:           statistics,
 		Page:                 cal,
+		CurrentPage:          pageNumber,
 		ExamQuestionResponse: questions,
 	}
 	return questionsRes, nil
@@ -220,10 +227,17 @@ func (e *examQuestionRepository) FetchManyByExamID(ctx context.Context, examID s
 		}
 	}()
 	cal = <-calCh
+	statisticsCh := make(chan exam_question_domain.Statistics)
+	go func() {
+		statistics, _ := e.Statistics(ctx)
+		statisticsCh <- statistics
+	}()
+	statistics := <-statisticsCh
 
 	questionsRes := exam_question_domain.Response{
-		Count:                count,
+		Statistics:           statistics,
 		Page:                 cal,
+		CurrentPage:          pageNumber,
 		ExamQuestionResponse: questions,
 	}
 
@@ -311,4 +325,18 @@ func (e *examQuestionRepository) DeleteOne(ctx context.Context, examID string) e
 
 	_, err = collectionQuestion.DeleteOne(ctx, filter)
 	return err
+}
+
+func (e *examQuestionRepository) Statistics(ctx context.Context) (exam_question_domain.Statistics, error) {
+	collectionExamQuestion := e.database.Collection(e.collectionQuestion)
+
+	count, err := collectionExamQuestion.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return exam_question_domain.Statistics{}, err
+	}
+
+	statistics := exam_question_domain.Statistics{
+		Count: count,
+	}
+	return statistics, nil
 }

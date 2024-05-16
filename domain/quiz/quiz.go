@@ -44,6 +44,7 @@ type QuizResponse struct {
 }
 
 type Response struct {
+	CountExam   int64      `bson:"count_quiz" json:"count_quiz"`
 	Page        int64      `bson:"page" json:"page"`
 	CurrentPage int        `bson:"current_page" json:"current_page"`
 	Statistics  Statistics `bson:"statistics" json:"statistics"`

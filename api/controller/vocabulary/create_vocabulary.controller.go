@@ -2,7 +2,6 @@ package vocabulary_controller
 
 import (
 	vocabulary_domain "clean-architecture/domain/vocabulary"
-	"clean-architecture/internal"
 	"clean-architecture/internal/cloud/cloudinary"
 	"clean-architecture/internal/cloud/google"
 	file_internal "clean-architecture/internal/file"
@@ -31,36 +30,86 @@ func (v *VocabularyController) CreateOneVocabulary(ctx *gin.Context) {
 		return
 	}
 
-	var vocabularyInput vocabulary_domain.Input
-	if err := ctx.ShouldBindJSON(&vocabularyInput); err != nil {
+	unitId := ctx.Request.FormValue("unit_id")
+	idUnit, err := primitive.ObjectIDFromHex(unitId)
+
+	word := ctx.Request.FormValue("word")
+	partOfSpeech := ctx.Request.FormValue("part_of_speech")
+	pronunciation := ctx.Request.FormValue("pronunciation")
+	mean := ctx.Request.FormValue("mean")
+	exampleVie := ctx.Request.FormValue("example_vie")
+	exampleEng := ctx.Request.FormValue("example_eng")
+	explainVie := ctx.Request.FormValue("explain_vie")
+	explainEng := ctx.Request.FormValue("explain_eng")
+	fieldOfIt := ctx.Request.FormValue("field_of_it")
+	linkUrl := ctx.Request.FormValue("link_url")
+
+	//var vocabularyInput vocabulary_domain.Input
+	//if err := ctx.ShouldBindJSON(&vocabularyInput); err != nil {
+	//	ctx.JSON(http.StatusBadRequest, gin.H{
+	//		"status":  "error",
+	//		"message": err.Error(),
+	//	})
+	//	return
+	//}
+	//
+	//if err := internal.IsValidVocabulary(vocabularyInput); err != nil {
+	//	ctx.JSON(http.StatusBadRequest, gin.H{
+	//		"status":  "error",
+	//		"message": err.Error(),
+	//	})
+	//	return
+	//}
+
+	file, err := ctx.FormFile("file")
+	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
+			"error":   "Error parsing form",
 			"message": err.Error(),
 		})
 		return
 	}
 
-	if err := internal.IsValidVocabulary(vocabularyInput); err != nil {
+	if !file_internal.IsImage(file.Filename) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"message": err.Error(),
+			"error": "Invalid file format. Only images are allowed.",
+		})
+		return
+	}
+
+	f, err := file.Open()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Error opening uploaded file",
+		})
+		return
+	}
+	defer f.Close()
+
+	// Tải file lên Cloudinary
+	result, err := cloudinary.UploadImageToCloudinary(f, file.Filename, v.Database.CloudinaryUploadFolderUser)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
 		})
 		return
 	}
 
 	vocabularyRes := &vocabulary_domain.Vocabulary{
 		Id:            primitive.NewObjectID(),
-		Word:          vocabularyInput.Word,
-		PartOfSpeech:  vocabularyInput.PartOfSpeech,
-		Pronunciation: vocabularyInput.Pronunciation,
-		Mean:          vocabularyInput.Mean,
-		ExplainVie:    vocabularyInput.ExplainVie,
-		ExampleEng:    vocabularyInput.ExampleEng,
-		ExplainEng:    vocabularyInput.ExplainEng,
-		ExampleVie:    vocabularyInput.ExampleVie,
-		FieldOfIT:     vocabularyInput.FieldOfIT,
-		LinkURL:       vocabularyInput.LinkURL,
-		UnitID:        vocabularyInput.UnitID,
+		Word:          word,
+		PartOfSpeech:  partOfSpeech,
+		Pronunciation: pronunciation,
+		Mean:          mean,
+		ExplainVie:    explainVie,
+		ExampleEng:    exampleEng,
+		ExplainEng:    explainEng,
+		ExampleVie:    exampleVie,
+		FieldOfIT:     fieldOfIt,
+		LinkURL:       linkUrl,
+		ImageURL:      result.ImageURL,
+		AssetURL:      result.AssetID,
+		UnitID:        idUnit,
 		IsFavourite:   0,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
@@ -136,9 +185,8 @@ func (v *VocabularyController) CreateVocabularyWithFileInAdmin(ctx *gin.Context)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
 		for _, vocabulary := range result {
-			unitID, err := v.VocabularyUseCase.FindUnitIDByUnitLevel(ctx, vocabulary.UnitLevel)
+			unitID, err := v.VocabularyUseCase.FindUnitIDByUnitLevel(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
 			if err != nil {
 				ctx.JSON(500, gin.H{"error": err.Error()})
 				return
@@ -243,7 +291,7 @@ func (v *VocabularyController) CreateVocabularyWithFileInUser(ctx *gin.Context) 
 	var vocabularies []vocabulary_domain.Vocabulary
 
 	for _, vocabulary := range result {
-		unitID, err := v.VocabularyUseCase.FindUnitIDByUnitLevel(ctx, vocabulary.UnitLevel)
+		unitID, err := v.VocabularyUseCase.FindUnitIDByUnitLevel(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
 		if err != nil {
 			ctx.JSON(500, gin.H{"error": err.Error()})
 			return

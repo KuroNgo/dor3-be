@@ -4,6 +4,7 @@ import (
 	vocabulary_controller "clean-architecture/api/controller/vocabulary"
 	"clean-architecture/bootstrap"
 	image_domain "clean-architecture/domain/image"
+	lesson_domain "clean-architecture/domain/lesson"
 	mark_domain "clean-architecture/domain/mark_vocabulary"
 	unit_domain "clean-architecture/domain/unit"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
@@ -18,7 +19,7 @@ import (
 
 func VocabularyRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	vo := vocabulary_repository.NewVocabularyRepository(db, vocabulary_domain.CollectionVocabulary,
-		mark_domain.CollectionMark, unit_domain.CollectionUnit)
+		mark_domain.CollectionMark, unit_domain.CollectionUnit, lesson_domain.CollectionLesson)
 	im := image_repository.NewImageRepository(db, image_domain.CollectionImage)
 
 	vocabulary := &vocabulary_controller.VocabularyController{

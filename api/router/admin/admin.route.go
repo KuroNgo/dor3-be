@@ -33,4 +33,5 @@ func AdminRouter(env *bootstrap.Database, timeout time.Duration, db *mongo.Datab
 	router.GET("/refresh", admin.RefreshToken)
 	router.GET("/logout", middleware.DeserializeUser(), admin.Logout)
 	router.GET("/user/fetch", admin.FetchManyUser)
+	router.GET("/user/fetch/user_id", admin.FetchUserByID)
 }

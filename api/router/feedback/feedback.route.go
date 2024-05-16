@@ -17,7 +17,7 @@ import (
 )
 
 func FeedbackRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	fe := feedback_repository.NewFeedbackRepository(db, feedback_domain.CollectionFeedback)
+	fe := feedback_repository.NewFeedbackRepository(db, feedback_domain.CollectionFeedback, user_domain.CollectionUser)
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 
 	feedback := &feedback_controller.FeedbackController{
