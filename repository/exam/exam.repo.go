@@ -2,6 +2,8 @@ package exam_repository
 
 import (
 	exam_domain "clean-architecture/domain/exam"
+	lesson_domain "clean-architecture/domain/lesson"
+	unit_domain "clean-architecture/domain/unit"
 	"clean-architecture/internal"
 	"context"
 	"errors"
@@ -131,6 +133,8 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 	//}
 
 	collectionExam := e.database.Collection(e.collectionExam)
+	collectionUnit := e.database.Collection(e.collectionUnit)
+	collectionLesson := e.database.Collection(e.collectionLesson)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -185,8 +189,21 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 			countQuest := e.CountQuestion(ctx, exam.ID.Hex())
 			exam.CountQuestion = countQuest
 
+			var unit unit_domain.Unit
+			filterUnit := bson.M{"_id": idUnit}
+			err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
+			if err != nil {
+				return
+			}
+
+			var lesson lesson_domain.Lesson
+			filterLesson := bson.M{"_id": unit.LessonID}
+			err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
+			if err != nil {
+				return
+			}
+
 			// Gắn CourseID vào bài học
-			exam.UnitID = idUnit
 			exams = append(exams, exam)
 		}
 	}()
