@@ -32,6 +32,18 @@ func (l *lessonUseCase) FetchByID(ctx context.Context, lessonID string) (lesson_
 	return data, nil
 }
 
+func (l *lessonUseCase) FetchManyNotPagination(ctx context.Context) ([]lesson_domain.LessonResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
+	defer cancel()
+	data, err := l.lessonRepository.FetchManyNotPagination(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
 func (l *lessonUseCase) FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error) {
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()

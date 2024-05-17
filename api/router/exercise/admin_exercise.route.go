@@ -5,6 +5,8 @@ import (
 	"clean-architecture/bootstrap"
 	admin_domain "clean-architecture/domain/admin"
 	exercise_domain "clean-architecture/domain/exercise"
+	exercise_options_domain "clean-architecture/domain/exercise_options"
+	exercise_questions_domain "clean-architecture/domain/exercise_questions"
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
 	user_domain "clean-architecture/domain/user"
@@ -19,7 +21,7 @@ import (
 )
 
 func AdminExerciseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	ex := exercise_repository.NewExerciseRepository(db, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary, exercise_domain.CollectionExercise, exercise_domain.CollectionExercise)
+	ex := exercise_repository.NewExerciseRepository(db, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary, exercise_domain.CollectionExercise, exercise_questions_domain.CollectionExerciseQuestion, exercise_options_domain.CollectionExerciseOptions)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
 	exercise := &exercise_controller.ExerciseController{

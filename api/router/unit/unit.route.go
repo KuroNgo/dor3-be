@@ -30,6 +30,7 @@ func UnitRouter(env *bootstrap.Database, timeout time.Duration, db *mongo.Databa
 
 	router := group.Group("/unit")
 	router.GET("/fetch", unit.FetchMany)
+	router.GET("/fetch/not", unit.FetchManyNotPagination)
 	router.PATCH("/update/complete", middleware.DeserializeUser(), unit.UpdateCompleteUnit)
 	router.GET("/fetch/lesson_id", unit.FetchByIdLesson)
 }

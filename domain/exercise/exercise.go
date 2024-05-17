@@ -1,6 +1,8 @@
 package exercise_domain
 
 import (
+	exercise_options_domain "clean-architecture/domain/exercise_options"
+	exercise_questions_domain "clean-architecture/domain/exercise_questions"
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
 	"context"
@@ -30,9 +32,11 @@ type Exercise struct {
 }
 
 type ExerciseResponse struct {
-	ID     primitive.ObjectID   `bson:"_id" json:"_id"`
-	Lesson lesson_domain.Lesson `bson:"lesson" json:"lesson"`
-	Unit   unit_domain.Unit     `bson:"unit" json:"unit"`
+	ID               primitive.ObjectID                         `bson:"_id" json:"_id"`
+	Lesson           lesson_domain.Lesson                       `bson:"lesson" json:"lesson"`
+	Unit             unit_domain.Unit                           `bson:"unit" json:"unit"`
+	ExerciseOptions  exercise_options_domain.ExerciseOptions    `bson:"exercise_options" json:"exercise_options"`
+	ExerciseQuestion exercise_questions_domain.ExerciseQuestion `bson:"exercise_question" json:"exercise_question"`
 
 	Title       string `bson:"title" json:"title"`
 	Description string `bson:"description" json:"description"`

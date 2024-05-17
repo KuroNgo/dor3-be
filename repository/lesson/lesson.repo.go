@@ -220,6 +220,98 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string,
 	return lessons, response, nil
 }
 
+func (l *lessonRepository) FetchManyNotPagination(ctx context.Context) ([]lesson_domain.LessonResponse, error) {
+	collectionLesson := l.database.Collection(l.collectionLesson)
+	collectionUnit := l.database.Collection(l.collectionUnit)
+
+	cursor, err := collectionLesson.Find(ctx, bson.D{})
+	if err != nil {
+		return nil, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
+
+	var lessons []lesson_domain.LessonResponse
+
+	var wg sync.WaitGroup
+	//wg.Add(1)
+	//go func() {
+	//	defer wg.Done()
+	for cursor.Next(ctx) {
+		var lesson lesson_domain.LessonResponse
+		if err = cursor.Decode(&lesson); err != nil {
+			return nil, err
+		}
+
+		countUnitCh := make(chan int32)
+		go func() {
+			defer close(countUnitCh)
+			// Lấy thông tin liên quan cho mỗi chủ đề
+			countUnit, err := l.countUnitsByLessonsID(ctx, lesson.ID)
+			if err != nil {
+				return
+			}
+
+			countUnitCh <- countUnit
+		}()
+
+		countVocabularyCh := make(chan int32)
+		go func() {
+			defer close(countVocabularyCh)
+			countVocabulary, err := l.countVocabularyByLessonID(ctx, lesson.ID)
+			if err != nil {
+				return
+			}
+
+			countVocabularyCh <- countVocabulary
+		}()
+
+		countUnit := <-countUnitCh
+		countVocabulary := <-countVocabularyCh
+
+		lesson.CountUnit = countUnit
+		lesson.CountVocabulary = countVocabulary
+
+		// Thêm lesson vào slice lessons
+		lessons = append(lessons, lesson)
+	}
+	//
+	//}()
+	//
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			var lesson lesson_domain.LessonResponse
+			if err = cursor.Decode(&lesson); err != nil {
+				return
+			}
+
+			var unit unit_domain.UnitResponse
+			filter := bson.M{"lesson_id": lesson.ID}
+			err := collectionUnit.FindOne(ctx, filter).Decode(&unit)
+			if err != nil {
+				return
+			}
+
+			var arrIsComplete []int
+			arrIsComplete = append(arrIsComplete, unit.IsComplete)
+
+			lesson.UnitIsComplete = arrIsComplete
+			lessons = append(lessons, lesson)
+		}
+
+	}()
+
+	wg.Wait()
+
+	return lessons, nil
+}
+
 func (l *lessonRepository) FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error) {
 	collectionCourse := l.database.Collection(l.collectionCourse)
 
