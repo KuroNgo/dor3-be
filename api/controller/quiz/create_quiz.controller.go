@@ -47,7 +47,7 @@ func (q *QuizController) CreateOneQuiz(ctx *gin.Context) {
 	}
 
 	quizRes := &quiz_domain.Quiz{
-		ID:          primitive.NewObjectID(),
+		Id:          primitive.NewObjectID(),
 		LessonID:    quizInput.LessonID,
 		UnitID:      quizInput.UnitID,
 		Title:       quizInput.Title,
