@@ -1,6 +1,7 @@
 package exercise_question_repository
 
 import (
+	exercise_options_domain "clean-architecture/domain/exercise_options"
 	exercise_questions_domain "clean-architecture/domain/exercise_questions"
 	"context"
 	"errors"
@@ -12,9 +13,11 @@ import (
 )
 
 type exerciseQuestionRepository struct {
-	database           *mongo.Database
-	collectionQuestion string
-	collectionExercise string
+	database             *mongo.Database
+	collectionQuestion   string
+	collectionExercise   string
+	collectionVocabulary string
+	collectionOptions    string
 }
 
 func NewExerciseQuestionRepository(db *mongo.Database, collectionQuestion string, collectionExercise string) exercise_questions_domain.IExerciseQuestionRepository {
@@ -27,6 +30,7 @@ func NewExerciseQuestionRepository(db *mongo.Database, collectionQuestion string
 
 func (e *exerciseQuestionRepository) FetchMany(ctx context.Context, page string) (exercise_questions_domain.Response, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
+	collectionOptions := e.database.Collection(e.collectionOptions)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -53,18 +57,37 @@ func (e *exerciseQuestionRepository) FetchMany(ctx context.Context, page string)
 		return exercise_questions_domain.Response{}, err
 	}
 
-	var questions []exercise_questions_domain.ExerciseQuestion
+	var questions []exercise_questions_domain.ExerciseQuestionResponse
 	for cursor.Next(ctx) {
 		var question exercise_questions_domain.ExerciseQuestion
 		if err = cursor.Decode(&question); err != nil {
 			return exercise_questions_domain.Response{}, err
 		}
 
-		questions = append(questions, question)
+		var option exercise_options_domain.ExerciseOptions
+		filterOptions := bson.M{"question_id": question.ID}
+		err := collectionOptions.FindOne(ctx, filterOptions).Decode(&option)
+		if err != nil {
+			return exercise_questions_domain.Response{}, err
+		}
+
+		var questionRes exercise_questions_domain.ExerciseQuestionResponse
+		questionRes.ID = question.ID
+		questionRes.ExerciseID = question.ExerciseID
+		questionRes.VocabularyID = question.VocabularyID
+		questionRes.Options = option
+		questionRes.Content = question.Content
+		questionRes.Type = question.Type
+		questionRes.Level = question.Level
+		questionRes.Content = question.Content
+		questionRes.UpdateAt = question.UpdateAt
+		questionRes.WhoUpdate = question.WhoUpdate
+
+		questions = append(questions, questionRes)
 	}
 	questionsRes := exercise_questions_domain.Response{
-		Page:             cal,
-		ExerciseQuestion: questions,
+		Page:                     cal,
+		ExerciseQuestionResponse: questions,
 	}
 	return questionsRes, nil
 }
@@ -100,9 +123,7 @@ func (e *exerciseQuestionRepository) FetchManyByExerciseID(ctx context.Context, 
 		questions = append(questions, question)
 	}
 
-	questionsRes := exercise_questions_domain.Response{
-		ExerciseQuestion: questions,
-	}
+	questionsRes := exercise_questions_domain.Response{}
 
 	return questionsRes, nil
 }

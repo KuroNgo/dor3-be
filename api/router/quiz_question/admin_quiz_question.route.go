@@ -4,8 +4,9 @@ import (
 	quiz_question_controller "clean-architecture/api/controller/quiz_question"
 	"clean-architecture/bootstrap"
 	admin_domain "clean-architecture/domain/admin"
-	exercise_domain "clean-architecture/domain/exercise"
-	exercise_questions_domain "clean-architecture/domain/exercise_questions"
+	quiz_domain "clean-architecture/domain/quiz"
+	quiz_options_domain "clean-architecture/domain/quiz_options"
+	quiz_question_domain "clean-architecture/domain/quiz_question"
 	user_domain "clean-architecture/domain/user"
 	admin_repository "clean-architecture/repository/admin"
 	quiz_question_repository "clean-architecture/repository/quiz_question"
@@ -17,7 +18,7 @@ import (
 )
 
 func AdminQuizQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	quest := quiz_question_repository.NewQuizQuestionRepository(db, exercise_questions_domain.CollectionExerciseQuestion, exercise_domain.CollectionExercise)
+	quest := quiz_question_repository.NewQuizQuestionRepository(db, quiz_question_domain.CollectionQuizQuestion, quiz_domain.CollectionQuiz, quiz_options_domain.CollectionQuizOptions)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
 	question := &quiz_question_controller.QuizQuestionsController{

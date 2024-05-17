@@ -2,6 +2,8 @@ package quiz_domain
 
 import (
 	lesson_domain "clean-architecture/domain/lesson"
+	quiz_options_domain "clean-architecture/domain/quiz_options"
+	quiz_question_domain "clean-architecture/domain/quiz_question"
 	unit_domain "clean-architecture/domain/unit"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -30,9 +32,11 @@ type Quiz struct {
 }
 
 type QuizResponse struct {
-	ID     primitive.ObjectID   `bson:"_id" json:"_id"`
-	Lesson lesson_domain.Lesson `bson:"lesson" json:"lesson"`
-	Unit   unit_domain.Unit     `bson:"unit" json:"unit"`
+	ID           primitive.ObjectID                `bson:"_id" json:"_id"`
+	Lesson       lesson_domain.Lesson              `bson:"lesson" json:"lesson"`
+	Unit         unit_domain.Unit                  `bson:"unit" json:"unit"`
+	QuizOptions  quiz_options_domain.QuizOptions   `bson:"quiz_options" json:"quiz_options"`
+	QuizQuestion quiz_question_domain.QuizQuestion `bson:"quiz_question" json:"quiz_question"`
 
 	Title       string `bson:"title" json:"title"`
 	Description string `bson:"description" json:"description"`

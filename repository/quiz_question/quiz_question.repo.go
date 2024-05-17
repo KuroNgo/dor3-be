@@ -1,7 +1,9 @@
 package quiz_question_repository
 
 import (
+	quiz_options_domain "clean-architecture/domain/quiz_options"
 	quiz_question_domain "clean-architecture/domain/quiz_question"
+	context2 "context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,19 +16,22 @@ import (
 type quizQuestionRepository struct {
 	database           *mongo.Database
 	collectionQuestion string
-	collectionExam     string
+	collectionQuiz     string
+	collectionOptions  string
 }
 
-func NewQuizQuestionRepository(db *mongo.Database, collectionQuestion string, collectionExam string) quiz_question_domain.IQuizQuestionRepository {
+func NewQuizQuestionRepository(db *mongo.Database, collectionQuestion string, collectionQuiz string, collectionOptions string) quiz_question_domain.IQuizQuestionRepository {
 	return &quizQuestionRepository{
 		database:           db,
 		collectionQuestion: collectionQuestion,
-		collectionExam:     collectionExam,
+		collectionQuiz:     collectionQuiz,
+		collectionOptions:  collectionOptions,
 	}
 }
 
 func (q quizQuestionRepository) FetchMany(ctx context.Context, page string) (quiz_question_domain.Response, error) {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
+	collectionOptions := q.database.Collection(q.collectionOptions)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -54,24 +59,44 @@ func (q quizQuestionRepository) FetchMany(ctx context.Context, page string) (qui
 		return quiz_question_domain.Response{}, err
 	}
 
-	var questions []quiz_question_domain.QuizQuestion
+	var questions []quiz_question_domain.QuizQuestionResponse
 	for cursor.Next(ctx) {
 		var question quiz_question_domain.QuizQuestion
 		if err = cursor.Decode(&question); err != nil {
 			return quiz_question_domain.Response{}, err
 		}
 
-		questions = append(questions, question)
+		var option quiz_options_domain.QuizOptions
+		filterOptions := bson.M{"question_id": question.ID}
+		err := collectionOptions.FindOne(ctx, filterOptions).Decode(&option)
+		if err != nil {
+			return quiz_question_domain.Response{}, err
+		}
+
+		var questionRes quiz_question_domain.QuizQuestionResponse
+		questionRes.ID = question.ID
+		questionRes.QuizID = question.QuizID
+		questionRes.VocabularyID = question.VocabularyID
+		questionRes.Options = option
+		questionRes.Content = question.Content
+		questionRes.Type = question.Type
+		questionRes.Level = question.Level
+		questionRes.Content = question.Content
+		questionRes.UpdateAt = question.UpdateAt
+		questionRes.WhoUpdate = question.WhoUpdate
+
+		questions = append(questions, questionRes)
 	}
 	questionsRes := quiz_question_domain.Response{
-		Page:         cal,
-		QuizQuestion: questions,
+		Page:                 cal,
+		QuizQuestionResponse: questions,
 	}
 	return questionsRes, nil
 }
 
 func (q quizQuestionRepository) FetchManyByQuizID(ctx context.Context, quizID string) (quiz_question_domain.Response, error) {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
+	collectionOptions := q.database.Collection(q.collectionOptions)
 
 	idQuiz, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
@@ -83,9 +108,14 @@ func (q quizQuestionRepository) FetchManyByQuizID(ctx context.Context, quizID st
 	if err != nil {
 		return quiz_question_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context2.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
-	var questions []quiz_question_domain.QuizQuestion
+	var questions []quiz_question_domain.QuizQuestionResponse
 	for cursor.Next(ctx) {
 		var question quiz_question_domain.QuizQuestion
 		if err = cursor.Decode(&question); err != nil {
@@ -93,11 +123,30 @@ func (q quizQuestionRepository) FetchManyByQuizID(ctx context.Context, quizID st
 		}
 
 		question.QuizID = idQuiz
-		questions = append(questions, question)
+		var option quiz_options_domain.QuizOptions
+		filterOptions := bson.M{"question_id": question.ID}
+		err := collectionOptions.FindOne(ctx, filterOptions).Decode(&option)
+		if err != nil {
+			return quiz_question_domain.Response{}, err
+		}
+
+		var questionRes quiz_question_domain.QuizQuestionResponse
+		questionRes.ID = question.ID
+		questionRes.QuizID = question.QuizID
+		questionRes.VocabularyID = question.VocabularyID
+		questionRes.Options = option
+		questionRes.Content = question.Content
+		questionRes.Type = question.Type
+		questionRes.Level = question.Level
+		questionRes.Content = question.Content
+		questionRes.UpdateAt = question.UpdateAt
+		questionRes.WhoUpdate = question.WhoUpdate
+
+		questions = append(questions, questionRes)
 	}
 
 	questionsRes := quiz_question_domain.Response{
-		QuizQuestion: questions,
+		QuizQuestionResponse: questions,
 	}
 
 	return questionsRes, nil
@@ -126,10 +175,10 @@ func (q quizQuestionRepository) UpdateOne(ctx context.Context, quizQuestion *qui
 
 func (q quizQuestionRepository) CreateOne(ctx context.Context, quizQuestion *quiz_question_domain.QuizQuestion) error {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
-	collectionExam := q.database.Collection(q.collectionExam)
+	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
 	filterExamID := bson.M{"quiz_id": quizQuestion.QuizID}
-	countLessonID, err := collectionExam.CountDocuments(ctx, filterExamID)
+	countLessonID, err := collectionQuiz.CountDocuments(ctx, filterExamID)
 	if err != nil {
 		return err
 	}

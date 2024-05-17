@@ -454,7 +454,7 @@ func (e *examRepository) CreateOne(ctx context.Context, exam *exam_domain.Exam) 
 		return errors.New("the lesson ID does not exist")
 	}
 
-	filterUnitID := bson.M{"_id": exam.UnitID}
+	filterUnitID := bson.M{"_id": exam.UnitID, "lesson_id": exam.LessonID}
 	countUnitID, err := collectionUnit.CountDocuments(ctx, filterUnitID)
 	if err != nil {
 		return err

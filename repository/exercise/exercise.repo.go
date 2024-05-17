@@ -2,6 +2,8 @@ package exercise_repository
 
 import (
 	exercise_domain "clean-architecture/domain/exercise"
+	exercise_options_domain "clean-architecture/domain/exercise_options"
+	exercise_questions_domain "clean-architecture/domain/exercise_questions"
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
 	"clean-architecture/internal"
@@ -24,9 +26,10 @@ type exerciseRepository struct {
 	collectionVocabulary string
 	collectionExercise   string
 	collectionQuestion   string
+	collectionOptions    string
 }
 
-func NewExerciseRepository(db *mongo.Database, collectionLesson string, collectionUnit string, collectionVocabulary string, collectionExercise string, collectionQuestion string) exercise_domain.IExerciseRepository {
+func NewExerciseRepository(db *mongo.Database, collectionLesson string, collectionUnit string, collectionVocabulary string, collectionExercise string, collectionQuestion string, collectionOptions string) exercise_domain.IExerciseRepository {
 	return &exerciseRepository{
 		database:             db,
 		collectionLesson:     collectionLesson,
@@ -34,6 +37,7 @@ func NewExerciseRepository(db *mongo.Database, collectionLesson string, collecti
 		collectionVocabulary: collectionVocabulary,
 		collectionExercise:   collectionExercise,
 		collectionQuestion:   collectionQuestion,
+		collectionOptions:    collectionOptions,
 	}
 }
 
@@ -41,6 +45,8 @@ func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string
 	collectionExercise := e.database.Collection(e.collectionExercise)
 	collectionUnit := e.database.Collection(e.collectionUnit)
 	collectionLesson := e.database.Collection(e.collectionLesson)
+	collectionQuestion := e.database.Collection(e.collectionQuestion)
+	collectionOptions := e.database.Collection(e.collectionOptions)
 
 	idUnit, err := primitive.ObjectIDFromHex(unitID)
 	if err != nil {
@@ -76,12 +82,30 @@ func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string
 			}
 
 			var unit unit_domain.Unit
-			if err = collectionUnit.FindOne(ctx, bson.M{"_id": idUnit}).Decode(&unit); err != nil {
+			filterUnit := bson.M{"_id": exercise.UnitID}
+			err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
+			if err != nil {
 				return
 			}
 
 			var lesson lesson_domain.Lesson
-			if err = collectionLesson.FindOne(ctx, bson.M{"_id": unit.LessonID}).Decode(&lesson); err != nil {
+			filterLesson := bson.M{"_id": unit.LessonID}
+			err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
+			if err != nil {
+				return
+			}
+
+			var exerciseQuestion exercise_questions_domain.ExerciseQuestion
+			filterQuestion := bson.M{"exercise_id": exercise.Id}
+			err = collectionQuestion.FindOne(ctx, filterQuestion).Decode(&exerciseQuestion)
+			if err != nil {
+				return
+			}
+
+			var exerciseOptions exercise_options_domain.ExerciseOptions
+			filterOptions := bson.M{"question_id": exerciseQuestion.ID}
+			err = collectionOptions.FindOne(ctx, filterOptions).Decode(&exerciseOptions)
+			if err != nil {
 				return
 			}
 
@@ -98,6 +122,8 @@ func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string
 			exerciseRes.CountQuestion = countQuest
 			exerciseRes.Unit = unit
 			exerciseRes.Lesson = lesson
+			exerciseRes.ExerciseQuestion = exerciseQuestion
+			exerciseRes.ExerciseOptions = exerciseOptions
 
 			exercises = append(exercises, exerciseRes)
 		}
@@ -120,6 +146,8 @@ func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID strin
 	collectionExercise := e.database.Collection(e.collectionExercise)
 	collectionUnit := e.database.Collection(e.collectionUnit)
 	collectionLesson := e.database.Collection(e.collectionLesson)
+	collectionQuestion := e.database.Collection(e.collectionQuestion)
+	collectionOptions := e.database.Collection(e.collectionOptions)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil || pageNumber < 1 {
@@ -149,7 +177,12 @@ func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID strin
 	if err != nil {
 		return nil, exercise_domain.DetailResponse{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	var exercises []exercise_domain.ExerciseResponse
 
@@ -167,12 +200,30 @@ func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID strin
 		}
 
 		var unit unit_domain.Unit
-		if err = collectionUnit.FindOne(ctx, bson.M{"_id": idUnit}).Decode(&unit); err != nil {
+		filterUnit := bson.M{"_id": exercise.UnitID}
+		err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
+		if err != nil {
 			return nil, exercise_domain.DetailResponse{}, err
 		}
 
 		var lesson lesson_domain.Lesson
-		if err = collectionLesson.FindOne(ctx, bson.M{"_id": unit.LessonID}).Decode(&lesson); err != nil {
+		filterLesson := bson.M{"_id": unit.LessonID}
+		err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
+		if err != nil {
+			return nil, exercise_domain.DetailResponse{}, err
+		}
+
+		var exerciseQuestion exercise_questions_domain.ExerciseQuestion
+		filterQuestion := bson.M{"exercise_id": exercise.Id}
+		err = collectionQuestion.FindOne(ctx, filterQuestion).Decode(&exerciseQuestion)
+		if err != nil {
+			return nil, exercise_domain.DetailResponse{}, err
+		}
+
+		var exerciseOptions exercise_options_domain.ExerciseOptions
+		filterOptions := bson.M{"question_id": exerciseQuestion.ID}
+		err = collectionOptions.FindOne(ctx, filterOptions).Decode(&exerciseOptions)
+		if err != nil {
 			return nil, exercise_domain.DetailResponse{}, err
 		}
 
@@ -189,6 +240,8 @@ func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID strin
 		exerciseRes.CountQuestion = countQuest
 		exerciseRes.Unit = unit
 		exerciseRes.Lesson = lesson
+		exerciseRes.ExerciseQuestion = exerciseQuestion
+		exerciseRes.ExerciseOptions = exerciseOptions
 
 		exercises = append(exercises, exerciseRes)
 	}

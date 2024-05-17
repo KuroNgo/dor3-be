@@ -35,6 +35,41 @@ func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLess
 	}
 }
 
+func (u *unitRepository) FetchManyNotPagination(ctx context.Context) ([]unit_domain.UnitResponse, error) {
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	cursor, err := collectionUnit.Find(ctx, bson.D{})
+	if err != nil {
+		return nil, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
+
+	internal.Wg.Add(1)
+	go func() {
+		defer internal.Wg.Done()
+		for cursor.Next(ctx) {
+			if err = cursor.Decode(&unit); err != nil {
+				return
+			}
+
+			countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
+			if err != nil {
+				return
+			}
+
+			unit.CountVocabulary = countVocabulary
+			units = append(units, unit)
+		}
+
+	}()
+	internal.Wg.Wait()
+	return units, nil
+}
+
 func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 

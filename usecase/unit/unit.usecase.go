@@ -32,6 +32,18 @@ func (u *unitUseCase) FetchMany(ctx context.Context, page string) ([]unit_domain
 	return unit, detail, err
 }
 
+func (u *unitUseCase) FetchManyNotPagination(ctx context.Context) ([]unit_domain.UnitResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
+	unit, err := u.unitRepository.FetchManyNotPagination(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return unit, err
+}
+
 func (u *unitUseCase) FetchByIdLesson(ctx context.Context, idLesson string, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()

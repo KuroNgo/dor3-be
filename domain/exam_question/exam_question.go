@@ -1,6 +1,7 @@
 package exam_question_domain
 
 import (
+	exam_options_domain "clean-architecture/domain/exam_options"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -27,9 +28,10 @@ type ExamQuestion struct {
 }
 
 type ExamQuestionResponse struct {
-	ID         primitive.ObjectID `bson:"_id" json:"_id"`
-	ExamID     primitive.ObjectID `bson:"exam_id" json:"exam_id"`
-	Vocabulary vocabulary_domain.Vocabulary
+	ID         primitive.ObjectID              `bson:"_id" json:"_id"`
+	ExamID     primitive.ObjectID              `bson:"exam_id" json:"exam_id"`
+	Vocabulary vocabulary_domain.Vocabulary    `bson:"vocabulary" json:"vocabulary"`
+	Options    exam_options_domain.ExamOptions `bson:"options" json:"options"`
 
 	Content string `bson:"content" json:"content"`
 	Type    string `bson:"type" json:"type"`

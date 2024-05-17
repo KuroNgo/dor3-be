@@ -28,11 +28,14 @@ type Update struct {
 //go:generate mockery --name IUnitUseCase
 type IUnitUseCase interface {
 	FetchMany(ctx context.Context, page string) ([]UnitResponse, DetailResponse, error)
+	FetchManyNotPagination(ctx context.Context) ([]UnitResponse, error)
 	FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error)
 	FetchByIdLesson(ctx context.Context, idLesson string, page string) ([]UnitResponse, DetailResponse, error)
+
 	CreateOne(ctx context.Context, unit *Unit) error
 	CreateOneByNameLesson(ctx context.Context, unit *Unit) error
 	UpdateOne(ctx context.Context, unit *Unit) (*mongo.UpdateResult, error)
+
 	DeleteOne(ctx context.Context, unitID string) error
 	UpdateComplete(ctx context.Context, update *Unit) error
 }

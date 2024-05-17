@@ -24,6 +24,22 @@ func (l *LessonController) FetchMany(ctx *gin.Context) {
 	})
 }
 
+func (l *LessonController) FetchManyNotPagination(ctx *gin.Context) {
+	lesson, err := l.LessonUseCase.FetchManyNotPagination(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data":   lesson,
+	})
+}
+
 func (l *LessonController) FetchByIdCourse(ctx *gin.Context) {
 	idCourse := ctx.Query("course_id")
 	page := ctx.DefaultQuery("page", "1")

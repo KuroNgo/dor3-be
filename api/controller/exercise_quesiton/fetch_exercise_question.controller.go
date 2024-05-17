@@ -15,8 +15,9 @@ func (e *ExerciseQuestionsController) FetchManyExerciseOptions(ctx *gin.Context)
 		return
 	}
 
-	exerciseID := ctx.Query("exercise_id")
-	exam, err := e.ExerciseQuestionUseCase.FetchManyByExerciseID(ctx, exerciseID)
+	page := ctx.DefaultQuery("page", "1")
+
+	exam, err := e.ExerciseQuestionUseCase.FetchMany(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
