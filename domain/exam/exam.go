@@ -1,6 +1,8 @@
 package exam_domain
 
 import (
+	exam_options_domain "clean-architecture/domain/exam_options"
+	exam_question_domain "clean-architecture/domain/exam_question"
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
 	"context"
@@ -31,9 +33,11 @@ type Exam struct {
 }
 
 type ExamResponse struct {
-	ID     primitive.ObjectID   `bson:"_id" json:"_id"`
-	Lesson lesson_domain.Lesson `bson:"lesson" json:"lesson"`
-	Unit   unit_domain.Unit     `bson:"unit" json:"unit"`
+	ID           primitive.ObjectID                `bson:"_id" json:"_id"`
+	Lesson       lesson_domain.Lesson              `bson:"lesson" json:"lesson"`
+	Unit         unit_domain.Unit                  `bson:"unit" json:"unit"`
+	ExamOptions  exam_options_domain.ExamOptions   `bson:"exam_options" json:"exam_options"`
+	ExamQuestion exam_question_domain.ExamQuestion `bson:"exam_question" json:"exam_question"`
 
 	Title       string `bson:"title" json:"title"`
 	Description string `bson:"description" json:"description"`
