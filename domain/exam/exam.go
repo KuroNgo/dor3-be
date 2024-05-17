@@ -1,10 +1,6 @@
 package exam_domain
 
 import (
-	exam_options_domain "clean-architecture/domain/exam_options"
-	exam_question_domain "clean-architecture/domain/exam_question"
-	lesson_domain "clean-architecture/domain/lesson"
-	unit_domain "clean-architecture/domain/unit"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -32,26 +28,6 @@ type Exam struct {
 	IsComplete int `bson:"is_complete" json:"is_complete"`
 }
 
-type ExamResponse struct {
-	ID           primitive.ObjectID                `bson:"_id" json:"_id"`
-	Lesson       lesson_domain.Lesson              `bson:"lesson" json:"lesson"`
-	Unit         unit_domain.Unit                  `bson:"unit" json:"unit"`
-	ExamOptions  exam_options_domain.ExamOptions   `bson:"exam_options" json:"exam_options"`
-	ExamQuestion exam_question_domain.ExamQuestion `bson:"exam_question" json:"exam_question"`
-
-	Title       string `bson:"title" json:"title"`
-	Description string `bson:"description" json:"description"`
-	Duration    string `bson:"duration" json:"duration"`
-
-	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
-	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
-	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
-	Learner    string    `bson:"learner" json:"learner"`
-
-	IsComplete    int   `bson:"is_complete" json:"is_complete"`
-	CountQuestion int64 `bson:"count_question" json:"count_question"`
-}
-
 type DetailResponse struct {
 	CountExam   int64      `bson:"count_exam" json:"count_exam"`
 	Page        int64      `json:"page" bson:"page"`
@@ -64,9 +40,10 @@ type Statistics struct {
 }
 
 type IExamRepository interface {
-	FetchMany(ctx context.Context, page string) ([]ExamResponse, DetailResponse, error)
-	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]ExamResponse, DetailResponse, error)
-	FetchOneByUnitID(ctx context.Context, unitID string) (ExamResponse, error)
+	FetchMany(ctx context.Context, page string) ([]Exam, DetailResponse, error)
+	FetchExamByID(ctx context.Context, id string) (Exam, error)
+	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]Exam, DetailResponse, error)
+	FetchOneByUnitID(ctx context.Context, unitID string) (Exam, error)
 
 	CreateOne(ctx context.Context, exam *Exam) error
 	UpdateOne(ctx context.Context, exam *Exam) (*mongo.UpdateResult, error)

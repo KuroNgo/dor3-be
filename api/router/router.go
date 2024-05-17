@@ -7,12 +7,10 @@ import (
 	course_route "clean-architecture/api/router/course"
 	exam_route "clean-architecture/api/router/exam"
 	exam_answer_route "clean-architecture/api/router/exam_answer"
-	exam_options_route "clean-architecture/api/router/exam_options"
 	exam_question_route "clean-architecture/api/router/exam_question"
 	exam_result_route "clean-architecture/api/router/exam_result"
 	exercise_route "clean-architecture/api/router/exercise"
 	exercise_answer_route "clean-architecture/api/router/exercise_answer"
-	exercise_options_route "clean-architecture/api/router/exercise_options"
 	exercise_question_route "clean-architecture/api/router/exercise_question"
 	exercise_result_route "clean-architecture/api/router/exercise_result"
 	feedback_route "clean-architecture/api/router/feedback"
@@ -22,7 +20,6 @@ import (
 	mark_vocabulary_route "clean-architecture/api/router/mark_vocabulary"
 	quiz_route "clean-architecture/api/router/quiz"
 	quiz_answer_route "clean-architecture/api/router/quiz_answer"
-	quiz_options_route "clean-architecture/api/router/quiz_options"
 	quiz_question_route "clean-architecture/api/router/quiz_question"
 	quiz_result_route "clean-architecture/api/router/quiz_result"
 	unit_route "clean-architecture/api/router/unit"
@@ -75,19 +72,16 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	exam_route.ExamRoute(env, timeout, db, publicRouter)
 	exam_answer_route.ExamAnswerRoute(env, timeout, db, publicRouter)
 	exam_question_route.ExamQuestionRoute(env, timeout, db, publicRouter)
-	exam_options_route.ExamOptionsRoute(env, timeout, db, publicRouter)
 	exam_result_route.ExamResultRoute(env, timeout, db, publicRouter)
 
 	exercise_route.ExerciseRoute(env, timeout, db, publicRouter)
 	exercise_answer_route.ExerciseRoute(env, timeout, db, publicRouter)
-	exercise_options_route.ExerciseOptionsRoute(env, timeout, db, publicRouter)
 	exercise_question_route.ExerciseQuestionRoute(env, timeout, db, publicRouter)
 	exercise_result_route.ExerciseResultRoute(env, timeout, db, publicRouter)
 
 	quiz_route.QuizRouter(env, timeout, db, publicRouter)
 	quiz_answer_route.QuizAnswerRoute(env, timeout, db, publicRouter)
 	quiz_question_route.QuizQuestionRoute(env, timeout, db, publicRouter)
-	quiz_options_route.QuizOptionsRoute(env, timeout, db, publicRouter)
 	quiz_result_route.QuizResultRoute(env, timeout, db, publicRouter)
 
 	mark_vocabulary_route.MarkVocabularyRoute(env, timeout, db, publicRouter)
@@ -104,15 +98,12 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	feedback_route.AdminFeedbackRoute(env, timeout, db, privateRouter)
 
 	exam_route.AdminExamRoute(env, timeout, db, privateRouter)
-	exam_options_route.AdminExamOptionsRoute(env, timeout, db, privateRouter)
 	exam_question_route.AdminExamQuestionRoute(env, timeout, db, privateRouter)
 
 	exercise_route.AdminExerciseRoute(env, timeout, db, privateRouter)
-	exercise_options_route.AdminExerciseOptionsRoute(env, timeout, db, privateRouter)
 	exercise_question_route.AdminExerciseQuestionRoute(env, timeout, db, privateRouter)
 
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
-	quiz_options_route.AdminQuizOptionsRoute(env, timeout, db, privateRouter)
 	quiz_question_route.AdminQuizQuestionRoute(env, timeout, db, privateRouter)
 
 	admin_route.AdminRouter(env, timeout, db, privateRouter)

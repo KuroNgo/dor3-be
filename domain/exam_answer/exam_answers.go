@@ -1,7 +1,6 @@
 package exam_answer_domain
 
 import (
-	exam_domain "clean-architecture/domain/exam"
 	exam_question_domain "clean-architecture/domain/exam_question"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -26,7 +25,6 @@ type ExamAnswerResponse struct {
 	ID       primitive.ObjectID                `bson:"_id" json:"_id"`
 	UserID   primitive.ObjectID                `bson:"user_id" json:"user_id"`
 	Question exam_question_domain.ExamQuestion `bson:"question" json:"question"`
-	Exam     exam_domain.Exam                  `bson:"exam" json:"exam"`
 
 	Answer      string    `bson:"answer" json:"answer"`
 	IsCorrect   int       `bson:"correct" json:"correct"`

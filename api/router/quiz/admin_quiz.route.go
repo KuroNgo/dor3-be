@@ -28,6 +28,7 @@ func AdminQuizRouter(env *bootstrap.Database, timeout time.Duration, db *mongo.D
 	}
 
 	router := group.Group("/quiz")
+	router.GET("/fetch/_id", quiz.FetchOneExerciseQuestionByID)
 	router.GET("/fetch", quiz.FetchManyQuizInAdmin)
 	router.GET("/1/fetch", quiz.FetchOneQuizByUnitIDInAdmin)
 	router.GET("/n/fetch", quiz.FetchManyQuizByUnitIDInAdmin)

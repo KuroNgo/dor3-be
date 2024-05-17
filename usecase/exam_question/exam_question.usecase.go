@@ -12,6 +12,18 @@ type examQuestionUseCase struct {
 	contextTimeout         time.Duration
 }
 
+func (e *examQuestionUseCase) FetchQuestionByID(ctx context.Context, id string) (exam_question_domain.ExamQuestion, error) {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	data, err := e.examQuestionRepository.FetchQuestionByID(ctx, id)
+	if err != nil {
+		return exam_question_domain.ExamQuestion{}, err
+	}
+
+	return data, nil
+}
+
 func NewExamQuestionUseCase(examQuestionRepository exam_question_domain.IExamQuestionRepository, timeout time.Duration) exam_question_domain.IExamQuestionUseCase {
 	return &examQuestionUseCase{
 		examQuestionRepository: examQuestionRepository,

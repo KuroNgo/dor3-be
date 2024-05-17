@@ -30,8 +30,9 @@ func QuizAnswerRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.D
 	}
 
 	router := group.Group("/quiz/answer")
-	router.GET("/fetch", middleware.DeserializeUser(), answer.FetchManyAnswerByUserIDAndQuestionID)
-	router.POST("/create", middleware.DeserializeUser(), answer.CreateOneQuizAnswer)
-	router.DELETE("/delete", middleware.DeserializeUser(), answer.DeleteOneAnswer)
-	router.DELETE("/all/delete", middleware.DeserializeUser(), answer.DeleteAllAnswerInQuizID)
+	router.Use(middleware.DeserializeUser())
+	router.GET("/fetch", answer.FetchManyAnswerByUserIDAndQuestionID)
+	router.POST("/create", answer.CreateOneQuizAnswer)
+	router.DELETE("/delete", answer.DeleteOneAnswer)
+	router.DELETE("/all/delete", answer.DeleteAllAnswerInQuizID)
 }

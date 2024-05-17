@@ -2,9 +2,9 @@ package quiz_question_route
 
 import (
 	quiz_question_controller "clean-architecture/api/controller/quiz_question"
+	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
 	quiz_domain "clean-architecture/domain/quiz"
-	quiz_options_domain "clean-architecture/domain/quiz_options"
 	quiz_question_domain "clean-architecture/domain/quiz_question"
 	user_domain "clean-architecture/domain/user"
 	user_detail_domain "clean-architecture/domain/user_detail"
@@ -18,7 +18,7 @@ import (
 )
 
 func QuizQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	quest := quiz_question_repository.NewQuizQuestionRepository(db, quiz_question_domain.CollectionQuizQuestion, quiz_domain.CollectionQuiz, quiz_options_domain.CollectionQuizOptions)
+	quest := quiz_question_repository.NewQuizQuestionRepository(db, quiz_question_domain.CollectionQuizQuestion, quiz_domain.CollectionQuiz)
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 
 	question := &quiz_question_controller.QuizQuestionsController{
@@ -28,5 +28,7 @@ func QuizQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *mongo
 	}
 
 	router := group.Group("/quiz/question")
+	router.Use(middleware.DeserializeUser())
+	router.GET("/fetch/_id", question.FetchOneQuizQuestionByID)
 	router.GET("/fetch", question.FetchManyQuizQuestion)
 }

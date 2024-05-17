@@ -5,7 +5,6 @@ import (
 	"clean-architecture/bootstrap"
 	admin_domain "clean-architecture/domain/admin"
 	exercise_domain "clean-architecture/domain/exercise"
-	exercise_options_domain "clean-architecture/domain/exercise_options"
 	exercise_questions_domain "clean-architecture/domain/exercise_questions"
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
@@ -21,7 +20,7 @@ import (
 )
 
 func AdminExerciseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	ex := exercise_repository.NewExerciseRepository(db, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary, exercise_domain.CollectionExercise, exercise_questions_domain.CollectionExerciseQuestion, exercise_options_domain.CollectionExerciseOptions)
+	ex := exercise_repository.NewExerciseRepository(db, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary, exercise_domain.CollectionExercise, exercise_questions_domain.CollectionExerciseQuestion)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
 	exercise := &exercise_controller.ExerciseController{
@@ -31,6 +30,7 @@ func AdminExerciseRoute(env *bootstrap.Database, timeout time.Duration, db *mong
 	}
 
 	router := group.Group("/exercise")
+	router.GET("/fetch/_id", exercise.FetchOneExerciseByID)
 	router.GET("/fetch/n/unit", exercise.FetchManyByUnitID)
 	router.POST("/create", exercise.CreateOneExercise)
 	router.PATCH("/update", exercise.UpdateOneExercise)

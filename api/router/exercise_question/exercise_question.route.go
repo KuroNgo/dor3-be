@@ -29,5 +29,6 @@ func ExerciseQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *m
 
 	router := group.Group("/exercise/question")
 	router.Use(middleware.DeserializeUser())
+	router.GET("/fetch/_id", question.FetchOneExerciseQuestionByID)
 	router.GET("/fetch", question.FetchManyExerciseOptions)
 }

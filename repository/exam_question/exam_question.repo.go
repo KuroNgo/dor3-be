@@ -21,6 +21,27 @@ type examQuestionRepository struct {
 	collectionVocabulary string
 }
 
+func (e *examQuestionRepository) FetchQuestionByID(ctx context.Context, id string) (exam_question_domain.ExamQuestion, error) {
+	collectionQuestion := e.database.Collection(e.collectionQuestion)
+
+	idQuestion, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return exam_question_domain.ExamQuestion{}, err
+	}
+
+	var examQuestion exam_question_domain.ExamQuestion
+	filter := bson.M{"_id": idQuestion}
+	err = collectionQuestion.FindOne(ctx, filter).Decode(&examQuestion)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return exam_question_domain.ExamQuestion{}, errors.New("question not found")
+		}
+		return exam_question_domain.ExamQuestion{}, err
+	}
+
+	return examQuestion, nil
+}
+
 func NewExamQuestionRepository(db *mongo.Database, collectionQuestion string, collectionExam string, collectionVocabulary string) exam_question_domain.IExamQuestionRepository {
 	return &examQuestionRepository{
 		database:             db,
@@ -135,20 +156,23 @@ func (e *examQuestionRepository) FetchManyByExamID(ctx context.Context, examID s
 
 	idExam, err := primitive.ObjectIDFromHex(examID)
 	if err != nil {
+		fmt.Println("Error converting examID to ObjectID:", err)
 		return exam_question_domain.Response{}, err
 	}
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
+		fmt.Println("Error converting page to int:", err)
 		return exam_question_domain.Response{}, errors.New("invalid page number")
 	}
 	perPage := 7
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
-	filter := bson.M{"exam_id": idExam}
 
+	filter := bson.M{"exam_id": idExam}
 	cursor, err := collectionQuestion.Find(ctx, filter, findOptions)
 	if err != nil {
+		fmt.Println("Error finding documents in collectionQuestion:", err)
 		return exam_question_domain.Response{}, err
 	}
 	defer func() {
@@ -159,74 +183,51 @@ func (e *examQuestionRepository) FetchManyByExamID(ctx context.Context, examID s
 	}()
 
 	var count int64
-	count, err = collectionQuestion.CountDocuments(ctx, bson.D{})
+	count, err = collectionQuestion.CountDocuments(ctx, bson.M{"exam_id": idExam})
 	if err != nil {
+		fmt.Println("Error counting documents in collectionQuestion:", err)
 		return exam_question_domain.Response{}, err
 	}
 
 	var questions []exam_question_domain.ExamQuestionResponse
-	pipeline := bson.A{
-		bson.D{
-			{"$lookup", bson.D{
-				{"from", "vocabulary"},
-				{"localField", "VocabularyID"},
-				{"foreignField", "_id"},
-				{"as", "vocabulary"},
-			}},
-		},
+
+	for cursor.Next(ctx) {
+		var question exam_question_domain.ExamQuestionResponse
+		if err := cursor.Decode(&question); err != nil {
+			fmt.Println("Error decoding question:", err)
+			return exam_question_domain.Response{}, err
+		}
+
+		var question2 exam_question_domain.ExamQuestion
+		if err := cursor.Decode(&question2); err != nil {
+			fmt.Println("Error decoding question:", err)
+			return exam_question_domain.Response{}, err
+		}
+
+		var vocabulary vocabulary_domain.Vocabulary
+		filterVocabulary := bson.M{"_id": question2.VocabularyID}
+		err := collectVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
+		if err != nil {
+			return exam_question_domain.Response{}, err
+		}
+
+		question.Vocabulary = vocabulary
+
+		questions = append(questions, question)
 	}
 
-	internal.Wg.Add(1)
+	if err := cursor.Err(); err != nil {
+		fmt.Println("Cursor encountered an error:", err)
+		return exam_question_domain.Response{}, err
+	}
 
-	go func() {
-		defer internal.Wg.Done()
-		for cursor.Next(ctx) {
-			var question exam_question_domain.ExamQuestionResponse
-			if err := cursor.Decode(&question); err != nil {
-				return
-			}
+	var totalPages int64
+	if count%int64(perPage) == 0 {
+		totalPages = count / int64(perPage)
+	} else {
+		totalPages = count/int64(perPage) + 1
+	}
 
-			question.ExamID = idExam
-
-			// Thực hiện truy vấn aggregation để thêm thông tin vocabulary cho câu hỏi
-			cursorV, err := collectVocabulary.Aggregate(ctx, pipeline)
-			if err != nil {
-				return
-			}
-
-			// Duyệt qua kết quả của truy vấn aggregation
-			var vocabularies []vocabulary_domain.Vocabulary
-			if err := cursorV.All(ctx, &vocabularies); err != nil {
-				return
-			}
-
-			// Gán vocabulary cho câu hỏi
-			if len(vocabularies) > 0 {
-				question.Vocabulary = vocabularies[0]
-			}
-
-			err = cursorV.Close(ctx)
-			if err != nil {
-				return
-			}
-			questions = append(questions, question)
-		}
-
-	}()
-
-	internal.Wg.Wait()
-
-	var cal int64
-	calCh := make(chan int64)
-	go func() {
-		defer close(calCh)
-		cal1 := count / int64(perPage)
-		cal2 := count % int64(perPage)
-		if cal2 != 0 {
-			calCh <- cal1 + 1
-		}
-	}()
-	cal = <-calCh
 	statisticsCh := make(chan exam_question_domain.Statistics)
 	go func() {
 		statistics, _ := e.Statistics(ctx)
@@ -236,7 +237,7 @@ func (e *examQuestionRepository) FetchManyByExamID(ctx context.Context, examID s
 
 	questionsRes := exam_question_domain.Response{
 		Statistics:           statistics,
-		Page:                 cal,
+		Page:                 totalPages,
 		CurrentPage:          pageNumber,
 		ExamQuestionResponse: questions,
 	}
@@ -250,16 +251,17 @@ func (e *examQuestionRepository) UpdateOne(ctx context.Context, examQuestion *ex
 	filter := bson.D{{Key: "_id", Value: examQuestion.ID}}
 	update := bson.M{
 		"$set": bson.M{
-			"exam_id":    examQuestion.ExamID,
-			"content":    examQuestion.Content,
-			"type":       examQuestion.Type,
-			"level":      examQuestion.Level,
-			"update_at":  examQuestion.UpdateAt,
-			"who_update": examQuestion.WhoUpdate,
+			"content":        examQuestion.Content,
+			"type":           examQuestion.Type,
+			"level":          examQuestion.Level,
+			"options":        examQuestion.Options,
+			"correct_answer": examQuestion.CorrectAnswer,
+			"update_at":      examQuestion.UpdateAt,
+			"who_update":     examQuestion.WhoUpdate,
 		},
 	}
 
-	data, err := collection.UpdateOne(ctx, filter, update)
+	data, err := collection.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return nil, err
 	}

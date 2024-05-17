@@ -12,6 +12,18 @@ type quizQuestionUseCase struct {
 	contextTimeout         time.Duration
 }
 
+func (q *quizQuestionUseCase) FetchByID(ctx context.Context, id string) (quiz_question_domain.QuizQuestion, error) {
+	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
+	defer cancel()
+
+	data, err := q.quizQuestionRepository.FetchByID(ctx, id)
+	if err != nil {
+		return quiz_question_domain.QuizQuestion{}, err
+	}
+
+	return data, nil
+}
+
 func NewQuizQuestionUseCase(quizQuestionRepository quiz_question_domain.IQuizQuestionRepository, timeout time.Duration) quiz_question_domain.IQuizQuestionUseCase {
 	return &quizQuestionUseCase{
 		quizQuestionRepository: quizQuestionRepository,

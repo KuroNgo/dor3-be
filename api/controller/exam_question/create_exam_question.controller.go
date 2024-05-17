@@ -37,15 +37,17 @@ func (e *ExamQuestionsController) CreateOneExamQuestions(ctx *gin.Context) {
 	}
 
 	question := exam_question_domain.ExamQuestion{
-		ID:           primitive.NewObjectID(),
-		ExamID:       questionInput.ExamID,
-		VocabularyID: questionInput.VocabularyID,
-		Content:      questionInput.Content,
-		Type:         questionInput.Type,
-		Level:        questionInput.Level,
-		CreatedAt:    time.Now(),
-		UpdateAt:     time.Now(),
-		WhoUpdate:    admin.FullName,
+		ID:            primitive.NewObjectID(),
+		ExamID:        questionInput.ExamID,
+		VocabularyID:  questionInput.VocabularyID,
+		Content:       questionInput.Content,
+		Type:          questionInput.Type,
+		Level:         questionInput.Level,
+		Options:       questionInput.Options,
+		CorrectAnswer: questionInput.CorrectAnswer,
+		CreatedAt:     time.Now(),
+		UpdateAt:      time.Now(),
+		WhoUpdate:     admin.FullName,
 	}
 
 	err = e.ExamQuestionUseCase.CreateOne(ctx, &question)

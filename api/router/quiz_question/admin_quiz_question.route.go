@@ -5,7 +5,6 @@ import (
 	"clean-architecture/bootstrap"
 	admin_domain "clean-architecture/domain/admin"
 	quiz_domain "clean-architecture/domain/quiz"
-	quiz_options_domain "clean-architecture/domain/quiz_options"
 	quiz_question_domain "clean-architecture/domain/quiz_question"
 	user_domain "clean-architecture/domain/user"
 	admin_repository "clean-architecture/repository/admin"
@@ -18,7 +17,7 @@ import (
 )
 
 func AdminQuizQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	quest := quiz_question_repository.NewQuizQuestionRepository(db, quiz_question_domain.CollectionQuizQuestion, quiz_domain.CollectionQuiz, quiz_options_domain.CollectionQuizOptions)
+	quest := quiz_question_repository.NewQuizQuestionRepository(db, quiz_question_domain.CollectionQuizQuestion, quiz_domain.CollectionQuiz)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
 	question := &quiz_question_controller.QuizQuestionsController{
@@ -28,6 +27,7 @@ func AdminQuizQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *
 	}
 
 	router := group.Group("/quiz/question")
+	router.GET("/fetch/_id", question.FetchOneQuizQuestionByID)
 	router.POST("/create", question.CreateOneQuizQuestions)
 	router.PATCH("/update", question.UpdateOneQuizOptions)
 	router.DELETE("/delete/_id", question.DeleteOneQuizQuestions)

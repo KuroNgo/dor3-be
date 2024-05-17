@@ -1,7 +1,6 @@
 package exercise_questions_domain
 
 import (
-	exercise_options_domain "clean-architecture/domain/exercise_options"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,24 +16,11 @@ type ExerciseQuestion struct {
 	ExerciseID   primitive.ObjectID `bson:"exercise_id" json:"exercise_id"`
 	VocabularyID primitive.ObjectID `bson:"vocabulary_id" json:"vocabulary_id"`
 
-	Content string `bson:"content" json:"content"`
-	Type    string `bson:"type" json:"type"`
-	Level   int    `bson:"level" json:"level"`
-
-	CreatedAt time.Time `bson:"created_at" json:"created_at"`
-	UpdateAt  time.Time `bson:"update_at" json:"update_at"`
-	WhoUpdate string    `bson:"who_update" json:"who_update"`
-}
-
-type ExerciseQuestionResponse struct {
-	ID           primitive.ObjectID                      `bson:"_id" json:"_id"`
-	ExerciseID   primitive.ObjectID                      `bson:"exercise_id" json:"exercise_id"`
-	VocabularyID primitive.ObjectID                      `bson:"vocabulary_id" json:"vocabulary_id"`
-	Options      exercise_options_domain.ExerciseOptions `bson:"options" json:"options"`
-
-	Content string `bson:"content" json:"content"`
-	Type    string `bson:"type" json:"type"`
-	Level   int    `bson:"level" json:"level"`
+	Content       string   `bson:"content" json:"content"`
+	Type          string   `bson:"type" json:"type"`
+	Level         int      `bson:"level" json:"level"`
+	Options       []string `bson:"options" json:"options"`
+	CorrectAnswer string   `bson:"correct_answer" json:"correct_answer"`
 
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 	UpdateAt  time.Time `bson:"update_at" json:"update_at"`
@@ -42,10 +28,10 @@ type ExerciseQuestionResponse struct {
 }
 
 type Response struct {
-	Page                     int64                      `bson:"page" json:"page"`
-	CurrentPage              int                        `bson:"current_page" json:"current_page"`
-	Statistics               Statistics                 `bson:"statistics" json:"statistics"`
-	ExerciseQuestionResponse []ExerciseQuestionResponse `json:"exercise_question" bson:"exercise_question"`
+	Page             int64              `bson:"page" json:"page"`
+	CurrentPage      int                `bson:"current_page" json:"current_page"`
+	Statistics       Statistics         `bson:"statistics" json:"statistics"`
+	ExerciseQuestion []ExerciseQuestion `json:"exercise_question" bson:"exercise_question"`
 }
 
 type Statistics struct {
@@ -54,6 +40,7 @@ type Statistics struct {
 
 type IExerciseQuestionRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
+	FetchByID(ctx context.Context, id string) (ExerciseQuestion, error)
 	FetchManyByExerciseID(ctx context.Context, exerciseID string) (Response, error)
 
 	UpdateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) (*mongo.UpdateResult, error)

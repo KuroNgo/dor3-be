@@ -1,9 +1,7 @@
 package exam_answer_repository
 
 import (
-	exam_domain "clean-architecture/domain/exam"
 	exam_answer_domain "clean-architecture/domain/exam_answer"
-	exam_options_domain "clean-architecture/domain/exam_options"
 	exam_question_domain "clean-architecture/domain/exam_question"
 	"clean-architecture/internal"
 	"context"
@@ -19,7 +17,6 @@ type examAnswerRepository struct {
 	database           *mongo.Database
 	collectionQuestion string
 	collectionAnswer   string
-	collectionOptions  string
 	collectionExam     string
 
 	answerManyCache    map[string]exam_answer_domain.ExamAnswer
@@ -28,12 +25,11 @@ type examAnswerRepository struct {
 	cacheMutex         sync.RWMutex
 }
 
-func NewExamAnswerRepository(db *mongo.Database, collectionQuestion string, collectionOptions string, collectionAnswer string, collectionExam string) exam_answer_domain.IExamAnswerRepository {
+func NewExamAnswerRepository(db *mongo.Database, collectionQuestion string, collectionAnswer string, collectionExam string) exam_answer_domain.IExamAnswerRepository {
 	return &examAnswerRepository{
 		database:           db,
 		collectionQuestion: collectionQuestion,
 		collectionAnswer:   collectionAnswer,
-		collectionOptions:  collectionOptions,
 		collectionExam:     collectionExam,
 
 		answerManyCache:    make(map[string]exam_answer_domain.ExamAnswer),
@@ -45,7 +41,6 @@ func NewExamAnswerRepository(db *mongo.Database, collectionQuestion string, coll
 func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (exam_answer_domain.Response, error) {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
-	collectionExam := e.database.Collection(e.collectionExam)
 
 	idQuestion, err := primitive.ObjectIDFromHex(questionID)
 	if err != nil {
@@ -86,15 +81,10 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 				return
 			}
 
-			var exam exam_domain.Exam
-			filterExam := bson.M{"_id": question.ExamID}
-			err = collectionExam.FindOne(ctx, filterExam).Decode(&exam)
-
 			var answerRes exam_answer_domain.ExamAnswerResponse
 			answerRes.ID = answer.ID
 			answerRes.UserID = answer.UserID
 			answerRes.Question = question
-			answerRes.Exam = exam
 			answerRes.Answer = answer.Answer
 			answerRes.SubmittedAt = answer.SubmittedAt
 			answerRes.IsCorrect = answer.IsCorrect
@@ -115,36 +105,31 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 
 func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_answer_domain.ExamAnswer) error {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
-	collectionOptions := e.database.Collection(e.collectionOptions)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
-	// kiểm tra questionId có tồn tại
+	// Kiểm tra questionID có tồn tại
 	filterQuestionID := bson.M{"_id": examAnswer.QuestionID}
 	countQuestionID, err := collectionQuestion.CountDocuments(ctx, filterQuestionID)
 	if err != nil {
 		return err
 	}
 	if countQuestionID == 0 {
-		return errors.New("the question ID do not exist")
+		return errors.New("the question ID does not exist")
 	}
 
-	// kiểm tra answer có bằng với đáp án
-	var options exam_options_domain.ExamOptions
-	filterQuestionId := bson.M{"question_id": examAnswer.QuestionID}
-	if err := collectionOptions.FindOne(ctx, filterQuestionId).Decode(&options); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return errors.New("no options found for the question ID")
-		}
+	// Lấy câu hỏi từ CSDL
+	var examQuestion exam_question_domain.ExamQuestion
+	err = collectionQuestion.FindOne(ctx, filterQuestionID).Decode(&examQuestion)
+	if err != nil {
 		return err
 	}
 
-	if examAnswer.Answer == options.CorrectAnswer {
-		examAnswer.IsCorrect = 1 //đúng
-	} else {
-		examAnswer.IsCorrect = 0 //sai
+	// Kiểm tra câu trả lời của thí sinh
+	if examAnswer.Answer == examQuestion.CorrectAnswer {
+		examAnswer.IsCorrect = 1
 	}
 
-	// thêm answer vào CSDL
+	// Thêm câu trả lời vào CSDL
 	_, err = collectionAnswer.InsertOne(ctx, examAnswer)
 	if err != nil {
 		return err

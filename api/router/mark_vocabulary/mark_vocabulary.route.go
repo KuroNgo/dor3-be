@@ -35,7 +35,8 @@ func MarkVocabularyRoute(env *bootstrap.Database, timeout time.Duration, db *mon
 	}
 
 	router := group.Group("/mark_vocabulary")
-	router.GET("/fetch/mark_list_id", middleware.DeserializeUser(), markVocabulary.FetchManyByMarkListIdAndUserId)
-	router.POST("/create", middleware.DeserializeUser(), markVocabulary.CreateOneMarkVocabulary)
-	router.DELETE("/delete/_id", middleware.DeserializeUser(), markVocabulary.DeleteOneMarkVocabulary)
+	router.Use(middleware.DeserializeUser())
+	router.GET("/fetch/mark_list_id", markVocabulary.FetchManyByMarkListIdAndUserId)
+	router.POST("/create", markVocabulary.CreateOneMarkVocabulary)
+	router.DELETE("/delete/_id", markVocabulary.DeleteOneMarkVocabulary)
 }

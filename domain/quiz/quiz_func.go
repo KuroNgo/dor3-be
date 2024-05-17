@@ -24,9 +24,10 @@ type Completed struct {
 
 //go:generate mockery --name IQuizUseCase
 type IQuizUseCase interface {
-	FetchMany(ctx context.Context, page string) ([]QuizResponse, Response, error)
-	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]QuizResponse, Response, error)
-	FetchOneByUnitID(ctx context.Context, unitID string) (QuizResponse, error)
+	FetchMany(ctx context.Context, page string) ([]Quiz, Response, error)
+	FetchByID(ctx context.Context, id string) (Quiz, error)
+	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]Quiz, Response, error)
+	FetchOneByUnitID(ctx context.Context, unitID string) (Quiz, error)
 
 	UpdateOne(ctx context.Context, quiz *Quiz) (*mongo.UpdateResult, error)
 	UpdateCompleted(ctx context.Context, quiz *Quiz) error

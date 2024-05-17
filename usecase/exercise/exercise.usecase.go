@@ -12,6 +12,18 @@ type exerciseUseCase struct {
 	contextTimeout     time.Duration
 }
 
+func (e *exerciseUseCase) FetchByID(ctx context.Context, id string) (exercise_domain.Exercise, error) {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	vocabulary, err := e.exerciseRepository.FetchByID(ctx, id)
+	if err != nil {
+		return exercise_domain.Exercise{}, err
+	}
+
+	return vocabulary, err
+}
+
 func NewExerciseUseCase(exerciseRepository exercise_domain.IExerciseRepository, timeout time.Duration) exercise_domain.IExerciseUseCase {
 	return &exerciseUseCase{
 		exerciseRepository: exerciseRepository,
@@ -19,19 +31,19 @@ func NewExerciseUseCase(exerciseRepository exercise_domain.IExerciseRepository, 
 	}
 }
 
-func (e *exerciseUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
+func (e *exerciseUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.Exercise, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
 	vocabulary, err := e.exerciseRepository.FetchOneByUnitID(ctx, unitID)
 	if err != nil {
-		return exercise_domain.ExerciseResponse{}, err
+		return exercise_domain.Exercise{}, err
 	}
 
 	return vocabulary, err
 }
 
-func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
+func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
@@ -55,7 +67,7 @@ func (e *exerciseUseCase) UpdateCompleted(ctx context.Context, exercise *exercis
 	return nil
 }
 
-func (e *exerciseUseCase) FetchMany(ctx context.Context, page string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
+func (e *exerciseUseCase) FetchMany(ctx context.Context, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 

@@ -6,7 +6,6 @@ import (
 	"clean-architecture/bootstrap"
 	exam_domain "clean-architecture/domain/exam"
 	exam_answer_domain "clean-architecture/domain/exam_answer"
-	exam_options_domain "clean-architecture/domain/exam_options"
 	exam_question_domain "clean-architecture/domain/exam_question"
 	exam_result_domain "clean-architecture/domain/exam_result"
 	exercise_domain "clean-architecture/domain/exercise"
@@ -28,7 +27,7 @@ import (
 )
 
 func ExamAnswerRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	ans := exam_answer_repository.NewExamAnswerRepository(db, exam_question_domain.CollectionExamQuestion, exam_options_domain.CollectionExamOptions, exam_answer_domain.CollectionExamAnswers, exam_domain.CollectionExam)
+	ans := exam_answer_repository.NewExamAnswerRepository(db, exam_question_domain.CollectionExamQuestion, exam_answer_domain.CollectionExamAnswers, exam_domain.CollectionExam)
 	res := exam_result_repository.NewExamResultRepository(db, exam_result_domain.CollectionExamResult, exam_domain.CollectionExam)
 	users := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 	userAttempt := user_attempt_repository.NewUserAttemptRepository(db, user_attempt_domain.CollectionUserAttempt, exam_domain.CollectionExam, quiz_domain.CollectionQuiz, exercise_domain.CollectionExercise)

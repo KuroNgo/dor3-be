@@ -12,6 +12,18 @@ type examUseCase struct {
 	contextTimeout time.Duration
 }
 
+func (e *examUseCase) FetchExamByID(ctx context.Context, id string) (exam_domain.Exam, error) {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	data, err := e.examRepository.FetchExamByID(ctx, id)
+	if err != nil {
+		return exam_domain.Exam{}, err
+	}
+
+	return data, nil
+}
+
 func NewExamUseCase(examRepository exam_domain.IExamRepository, timeout time.Duration) exam_domain.IExamUseCase {
 	return &examUseCase{
 		examRepository: examRepository,
@@ -19,7 +31,7 @@ func NewExamUseCase(examRepository exam_domain.IExamRepository, timeout time.Dur
 	}
 }
 
-func (e *examUseCase) FetchMany(ctx context.Context, page string) ([]exam_domain.ExamResponse, exam_domain.DetailResponse, error) {
+func (e *examUseCase) FetchMany(ctx context.Context, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
@@ -31,19 +43,19 @@ func (e *examUseCase) FetchMany(ctx context.Context, page string) ([]exam_domain
 	return data, detail, nil
 }
 
-func (e *examUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.ExamResponse, error) {
+func (e *examUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.Exam, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
 	data, err := e.examRepository.FetchOneByUnitID(ctx, unitID)
 	if err != nil {
-		return exam_domain.ExamResponse{}, err
+		return exam_domain.Exam{}, err
 	}
 
 	return data, nil
 }
 
-func (e *examUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exam_domain.ExamResponse, exam_domain.DetailResponse, error) {
+func (e *examUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 

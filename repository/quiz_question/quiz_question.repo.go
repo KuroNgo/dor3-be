@@ -1,7 +1,6 @@
 package quiz_question_repository
 
 import (
-	quiz_options_domain "clean-architecture/domain/quiz_options"
 	quiz_question_domain "clean-architecture/domain/quiz_question"
 	context2 "context"
 	"errors"
@@ -17,21 +16,39 @@ type quizQuestionRepository struct {
 	database           *mongo.Database
 	collectionQuestion string
 	collectionQuiz     string
-	collectionOptions  string
 }
 
-func NewQuizQuestionRepository(db *mongo.Database, collectionQuestion string, collectionQuiz string, collectionOptions string) quiz_question_domain.IQuizQuestionRepository {
+func (q quizQuestionRepository) FetchByID(ctx context2.Context, id string) (quiz_question_domain.QuizQuestion, error) {
+	collectionQuestion := q.database.Collection(q.collectionQuestion)
+
+	idQuestion, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return quiz_question_domain.QuizQuestion{}, err
+	}
+
+	var quizQuestion quiz_question_domain.QuizQuestion
+	filter := bson.M{"_id": idQuestion}
+	err = collectionQuestion.FindOne(ctx, filter).Decode(&quizQuestion)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return quiz_question_domain.QuizQuestion{}, errors.New("quiz question not found")
+		}
+		return quiz_question_domain.QuizQuestion{}, err
+	}
+
+	return quizQuestion, nil
+}
+
+func NewQuizQuestionRepository(db *mongo.Database, collectionQuestion string, collectionQuiz string) quiz_question_domain.IQuizQuestionRepository {
 	return &quizQuestionRepository{
 		database:           db,
 		collectionQuestion: collectionQuestion,
 		collectionQuiz:     collectionQuiz,
-		collectionOptions:  collectionOptions,
 	}
 }
 
 func (q quizQuestionRepository) FetchMany(ctx context.Context, page string) (quiz_question_domain.Response, error) {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
-	collectionOptions := q.database.Collection(q.collectionOptions)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -59,44 +76,24 @@ func (q quizQuestionRepository) FetchMany(ctx context.Context, page string) (qui
 		return quiz_question_domain.Response{}, err
 	}
 
-	var questions []quiz_question_domain.QuizQuestionResponse
+	var questions []quiz_question_domain.QuizQuestion
 	for cursor.Next(ctx) {
 		var question quiz_question_domain.QuizQuestion
 		if err = cursor.Decode(&question); err != nil {
 			return quiz_question_domain.Response{}, err
 		}
 
-		var option quiz_options_domain.QuizOptions
-		filterOptions := bson.M{"question_id": question.ID}
-		err := collectionOptions.FindOne(ctx, filterOptions).Decode(&option)
-		if err != nil {
-			return quiz_question_domain.Response{}, err
-		}
-
-		var questionRes quiz_question_domain.QuizQuestionResponse
-		questionRes.ID = question.ID
-		questionRes.QuizID = question.QuizID
-		questionRes.VocabularyID = question.VocabularyID
-		questionRes.Options = option
-		questionRes.Content = question.Content
-		questionRes.Type = question.Type
-		questionRes.Level = question.Level
-		questionRes.Content = question.Content
-		questionRes.UpdateAt = question.UpdateAt
-		questionRes.WhoUpdate = question.WhoUpdate
-
-		questions = append(questions, questionRes)
+		questions = append(questions, question)
 	}
 	questionsRes := quiz_question_domain.Response{
-		Page:                 cal,
-		QuizQuestionResponse: questions,
+		Page:         cal,
+		QuizQuestion: questions,
 	}
 	return questionsRes, nil
 }
 
 func (q quizQuestionRepository) FetchManyByQuizID(ctx context.Context, quizID string) (quiz_question_domain.Response, error) {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
-	collectionOptions := q.database.Collection(q.collectionOptions)
 
 	idQuiz, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
@@ -115,7 +112,7 @@ func (q quizQuestionRepository) FetchManyByQuizID(ctx context.Context, quizID st
 		}
 	}(cursor, ctx)
 
-	var questions []quiz_question_domain.QuizQuestionResponse
+	var questions []quiz_question_domain.QuizQuestion
 	for cursor.Next(ctx) {
 		var question quiz_question_domain.QuizQuestion
 		if err = cursor.Decode(&question); err != nil {
@@ -123,30 +120,12 @@ func (q quizQuestionRepository) FetchManyByQuizID(ctx context.Context, quizID st
 		}
 
 		question.QuizID = idQuiz
-		var option quiz_options_domain.QuizOptions
-		filterOptions := bson.M{"question_id": question.ID}
-		err := collectionOptions.FindOne(ctx, filterOptions).Decode(&option)
-		if err != nil {
-			return quiz_question_domain.Response{}, err
-		}
 
-		var questionRes quiz_question_domain.QuizQuestionResponse
-		questionRes.ID = question.ID
-		questionRes.QuizID = question.QuizID
-		questionRes.VocabularyID = question.VocabularyID
-		questionRes.Options = option
-		questionRes.Content = question.Content
-		questionRes.Type = question.Type
-		questionRes.Level = question.Level
-		questionRes.Content = question.Content
-		questionRes.UpdateAt = question.UpdateAt
-		questionRes.WhoUpdate = question.WhoUpdate
-
-		questions = append(questions, questionRes)
+		questions = append(questions, question)
 	}
 
 	questionsRes := quiz_question_domain.Response{
-		QuizQuestionResponse: questions,
+		QuizQuestion: questions,
 	}
 
 	return questionsRes, nil
