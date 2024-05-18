@@ -30,8 +30,10 @@ func AdminExerciseRoute(env *bootstrap.Database, timeout time.Duration, db *mong
 	}
 
 	router := group.Group("/exercise")
-	router.GET("/fetch/_id", exercise.FetchOneExerciseByID)
-	router.GET("/fetch/n/unit", exercise.FetchManyByUnitID)
+	router.GET("/fetch/_id", exercise.FetchOneExerciseByIDInAdmin)
+	router.GET("/fetch/n/unit_id", exercise.FetchManyByUnitIDInAdmin)
+	router.GET("/fetch", exercise.FetchManyExerciseInAdmin)
+	router.GET("/fetch/1/unit_id", exercise.FetchOneByUnitIDInAdmin)
 	router.POST("/create", exercise.CreateOneExercise)
 	router.PATCH("/update", exercise.UpdateOneExercise)
 	router.DELETE("/delete/_id", exercise.DeleteOneExercise)

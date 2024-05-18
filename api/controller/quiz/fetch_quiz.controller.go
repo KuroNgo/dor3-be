@@ -260,3 +260,39 @@ func (q *QuizController) FetchManyQuizByUnitIDInAdmin(ctx *gin.Context) {
 		"data":   quiz,
 	})
 }
+
+func (q *QuizController) FetchOneExerciseQuestionByIDInAdmin(ctx *gin.Context) {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+
+	admin, err := q.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
+	id := ctx.Query("_id")
+	quiz, err := q.QuizUseCase.FetchByID(ctx, id)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data":   quiz,
+	})
+}

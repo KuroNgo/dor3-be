@@ -39,11 +39,12 @@ func (e *exerciseQuestionRepository) FetchByID(ctx context.Context, id string) (
 	return exerciseQuestion, nil
 }
 
-func NewExerciseQuestionRepository(db *mongo.Database, collectionQuestion string, collectionExercise string) exercise_questions_domain.IExerciseQuestionRepository {
+func NewExerciseQuestionRepository(db *mongo.Database, collectionQuestion string, collectionExercise string, collectionVocabulary string) exercise_questions_domain.IExerciseQuestionRepository {
 	return &exerciseQuestionRepository{
-		database:           db,
-		collectionQuestion: collectionQuestion,
-		collectionExercise: collectionExercise,
+		database:             db,
+		collectionQuestion:   collectionQuestion,
+		collectionExercise:   collectionExercise,
+		collectionVocabulary: collectionVocabulary,
 	}
 }
 
@@ -130,15 +131,33 @@ func (e *exerciseQuestionRepository) FetchManyByExerciseID(ctx context.Context, 
 func (e *exerciseQuestionRepository) CreateOne(ctx context.Context, exerciseQuestion *exercise_questions_domain.ExerciseQuestion) error {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 	collectionExercise := e.database.Collection(e.collectionExercise)
+	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
 
-	filterExerciseID := bson.M{"exercise_id": exerciseQuestion.ExerciseID}
+	filterExerciseID := bson.M{"_id": exerciseQuestion.ExerciseID}
 	countExerciseID, err := collectionExercise.CountDocuments(ctx, filterExerciseID)
 	if err != nil {
 		return err
 	}
-
 	if countExerciseID == 0 {
 		return errors.New("the exerciseID do not exist")
+	}
+
+	filterVocabularyID := bson.M{"_id": exerciseQuestion.VocabularyID}
+	countVocabularyID, err := collectionVocabulary.CountDocuments(ctx, filterVocabularyID)
+	if err != nil {
+		return err
+	}
+	if countVocabularyID == 0 {
+		return errors.New("the vocabularyID does not exist")
+	}
+
+	filterParent := bson.M{"exercise_id": exerciseQuestion.ExerciseID}
+	count, err := collectionQuestion.CountDocuments(ctx, filterParent)
+	if err != nil {
+		return err
+	}
+	if count >= 10 {
+		return errors.New("the question id is not added in one exercise")
 	}
 
 	_, err = collectionQuestion.InsertOne(ctx, exerciseQuestion)

@@ -162,7 +162,7 @@ func (e *ExamsController) FetchManyExamInAdmin(ctx *gin.Context) {
 		})
 		return
 	}
-	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
@@ -198,7 +198,7 @@ func (e *ExamsController) FetchManyExamByUnitIDInAdmin(ctx *gin.Context) {
 		})
 		return
 	}
-	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
@@ -245,7 +245,7 @@ func (e *ExamsController) FetchOneExamByUnitIDInAdmin(ctx *gin.Context) {
 		})
 		return
 	}
-	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
@@ -253,7 +253,6 @@ func (e *ExamsController) FetchOneExamByUnitIDInAdmin(ctx *gin.Context) {
 		})
 		return
 	}
-
 	_, err = ctx.Cookie("access_token")
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

@@ -7,11 +7,19 @@ import (
 )
 
 func (e *ExerciseController) FetchManyExercise(ctx *gin.Context) {
-	_, err := ctx.Cookie("access_token")
-	if err != nil {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "fail",
-			"message": "You are not login!",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
 		})
 		return
 	}
@@ -35,15 +43,22 @@ func (e *ExerciseController) FetchManyExercise(ctx *gin.Context) {
 }
 
 func (e *ExerciseController) FetchManyByUnitID(ctx *gin.Context) {
-	_, err := ctx.Cookie("access_token")
-	if err != nil {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "fail",
-			"message": "You are not login!",
+			"message": "You are not logged in!",
 		})
 		return
 	}
-
+	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
 	unitID := ctx.Query("unit_id")
 	if unitID == "" {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -71,11 +86,19 @@ func (e *ExerciseController) FetchManyByUnitID(ctx *gin.Context) {
 }
 
 func (e *ExerciseController) FetchOneByUnitID(ctx *gin.Context) {
-	_, err := ctx.Cookie("access_token")
-	if err != nil {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "fail",
-			"message": "You are not login!",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
 		})
 		return
 	}
@@ -139,11 +162,19 @@ func (e *ExerciseController) FetchOneExerciseByID(ctx *gin.Context) {
 }
 
 func (e *ExerciseController) FetchManyExerciseInAdmin(ctx *gin.Context) {
-	_, err := ctx.Cookie("access_token")
-	if err != nil {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "fail",
-			"message": "You are not login!",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
 		})
 		return
 	}
@@ -167,11 +198,19 @@ func (e *ExerciseController) FetchManyExerciseInAdmin(ctx *gin.Context) {
 }
 
 func (e *ExerciseController) FetchManyByUnitIDInAdmin(ctx *gin.Context) {
-	_, err := ctx.Cookie("access_token")
-	if err != nil {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "fail",
-			"message": "You are not login!",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
 		})
 		return
 	}
@@ -203,11 +242,19 @@ func (e *ExerciseController) FetchManyByUnitIDInAdmin(ctx *gin.Context) {
 }
 
 func (e *ExerciseController) FetchOneByUnitIDInAdmin(ctx *gin.Context) {
-	_, err := ctx.Cookie("access_token")
-	if err != nil {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "fail",
-			"message": "You are not login!",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
 		})
 		return
 	}
@@ -232,5 +279,40 @@ func (e *ExerciseController) FetchOneByUnitIDInAdmin(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 		"data":   ex,
+	})
+}
+
+func (e *ExerciseController) FetchOneExerciseByIDInAdmin(ctx *gin.Context) {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
+	id := ctx.Query("_id")
+	exercise, err := e.ExerciseUseCase.FetchByID(ctx, id)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data":   exercise,
 	})
 }

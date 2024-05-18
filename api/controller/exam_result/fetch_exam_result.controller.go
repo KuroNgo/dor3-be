@@ -7,6 +7,22 @@ import (
 )
 
 func (e *ExamResultController) FetchManyExamResult(ctx *gin.Context) {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
 	page := ctx.DefaultQuery("page", "1")
 
 	exam, err := e.ExamResultUseCase.FetchMany(ctx, page)
@@ -25,6 +41,23 @@ func (e *ExamResultController) FetchManyExamResult(ctx *gin.Context) {
 }
 
 func (e *ExamResultController) FetchResultByExamID(ctx *gin.Context) {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
 	examID := ctx.Param("exam_id")
 
 	exam, err := e.ExamResultUseCase.FetchManyByExamID(ctx, examID)
@@ -43,7 +76,22 @@ func (e *ExamResultController) FetchResultByExamID(ctx *gin.Context) {
 }
 
 func (e *ExamResultController) GetResultsByUserIDAndExamID(ctx *gin.Context) {
-	currentUser := ctx.MustGet("currentUser")
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
 	examId := ctx.Param("exam_id")
 
 	exam, err := e.ExamResultUseCase.GetResultsByUserIDAndExamID(ctx, fmt.Sprintf("%s", currentUser), examId)

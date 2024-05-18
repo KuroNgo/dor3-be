@@ -33,6 +33,7 @@ func ExerciseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Dat
 	router := group.Group("/exercise")
 	router.Use(middleware.DeserializeUser())
 	router.GET("/fetch/_id", exercise.FetchOneExerciseByID)
+	router.GET("/fetch/n/unit_id", exercise.FetchManyByUnitID)
 	router.GET("/fetch", exercise.FetchManyExercise)
-	router.GET("/fetch/1/unit", exercise.FetchOneByUnitID)
+	router.GET("/fetch/1/unit_id", exercise.FetchOneByUnitID)
 }

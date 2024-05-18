@@ -15,9 +15,8 @@ type ExerciseAnswer struct {
 	UserID     primitive.ObjectID `bson:"user_id" json:"user_id"`
 	QuestionID primitive.ObjectID `bson:"question_id" json:"question_id"`
 
-	Answer     string `bson:"answer" json:"answer"`
-	BlankIndex int    `bson:"blank_index" json:"blank_index"`
-	IsCorrect  int    `bson:"is_correct" json:"is_correct"`
+	Answer    string `bson:"answer" json:"answer"`
+	IsCorrect int    `bson:"is_correct" json:"is_correct"`
 
 	SubmittedAt time.Time `bson:"submitted_at" json:"submitted_at"`
 }
