@@ -30,7 +30,8 @@ func ExamQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *mongo
 
 	router := group.Group("/exam/question")
 	router.Use(middleware.DeserializeUser())
-	router.GET("/fetch/_id", question.FetchManyExamQuestionsByID)
 	router.GET("/fetch", question.FetchManyExamQuestions)
-	router.GET("/fetch/exam_id", question.FetchManyExamQuestionsByExamID)
+	router.GET("/fetch/_id", question.FetchOneExamQuestionsByID)
+	router.GET("/fetch/1/exam_id", question.FetchOneExamQuestionsByExamID)
+	router.GET("/fetch/n/exam_id", question.FetchManyExamQuestionsByExamID)
 }

@@ -29,6 +29,8 @@ func QuizQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *mongo
 
 	router := group.Group("/quiz/question")
 	router.Use(middleware.DeserializeUser())
-	router.GET("/fetch/_id", question.FetchOneQuizQuestionByID)
 	router.GET("/fetch", question.FetchManyQuizQuestion)
+	router.GET("/fetch/_id", question.FetchOneQuizQuestionByID)
+	router.GET("/fetch/1/quiz_id", question.FetchOneQuizQuestionByQuizID)
+	router.GET("/fetch/n/quiz_id", question.FetchManyQuizQuestionByQuizID)
 }

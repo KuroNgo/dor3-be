@@ -22,6 +22,7 @@ type IQuizQuestionUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchByID(ctx context.Context, id string) (QuizQuestion, error)
 	FetchManyByQuizID(ctx context.Context, quizID string) (Response, error)
+	FetchOneByQuizID(ctx context.Context, quizID string) (QuizQuestion, error)
 
 	UpdateOne(ctx context.Context, quizQuestion *QuizQuestion) (*mongo.UpdateResult, error)
 	CreateOne(ctx context.Context, quizQuestion *QuizQuestion) error

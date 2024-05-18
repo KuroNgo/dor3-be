@@ -27,8 +27,10 @@ func AdminQuizQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *
 	}
 
 	router := group.Group("/quiz/question")
-	router.GET("/fetch/_id", question.FetchOneQuizQuestionByID)
-	router.GET("/fetch", question.FetchManyQuizQuestion)
+	router.GET("/fetch", question.FetchManyQuizQuestionInAdmin)
+	router.GET("/fetch/_id", question.FetchOneQuizQuestionByIDInAdmin)
+	router.GET("/fetch/1/quiz_id", question.FetchOneQuizQuestionByQuizIDInAdmin)
+	router.GET("/fetch/n/quiz_id", question.FetchManyQuizQuestionByQuizIDInAdmin)
 	router.POST("/create", question.CreateOneQuizQuestions)
 	router.PATCH("/update", question.UpdateOneQuizOptions)
 	router.DELETE("/delete/_id", question.DeleteOneQuizQuestions)

@@ -12,18 +12,6 @@ type examQuestionUseCase struct {
 	contextTimeout         time.Duration
 }
 
-func (e *examQuestionUseCase) FetchQuestionByID(ctx context.Context, id string) (exam_question_domain.ExamQuestion, error) {
-	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
-	defer cancel()
-
-	data, err := e.examQuestionRepository.FetchQuestionByID(ctx, id)
-	if err != nil {
-		return exam_question_domain.ExamQuestion{}, err
-	}
-
-	return data, nil
-}
-
 func NewExamQuestionUseCase(examQuestionRepository exam_question_domain.IExamQuestionRepository, timeout time.Duration) exam_question_domain.IExamQuestionUseCase {
 	return &examQuestionUseCase{
 		examQuestionRepository: examQuestionRepository,
@@ -38,6 +26,30 @@ func (e *examQuestionUseCase) FetchMany(ctx context.Context, page string) (exam_
 	data, err := e.examQuestionRepository.FetchMany(ctx, page)
 	if err != nil {
 		return exam_question_domain.Response{}, err
+	}
+
+	return data, nil
+}
+
+func (e *examQuestionUseCase) FetchOneByExamID(ctx context.Context, examID string) (exam_question_domain.ExamQuestionResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	data, err := e.examQuestionRepository.FetchOneByExamID(ctx, examID)
+	if err != nil {
+		return exam_question_domain.ExamQuestionResponse{}, err
+	}
+
+	return data, nil
+}
+
+func (e *examQuestionUseCase) FetchQuestionByID(ctx context.Context, id string) (exam_question_domain.ExamQuestion, error) {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	data, err := e.examQuestionRepository.FetchQuestionByID(ctx, id)
+	if err != nil {
+		return exam_question_domain.ExamQuestion{}, err
 	}
 
 	return data, nil

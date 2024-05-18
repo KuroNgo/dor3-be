@@ -21,27 +21,6 @@ type examQuestionRepository struct {
 	collectionVocabulary string
 }
 
-func (e *examQuestionRepository) FetchQuestionByID(ctx context.Context, id string) (exam_question_domain.ExamQuestion, error) {
-	collectionQuestion := e.database.Collection(e.collectionQuestion)
-
-	idQuestion, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return exam_question_domain.ExamQuestion{}, err
-	}
-
-	var examQuestion exam_question_domain.ExamQuestion
-	filter := bson.M{"_id": idQuestion}
-	err = collectionQuestion.FindOne(ctx, filter).Decode(&examQuestion)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return exam_question_domain.ExamQuestion{}, errors.New("question not found")
-		}
-		return exam_question_domain.ExamQuestion{}, err
-	}
-
-	return examQuestion, nil
-}
-
 func NewExamQuestionRepository(db *mongo.Database, collectionQuestion string, collectionExam string, collectionVocabulary string) exam_question_domain.IExamQuestionRepository {
 	return &examQuestionRepository{
 		database:             db,
@@ -148,6 +127,66 @@ func (e *examQuestionRepository) FetchMany(ctx context.Context, page string) (ex
 		ExamQuestionResponse: questions,
 	}
 	return questionsRes, nil
+}
+
+func (e *examQuestionRepository) FetchOneByExamID(ctx context.Context, examID string) (exam_question_domain.ExamQuestionResponse, error) {
+	collectionQuestion := e.database.Collection(e.collectionQuestion)
+	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
+
+	idExam, err := primitive.ObjectIDFromHex(examID)
+	if err != nil {
+		return exam_question_domain.ExamQuestionResponse{}, err
+	}
+
+	var examQuestion exam_question_domain.ExamQuestion
+	filter := bson.M{"exam_id": idExam}
+	err = collectionQuestion.FindOne(ctx, filter).Decode(&examQuestion)
+	if err != nil {
+		return exam_question_domain.ExamQuestionResponse{}, err
+	}
+
+	var vocabulary vocabulary_domain.Vocabulary
+	filterVocabulary := bson.M{"_id": examQuestion.VocabularyID}
+	err = collectionVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
+	if err != nil {
+		return exam_question_domain.ExamQuestionResponse{}, err
+	}
+
+	var examQuestionRes exam_question_domain.ExamQuestionResponse
+	examQuestionRes.ID = examQuestion.ID
+	examQuestionRes.ExamID = examQuestion.ExamID
+	examQuestionRes.Vocabulary = vocabulary
+	examQuestionRes.Content = examQuestion.Content
+	examQuestionRes.Type = examQuestion.Type
+	examQuestionRes.Level = examQuestion.Level
+	examQuestionRes.Options = examQuestion.Options
+	examQuestionRes.CorrectAnswer = examQuestion.CorrectAnswer
+	examQuestionRes.CreatedAt = examQuestion.CreatedAt
+	examQuestionRes.UpdateAt = examQuestion.UpdateAt
+	examQuestionRes.WhoUpdate = examQuestion.WhoUpdate
+
+	return examQuestionRes, nil
+}
+
+func (e *examQuestionRepository) FetchQuestionByID(ctx context.Context, id string) (exam_question_domain.ExamQuestion, error) {
+	collectionQuestion := e.database.Collection(e.collectionQuestion)
+
+	idQuestion, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return exam_question_domain.ExamQuestion{}, err
+	}
+
+	var examQuestion exam_question_domain.ExamQuestion
+	filter := bson.M{"_id": idQuestion}
+	err = collectionQuestion.FindOne(ctx, filter).Decode(&examQuestion)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return exam_question_domain.ExamQuestion{}, errors.New("question not found")
+		}
+		return exam_question_domain.ExamQuestion{}, err
+	}
+
+	return examQuestion, nil
 }
 
 func (e *examQuestionRepository) FetchManyByExamID(ctx context.Context, examID string, page string) (exam_question_domain.Response, error) {

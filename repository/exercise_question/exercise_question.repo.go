@@ -18,6 +18,24 @@ type exerciseQuestionRepository struct {
 	collectionVocabulary string
 }
 
+func (e *exerciseQuestionRepository) FetchOneByExerciseID(ctx context.Context, exerciseID string) (exercise_questions_domain.ExerciseQuestion, error) {
+	collectionQuestion := e.database.Collection(e.collectionQuestion)
+
+	idExercise, err := primitive.ObjectIDFromHex(exerciseID)
+	if err != nil {
+		return exercise_questions_domain.ExerciseQuestion{}, err
+	}
+
+	var exerciseQuestion exercise_questions_domain.ExerciseQuestion
+	filter := bson.M{"exercise_id": idExercise}
+	err = collectionQuestion.FindOne(ctx, filter).Decode(&exerciseQuestion)
+	if err != nil {
+		return exercise_questions_domain.ExerciseQuestion{}, err
+	}
+
+	return exerciseQuestion, nil
+}
+
 func (e *exerciseQuestionRepository) FetchByID(ctx context.Context, id string) (exercise_questions_domain.ExerciseQuestion, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
