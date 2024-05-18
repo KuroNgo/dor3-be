@@ -22,6 +22,27 @@ type quizRepository struct {
 	collectionUnit   string
 }
 
+func (q *quizRepository) FetchByID(ctx context.Context, id string) (quiz_domain.Quiz, error) {
+	collectionQuiz := q.database.Collection(q.collectionQuiz)
+
+	idQuiz, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return quiz_domain.Quiz{}, err
+	}
+
+	var quiz quiz_domain.Quiz
+	filter := bson.M{"_id": idQuiz}
+	err = collectionQuiz.FindOne(ctx, filter).Decode(&quiz)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return quiz_domain.Quiz{}, errors.New("quiz not found")
+		}
+		return quiz_domain.Quiz{}, err
+	}
+
+	return quiz, nil
+}
+
 func NewQuizRepository(db *mongo.Database, collectionQuiz string, collectionLesson string, collectionUnit string) quiz_domain.IQuizRepository {
 	return &quizRepository{
 		database:         db,
@@ -31,7 +52,7 @@ func NewQuizRepository(db *mongo.Database, collectionQuiz string, collectionLess
 	}
 }
 
-func (q *quizRepository) FetchOneByUnitID(ctx context.Context, unitID string) (quiz_domain.QuizResponse, error) {
+func (q *quizRepository) FetchOneByUnitID(ctx context.Context, unitID string) (quiz_domain.Quiz, error) {
 	//e.cacheMutex.RLock()
 	//cacheData, found := e.examOneCache[unitID]
 	//e.cacheMutex.RUnlock()
@@ -40,18 +61,16 @@ func (q *quizRepository) FetchOneByUnitID(ctx context.Context, unitID string) (q
 	//	return cacheData, nil
 	//}
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
-	collectionUnit := q.database.Collection(q.collectionUnit)
-	collectionLesson := q.database.Collection(q.collectionLesson)
 
 	idUnit, err := primitive.ObjectIDFromHex(unitID)
 	if err != nil {
-		return quiz_domain.QuizResponse{}, err
+		return quiz_domain.Quiz{}, err
 	}
 
 	filter := bson.M{"unit_id": idUnit}
 	cursor, err := collectionQuiz.Find(ctx, filter)
 	if err != nil {
-		return quiz_domain.QuizResponse{}, err
+		return quiz_domain.Quiz{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
 		err := cursor.Close(ctx)
@@ -60,7 +79,7 @@ func (q *quizRepository) FetchOneByUnitID(ctx context.Context, unitID string) (q
 		}
 	}(cursor, ctx)
 
-	var quizs []quiz_domain.QuizResponse
+	var quizs []quiz_domain.Quiz
 	internal.Wg.Add(1)
 	go func() {
 		defer internal.Wg.Done()
@@ -70,44 +89,14 @@ func (q *quizRepository) FetchOneByUnitID(ctx context.Context, unitID string) (q
 				return
 			}
 
-			// Fetch related data
-			countQuest := q.countQuestion(ctx, quiz.Id.Hex())
-			if err != nil {
-				return
-			}
-
-			var unit unit_domain.Unit
-			if err = collectionUnit.FindOne(ctx, bson.M{"_id": idUnit}).Decode(&unit); err != nil {
-				return
-			}
-
-			var lesson lesson_domain.Lesson
-			if err = collectionLesson.FindOne(ctx, bson.M{"_id": unit.LessonID}).Decode(&lesson); err != nil {
-				return
-			}
-
-			var quizRes quiz_domain.QuizResponse
-			quizRes.ID = quiz.Id
-			quizRes.Title = quiz.Title
-			quizRes.Description = quiz.Description
-			quizRes.Duration = quiz.Duration
-			quizRes.CreatedAt = quiz.CreatedAt
-			quizRes.UpdatedAt = quiz.UpdatedAt
-			quizRes.WhoUpdates = quiz.WhoUpdates
-			quizRes.Learner = quiz.Learner
-			quizRes.IsComplete = quiz.IsComplete
-			quizRes.CountQuestion = int32(countQuest)
-			quizRes.Unit = unit
-			quizRes.Lesson = lesson
-
-			quizs = append(quizs, quizRes)
+			quizs = append(quizs, quiz)
 		}
 	}()
 	internal.Wg.Wait()
 
 	// Kiểm tra nếu danh sách exercises không rỗng
 	if len(quizs) == 0 {
-		return quiz_domain.QuizResponse{}, errors.New("no exercises found")
+		return quiz_domain.Quiz{}, errors.New("no exercises found")
 	}
 
 	// Chọn một giá trị ngẫu nhiên từ danh sách exercises
@@ -121,7 +110,7 @@ func (q *quizRepository) FetchOneByUnitID(ctx context.Context, unitID string) (q
 	//e.cacheMutex.Unlock()
 }
 
-func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
+func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]quiz_domain.Quiz, quiz_domain.Response, error) {
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
 	collectionUnit := q.database.Collection(q.collectionUnit)
 	collectionLesson := q.database.Collection(q.collectionLesson)
@@ -172,16 +161,10 @@ func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 		}
 	}(cursor, ctx)
 
-	var quizz []quiz_domain.QuizResponse
+	var quizz []quiz_domain.Quiz
 	for cursor.Next(ctx) {
 		var quiz quiz_domain.Quiz
 		if err := cursor.Decode(&quiz); err != nil {
-			return nil, quiz_domain.Response{}, err
-		}
-
-		// Fetch related data
-		countQuest := q.countQuestion(ctx, quiz.Id.Hex())
-		if err != nil {
 			return nil, quiz_domain.Response{}, err
 		}
 
@@ -195,21 +178,10 @@ func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 			return nil, quiz_domain.Response{}, err
 		}
 
-		var quizRes quiz_domain.QuizResponse
-		quizRes.ID = quiz.Id
-		quizRes.Title = quiz.Title
-		quizRes.Description = quiz.Description
-		quizRes.Duration = quiz.Duration
-		quizRes.CreatedAt = quiz.CreatedAt
-		quizRes.UpdatedAt = quiz.UpdatedAt
-		quizRes.WhoUpdates = quiz.WhoUpdates
-		quizRes.Learner = quiz.Learner
-		quizRes.IsComplete = quiz.IsComplete
-		quizRes.CountQuestion = int32(countQuest)
-		quizRes.Unit = unit
-		quizRes.Lesson = lesson
+		quiz.UnitID = unit.ID
+		quiz.LessonID = lesson.ID
 
-		quizz = append(quizz, quizRes)
+		quizz = append(quizz, quiz)
 	}
 
 	cal := <-calCh
@@ -220,7 +192,7 @@ func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 	return quizz, response, nil
 }
 
-func (q *quizRepository) FetchMany(ctx context.Context, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
+func (q *quizRepository) FetchMany(ctx context.Context, page string) ([]quiz_domain.Quiz, quiz_domain.Response, error) {
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -255,10 +227,10 @@ func (q *quizRepository) FetchMany(ctx context.Context, page string) ([]quiz_dom
 		}
 	}(cursor, ctx)
 
-	var quiz []quiz_domain.QuizResponse
+	var quiz []quiz_domain.Quiz
 
 	for cursor.Next(ctx) {
-		var quizRes quiz_domain.QuizResponse
+		var quizRes quiz_domain.Quiz
 		if err = cursor.Decode(&quizRes); err != nil {
 			return nil, quiz_domain.Response{}, err
 		}

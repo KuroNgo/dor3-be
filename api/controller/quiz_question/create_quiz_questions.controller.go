@@ -37,15 +37,17 @@ func (q *QuizQuestionsController) CreateOneQuizQuestions(ctx *gin.Context) {
 	}
 
 	question := quiz_question_domain.QuizQuestion{
-		ID:           primitive.NewObjectID(),
-		QuizID:       questionInput.QuizID,
-		VocabularyID: questionInput.VocabularyID,
-		Content:      questionInput.Content,
-		Type:         questionInput.Type,
-		Level:        questionInput.Level,
-		CreatedAt:    time.Now(),
-		UpdateAt:     time.Now(),
-		WhoUpdate:    admin.FullName,
+		ID:            primitive.NewObjectID(),
+		QuizID:        questionInput.QuizID,
+		VocabularyID:  questionInput.VocabularyID,
+		Content:       questionInput.Content,
+		Type:          questionInput.Type,
+		Level:         questionInput.Level,
+		Options:       questionInput.Options,
+		CorrectAnswer: questionInput.CorrectAnswer,
+		CreatedAt:     time.Now(),
+		UpdateAt:      time.Now(),
+		WhoUpdate:     admin.FullName,
 	}
 
 	err = q.QuizQuestionUseCase.CreateOne(ctx, &question)

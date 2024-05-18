@@ -2,10 +2,6 @@ package exercise_repository
 
 import (
 	exercise_domain "clean-architecture/domain/exercise"
-	exercise_options_domain "clean-architecture/domain/exercise_options"
-	exercise_questions_domain "clean-architecture/domain/exercise_questions"
-	lesson_domain "clean-architecture/domain/lesson"
-	unit_domain "clean-architecture/domain/unit"
 	"clean-architecture/internal"
 	"context"
 	"errors"
@@ -26,10 +22,30 @@ type exerciseRepository struct {
 	collectionVocabulary string
 	collectionExercise   string
 	collectionQuestion   string
-	collectionOptions    string
 }
 
-func NewExerciseRepository(db *mongo.Database, collectionLesson string, collectionUnit string, collectionVocabulary string, collectionExercise string, collectionQuestion string, collectionOptions string) exercise_domain.IExerciseRepository {
+func (e *exerciseRepository) FetchByID(ctx context.Context, id string) (exercise_domain.Exercise, error) {
+	collectionExercise := e.database.Collection(e.collectionExercise)
+
+	idExercise, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return exercise_domain.Exercise{}, err
+	}
+
+	var exercise exercise_domain.Exercise
+	filter := bson.M{"_id": idExercise}
+	err = collectionExercise.FindOne(ctx, filter).Decode(&exercise)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return exercise_domain.Exercise{}, errors.New("exercise not found")
+		}
+		return exercise_domain.Exercise{}, err
+	}
+
+	return exercise, nil
+}
+
+func NewExerciseRepository(db *mongo.Database, collectionLesson string, collectionUnit string, collectionVocabulary string, collectionExercise string, collectionQuestion string) exercise_domain.IExerciseRepository {
 	return &exerciseRepository{
 		database:             db,
 		collectionLesson:     collectionLesson,
@@ -37,26 +53,21 @@ func NewExerciseRepository(db *mongo.Database, collectionLesson string, collecti
 		collectionVocabulary: collectionVocabulary,
 		collectionExercise:   collectionExercise,
 		collectionQuestion:   collectionQuestion,
-		collectionOptions:    collectionOptions,
 	}
 }
 
-func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.ExerciseResponse, error) {
+func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.Exercise, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
-	collectionUnit := e.database.Collection(e.collectionUnit)
-	collectionLesson := e.database.Collection(e.collectionLesson)
-	collectionQuestion := e.database.Collection(e.collectionQuestion)
-	collectionOptions := e.database.Collection(e.collectionOptions)
 
 	idUnit, err := primitive.ObjectIDFromHex(unitID)
 	if err != nil {
-		return exercise_domain.ExerciseResponse{}, err
+		return exercise_domain.Exercise{}, err
 	}
 
 	filter := bson.M{"unit_id": idUnit}
 	cursor, err := collectionExercise.Find(ctx, filter)
 	if err != nil {
-		return exercise_domain.ExerciseResponse{}, err
+		return exercise_domain.Exercise{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
 		err := cursor.Close(ctx)
@@ -65,7 +76,7 @@ func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string
 		}
 	}(cursor, ctx)
 
-	var exercises []exercise_domain.ExerciseResponse
+	var exercises []exercise_domain.Exercise
 	internal.Wg.Add(1)
 	go func() {
 		defer internal.Wg.Done()
@@ -75,64 +86,14 @@ func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string
 				return
 			}
 
-			// Fetch related data
-			countQuest, err := e.countQuestionByExerciseID(ctx, exercise.Id)
-			if err != nil {
-				return
-			}
-
-			var unit unit_domain.Unit
-			filterUnit := bson.M{"_id": exercise.UnitID}
-			err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
-			if err != nil {
-				return
-			}
-
-			var lesson lesson_domain.Lesson
-			filterLesson := bson.M{"_id": unit.LessonID}
-			err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
-			if err != nil {
-				return
-			}
-
-			var exerciseQuestion exercise_questions_domain.ExerciseQuestion
-			filterQuestion := bson.M{"exercise_id": exercise.Id}
-			err = collectionQuestion.FindOne(ctx, filterQuestion).Decode(&exerciseQuestion)
-			if err != nil {
-				return
-			}
-
-			var exerciseOptions exercise_options_domain.ExerciseOptions
-			filterOptions := bson.M{"question_id": exerciseQuestion.ID}
-			err = collectionOptions.FindOne(ctx, filterOptions).Decode(&exerciseOptions)
-			if err != nil {
-				return
-			}
-
-			var exerciseRes exercise_domain.ExerciseResponse
-			exerciseRes.ID = exercise.Id
-			exerciseRes.Title = exercise.Title
-			exerciseRes.Description = exercise.Description
-			exerciseRes.Duration = exercise.Duration
-			exerciseRes.CreatedAt = exercise.CreatedAt
-			exerciseRes.UpdatedAt = exercise.UpdatedAt
-			exerciseRes.WhoUpdates = exercise.WhoUpdates
-			exerciseRes.Learner = exercise.Learner
-			exerciseRes.IsComplete = exercise.IsComplete
-			exerciseRes.CountQuestion = countQuest
-			exerciseRes.Unit = unit
-			exerciseRes.Lesson = lesson
-			exerciseRes.ExerciseQuestion = exerciseQuestion
-			exerciseRes.ExerciseOptions = exerciseOptions
-
-			exercises = append(exercises, exerciseRes)
+			exercises = append(exercises, exercise)
 		}
 	}()
 	internal.Wg.Wait()
 
 	// Kiểm tra nếu danh sách exercises không rỗng
 	if len(exercises) == 0 {
-		return exercise_domain.ExerciseResponse{}, errors.New("no exercises found")
+		return exercise_domain.Exercise{}, errors.New("no exercises found")
 	}
 
 	// Chọn một giá trị ngẫu nhiên từ danh sách exercises
@@ -142,12 +103,8 @@ func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string
 	return randomExercise, nil
 }
 
-func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
+func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
-	collectionUnit := e.database.Collection(e.collectionUnit)
-	collectionLesson := e.database.Collection(e.collectionLesson)
-	collectionQuestion := e.database.Collection(e.collectionQuestion)
-	collectionOptions := e.database.Collection(e.collectionOptions)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil || pageNumber < 1 {
@@ -184,7 +141,7 @@ func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID strin
 		}
 	}(cursor, ctx)
 
-	var exercises []exercise_domain.ExerciseResponse
+	var exercises []exercise_domain.Exercise
 
 	// Process each exercise
 	for cursor.Next(ctx) {
@@ -193,57 +150,7 @@ func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID strin
 			return nil, exercise_domain.DetailResponse{}, err
 		}
 
-		// Fetch related data
-		countQuest, err := e.countQuestionByExerciseID(ctx, exercise.Id)
-		if err != nil {
-			return nil, exercise_domain.DetailResponse{}, err
-		}
-
-		var unit unit_domain.Unit
-		filterUnit := bson.M{"_id": exercise.UnitID}
-		err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
-		if err != nil {
-			return nil, exercise_domain.DetailResponse{}, err
-		}
-
-		var lesson lesson_domain.Lesson
-		filterLesson := bson.M{"_id": unit.LessonID}
-		err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
-		if err != nil {
-			return nil, exercise_domain.DetailResponse{}, err
-		}
-
-		var exerciseQuestion exercise_questions_domain.ExerciseQuestion
-		filterQuestion := bson.M{"exercise_id": exercise.Id}
-		err = collectionQuestion.FindOne(ctx, filterQuestion).Decode(&exerciseQuestion)
-		if err != nil {
-			return nil, exercise_domain.DetailResponse{}, err
-		}
-
-		var exerciseOptions exercise_options_domain.ExerciseOptions
-		filterOptions := bson.M{"question_id": exerciseQuestion.ID}
-		err = collectionOptions.FindOne(ctx, filterOptions).Decode(&exerciseOptions)
-		if err != nil {
-			return nil, exercise_domain.DetailResponse{}, err
-		}
-
-		var exerciseRes exercise_domain.ExerciseResponse
-		exerciseRes.ID = exercise.Id
-		exerciseRes.Title = exercise.Title
-		exerciseRes.Description = exercise.Description
-		exerciseRes.Duration = exercise.Duration
-		exerciseRes.CreatedAt = exercise.CreatedAt
-		exerciseRes.UpdatedAt = exercise.UpdatedAt
-		exerciseRes.WhoUpdates = exercise.WhoUpdates
-		exerciseRes.Learner = exercise.Learner
-		exerciseRes.IsComplete = exercise.IsComplete
-		exerciseRes.CountQuestion = countQuest
-		exerciseRes.Unit = unit
-		exerciseRes.Lesson = lesson
-		exerciseRes.ExerciseQuestion = exerciseQuestion
-		exerciseRes.ExerciseOptions = exerciseOptions
-
-		exercises = append(exercises, exerciseRes)
+		exercises = append(exercises, exercise)
 	}
 
 	if err = cursor.Err(); err != nil {
@@ -259,16 +166,14 @@ func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID strin
 	return exercises, detail, nil
 }
 
-func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exercise_domain.ExerciseResponse, exercise_domain.DetailResponse, error) {
+func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
-	collectionUnit := e.database.Collection(e.collectionUnit)
-	collectionLesson := e.database.Collection(e.collectionLesson)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
 		return nil, exercise_domain.DetailResponse{}, errors.New("invalid page number")
 	}
-	perPage := 1
+	perPage := 10
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 	count, err := collectionExercise.CountDocuments(ctx, bson.D{})
@@ -290,61 +195,25 @@ func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exer
 		}
 	}(cursor, ctx)
 
-	var exercises []exercise_domain.ExerciseResponse
+	var exercises []exercise_domain.Exercise
 
-	internal.Wg.Add(1)
-	go func() {
-		defer internal.Wg.Done()
-		for cursor.Next(ctx) {
-			var exercise exercise_domain.Exercise
-			if err := cursor.Decode(&exercise); err != nil {
-				log.Printf("failed to decode exercise: %v", err)
-				return
-			}
-
-			// Lấy thông tin liên quan cho mỗi khóa học
-			countQuest, err := e.countQuestionByExerciseID(ctx, exercise.Id)
-			if err != nil {
-				log.Printf("failed to count questions: %v", err)
-				return
-			}
-
-			var unit unit_domain.Unit
-			filterUnit := bson.M{"_id": exercise.UnitID}
-			err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
-			if err != nil {
-				log.Printf("failed to find unit: %v", err)
-				return
-			}
-
-			var lesson lesson_domain.Lesson
-			filterLesson := bson.M{"_id": unit.LessonID}
-			err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
-			if err != nil {
-				log.Printf("failed to find lesson: %v", err)
-				return
-			}
-
-			var exerciseRes exercise_domain.ExerciseResponse
-			exerciseRes.ID = exercise.Id
-			exerciseRes.Title = exercise.Title
-			exerciseRes.Description = exercise.Description
-			exerciseRes.Duration = exercise.Duration
-			exerciseRes.CreatedAt = exercise.CreatedAt
-			exerciseRes.UpdatedAt = exercise.UpdatedAt
-			exerciseRes.WhoUpdates = exercise.WhoUpdates
-			exerciseRes.Learner = exercise.Learner
-			exerciseRes.IsComplete = exercise.IsComplete
-			exerciseRes.CountQuestion = countQuest
-			exerciseRes.Unit = unit
-			exerciseRes.Lesson = lesson
-
-			exercises = append(exercises, exerciseRes)
+	//internal.Wg.Add(1)
+	//go func() {
+	//	defer internal.Wg.Done()
+	for cursor.Next(ctx) {
+		var exercise exercise_domain.Exercise
+		if err := cursor.Decode(&exercise); err != nil {
+			log.Printf("failed to decode exercise: %v", err)
+			return nil, exercise_domain.DetailResponse{}, err
 		}
-		if err := cursor.Err(); err != nil {
-			log.Printf("cursor error: %v", err)
-		}
-	}()
+
+		exercises = append(exercises, exercise)
+
+	}
+	//	if err := cursor.Err(); err != nil {
+	//		log.Printf("cursor error: %v", err)
+	//	}
+	//}()
 	internal.Wg.Wait()
 
 	statisticsCh := make(chan exercise_domain.Statistics)

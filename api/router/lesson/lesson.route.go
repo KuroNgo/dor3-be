@@ -2,6 +2,7 @@ package lesson_route
 
 import (
 	lesson_controller "clean-architecture/api/controller/lesson"
+	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
 	course_domain "clean-architecture/domain/course"
 	image_domain "clean-architecture/domain/image"
@@ -34,6 +35,7 @@ func LessonRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Datab
 	}
 
 	router := group.Group("/lesson")
+	router.Use(middleware.DeserializeUser())
 	router.GET("/fetch", lesson.FetchMany)
 	router.GET("/fetch/not", lesson.FetchManyNotPagination)
 	router.GET("/fetch/_id", lesson.FetchById)

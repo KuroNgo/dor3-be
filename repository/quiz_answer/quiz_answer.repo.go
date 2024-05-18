@@ -2,7 +2,6 @@ package quiz_answer_repository
 
 import (
 	quiz_answer_domain "clean-architecture/domain/quiz_answer"
-	quiz_options_domain "clean-architecture/domain/quiz_options"
 	"clean-architecture/internal"
 	"context"
 	"errors"
@@ -15,15 +14,15 @@ type quizAnswerRepository struct {
 	database           *mongo.Database
 	collectionQuestion string
 	collectionAnswer   string
-	collectionOptions  string
+	collectionQuiz     string
 }
 
-func NewQuizAnswerRepository(db *mongo.Database, collectionQuestion string, collectionAnswer string, collectionOptions string) quiz_answer_domain.IQuizAnswerRepository {
+func NewQuizAnswerRepository(db *mongo.Database, collectionQuestion string, collectionAnswer string, collectionQuiz string) quiz_answer_domain.IQuizAnswerRepository {
 	return &quizAnswerRepository{
 		database:           db,
 		collectionQuestion: collectionQuestion,
 		collectionAnswer:   collectionAnswer,
-		collectionOptions:  collectionOptions,
+		collectionQuiz:     collectionQuiz,
 	}
 }
 
@@ -81,7 +80,6 @@ func (q *quizAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 func (q *quizAnswerRepository) CreateOne(ctx context.Context, quizAnswer *quiz_answer_domain.QuizAnswer) error {
 	collectionAnswer := q.database.Collection(q.collectionAnswer)
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
-	collectionOptions := q.database.Collection(q.collectionOptions)
 
 	// kiểm tra questionId có tồn tại
 	filterQuestionID := bson.M{"question_id": quizAnswer.QuestionID}
@@ -91,21 +89,6 @@ func (q *quizAnswerRepository) CreateOne(ctx context.Context, quizAnswer *quiz_a
 	}
 	if countQuestionID == 0 {
 		return errors.New("the question ID do not exist")
-	}
-
-	// kiểm tra answer có bằng với đáp án
-	var options quiz_options_domain.QuizOptions
-	if err := collectionOptions.FindOne(ctx, filterQuestionID).Decode(&options); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return errors.New("no options found for the question ID")
-		}
-		return err
-	}
-
-	if quizAnswer.Answer == options.CorrectAnswer {
-		quizAnswer.IsCorrect = 1 //đúng
-	} else {
-		quizAnswer.IsCorrect = 0 //sai
 	}
 
 	_, err = collectionAnswer.InsertOne(ctx, quizAnswer)

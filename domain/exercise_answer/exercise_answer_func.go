@@ -12,7 +12,6 @@ type Input struct {
 	QuestionID primitive.ObjectID `bson:"question_id" json:"question_id"`
 
 	Answer      string    `bson:"answer" json:"answer"`
-	BlankIndex  int       `bson:"blank_index" json:"blank_index"` // Chỉ số của từ cần điền vào câu, nếu là loại bài tập điền từ
 	SubmittedAt time.Time `bson:"submitted_at" json:"submitted_at"`
 }
 

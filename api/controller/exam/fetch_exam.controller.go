@@ -118,6 +118,41 @@ func (e *ExamsController) FetchOneExamByUnitID(ctx *gin.Context) {
 	})
 }
 
+func (e *ExamsController) FetchOneExamByID(ctx *gin.Context) {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
+	id := ctx.Query("_id")
+	exam, err := e.ExamUseCase.FetchExamByID(ctx, id)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data":   exam,
+	})
+}
+
 func (e *ExamsController) FetchManyExamInAdmin(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
@@ -127,7 +162,7 @@ func (e *ExamsController) FetchManyExamInAdmin(ctx *gin.Context) {
 		})
 		return
 	}
-	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
@@ -163,7 +198,7 @@ func (e *ExamsController) FetchManyExamByUnitIDInAdmin(ctx *gin.Context) {
 		})
 		return
 	}
-	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
@@ -210,7 +245,7 @@ func (e *ExamsController) FetchOneExamByUnitIDInAdmin(ctx *gin.Context) {
 		})
 		return
 	}
-	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "Unauthorized",
@@ -218,7 +253,6 @@ func (e *ExamsController) FetchOneExamByUnitIDInAdmin(ctx *gin.Context) {
 		})
 		return
 	}
-
 	_, err = ctx.Cookie("access_token")
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -231,6 +265,41 @@ func (e *ExamsController) FetchOneExamByUnitIDInAdmin(ctx *gin.Context) {
 	unitID := ctx.Query("unit_id")
 
 	exam, err := e.ExamUseCase.FetchOneByUnitID(ctx, unitID)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data":   exam,
+	})
+}
+
+func (e *ExamsController) FetchOneExamByIDInAdmin(ctx *gin.Context) {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	admin, err := e.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
+	id := ctx.Query("_id")
+	exam, err := e.ExamUseCase.FetchExamByID(ctx, id)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{

@@ -1,7 +1,6 @@
 package exam_question_domain
 
 import (
-	exam_options_domain "clean-architecture/domain/exam_options"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,9 +17,11 @@ type ExamQuestion struct {
 	ExamID       primitive.ObjectID `bson:"exam_id" json:"exam_id"`
 	VocabularyID primitive.ObjectID `bson:"vocabulary_id" json:"vocabulary_id"`
 
-	Content string `bson:"content" json:"content"`
-	Type    string `bson:"type" json:"type"`
-	Level   int    `bson:"level" json:"level"`
+	Content       string   `bson:"content" json:"content"`
+	Type          string   `bson:"type" json:"type"`
+	Level         int      `bson:"level" json:"level"`
+	Options       []string `bson:"options" json:"options"`
+	CorrectAnswer string   `bson:"correct_answer" json:"correct_answer"`
 
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 	UpdateAt  time.Time `bson:"update_at" json:"update_at"`
@@ -28,14 +29,15 @@ type ExamQuestion struct {
 }
 
 type ExamQuestionResponse struct {
-	ID         primitive.ObjectID              `bson:"_id" json:"_id"`
-	ExamID     primitive.ObjectID              `bson:"exam_id" json:"exam_id"`
-	Vocabulary vocabulary_domain.Vocabulary    `bson:"vocabulary" json:"vocabulary"`
-	Options    exam_options_domain.ExamOptions `bson:"options" json:"options"`
+	ID         primitive.ObjectID           `bson:"_id" json:"_id"`
+	ExamID     primitive.ObjectID           `bson:"exam_id" json:"exam_id"`
+	Vocabulary vocabulary_domain.Vocabulary `bson:"vocabulary" json:"vocabulary"`
 
-	Content string `bson:"content" json:"content"`
-	Type    string `bson:"type" json:"type"`
-	Level   int    `bson:"level" json:"level"`
+	Content       string   `bson:"content" json:"content"`
+	Type          string   `bson:"type" json:"type"`
+	Level         int      `bson:"level" json:"level"`
+	Options       []string `bson:"options" json:"options"`
+	CorrectAnswer string   `bson:"correct_answer" json:"correct_answer"`
 
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 	UpdateAt  time.Time `bson:"update_at" json:"update_at"`
@@ -55,6 +57,7 @@ type Statistics struct {
 
 type IExamQuestionRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
+	FetchQuestionByID(ctx context.Context, id string) (ExamQuestion, error)
 	FetchManyByExamID(ctx context.Context, examID string, page string) (Response, error)
 
 	CreateOne(ctx context.Context, examQuestion *ExamQuestion) error

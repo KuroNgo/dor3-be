@@ -8,6 +8,7 @@ import (
 	exercise_questions_domain "clean-architecture/domain/exercise_questions"
 	user_domain "clean-architecture/domain/user"
 	user_detail_domain "clean-architecture/domain/user_detail"
+	vocabulary_domain "clean-architecture/domain/vocabulary"
 	exercise_question_repository "clean-architecture/repository/exercise_question"
 	user_repository "clean-architecture/repository/user"
 	exercise_question_usecase "clean-architecture/usecase/exercise_question"
@@ -18,7 +19,7 @@ import (
 )
 
 func ExerciseQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	quest := exercise_question_repository.NewExerciseQuestionRepository(db, exercise_questions_domain.CollectionExerciseQuestion, exercise_domain.CollectionExercise)
+	quest := exercise_question_repository.NewExerciseQuestionRepository(db, exercise_questions_domain.CollectionExerciseQuestion, exercise_domain.CollectionExercise, vocabulary_domain.CollectionVocabulary)
 	users := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 
 	question := &exercise_quesiton_controller.ExerciseQuestionsController{
@@ -29,5 +30,6 @@ func ExerciseQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *m
 
 	router := group.Group("/exercise/question")
 	router.Use(middleware.DeserializeUser())
+	router.GET("/fetch/_id", question.FetchOneExerciseQuestionByID)
 	router.GET("/fetch", question.FetchManyExerciseOptions)
 }

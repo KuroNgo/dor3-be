@@ -30,6 +30,7 @@ func QuizRouter(env *bootstrap.Database, timeout time.Duration, db *mongo.Databa
 
 	router := group.Group("/quiz")
 	router.Use(middleware.DeserializeUser())
+	router.GET("/fetch/_id", quiz.FetchOneExerciseQuestionByID)
 	router.GET("/fetch", quiz.FetchManyQuiz)
 	router.GET("/n/fetch", quiz.FetchManyQuizByUnitID)
 	router.GET("/1/fetch", quiz.FetchOneQuizByUnitID)

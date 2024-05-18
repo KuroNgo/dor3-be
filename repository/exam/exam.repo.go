@@ -2,10 +2,6 @@ package exam_repository
 
 import (
 	exam_domain "clean-architecture/domain/exam"
-	exam_options_domain "clean-architecture/domain/exam_options"
-	exam_question_domain "clean-architecture/domain/exam_question"
-	lesson_domain "clean-architecture/domain/lesson"
-	unit_domain "clean-architecture/domain/unit"
 	"clean-architecture/internal"
 	"context"
 	"errors"
@@ -25,32 +21,53 @@ type examRepository struct {
 	collectionUnit         string
 	collectionExam         string
 	collectionExamQuestion string
-	collectionExamOptions  string
+	collectionVocabulary   string
 
 	examResponseCache map[string]exam_domain.DetailResponse
-	examManyCache     map[string][]exam_domain.ExamResponse
-	examOneCache      map[string]exam_domain.ExamResponse
+	examManyCache     map[string][]exam_domain.Exam
+	examOneCache      map[string]exam_domain.Exam
 	examCacheExpires  map[string]time.Time
 	cacheMutex        sync.RWMutex
 }
 
-func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionExamQuestion string, collectionExamOptions string) exam_domain.IExamRepository {
+func (e *examRepository) FetchExamByID(ctx context.Context, id string) (exam_domain.Exam, error) {
+	collectionExam := e.database.Collection(e.collectionExam)
+
+	idExam, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return exam_domain.Exam{}, err
+	}
+
+	var exam exam_domain.Exam
+	filter := bson.M{"_id": idExam}
+	err = collectionExam.FindOne(ctx, filter).Decode(&exam)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return exam_domain.Exam{}, errors.New("exam not found")
+		}
+		return exam_domain.Exam{}, err
+	}
+
+	return exam, nil
+}
+
+func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionExamQuestion string, collectionVocabulary string) exam_domain.IExamRepository {
 	return &examRepository{
 		database:               db,
 		collectionExam:         collectionExam,
 		collectionLesson:       collectionLesson,
 		collectionUnit:         collectionUnit,
 		collectionExamQuestion: collectionExamQuestion,
-		collectionExamOptions:  collectionExamOptions,
+		collectionVocabulary:   collectionVocabulary,
 
 		examResponseCache: make(map[string]exam_domain.DetailResponse),
-		examManyCache:     make(map[string][]exam_domain.ExamResponse),
-		examOneCache:      make(map[string]exam_domain.ExamResponse),
+		examManyCache:     make(map[string][]exam_domain.Exam),
+		examOneCache:      make(map[string]exam_domain.Exam),
 		examCacheExpires:  make(map[string]time.Time),
 	}
 }
 
-func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_domain.ExamResponse, exam_domain.DetailResponse, error) {
+func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
 	//e.cacheMutex.RLock()
 	//cacheData, found := e.examManyCache["exam"]
 	//cachedResponseData, found := e.examResponseCache[page]
@@ -61,10 +78,6 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 	//}
 
 	collectionExam := e.database.Collection(e.collectionExam)
-	collectionUnit := e.database.Collection(e.collectionUnit)
-	collectionLesson := e.database.Collection(e.collectionLesson)
-	collectionExamQuestion := e.database.Collection(e.collectionExamQuestion)
-	collectionExamOptions := e.database.Collection(e.collectionExamOptions)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -99,66 +112,15 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 		}
 	}(cursor, ctx)
 
-	var exams []exam_domain.ExamResponse
-	//internal.Wg.Add(1)
-	//go func() {
-	//	defer internal.Wg.Done()
+	var exams []exam_domain.Exam
 	for cursor.Next(ctx) {
 		var exam exam_domain.Exam
 		if err = cursor.Decode(&exam); err != nil {
 			return nil, exam_domain.DetailResponse{}, err
 		}
-		countQuest := e.CountQuestion(ctx, exam.ID.Hex())
 
-		var unit unit_domain.Unit
-		filterUnit := bson.M{"_id": exam.UnitID}
-		err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
-		if err != nil {
-			return nil, exam_domain.DetailResponse{}, err
-		}
-
-		var lesson lesson_domain.Lesson
-		filterLesson := bson.M{"_id": unit.LessonID}
-		err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
-		if err != nil {
-			return nil, exam_domain.DetailResponse{}, err
-		}
-
-		var examQuestion exam_question_domain.ExamQuestion
-		filterQuestion := bson.M{"exam_id": exam.ID}
-		err = collectionExamQuestion.FindOne(ctx, filterQuestion).Decode(&examQuestion)
-		if err != nil {
-			return nil, exam_domain.DetailResponse{}, err
-		}
-
-		var examOptions exam_options_domain.ExamOptions
-		filterOptions := bson.M{"question_id": examQuestion.ID}
-		err = collectionExamOptions.FindOne(ctx, filterOptions).Decode(&examOptions)
-		if err != nil {
-			return nil, exam_domain.DetailResponse{}, err
-		}
-
-		var examRes exam_domain.ExamResponse
-		examRes.ID = exam.ID
-		examRes.Title = exam.Title
-		examRes.Description = exam.Description
-		examRes.Duration = exam.Duration
-		examRes.CreatedAt = exam.CreatedAt
-		examRes.UpdatedAt = exam.UpdatedAt
-		examRes.WhoUpdates = exam.WhoUpdates
-		examRes.Learner = exam.Learner
-		examRes.IsComplete = exam.IsComplete
-		examRes.CountQuestion = countQuest
-		examRes.Unit = unit
-		examRes.Lesson = lesson
-		examRes.ExamQuestion = examQuestion
-		examRes.ExamOptions = examOptions
-
-		exams = append(exams, examRes)
+		exams = append(exams, exam)
 	}
-	//}()
-
-	//internal.Wg.Wait()
 	statisticsCh := make(chan exam_domain.Statistics)
 	go func() {
 		statistics, _ := e.Statistics(ctx)
@@ -170,14 +132,14 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 	detail := exam_domain.DetailResponse{
 		Page:        cal,
 		CurrentPage: pageNumber,
-		CountExam:   count,
+		CountExam:   int64(len(exams)),
 		Statistics:  statistics,
 	}
 
 	return exams, detail, nil
 }
 
-func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exam_domain.ExamResponse, exam_domain.DetailResponse, error) {
+func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
 	//e.cacheMutex.RLock()
 	//cacheData, found := e.examManyCache[unitID]
 	//cachedResponseData, found := e.examResponseCache[page]
@@ -188,10 +150,6 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 	//}
 
 	collectionExam := e.database.Collection(e.collectionExam)
-	collectionUnit := e.database.Collection(e.collectionUnit)
-	collectionLesson := e.database.Collection(e.collectionLesson)
-	collectionExamQuestion := e.database.Collection(e.collectionExamQuestion)
-	collectionExamOptions := e.database.Collection(e.collectionExamOptions)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil || pageNumber < 1 {
@@ -228,7 +186,7 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 		}
 	}(cursor, ctx)
 
-	var exams []exam_domain.ExamResponse
+	var exams []exam_domain.Exam
 
 	// Process each exercise
 	for cursor.Next(ctx) {
@@ -237,63 +195,24 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 			return nil, exam_domain.DetailResponse{}, err
 		}
 
-		// Fetch related data
-		countQuest := e.CountQuestion(ctx, exam.ID.Hex())
-
-		var unit unit_domain.Unit
-		filterUnit := bson.M{"_id": exam.UnitID}
-		err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
-		if err != nil {
-			return nil, exam_domain.DetailResponse{}, err
-		}
-
-		var lesson lesson_domain.Lesson
-		filterLesson := bson.M{"_id": unit.LessonID}
-		err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
-		if err != nil {
-			return nil, exam_domain.DetailResponse{}, err
-		}
-
-		var examQuestion exam_question_domain.ExamQuestion
-		filterQuestion := bson.M{"exam_id": exam.ID}
-		err = collectionExamQuestion.FindOne(ctx, filterQuestion).Decode(&examQuestion)
-		if err != nil {
-			return nil, exam_domain.DetailResponse{}, err
-		}
-
-		var examOptions exam_options_domain.ExamOptions
-		filterOptions := bson.M{"question_id": examQuestion.ID}
-		err = collectionExamOptions.FindOne(ctx, filterOptions).Decode(&examOptions)
-		if err != nil {
-			return nil, exam_domain.DetailResponse{}, err
-		}
-
-		var examRes exam_domain.ExamResponse
-		examRes.ID = exam.ID
-		examRes.Title = exam.Title
-		examRes.Description = exam.Description
-		examRes.Duration = exam.Duration
-		examRes.CreatedAt = exam.CreatedAt
-		examRes.UpdatedAt = exam.UpdatedAt
-		examRes.WhoUpdates = exam.WhoUpdates
-		examRes.Learner = exam.Learner
-		examRes.IsComplete = exam.IsComplete
-		examRes.CountQuestion = countQuest
-		examRes.Unit = unit
-		examRes.Lesson = lesson
-		examRes.ExamQuestion = examQuestion
-		examRes.ExamOptions = examOptions
-
-		exams = append(exams, examRes)
+		exams = append(exams, exam)
 	}
 
 	if err = cursor.Err(); err != nil {
 		return nil, exam_domain.DetailResponse{}, err
 	}
 
+	statisticsCh := make(chan exam_domain.Statistics)
+	go func() {
+		statistics, _ := e.Statistics(ctx)
+		statisticsCh <- statistics
+	}()
+	statistics := <-statisticsCh
+
 	detail := exam_domain.DetailResponse{
-		CountExam:   count,
+		CountExam:   int64(len(exams)),
 		Page:        totalPages,
+		Statistics:  statistics,
 		CurrentPage: pageNumber,
 	}
 
@@ -306,7 +225,7 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 	//e.cacheMutex.Unlock()
 }
 
-func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.ExamResponse, error) {
+func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.Exam, error) {
 	//e.cacheMutex.RLock()
 	//cacheData, found := e.examOneCache[unitID]
 	//e.cacheMutex.RUnlock()
@@ -316,20 +235,16 @@ func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (e
 	//}
 
 	collectionExam := e.database.Collection(e.collectionExam)
-	collectionUnit := e.database.Collection(e.collectionUnit)
-	collectionLesson := e.database.Collection(e.collectionLesson)
-	collectionExamQuestion := e.database.Collection(e.collectionExamQuestion)
-	collectionExamOptions := e.database.Collection(e.collectionExamOptions)
 
 	idUnit, err := primitive.ObjectIDFromHex(unitID)
 	if err != nil {
-		return exam_domain.ExamResponse{}, err
+		return exam_domain.Exam{}, err
 	}
 
 	filter := bson.M{"unit_id": idUnit}
 	cursor, err := collectionExam.Find(ctx, filter)
 	if err != nil {
-		return exam_domain.ExamResponse{}, err
+		return exam_domain.Exam{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
 		err := cursor.Close(ctx)
@@ -338,7 +253,7 @@ func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (e
 		}
 	}(cursor, ctx)
 
-	var exams []exam_domain.ExamResponse
+	var exams []exam_domain.Exam
 	internal.Wg.Add(1)
 	go func() {
 		defer internal.Wg.Done()
@@ -348,64 +263,15 @@ func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (e
 				return
 			}
 
-			// Fetch related data
-			countQuest := e.CountQuestion(ctx, exam.ID.Hex())
-			if err != nil {
-				return
-			}
+			exams = append(exams, exam)
 
-			var unit unit_domain.Unit
-			filterUnit := bson.M{"_id": exam.UnitID}
-			err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
-			if err != nil {
-				return
-			}
-
-			var lesson lesson_domain.Lesson
-			filterLesson := bson.M{"_id": unit.LessonID}
-			err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
-			if err != nil {
-				return
-			}
-
-			var examQuestion exam_question_domain.ExamQuestion
-			filterQuestion := bson.M{"exam_id": exam.ID}
-			err = collectionExamQuestion.FindOne(ctx, filterQuestion).Decode(&examQuestion)
-			if err != nil {
-				return
-			}
-
-			var examOptions exam_options_domain.ExamOptions
-			filterOptions := bson.M{"question_id": examQuestion.ID}
-			err = collectionExamOptions.FindOne(ctx, filterOptions).Decode(&examOptions)
-			if err != nil {
-				return
-			}
-
-			var examRes exam_domain.ExamResponse
-			examRes.ID = exam.ID
-			examRes.Title = exam.Title
-			examRes.Description = exam.Description
-			examRes.Duration = exam.Duration
-			examRes.CreatedAt = exam.CreatedAt
-			examRes.UpdatedAt = exam.UpdatedAt
-			examRes.WhoUpdates = exam.WhoUpdates
-			examRes.Learner = exam.Learner
-			examRes.IsComplete = exam.IsComplete
-			examRes.CountQuestion = countQuest
-			examRes.Unit = unit
-			examRes.Lesson = lesson
-			examRes.ExamQuestion = examQuestion
-			examRes.ExamOptions = examOptions
-
-			exams = append(exams, examRes)
 		}
 	}()
 	internal.Wg.Wait()
 
 	// Kiểm tra nếu danh sách exercises không rỗng
 	if len(exams) == 0 {
-		return exam_domain.ExamResponse{}, errors.New("no exercises found")
+		return exam_domain.Exam{}, errors.New("no exercises found")
 	}
 
 	// Chọn một giá trị ngẫu nhiên từ danh sách exercises

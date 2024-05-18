@@ -1,10 +1,6 @@
 package quiz_domain
 
 import (
-	lesson_domain "clean-architecture/domain/lesson"
-	quiz_options_domain "clean-architecture/domain/quiz_options"
-	quiz_question_domain "clean-architecture/domain/quiz_question"
-	unit_domain "clean-architecture/domain/unit"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -31,26 +27,6 @@ type Quiz struct {
 	Learner    string    `bson:"learner" json:"learner"`
 }
 
-type QuizResponse struct {
-	ID           primitive.ObjectID                `bson:"_id" json:"_id"`
-	Lesson       lesson_domain.Lesson              `bson:"lesson" json:"lesson"`
-	Unit         unit_domain.Unit                  `bson:"unit" json:"unit"`
-	QuizOptions  quiz_options_domain.QuizOptions   `bson:"quiz_options" json:"quiz_options"`
-	QuizQuestion quiz_question_domain.QuizQuestion `bson:"quiz_question" json:"quiz_question"`
-
-	Title       string `bson:"title" json:"title"`
-	Description string `bson:"description" json:"description"`
-	Duration    string `bson:"duration" json:"duration"`
-
-	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
-	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
-	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
-	Learner    string    `bson:"learner" json:"learner"`
-
-	IsComplete    int   `bson:"is_complete" json:"is_complete"`
-	CountQuestion int32 `bson:"count_question" json:"count_question"`
-}
-
 type Response struct {
 	CountExam   int64      `bson:"count_quiz" json:"count_quiz"`
 	Page        int64      `bson:"page" json:"page"`
@@ -64,9 +40,10 @@ type Statistics struct {
 
 //go:generate mockery --name IQuizRepository
 type IQuizRepository interface {
-	FetchMany(ctx context.Context, page string) ([]QuizResponse, Response, error)
-	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]QuizResponse, Response, error)
-	FetchOneByUnitID(ctx context.Context, unitID string) (QuizResponse, error)
+	FetchMany(ctx context.Context, page string) ([]Quiz, Response, error)
+	FetchByID(ctx context.Context, id string) (Quiz, error)
+	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]Quiz, Response, error)
+	FetchOneByUnitID(ctx context.Context, unitID string) (Quiz, error)
 
 	CreateOne(ctx context.Context, quiz *Quiz) error
 	UpdateOne(ctx context.Context, quiz *Quiz) (*mongo.UpdateResult, error)

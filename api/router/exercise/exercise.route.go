@@ -2,9 +2,9 @@ package exercise_route
 
 import (
 	exercise_controller "clean-architecture/api/controller/exercise"
+	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
 	exercise_domain "clean-architecture/domain/exercise"
-	exercise_options_domain "clean-architecture/domain/exercise_options"
 	exercise_questions_domain "clean-architecture/domain/exercise_questions"
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
@@ -21,7 +21,7 @@ import (
 )
 
 func ExerciseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	ex := exercise_repository.NewExerciseRepository(db, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary, exercise_domain.CollectionExercise, exercise_questions_domain.CollectionExerciseQuestion, exercise_options_domain.CollectionExerciseOptions)
+	ex := exercise_repository.NewExerciseRepository(db, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary, exercise_domain.CollectionExercise, exercise_questions_domain.CollectionExerciseQuestion)
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 
 	exercise := &exercise_controller.ExerciseController{
@@ -31,6 +31,9 @@ func ExerciseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Dat
 	}
 
 	router := group.Group("/exercise")
+	router.Use(middleware.DeserializeUser())
+	router.GET("/fetch/_id", exercise.FetchOneExerciseByID)
+	router.GET("/fetch/n/unit_id", exercise.FetchManyByUnitID)
 	router.GET("/fetch", exercise.FetchManyExercise)
-	router.GET("/fetch/1/unit", exercise.FetchOneByUnitID)
+	router.GET("/fetch/1/unit_id", exercise.FetchOneByUnitID)
 }

@@ -37,15 +37,17 @@ func (e *ExerciseQuestionsController) CreateOneExerciseQuestions(ctx *gin.Contex
 	}
 
 	question := exercise_questions_domain.ExerciseQuestion{
-		ID:           primitive.NewObjectID(),
-		ExerciseID:   questionInput.ExerciseID,
-		VocabularyID: questionInput.VocabularyID,
-		Content:      questionInput.Content,
-		Type:         questionInput.Type,
-		Level:        questionInput.Level,
-		CreatedAt:    time.Now(),
-		UpdateAt:     time.Now(),
-		WhoUpdate:    admin.FullName,
+		ID:            primitive.NewObjectID(),
+		ExerciseID:    questionInput.ExerciseID,
+		VocabularyID:  questionInput.VocabularyID,
+		Content:       questionInput.Content,
+		Type:          questionInput.Type,
+		Level:         questionInput.Level,
+		Options:       questionInput.Options,
+		CorrectAnswer: questionInput.CorrectAnswer,
+		CreatedAt:     time.Now(),
+		UpdateAt:      time.Now(),
+		WhoUpdate:     admin.FullName,
 	}
 
 	err = e.ExerciseQuestionUseCase.CreateOne(ctx, &question)

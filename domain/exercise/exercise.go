@@ -1,10 +1,6 @@
 package exercise_domain
 
 import (
-	exercise_options_domain "clean-architecture/domain/exercise_options"
-	exercise_questions_domain "clean-architecture/domain/exercise_questions"
-	lesson_domain "clean-architecture/domain/lesson"
-	unit_domain "clean-architecture/domain/unit"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -31,26 +27,6 @@ type Exercise struct {
 	Learner    string    `bson:"learner" json:"learner"`
 }
 
-type ExerciseResponse struct {
-	ID               primitive.ObjectID                         `bson:"_id" json:"_id"`
-	Lesson           lesson_domain.Lesson                       `bson:"lesson" json:"lesson"`
-	Unit             unit_domain.Unit                           `bson:"unit" json:"unit"`
-	ExerciseOptions  exercise_options_domain.ExerciseOptions    `bson:"exercise_options" json:"exercise_options"`
-	ExerciseQuestion exercise_questions_domain.ExerciseQuestion `bson:"exercise_question" json:"exercise_question"`
-
-	Title       string `bson:"title" json:"title"`
-	Description string `bson:"description" json:"description"`
-	Duration    string `bson:"duration" json:"duration"`
-
-	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
-	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
-	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
-	Learner    string    `bson:"learner" json:"learner"`
-
-	IsComplete    int   `bson:"is_complete" json:"is_complete"`
-	CountQuestion int32 `bson:"count_question" json:"count_question"`
-}
-
 type DetailResponse struct {
 	CountExercise int64      `bson:"count_exercise" json:"count_exercise"`
 	Page          int64      `json:"page" bson:"page"`
@@ -63,9 +39,10 @@ type Statistics struct {
 }
 
 type IExerciseRepository interface {
-	FetchMany(ctx context.Context, page string) ([]ExerciseResponse, DetailResponse, error)
-	FetchOneByUnitID(ctx context.Context, unitID string) (ExerciseResponse, error)
-	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]ExerciseResponse, DetailResponse, error)
+	FetchMany(ctx context.Context, page string) ([]Exercise, DetailResponse, error)
+	FetchByID(ctx context.Context, id string) (Exercise, error)
+	FetchOneByUnitID(ctx context.Context, unitID string) (Exercise, error)
+	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]Exercise, DetailResponse, error)
 
 	CreateOne(ctx context.Context, exercise *Exercise) error
 	UpdateOne(ctx context.Context, exercise *Exercise) (*mongo.UpdateResult, error)

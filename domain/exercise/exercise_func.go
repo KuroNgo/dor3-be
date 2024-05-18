@@ -27,9 +27,10 @@ type Complete struct {
 }
 
 type IExerciseUseCase interface {
-	FetchMany(ctx context.Context, page string) ([]ExerciseResponse, DetailResponse, error)
-	FetchOneByUnitID(ctx context.Context, unitID string) (ExerciseResponse, error)
-	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]ExerciseResponse, DetailResponse, error)
+	FetchMany(ctx context.Context, page string) ([]Exercise, DetailResponse, error)
+	FetchByID(ctx context.Context, id string) (Exercise, error)
+	FetchOneByUnitID(ctx context.Context, unitID string) (Exercise, error)
+	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]Exercise, DetailResponse, error)
 
 	UpdateOne(ctx context.Context, exercise *Exercise) (*mongo.UpdateResult, error)
 	UpdateCompleted(ctx context.Context, exercise *Exercise) error

@@ -12,6 +12,18 @@ type quizUseCase struct {
 	contextTimeout time.Duration
 }
 
+func (q *quizUseCase) FetchByID(ctx context.Context, id string) (quiz_domain.Quiz, error) {
+	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
+	defer cancel()
+
+	data, err := q.quizRepository.FetchByID(ctx, id)
+	if err != nil {
+		return quiz_domain.Quiz{}, err
+	}
+
+	return data, nil
+}
+
 func NewQuizUseCase(quizRepository quiz_domain.IQuizRepository, timeout time.Duration) quiz_domain.IQuizUseCase {
 	return &quizUseCase{
 		quizRepository: quizRepository,
@@ -19,7 +31,7 @@ func NewQuizUseCase(quizRepository quiz_domain.IQuizRepository, timeout time.Dur
 	}
 }
 
-func (q *quizUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
+func (q *quizUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]quiz_domain.Quiz, quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
@@ -31,13 +43,13 @@ func (q *quizUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page
 	return quiz, detail, nil
 }
 
-func (q *quizUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (quiz_domain.QuizResponse, error) {
+func (q *quizUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (quiz_domain.Quiz, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
 	quiz, err := q.quizRepository.FetchOneByUnitID(ctx, unitID)
 	if err != nil {
-		return quiz_domain.QuizResponse{}, err
+		return quiz_domain.Quiz{}, err
 	}
 
 	return quiz, nil
@@ -55,7 +67,7 @@ func (q *quizUseCase) UpdateCompleted(ctx context.Context, quiz *quiz_domain.Qui
 	return nil
 }
 
-func (q *quizUseCase) FetchMany(ctx context.Context, page string) ([]quiz_domain.QuizResponse, quiz_domain.Response, error) {
+func (q *quizUseCase) FetchMany(ctx context.Context, page string) ([]quiz_domain.Quiz, quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 

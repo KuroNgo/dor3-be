@@ -11,30 +11,35 @@ import (
 	"time"
 )
 
+// handleError xử lý lỗi chung
+func handleError(ctx *gin.Context, statusCode int, message string, err error) {
+	ctx.JSON(statusCode, gin.H{
+		"status":  "error",
+		"message": message,
+		"error":   err.Error(),
+	})
+}
+
+// IsCorrect là hằng số để biểu thị câu trả lời đúng
+const IsCorrect = 1
+
+// CreateOneExamAnswer tạo một câu trả lời bài kiểm tra
 func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"status":  "fail",
-			"message": "You are not logged in!",
-		})
+		handleError(ctx, http.StatusUnauthorized, "You are not logged in!", nil)
 		return
 	}
+
 	user, err := e.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || user == nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"status":  "Unauthorized",
-			"message": "You are not authorized to perform this action!",
-		})
+		handleError(ctx, http.StatusUnauthorized, "You are not authorized to perform this action!", err)
 		return
 	}
 
 	var answerInput exam_answer_domain.Input
 	if err = ctx.ShouldBindJSON(&answerInput); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status": "error",
-			"error":  err.Error(),
-		})
+		handleError(ctx, http.StatusBadRequest, "Invalid request", err)
 		return
 	}
 
@@ -48,19 +53,13 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 
 	err = e.ExamAnswerUseCase.CreateOne(ctx, &answer)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"message": err.Error(),
-		})
+		handleError(ctx, http.StatusInternalServerError, "Failed to create answer", err)
 		return
 	}
 
 	data, err := e.ExamAnswerUseCase.FetchManyAnswerByUserIDAndQuestionID(ctx, answerInput.QuestionID.Hex(), user.ID.Hex())
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"message": err.Error(),
-		})
+		handleError(ctx, http.StatusInternalServerError, "Failed to fetch answers", err)
 		return
 	}
 
@@ -68,12 +67,11 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 		var examID primitive.ObjectID
 		var totalCorrect int16
 
-		// Determine the examID and count the total correct answers
 		for i, res := range data.ExamAnswerResponse {
 			if i == 1 {
 				examID = res.Question.ExamID
 			}
-			if res.IsCorrect == 1 {
+			if res.IsCorrect == IsCorrect {
 				totalCorrect++
 			}
 		}
@@ -85,15 +83,12 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 				ExamID:     examID,
 				Score:      totalCorrect,
 				StartedAt:  time.Now(),
-				IsComplete: 1,
+				IsComplete: IsCorrect,
 			}
 
 			err := e.ExamResultUseCase.CreateOne(ctx, examResult)
 			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, gin.H{
-					"status":  "error",
-					"message": err.Error(),
-				})
+				handleError(ctx, http.StatusInternalServerError, "Failed to create exam result", err)
 				return
 			}
 
@@ -112,10 +107,7 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 
 			err = e.UserAttemptUseCase.CreateOneByUserID(ctx, userProcess)
 			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, gin.H{
-					"status":  "error",
-					"message": err.Error(),
-				})
+				handleError(ctx, http.StatusInternalServerError, "Failed to create user process", err)
 				return
 			}
 

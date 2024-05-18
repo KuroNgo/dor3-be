@@ -7,6 +7,7 @@ import (
 	exercise_domain "clean-architecture/domain/exercise"
 	exercise_questions_domain "clean-architecture/domain/exercise_questions"
 	user_domain "clean-architecture/domain/user"
+	vocabulary_domain "clean-architecture/domain/vocabulary"
 	admin_repository "clean-architecture/repository/admin"
 	"clean-architecture/repository/exercise_question"
 	admin_usecase "clean-architecture/usecase/admin"
@@ -17,7 +18,7 @@ import (
 )
 
 func AdminExerciseQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	quest := exercise_question_repository.NewExerciseQuestionRepository(db, exercise_questions_domain.CollectionExerciseQuestion, exercise_domain.CollectionExercise)
+	quest := exercise_question_repository.NewExerciseQuestionRepository(db, exercise_questions_domain.CollectionExerciseQuestion, exercise_domain.CollectionExercise, vocabulary_domain.CollectionVocabulary)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 
 	question := &exercise_quesiton_controller.ExerciseQuestionsController{
@@ -27,6 +28,8 @@ func AdminExerciseQuestionRoute(env *bootstrap.Database, timeout time.Duration, 
 	}
 
 	router := group.Group("/exercise/question")
+	router.GET("/fetch", question.FetchManyExerciseOptionsInAdmin)
+	router.GET("/fetch/_id", question.FetchOneExerciseQuestionByIDInAdmin)
 	router.POST("/create", question.CreateOneExerciseQuestions)
 	router.PATCH("/update", question.UpdateOneExerciseOptions)
 	router.DELETE("/delete/:_id", question.DeleteOneExerciseQuestions)
