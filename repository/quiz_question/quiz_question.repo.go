@@ -18,27 +18,6 @@ type quizQuestionRepository struct {
 	collectionQuiz     string
 }
 
-func (q quizQuestionRepository) FetchByID(ctx context2.Context, id string) (quiz_question_domain.QuizQuestion, error) {
-	collectionQuestion := q.database.Collection(q.collectionQuestion)
-
-	idQuestion, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return quiz_question_domain.QuizQuestion{}, err
-	}
-
-	var quizQuestion quiz_question_domain.QuizQuestion
-	filter := bson.M{"_id": idQuestion}
-	err = collectionQuestion.FindOne(ctx, filter).Decode(&quizQuestion)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return quiz_question_domain.QuizQuestion{}, errors.New("quiz question not found")
-		}
-		return quiz_question_domain.QuizQuestion{}, err
-	}
-
-	return quizQuestion, nil
-}
-
 func NewQuizQuestionRepository(db *mongo.Database, collectionQuestion string, collectionQuiz string) quiz_question_domain.IQuizQuestionRepository {
 	return &quizQuestionRepository{
 		database:           db,
@@ -90,6 +69,45 @@ func (q quizQuestionRepository) FetchMany(ctx context.Context, page string) (qui
 		QuizQuestion: questions,
 	}
 	return questionsRes, nil
+}
+
+func (q quizQuestionRepository) FetchOneByQuizID(ctx context.Context, quizID string) (quiz_question_domain.QuizQuestion, error) {
+	collectionQuestion := q.database.Collection(q.collectionQuestion)
+
+	idQuiz, err := primitive.ObjectIDFromHex(quizID)
+	if err != nil {
+		return quiz_question_domain.QuizQuestion{}, err
+	}
+
+	var quizQuestion quiz_question_domain.QuizQuestion
+	filter := bson.M{"quiz_id": idQuiz}
+	err = collectionQuestion.FindOne(ctx, filter).Decode(&quizQuestion)
+	if err != nil {
+		return quiz_question_domain.QuizQuestion{}, err
+	}
+
+	return quizQuestion, nil
+}
+
+func (q quizQuestionRepository) FetchByID(ctx context2.Context, id string) (quiz_question_domain.QuizQuestion, error) {
+	collectionQuestion := q.database.Collection(q.collectionQuestion)
+
+	idQuestion, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return quiz_question_domain.QuizQuestion{}, err
+	}
+
+	var quizQuestion quiz_question_domain.QuizQuestion
+	filter := bson.M{"_id": idQuestion}
+	err = collectionQuestion.FindOne(ctx, filter).Decode(&quizQuestion)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return quiz_question_domain.QuizQuestion{}, errors.New("quiz question not found")
+		}
+		return quiz_question_domain.QuizQuestion{}, err
+	}
+
+	return quizQuestion, nil
 }
 
 func (q quizQuestionRepository) FetchManyByQuizID(ctx context.Context, quizID string) (quiz_question_domain.Response, error) {

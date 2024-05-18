@@ -59,6 +59,7 @@ type IExamQuestionRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchQuestionByID(ctx context.Context, id string) (ExamQuestion, error)
 	FetchManyByExamID(ctx context.Context, examID string, page string) (Response, error)
+	FetchOneByExamID(ctx context.Context, examID string) (ExamQuestionResponse, error)
 
 	CreateOne(ctx context.Context, examQuestion *ExamQuestion) error
 	UpdateOne(ctx context.Context, examQuestion *ExamQuestion) (*mongo.UpdateResult, error)

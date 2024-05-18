@@ -28,9 +28,10 @@ func AdminExamQuestionRoute(env *bootstrap.Database, timeout time.Duration, db *
 	}
 
 	router := group.Group("/exam/question")
-	router.GET("/fetch/_id", question.FetchManyExamQuestionsByIDInAdmin)
 	router.GET("/fetch", question.FetchManyExamQuestionsInAdmin)
-	router.GET("/fetch/exam_id", question.FetchManyExamQuestionsByExamIDInAdmin)
+	router.GET("/fetch/_id", question.FetchOneExamQuestionsByIDInAdmin)
+	router.GET("/fetch/1/exam_id", question.FetchOneExamQuestionsByExamIDInAdmin)
+	router.GET("/fetch/n/exam_id", question.FetchManyExamQuestionsByExamIDInAdmin)
 	router.POST("/create", question.CreateOneExamQuestions)
 	router.PATCH("/update", question.UpdateOneExamQuestion)
 	router.DELETE("/delete/_id", question.DeleteOneExamQuestions)

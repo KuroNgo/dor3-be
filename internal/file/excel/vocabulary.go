@@ -38,6 +38,10 @@ func ReadFileForVocabulary(filename string) ([]file_internal.Vocabulary, error) 
 		}
 
 		for i, row := range rows {
+			if i == 0 {
+				continue
+			}
+
 			if len(row) >= 8 {
 				vocabulary := file_internal.Vocabulary{
 					Word:          row[0],

@@ -42,6 +42,7 @@ type IExerciseQuestionRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
 	FetchByID(ctx context.Context, id string) (ExerciseQuestion, error)
 	FetchManyByExerciseID(ctx context.Context, exerciseID string) (Response, error)
+	FetchOneByExerciseID(ctx context.Context, exerciseID string) (ExerciseQuestion, error)
 
 	UpdateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) (*mongo.UpdateResult, error)
 	CreateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) error

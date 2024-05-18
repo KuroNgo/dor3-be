@@ -12,18 +12,6 @@ type quizQuestionUseCase struct {
 	contextTimeout         time.Duration
 }
 
-func (q *quizQuestionUseCase) FetchByID(ctx context.Context, id string) (quiz_question_domain.QuizQuestion, error) {
-	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
-	defer cancel()
-
-	data, err := q.quizQuestionRepository.FetchByID(ctx, id)
-	if err != nil {
-		return quiz_question_domain.QuizQuestion{}, err
-	}
-
-	return data, nil
-}
-
 func NewQuizQuestionUseCase(quizQuestionRepository quiz_question_domain.IQuizQuestionRepository, timeout time.Duration) quiz_question_domain.IQuizQuestionUseCase {
 	return &quizQuestionUseCase{
 		quizQuestionRepository: quizQuestionRepository,
@@ -38,6 +26,30 @@ func (q *quizQuestionUseCase) FetchMany(ctx context.Context, page string) (quiz_
 	data, err := q.quizQuestionRepository.FetchMany(ctx, page)
 	if err != nil {
 		return quiz_question_domain.Response{}, err
+	}
+
+	return data, nil
+}
+
+func (q *quizQuestionUseCase) FetchOneByQuizID(ctx context.Context, quizID string) (quiz_question_domain.QuizQuestion, error) {
+	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
+	defer cancel()
+
+	data, err := q.quizQuestionRepository.FetchOneByQuizID(ctx, quizID)
+	if err != nil {
+		return quiz_question_domain.QuizQuestion{}, err
+	}
+
+	return data, nil
+}
+
+func (q *quizQuestionUseCase) FetchByID(ctx context.Context, id string) (quiz_question_domain.QuizQuestion, error) {
+	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
+	defer cancel()
+
+	data, err := q.quizQuestionRepository.FetchByID(ctx, id)
+	if err != nil {
+		return quiz_question_domain.QuizQuestion{}, err
 	}
 
 	return data, nil

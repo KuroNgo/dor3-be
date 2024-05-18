@@ -12,18 +12,6 @@ type exerciseQuestionUseCase struct {
 	contextTimeout             time.Duration
 }
 
-func (e *exerciseQuestionUseCase) FetchByID(ctx context.Context, id string) (exercise_questions_domain.ExerciseQuestion, error) {
-	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
-	defer cancel()
-
-	vocabulary, err := e.exerciseQuestionRepository.FetchByID(ctx, id)
-	if err != nil {
-		return exercise_questions_domain.ExerciseQuestion{}, err
-	}
-
-	return vocabulary, err
-}
-
 func NewExerciseQuestionUseCase(exerciseQuestionRepository exercise_questions_domain.IExerciseQuestionRepository, timeout time.Duration) exercise_questions_domain.IExerciseQuestionUseCase {
 	return &exerciseQuestionUseCase{
 		exerciseQuestionRepository: exerciseQuestionRepository,
@@ -41,6 +29,30 @@ func (e *exerciseQuestionUseCase) FetchMany(ctx context.Context, page string) (e
 	}
 
 	return data, nil
+}
+
+func (e *exerciseQuestionUseCase) FetchOneByExerciseID(ctx context.Context, exerciseID string) (exercise_questions_domain.ExerciseQuestion, error) {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	vocabulary, err := e.exerciseQuestionRepository.FetchOneByExerciseID(ctx, exerciseID)
+	if err != nil {
+		return exercise_questions_domain.ExerciseQuestion{}, err
+	}
+
+	return vocabulary, err
+}
+
+func (e *exerciseQuestionUseCase) FetchByID(ctx context.Context, id string) (exercise_questions_domain.ExerciseQuestion, error) {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	vocabulary, err := e.exerciseQuestionRepository.FetchByID(ctx, id)
+	if err != nil {
+		return exercise_questions_domain.ExerciseQuestion{}, err
+	}
+
+	return vocabulary, err
 }
 
 func (e *exerciseQuestionUseCase) FetchManyByExerciseID(ctx context.Context, exerciseID string) (exercise_questions_domain.Response, error) {

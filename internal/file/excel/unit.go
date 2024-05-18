@@ -41,9 +41,9 @@ func ReadFileForUnit(filename string) ([]file_internal.Unit, error) {
 		}
 
 		for i, row := range rows {
-			//if i == 0 {
-			//	continue
-			//}
+			if i == 0 {
+				continue
+			}
 
 			if len(row) >= 2 && i%5 == 0 || i == 0 {
 				unit := file_internal.Unit{
