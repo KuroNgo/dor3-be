@@ -173,7 +173,7 @@ func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exer
 	if err != nil {
 		return nil, exercise_domain.DetailResponse{}, errors.New("invalid page number")
 	}
-	perPage := 1
+	perPage := 10
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 	count, err := collectionExercise.CountDocuments(ctx, bson.D{})
@@ -197,23 +197,23 @@ func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exer
 
 	var exercises []exercise_domain.Exercise
 
-	internal.Wg.Add(1)
-	go func() {
-		defer internal.Wg.Done()
-		for cursor.Next(ctx) {
-			var exercise exercise_domain.Exercise
-			if err := cursor.Decode(&exercise); err != nil {
-				log.Printf("failed to decode exercise: %v", err)
-				return
-			}
-
-			exercises = append(exercises, exercise)
-
+	//internal.Wg.Add(1)
+	//go func() {
+	//	defer internal.Wg.Done()
+	for cursor.Next(ctx) {
+		var exercise exercise_domain.Exercise
+		if err := cursor.Decode(&exercise); err != nil {
+			log.Printf("failed to decode exercise: %v", err)
+			return nil, exercise_domain.DetailResponse{}, err
 		}
-		if err := cursor.Err(); err != nil {
-			log.Printf("cursor error: %v", err)
-		}
-	}()
+
+		exercises = append(exercises, exercise)
+
+	}
+	//	if err := cursor.Err(); err != nil {
+	//		log.Printf("cursor error: %v", err)
+	//	}
+	//}()
 	internal.Wg.Wait()
 
 	statisticsCh := make(chan exercise_domain.Statistics)
