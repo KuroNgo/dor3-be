@@ -50,7 +50,7 @@ func (auth *GoogleAuthController) GoogleLoginWithUser(c *gin.Context) {
 	fullName := userInfo["name"].(string)
 	avatarURL := userInfo["picture"].(string)
 	verifiedEmail := userInfo["verified_email"].(bool)
-	resBody := &user_domain.UserInput{
+	resBody := &user_domain.User{
 		ID:        primitive.NewObjectID(),
 		Email:     email,
 		FullName:  fullName,
@@ -77,28 +77,42 @@ func (auth *GoogleAuthController) GoogleLoginWithUser(c *gin.Context) {
 		return
 	}
 
-	accessToken, err := internal.CreateToken(auth.Database.AccessTokenExpiresIn, updateUser.ID.Hex(), auth.Database.AccessTokenPrivateKey)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  "fail",
-			"message": err.Error(),
-		})
-		return
-	}
+	accessTokenCh := make(chan string)
+	refreshTokenCh := make(chan string)
 
-	refreshToken, err := internal.CreateToken(auth.Database.RefreshTokenExpiresIn, updateUser.ID.Hex(), auth.Database.RefreshTokenPrivateKey)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  "fail",
-			"message": err.Error(),
-		})
-		return
-	}
+	go func() {
+		defer close(accessTokenCh)
+		// Generate token
+		accessToken, err := internal.CreateToken(auth.Database.AccessTokenExpiresIn, updateUser.ID, auth.Database.AccessTokenPrivateKey)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status":  "fail",
+				"message": err.Error()},
+			)
+			return
+		}
+		accessTokenCh <- accessToken
+	}()
 
-	c.SetCookie("access_token", accessToken, auth.Database.AccessTokenMaxAge*60, "/", "localhost", false, true)
-	c.SetCookie("refresh_token", refreshToken, auth.Database.RefreshTokenMaxAge*60, "/", "localhost", false, true)
-	c.SetCookie("logged_in", "true", auth.Database.AccessTokenMaxAge*60, "/", "localhost", false, false)
-	c.SetSameSite(http.SameSiteStrictMode) // Chỉ gửi cookie với các yêu cầu cùng nguồn
+	go func() {
+		defer close(refreshTokenCh)
+		refreshToken, err := internal.CreateToken(auth.Database.RefreshTokenExpiresIn, updateUser.ID, auth.Database.RefreshTokenPrivateKey)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status":  "fail",
+				"message": err.Error()},
+			)
+			return
+		}
+		refreshTokenCh <- refreshToken
+	}()
+
+	accessToken := <-accessTokenCh
+	refreshToken := <-refreshTokenCh
+
+	c.SetCookie("access_token", accessToken, auth.Database.AccessTokenMaxAge*1000, "/", "localhost", false, true)
+	c.SetCookie("refresh_token", refreshToken, auth.Database.AccessTokenMaxAge*1000, "/", "localhost", false, true)
+	c.SetCookie("logged_in", "true", auth.Database.AccessTokenMaxAge*1000, "/", "localhost", false, false)
 
 	c.JSON(http.StatusOK, gin.H{"token": signedToken})
 }

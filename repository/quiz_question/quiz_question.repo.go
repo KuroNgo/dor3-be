@@ -174,13 +174,13 @@ func (q quizQuestionRepository) CreateOne(ctx context.Context, quizQuestion *qui
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
-	filterExamID := bson.M{"quiz_id": quizQuestion.QuizID}
-	countLessonID, err := collectionQuiz.CountDocuments(ctx, filterExamID)
+	filterQuizID := bson.M{"quiz_id": quizQuestion.QuizID}
+	countQuiz, err := collectionQuiz.CountDocuments(ctx, filterQuizID)
 	if err != nil {
 		return err
 	}
 
-	if countLessonID == 0 {
+	if countQuiz == 0 {
 		return errors.New("the quizID do not exist")
 	}
 

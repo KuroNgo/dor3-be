@@ -1,6 +1,7 @@
 package exercise_questions_domain
 
 import (
+	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -27,11 +28,27 @@ type ExerciseQuestion struct {
 	WhoUpdate string    `bson:"who_update" json:"who_update"`
 }
 
+type ExerciseQuestionResponse struct {
+	ID         primitive.ObjectID           `bson:"_id" json:"_id"`
+	ExerciseID primitive.ObjectID           `bson:"exercise_id" json:"exercise_id"`
+	Vocabulary vocabulary_domain.Vocabulary `bson:"vocabulary" json:"vocabulary"`
+
+	Content       string   `bson:"content" json:"content"`
+	Type          string   `bson:"type" json:"type"`
+	Level         int      `bson:"level" json:"level"`
+	Options       []string `bson:"options" json:"options"`
+	CorrectAnswer string   `bson:"correct_answer" json:"correct_answer"`
+
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdateAt  time.Time `bson:"update_at" json:"update_at"`
+	WhoUpdate string    `bson:"who_update" json:"who_update"`
+}
+
 type Response struct {
-	Page             int64              `bson:"page" json:"page"`
-	CurrentPage      int                `bson:"current_page" json:"current_page"`
-	Statistics       Statistics         `bson:"statistics" json:"statistics"`
-	ExerciseQuestion []ExerciseQuestion `json:"exercise_question" bson:"exercise_question"`
+	Page                     int64                      `bson:"page" json:"page"`
+	CurrentPage              int                        `bson:"current_page" json:"current_page"`
+	Statistics               Statistics                 `bson:"statistics" json:"statistics"`
+	ExerciseQuestionResponse []ExerciseQuestionResponse `json:"exercise_question" bson:"exercise_question"`
 }
 
 type Statistics struct {
@@ -40,9 +57,9 @@ type Statistics struct {
 
 type IExerciseQuestionRepository interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchByID(ctx context.Context, id string) (ExerciseQuestion, error)
+	FetchByID(ctx context.Context, id string) (ExerciseQuestionResponse, error)
 	FetchManyByExerciseID(ctx context.Context, exerciseID string) (Response, error)
-	FetchOneByExerciseID(ctx context.Context, exerciseID string) (ExerciseQuestion, error)
+	FetchOneByExerciseID(ctx context.Context, exerciseID string) (ExerciseQuestionResponse, error)
 
 	UpdateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) (*mongo.UpdateResult, error)
 	CreateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) error

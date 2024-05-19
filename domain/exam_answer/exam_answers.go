@@ -33,6 +33,7 @@ type ExamAnswerResponse struct {
 
 type Response struct {
 	ExamAnswerResponse []ExamAnswerResponse `json:"exam_answer" bson:"exam_answer"`
+	Score              int                  `json:"score"`
 }
 
 type IExamAnswerRepository interface {

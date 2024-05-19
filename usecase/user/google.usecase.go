@@ -18,7 +18,7 @@ func NewGoogleUseCase(userRepository user_domain.IUserRepository, timeout time.D
 	}
 }
 
-func (g *googleUseCase) UpsertUser(c context.Context, email string, user *user_domain.UserInput) (*user_domain.User, error) {
+func (g *googleUseCase) UpsertUser(c context.Context, email string, user *user_domain.User) (*user_domain.User, error) {
 	ctx, cancel := context.WithTimeout(c, g.contextTimeout)
 	defer cancel()
 	return g.userRepository.UpsertOne(ctx, email, user)

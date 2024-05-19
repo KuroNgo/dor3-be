@@ -3,7 +3,7 @@ package user_attempt_repository
 import (
 	"clean-architecture/domain/user_attempt"
 	"context"
-	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,6 +15,43 @@ type userAttemptRepository struct {
 	collectionExercise    string
 	collectionQuiz        string
 	collectionUserAttempt string
+}
+
+func (u *userAttemptRepository) FetchOneByUnitID(ctx context.Context, unitID string) (user_attempt_domain.UserProcess, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u *userAttemptRepository) UpdateAttemptByExamID(ctx context.Context, userID user_attempt_domain.UserProcess) error {
+	collectionUserAttempt := u.database.Collection(u.collectionUserAttempt)
+
+	filter := bson.D{{Key: "user_id", Value: userID.UserID}}
+	update := bson.D{{Key: "$set", Value: bson.M{
+		"exam_id":        userID.ExamID,
+		"score":          userID.Score,
+		"process_status": userID.ProcessStatus,
+		"completed_date": userID.CompletedDate,
+		"updated_at":     userID.UpdatedAt,
+	}}}
+
+	_, err := collectionUserAttempt.UpdateOne(ctx, filter, &update)
+	return err
+}
+
+func (u *userAttemptRepository) UpdateAttemptByQuizID(ctx context.Context, userID user_attempt_domain.UserProcess) error {
+	collectionUserAttempt := u.database.Collection(u.collectionUserAttempt)
+
+	filter := bson.D{{Key: "user_id", Value: userID.UserID}}
+	update := bson.D{{Key: "$set", Value: bson.M{
+		"quiz_id":        userID.ExamID,
+		"score":          userID.Score,
+		"process_status": userID.ProcessStatus,
+		"completed_date": userID.CompletedDate,
+		"updated_at":     userID.UpdatedAt,
+	}}}
+
+	_, err := collectionUserAttempt.UpdateOne(ctx, filter, &update)
+	return err
 }
 
 func NewUserAttemptRepository(db *mongo.Database, collectionUserAttempt string, collectionExam string, collectionQuiz string, collectionExercise string) user_attempt_domain.IUserProcessRepository {
@@ -50,40 +87,45 @@ func (u *userAttemptRepository) FetchManyByUserID(ctx context.Context, userID st
 
 }
 
-func (u *userAttemptRepository) CreateOneByUserID(ctx context.Context, userProcess user_attempt_domain.UserProcess) error {
+func (u *userAttemptRepository) CreateAttemptByExerciseID(ctx context.Context, userProcess user_attempt_domain.UserProcess) error {
 	collectionUserAttempt := u.database.Collection(u.collectionUserAttempt)
 	collectionExam := u.database.Collection(u.collectionExam)
 	collectionQuiz := u.database.Collection(u.collectionQuiz)
 	collectionExercise := u.database.Collection(u.collectionExercise)
 
-	filterExam := bson.M{"_id": userProcess.ExamID}
-	countExam, err := collectionExam.CountDocuments(ctx, filterExam)
-	if err != nil {
-		return err
-	}
-	if countExam == 0 {
-		return errors.New("the exam do not exist")
-	}
-
-	filterQuiz := bson.M{"_id": userProcess.QuizID}
-	countQuiz, err := collectionQuiz.CountDocuments(ctx, filterQuiz)
-	if err != nil {
-		return err
-	}
-	if countQuiz == 0 {
-		return errors.New("the quiz do not exist")
+	// Hàm kiểm tra sự tồn tại của tài liệu
+	checkExistence := func(collection *mongo.Collection, id primitive.ObjectID, idName string) error {
+		if id == primitive.NilObjectID {
+			return nil
+		}
+		filter := bson.M{"_id": id}
+		count, err := collection.CountDocuments(ctx, filter)
+		if err != nil {
+			return err
+		}
+		if count == 0 {
+			return fmt.Errorf("the %s does not exist", idName)
+		}
+		return nil
 	}
 
-	filterExercise := bson.M{"_id": userProcess.ExerciseID}
-	countExercise, err := collectionExercise.CountDocuments(ctx, filterExercise)
-	if err != nil {
+	// Kiểm tra sự tồn tại của Exam
+	if err := checkExistence(collectionExam, userProcess.ExamID, "exam"); err != nil {
 		return err
 	}
-	if countExercise == 0 {
-		return errors.New("the quiz do not exist")
+
+	// Kiểm tra sự tồn tại của Quiz
+	if err := checkExistence(collectionQuiz, userProcess.QuizID, "quiz"); err != nil {
+		return err
 	}
 
-	_, err = collectionUserAttempt.InsertOne(ctx, userProcess)
+	// Kiểm tra sự tồn tại của Exercise
+	if err := checkExistence(collectionExercise, userProcess.ExerciseID, "exercise"); err != nil {
+		return err
+	}
+
+	// Chèn userProcess vào collectionUserAttempt
+	_, err := collectionUserAttempt.InsertOne(ctx, userProcess)
 	return err
 }
 

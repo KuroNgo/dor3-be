@@ -221,40 +221,44 @@ func (m *markVocabularyRepository) UpdateOne(ctx context.Context, markVocabulary
 }
 
 func (m *markVocabularyRepository) CreateOne(ctx context.Context, markVocabulary *mark_vocabulary_domain.MarkToFavourite) error {
+	// Lấy các collection cụ thể từ cơ sở dữ liệu MongoDB
 	collectionMarkVocabulary := m.database.Collection(m.collectionMarkVocabulary)
 	collectionMarkList := m.database.Collection(m.collectionMarkList)
 	collectionVocabulary := m.database.Collection(m.collectionVocabulary)
 
+	// Kiểm tra xem Mark List có tồn tại không bằng cách đếm các tài liệu khớp với MarkListID
 	filterMarkListReference := bson.M{"_id": markVocabulary.MarkListID}
 	countMarkListParent, err := collectionMarkList.CountDocuments(ctx, filterMarkListReference)
 	if err != nil {
-		return err
+		return err // Trả về lỗi nếu có lỗi xảy ra khi đếm tài liệu
 	}
 	if countMarkListParent == 0 {
-		return errors.New("the mark list does not exist")
+		return errors.New("the mark list does not exist") // Trả về lỗi nếu Mark List không tồn tại
 	}
 
+	// Kiểm tra xem Vocabulary có tồn tại không bằng cách đếm các tài liệu khớp với VocabularyID
 	filterMarkVocabularyReference := bson.M{"_id": markVocabulary.VocabularyID}
 	countMarkVocabularyParent, err := collectionVocabulary.CountDocuments(ctx, filterMarkVocabularyReference)
 	if err != nil {
-		return err
+		return err // Trả về lỗi nếu có lỗi xảy ra khi đếm tài liệu
 	}
 	if countMarkVocabularyParent == 0 {
-		return errors.New("the vocabulary does not exist")
+		return errors.New("the vocabulary does not exist") // Trả về lỗi nếu Vocabulary không tồn tại
 	}
 
+	// Kiểm tra xem Mark Vocabulary đã tồn tại chưa bằng cách đếm các tài liệu khớp với MarkListID và VocabularyID
 	filter := bson.M{"mark_list_id": markVocabulary.MarkListID, "vocabulary_id": markVocabulary.VocabularyID}
 	count, err := collectionMarkVocabulary.CountDocuments(ctx, filter)
 	if err != nil {
-		return err
+		return err // Trả về lỗi nếu có lỗi xảy ra khi đếm tài liệu
 	}
 	if count > 0 {
-		return errors.New("the mark vocabulary already exists")
+		return errors.New("the mark vocabulary already exists") // Trả về lỗi nếu Mark Vocabulary đã tồn tại
 	}
 
-	// Thực hiện tạo mới mark vocabulary
+	// Thực hiện chèn dữ liệu mới vào collection MarkVocabulary
 	_, err = collectionMarkVocabulary.InsertOne(ctx, markVocabulary)
-	return err
+	return err // Trả về kết quả của lệnh chèn hoặc lỗi nếu có lỗi xảy ra
 }
 
 func (m *markVocabularyRepository) DeleteOne(ctx context.Context, markVocabularyID string) error {

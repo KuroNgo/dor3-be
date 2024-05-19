@@ -20,9 +20,9 @@ type Input struct {
 
 type IExerciseQuestionUseCase interface {
 	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchByID(ctx context.Context, id string) (ExerciseQuestion, error)
+	FetchByID(ctx context.Context, id string) (ExerciseQuestionResponse, error)
 	FetchManyByExerciseID(ctx context.Context, exerciseID string) (Response, error)
-	FetchOneByExerciseID(ctx context.Context, exerciseID string) (ExerciseQuestion, error)
+	FetchOneByExerciseID(ctx context.Context, exerciseID string) (ExerciseQuestionResponse, error)
 
 	UpdateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) (*mongo.UpdateResult, error)
 	CreateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) error

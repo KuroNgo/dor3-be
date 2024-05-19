@@ -3,7 +3,6 @@ package exam_answer_repository
 import (
 	exam_answer_domain "clean-architecture/domain/exam_answer"
 	exam_question_domain "clean-architecture/domain/exam_question"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -42,6 +41,7 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
+	// Chuyển đổi questionID và userID sang ObjectID
 	idQuestion, err := primitive.ObjectIDFromHex(questionID)
 	if err != nil {
 		return exam_answer_domain.Response{}, err
@@ -52,55 +52,92 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 		return exam_answer_domain.Response{}, err
 	}
 
-	filter := bson.M{"question_id": idQuestion, "user_id": idUser}
-	cursor, err := collectionAnswer.Find(ctx, filter)
+	// Lấy thông tin của câu hỏi từ questionID
+	var question1 exam_question_domain.ExamQuestion
+	filterQuestion := bson.M{"_id": idQuestion}
+	err = collectionQuestion.FindOne(ctx, filterQuestion).Decode(&question1)
 	if err != nil {
 		return exam_answer_domain.Response{}, err
 	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
-		if err != nil {
-			return
+
+	// Lấy tất cả các câu hỏi thuộc bài kiểm tra đó
+	filterExamID := bson.M{"exam_id": question1.ExamID}
+	cursorQuestions, err := collectionQuestion.Find(ctx, filterExamID)
+	if err != nil {
+		return exam_answer_domain.Response{}, err
+	}
+
+	defer cursorQuestions.Close(ctx)
+
+	var questions []exam_question_domain.ExamQuestion
+	for cursorQuestions.Next(ctx) {
+		var question exam_question_domain.ExamQuestion
+		if err := cursorQuestions.Decode(&question); err != nil {
+			return exam_answer_domain.Response{}, err
 		}
-	}(cursor, ctx)
+		questions = append(questions, question)
+	}
+
+	// Lấy tất cả câu trả lời của người dùng cho bài kiểm tra đó
+	filterAnswers := bson.M{"user_id": idUser, "question_id": bson.M{"$in": questionIDs(questions)}}
+	cursorAnswers, err := collectionAnswer.Find(ctx, filterAnswers)
+	if err != nil {
+		return exam_answer_domain.Response{}, err
+	}
+	defer cursorAnswers.Close(ctx)
 
 	var answers []exam_answer_domain.ExamAnswerResponse
-	internal.Wg.Add(1)
-	go func() {
-		defer internal.Wg.Done()
-		for cursor.Next(ctx) {
-			var answer exam_answer_domain.ExamAnswer
-			if err = cursor.Decode(&answer); err != nil {
-				return
-			}
-
-			var question exam_question_domain.ExamQuestion
-			filterQuestion := bson.M{"_id": answer.QuestionID}
-			err = collectionQuestion.FindOne(ctx, filterQuestion).Decode(&question)
-			if err = cursor.Decode(&answer); err != nil {
-				return
-			}
-
-			var answerRes exam_answer_domain.ExamAnswerResponse
-			answerRes.ID = answer.ID
-			answerRes.UserID = answer.UserID
-			answerRes.Question = question
-			answerRes.Answer = answer.Answer
-			answerRes.SubmittedAt = answer.SubmittedAt
-			answerRes.IsCorrect = answer.IsCorrect
-
-			answer.QuestionID = idQuestion
-			answers = append(answers, answerRes)
+	for cursorAnswers.Next(ctx) {
+		var answer exam_answer_domain.ExamAnswer
+		if err := cursorAnswers.Decode(&answer); err != nil {
+			return exam_answer_domain.Response{}, err
 		}
-	}()
 
-	internal.Wg.Wait()
+		var question exam_question_domain.ExamQuestion
+		filterQuestion := bson.M{"_id": answer.QuestionID}
+		if err := collectionQuestion.FindOne(ctx, filterQuestion).Decode(&question); err != nil {
+			return exam_answer_domain.Response{}, err
+		}
+
+		answerRes := exam_answer_domain.ExamAnswerResponse{
+			ID:          answer.ID,
+			UserID:      answer.UserID,
+			Question:    question,
+			Answer:      answer.Answer,
+			SubmittedAt: answer.SubmittedAt,
+			IsCorrect:   answer.IsCorrect,
+		}
+		answers = append(answers, answerRes)
+	}
+
+	// Kiểm tra số lượng câu hỏi và câu trả lời
+	if len(answers) != len(questions) {
+		return exam_answer_domain.Response{}, errors.New("số câu trả lời không bằng số câu hỏi nên chưa thể tạo kết quả")
+	}
+
+	// Tính điểm
+	var score int
+	for _, answer := range answers {
+		if answer.IsCorrect == 1 {
+			score++
+		}
+	}
 
 	response := exam_answer_domain.Response{
 		ExamAnswerResponse: answers,
+		Score:              score,
 	}
 
 	return response, nil
+}
+
+// Hàm trợ giúp để lấy danh sách các ObjectID của các câu hỏi
+func questionIDs(questions []exam_question_domain.ExamQuestion) []primitive.ObjectID {
+	ids := make([]primitive.ObjectID, len(questions))
+	for i, question := range questions {
+		ids[i] = question.ID
+	}
+	return ids
 }
 
 func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_answer_domain.ExamAnswer) error {

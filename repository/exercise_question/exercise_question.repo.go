@@ -2,8 +2,10 @@ package exercise_question_repository
 
 import (
 	exercise_questions_domain "clean-architecture/domain/exercise_questions"
+	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"context"
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,30 +20,47 @@ type exerciseQuestionRepository struct {
 	collectionVocabulary string
 }
 
-func (e *exerciseQuestionRepository) FetchOneByExerciseID(ctx context.Context, exerciseID string) (exercise_questions_domain.ExerciseQuestion, error) {
+func (e *exerciseQuestionRepository) FetchOneByExerciseID(ctx context.Context, exerciseID string) (exercise_questions_domain.ExerciseQuestionResponse, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
+	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
 
 	idExercise, err := primitive.ObjectIDFromHex(exerciseID)
 	if err != nil {
-		return exercise_questions_domain.ExerciseQuestion{}, err
+		return exercise_questions_domain.ExerciseQuestionResponse{}, err
 	}
 
 	var exerciseQuestion exercise_questions_domain.ExerciseQuestion
 	filter := bson.M{"exercise_id": idExercise}
 	err = collectionQuestion.FindOne(ctx, filter).Decode(&exerciseQuestion)
 	if err != nil {
-		return exercise_questions_domain.ExerciseQuestion{}, err
+		return exercise_questions_domain.ExerciseQuestionResponse{}, err
 	}
 
-	return exerciseQuestion, nil
+	var exerciseQuestionRes exercise_questions_domain.ExerciseQuestionResponse
+	err = collectionQuestion.FindOne(ctx, filter).Decode(&exerciseQuestionRes)
+	if err != nil {
+		return exercise_questions_domain.ExerciseQuestionResponse{}, err
+	}
+
+	var vocabulary vocabulary_domain.Vocabulary
+	filterVocabulary := bson.M{"_id": exerciseQuestion.VocabularyID}
+	err = collectionVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
+	if err != nil {
+		return exercise_questions_domain.ExerciseQuestionResponse{}, err
+	}
+
+	exerciseQuestionRes.Vocabulary = vocabulary
+
+	return exerciseQuestionRes, nil
 }
 
-func (e *exerciseQuestionRepository) FetchByID(ctx context.Context, id string) (exercise_questions_domain.ExerciseQuestion, error) {
+func (e *exerciseQuestionRepository) FetchByID(ctx context.Context, id string) (exercise_questions_domain.ExerciseQuestionResponse, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
+	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
 
 	idQuestion, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return exercise_questions_domain.ExerciseQuestion{}, err
+		return exercise_questions_domain.ExerciseQuestionResponse{}, err
 	}
 
 	var exerciseQuestion exercise_questions_domain.ExerciseQuestion
@@ -49,12 +68,27 @@ func (e *exerciseQuestionRepository) FetchByID(ctx context.Context, id string) (
 	err = collectionQuestion.FindOne(ctx, filter).Decode(&exerciseQuestion)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return exercise_questions_domain.ExerciseQuestion{}, errors.New("exercise question not found")
+			return exercise_questions_domain.ExerciseQuestionResponse{}, errors.New("exercise question not found")
 		}
-		return exercise_questions_domain.ExerciseQuestion{}, err
+		return exercise_questions_domain.ExerciseQuestionResponse{}, err
 	}
 
-	return exerciseQuestion, nil
+	var exerciseQuestionRes exercise_questions_domain.ExerciseQuestionResponse
+	err = collectionQuestion.FindOne(ctx, filter).Decode(&exerciseQuestionRes)
+	if err != nil {
+		return exercise_questions_domain.ExerciseQuestionResponse{}, err
+	}
+
+	var vocabulary vocabulary_domain.Vocabulary
+	filterVocabulary := bson.M{"_id": exerciseQuestion.VocabularyID}
+	err = collectionVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
+	if err != nil {
+		return exercise_questions_domain.ExerciseQuestionResponse{}, err
+	}
+
+	exerciseQuestionRes.Vocabulary = vocabulary
+
+	return exerciseQuestionRes, nil
 }
 
 func NewExerciseQuestionRepository(db *mongo.Database, collectionQuestion string, collectionExercise string, collectionVocabulary string) exercise_questions_domain.IExerciseQuestionRepository {
@@ -68,6 +102,7 @@ func NewExerciseQuestionRepository(db *mongo.Database, collectionQuestion string
 
 func (e *exerciseQuestionRepository) FetchMany(ctx context.Context, page string) (exercise_questions_domain.Response, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
+	collectVocabulary := e.database.Collection(e.collectionVocabulary)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -94,54 +129,124 @@ func (e *exerciseQuestionRepository) FetchMany(ctx context.Context, page string)
 		return exercise_questions_domain.Response{}, err
 	}
 
-	var questions []exercise_questions_domain.ExerciseQuestion
+	var questions []exercise_questions_domain.ExerciseQuestionResponse
 	for cursor.Next(ctx) {
 		var question exercise_questions_domain.ExerciseQuestion
-		if err = cursor.Decode(&question); err != nil {
+		if err := cursor.Decode(&question); err != nil {
+			fmt.Println("Error decoding question:", err)
 			return exercise_questions_domain.Response{}, err
 		}
 
-		questions = append(questions, question)
+		var question2 exercise_questions_domain.ExerciseQuestionResponse
+		if err := cursor.Decode(&question2); err != nil {
+			fmt.Println("Error decoding question:", err)
+			return exercise_questions_domain.Response{}, err
+		}
+
+		var vocabulary vocabulary_domain.Vocabulary
+		filterVocabulary := bson.M{"_id": question.VocabularyID}
+		err := collectVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
+		if err != nil {
+			return exercise_questions_domain.Response{}, err
+		}
+
+		question2.Vocabulary = vocabulary
+
+		questions = append(questions, question2)
 	}
 	questionsRes := exercise_questions_domain.Response{
-		Page:             cal,
-		ExerciseQuestion: questions,
+		Page:                     cal,
+		ExerciseQuestionResponse: questions,
 	}
 	return questionsRes, nil
 }
 
 func (e *exerciseQuestionRepository) FetchManyByExerciseID(ctx context.Context, exerciseID string) (exercise_questions_domain.Response, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
+	collectVocabulary := e.database.Collection(e.collectionVocabulary)
 
-	idExam, err := primitive.ObjectIDFromHex(exerciseID)
+	idExercise, err := primitive.ObjectIDFromHex(exerciseID)
 	if err != nil {
+		fmt.Println("Error converting examID to ObjectID:", err)
 		return exercise_questions_domain.Response{}, err
 	}
 
-	filter := bson.M{"exercise_id": idExam}
+	//pageNumber, err := strconv.Atoi(page)
+	//if err != nil {
+	//	fmt.Println("Error converting page to int:", err)
+	//	return exam_question_domain.Response{}, errors.New("invalid page number")
+	//}
+	//perPage := 7
+	//skip := (pageNumber - 1) * perPage
+	//findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+	//
+	filter := bson.M{"exercise_id": idExercise}
 	cursor, err := collectionQuestion.Find(ctx, filter)
 	if err != nil {
+		fmt.Println("Error finding documents in collectionQuestion:", err)
 		return exercise_questions_domain.Response{}, err
 	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
+	defer func() {
 		err := cursor.Close(ctx)
 		if err != nil {
-			return
+			fmt.Println("Error closing cursor:", err)
 		}
-	}(cursor, ctx)
+	}()
 
-	var questions []exercise_questions_domain.ExerciseQuestion
+	//var count int64
+	//count, err = collectionQuestion.CountDocuments(ctx, bson.M{"exercise_id": idExercise})
+	//if err != nil {
+	//	fmt.Println("Error counting documents in collectionQuestion:", err)
+	//	return exercise_questions_domain.Response{}, err
+	//}
+
+	var questions []exercise_questions_domain.ExerciseQuestionResponse
+
 	for cursor.Next(ctx) {
 		var question exercise_questions_domain.ExerciseQuestion
-		if err = cursor.Decode(&question); err != nil {
+		if err := cursor.Decode(&question); err != nil {
+			fmt.Println("Error decoding question:", err)
 			return exercise_questions_domain.Response{}, err
 		}
 
-		question.ExerciseID = idExam
-		questions = append(questions, question)
+		var question2 exercise_questions_domain.ExerciseQuestionResponse
+		if err := cursor.Decode(&question2); err != nil {
+			fmt.Println("Error decoding question:", err)
+			return exercise_questions_domain.Response{}, err
+		}
+
+		var vocabulary vocabulary_domain.Vocabulary
+		filterVocabulary := bson.M{"_id": question.VocabularyID}
+		err := collectVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
+		if err != nil {
+			return exercise_questions_domain.Response{}, err
+		}
+
+		question2.Vocabulary = vocabulary
+
+		questions = append(questions, question2)
 	}
 
-	questionsRes := exercise_questions_domain.Response{}
+	//var totalPages int64
+	//if count%int64(perPage) == 0 {
+	//	totalPages = count / int64(perPage)
+	//} else {
+	//	totalPages = count/int64(perPage) + 1
+	//}
+	//
+	//statisticsCh := make(chan exercise_questions_domain.Statistics)
+	//go func() {
+	//	statistics, _ := e.Statistics(ctx)
+	//	statisticsCh <- statistics
+	//}()
+	//statistics := <-statisticsCh
+
+	questionsRes := exercise_questions_domain.Response{
+		//Statistics: statistics,
+		//Page:       totalPages,
+		//CurrentPage:          pageNumber,
+		ExerciseQuestionResponse: questions,
+	}
 
 	return questionsRes, nil
 }
