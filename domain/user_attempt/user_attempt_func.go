@@ -18,7 +18,10 @@ type Auto struct {
 
 type IUserProcessUseCase interface {
 	FetchManyByUserID(ctx context.Context, userID string) (Response, error)
-	CreateOneByUserID(ctx context.Context, userID UserProcess) error
+	FetchOneByUnitID(ctx context.Context, unitID string) (UserProcess, error)
+	CreateAttemptByExerciseID(ctx context.Context, userID UserProcess) error
 	UpdateAttemptByUserID(ctx context.Context, userID UserProcess) error
+	UpdateAttemptByExamID(ctx context.Context, userID UserProcess) error
+	UpdateAttemptByQuizID(ctx context.Context, userID UserProcess) error
 	DeleteAllByUserID(ctx context.Context, userID string) error
 }

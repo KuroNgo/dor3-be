@@ -11,6 +11,47 @@ type userAttemptUseCase struct {
 	contextTimeout        time.Duration
 }
 
+func (u *userAttemptUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (user_attempt_domain.UserProcess, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u *userAttemptUseCase) CreateAttemptByExerciseID(ctx context.Context, userID user_attempt_domain.UserProcess) error {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
+	err := u.userAttemptRepository.CreateAttemptByExerciseID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userAttemptUseCase) UpdateAttemptByExamID(ctx context.Context, userID user_attempt_domain.UserProcess) error {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
+	err := u.userAttemptRepository.UpdateAttemptByExamID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userAttemptUseCase) UpdateAttemptByQuizID(ctx context.Context, userID user_attempt_domain.UserProcess) error {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
+	err := u.userAttemptRepository.UpdateAttemptByQuizID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func NewAttemptUseCase(userAttemptRepository user_attempt_domain.IUserProcessRepository, timeout time.Duration) user_attempt_domain.IUserProcessUseCase {
 	return &userAttemptUseCase{
 		userAttemptRepository: userAttemptRepository,
@@ -28,18 +69,6 @@ func (u *userAttemptUseCase) FetchManyByUserID(ctx context.Context, userID strin
 	}
 
 	return userAttempt, err
-}
-
-func (u *userAttemptUseCase) CreateOneByUserID(ctx context.Context, user user_attempt_domain.UserProcess) error {
-	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
-	defer cancel()
-
-	err := u.userAttemptRepository.CreateOneByUserID(ctx, user)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (u *userAttemptUseCase) UpdateAttemptByUserID(ctx context.Context, user user_attempt_domain.UserProcess) error {

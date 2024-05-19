@@ -17,6 +17,43 @@ type userAttemptRepository struct {
 	collectionUserAttempt string
 }
 
+func (u *userAttemptRepository) FetchOneByUnitID(ctx context.Context, unitID string) (user_attempt_domain.UserProcess, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u *userAttemptRepository) UpdateAttemptByExamID(ctx context.Context, userID user_attempt_domain.UserProcess) error {
+	collectionUserAttempt := u.database.Collection(u.collectionUserAttempt)
+
+	filter := bson.D{{Key: "user_id", Value: userID.UserID}}
+	update := bson.D{{Key: "$set", Value: bson.M{
+		"exam_id":        userID.ExamID,
+		"score":          userID.Score,
+		"process_status": userID.ProcessStatus,
+		"completed_date": userID.CompletedDate,
+		"updated_at":     userID.UpdatedAt,
+	}}}
+
+	_, err := collectionUserAttempt.UpdateOne(ctx, filter, &update)
+	return err
+}
+
+func (u *userAttemptRepository) UpdateAttemptByQuizID(ctx context.Context, userID user_attempt_domain.UserProcess) error {
+	collectionUserAttempt := u.database.Collection(u.collectionUserAttempt)
+
+	filter := bson.D{{Key: "user_id", Value: userID.UserID}}
+	update := bson.D{{Key: "$set", Value: bson.M{
+		"quiz_id":        userID.ExamID,
+		"score":          userID.Score,
+		"process_status": userID.ProcessStatus,
+		"completed_date": userID.CompletedDate,
+		"updated_at":     userID.UpdatedAt,
+	}}}
+
+	_, err := collectionUserAttempt.UpdateOne(ctx, filter, &update)
+	return err
+}
+
 func NewUserAttemptRepository(db *mongo.Database, collectionUserAttempt string, collectionExam string, collectionQuiz string, collectionExercise string) user_attempt_domain.IUserProcessRepository {
 	return &userAttemptRepository{
 		database:              db,
@@ -50,7 +87,7 @@ func (u *userAttemptRepository) FetchManyByUserID(ctx context.Context, userID st
 
 }
 
-func (u *userAttemptRepository) CreateOneByUserID(ctx context.Context, userProcess user_attempt_domain.UserProcess) error {
+func (u *userAttemptRepository) CreateAttemptByExerciseID(ctx context.Context, userProcess user_attempt_domain.UserProcess) error {
 	collectionUserAttempt := u.database.Collection(u.collectionUserAttempt)
 	collectionExam := u.database.Collection(u.collectionExam)
 	collectionQuiz := u.database.Collection(u.collectionQuiz)

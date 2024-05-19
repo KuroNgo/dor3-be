@@ -49,7 +49,6 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 		QuestionID:  answerInput.QuestionID,
 		Answer:      answerInput.Answer,
 		SubmittedAt: time.Now(),
-		Learner:     user.FullName,
 	}
 
 	err = e.ExamAnswerUseCase.CreateOne(ctx, &answer)
@@ -104,7 +103,7 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 			UpdatedAt:     time.Now(),
 		}
 
-		err = e.UserAttemptUseCase.CreateOneByUserID(ctx, userProcess)
+		err = e.UserAttemptUseCase.UpdateAttemptByExamID(ctx, userProcess)
 		if err != nil {
 			handleError(ctx, http.StatusInternalServerError, "Failed to create user process", err)
 			return

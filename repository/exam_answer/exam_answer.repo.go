@@ -36,10 +36,12 @@ func NewExamAnswerRepository(db *mongo.Database, collectionQuestion string, coll
 		answerCacheExpires: make(map[string]time.Time),
 	}
 }
+
 func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (exam_answer_domain.Response, error) {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
+	// Chuyển đổi questionID và userID sang ObjectID
 	idQuestion, err := primitive.ObjectIDFromHex(questionID)
 	if err != nil {
 		return exam_answer_domain.Response{}, err
@@ -50,71 +52,62 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 		return exam_answer_domain.Response{}, err
 	}
 
-	filter := bson.M{"question_id": idQuestion, "user_id": idUser}
-	cursor, err := collectionAnswer.Find(ctx, filter)
+	// Lấy thông tin của câu hỏi từ questionID
+	var question1 exam_question_domain.ExamQuestion
+	filterQuestion := bson.M{"_id": idQuestion}
+	err = collectionQuestion.FindOne(ctx, filterQuestion).Decode(&question1)
 	if err != nil {
 		return exam_answer_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
 
-	var answers []exam_answer_domain.ExamAnswerResponse
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
-	var decodeErr error
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for cursor.Next(ctx) {
-			var answer exam_answer_domain.ExamAnswer
-			if err := cursor.Decode(&answer); err != nil {
-				decodeErr = err
-				return
-			}
-
-			var question exam_question_domain.ExamQuestion
-			filterQuestion := bson.M{"_id": answer.QuestionID}
-			if err := collectionQuestion.FindOne(ctx, filterQuestion).Decode(&question); err != nil {
-				decodeErr = err
-				return
-			}
-
-			answerRes := exam_answer_domain.ExamAnswerResponse{
-				ID:          answer.ID,
-				UserID:      answer.UserID,
-				Question:    question,
-				Answer:      answer.Answer,
-				SubmittedAt: answer.SubmittedAt,
-				IsCorrect:   answer.IsCorrect,
-			}
-
-			mutex.Lock()
-			answers = append(answers, answerRes)
-			mutex.Unlock()
-		}
-	}()
-
-	wg.Wait()
-
-	if decodeErr != nil {
-		return exam_answer_domain.Response{}, decodeErr
-	}
-
-	// Lấy danh sách tất cả các câu hỏi
-	filterQuestionAll := bson.M{"_id": idQuestion}
-	cursorQuestion, err := collectionQuestion.Find(ctx, filterQuestionAll)
+	// Lấy tất cả các câu hỏi thuộc bài kiểm tra đó
+	filterExamID := bson.M{"exam_id": question1.ExamID}
+	cursorQuestions, err := collectionQuestion.Find(ctx, filterExamID)
 	if err != nil {
 		return exam_answer_domain.Response{}, err
 	}
-	defer cursorQuestion.Close(ctx)
+
+	defer cursorQuestions.Close(ctx)
 
 	var questions []exam_question_domain.ExamQuestion
-	for cursorQuestion.Next(ctx) {
+	for cursorQuestions.Next(ctx) {
 		var question exam_question_domain.ExamQuestion
-		if err := cursorQuestion.Decode(&question); err != nil {
+		if err := cursorQuestions.Decode(&question); err != nil {
 			return exam_answer_domain.Response{}, err
 		}
 		questions = append(questions, question)
+	}
+
+	// Lấy tất cả câu trả lời của người dùng cho bài kiểm tra đó
+	filterAnswers := bson.M{"user_id": idUser, "question_id": bson.M{"$in": questionIDs(questions)}}
+	cursorAnswers, err := collectionAnswer.Find(ctx, filterAnswers)
+	if err != nil {
+		return exam_answer_domain.Response{}, err
+	}
+	defer cursorAnswers.Close(ctx)
+
+	var answers []exam_answer_domain.ExamAnswerResponse
+	for cursorAnswers.Next(ctx) {
+		var answer exam_answer_domain.ExamAnswer
+		if err := cursorAnswers.Decode(&answer); err != nil {
+			return exam_answer_domain.Response{}, err
+		}
+
+		var question exam_question_domain.ExamQuestion
+		filterQuestion := bson.M{"_id": answer.QuestionID}
+		if err := collectionQuestion.FindOne(ctx, filterQuestion).Decode(&question); err != nil {
+			return exam_answer_domain.Response{}, err
+		}
+
+		answerRes := exam_answer_domain.ExamAnswerResponse{
+			ID:          answer.ID,
+			UserID:      answer.UserID,
+			Question:    question,
+			Answer:      answer.Answer,
+			SubmittedAt: answer.SubmittedAt,
+			IsCorrect:   answer.IsCorrect,
+		}
+		answers = append(answers, answerRes)
 	}
 
 	// Kiểm tra số lượng câu hỏi và câu trả lời
@@ -136,6 +129,15 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 	}
 
 	return response, nil
+}
+
+// Hàm trợ giúp để lấy danh sách các ObjectID của các câu hỏi
+func questionIDs(questions []exam_question_domain.ExamQuestion) []primitive.ObjectID {
+	ids := make([]primitive.ObjectID, len(questions))
+	for i, question := range questions {
+		ids[i] = question.ID
+	}
+	return ids
 }
 
 func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_answer_domain.ExamAnswer) error {

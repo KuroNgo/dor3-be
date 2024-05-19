@@ -19,7 +19,6 @@ type ExamAnswer struct {
 	Answer      string    `bson:"answer" json:"answer"`
 	IsCorrect   int       `bson:"correct" json:"correct"`
 	SubmittedAt time.Time `bson:"submitted_at" json:"submitted_at"`
-	Learner     string    `bson:"learner" json:"learner"`
 }
 
 type ExamAnswerResponse struct {
