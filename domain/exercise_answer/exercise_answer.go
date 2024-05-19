@@ -19,6 +19,7 @@ type ExerciseAnswer struct {
 	IsCorrect int    `bson:"is_correct" json:"is_correct"`
 
 	SubmittedAt time.Time `bson:"submitted_at" json:"submitted_at"`
+	Learner     string    `bson:"learner" json:"learner"`
 }
 
 type Response struct {

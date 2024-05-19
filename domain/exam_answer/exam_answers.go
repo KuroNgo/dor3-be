@@ -19,6 +19,7 @@ type ExamAnswer struct {
 	Answer      string    `bson:"answer" json:"answer"`
 	IsCorrect   int       `bson:"correct" json:"correct"`
 	SubmittedAt time.Time `bson:"submitted_at" json:"submitted_at"`
+	Learner     string    `bson:"learner" json:"learner"`
 }
 
 type ExamAnswerResponse struct {
@@ -33,6 +34,7 @@ type ExamAnswerResponse struct {
 
 type Response struct {
 	ExamAnswerResponse []ExamAnswerResponse `json:"exam_answer" bson:"exam_answer"`
+	Score              int                  `json:"score"`
 }
 
 type IExamAnswerRepository interface {

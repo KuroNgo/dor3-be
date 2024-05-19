@@ -3,7 +3,6 @@ package exam_answer_repository
 import (
 	exam_answer_domain "clean-architecture/domain/exam_answer"
 	exam_question_domain "clean-architecture/domain/exam_question"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -37,7 +36,6 @@ func NewExamAnswerRepository(db *mongo.Database, collectionQuestion string, coll
 		answerCacheExpires: make(map[string]time.Time),
 	}
 }
-
 func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (exam_answer_domain.Response, error) {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
@@ -57,47 +55,84 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 	if err != nil {
 		return exam_answer_domain.Response{}, err
 	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
-		if err != nil {
-			return
-		}
-	}(cursor, ctx)
+	defer cursor.Close(ctx)
 
 	var answers []exam_answer_domain.ExamAnswerResponse
-	internal.Wg.Add(1)
+	var wg sync.WaitGroup
+	var mutex sync.Mutex
+	var decodeErr error
+
+	wg.Add(1)
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for cursor.Next(ctx) {
 			var answer exam_answer_domain.ExamAnswer
-			if err = cursor.Decode(&answer); err != nil {
+			if err := cursor.Decode(&answer); err != nil {
+				decodeErr = err
 				return
 			}
 
 			var question exam_question_domain.ExamQuestion
 			filterQuestion := bson.M{"_id": answer.QuestionID}
-			err = collectionQuestion.FindOne(ctx, filterQuestion).Decode(&question)
-			if err = cursor.Decode(&answer); err != nil {
+			if err := collectionQuestion.FindOne(ctx, filterQuestion).Decode(&question); err != nil {
+				decodeErr = err
 				return
 			}
 
-			var answerRes exam_answer_domain.ExamAnswerResponse
-			answerRes.ID = answer.ID
-			answerRes.UserID = answer.UserID
-			answerRes.Question = question
-			answerRes.Answer = answer.Answer
-			answerRes.SubmittedAt = answer.SubmittedAt
-			answerRes.IsCorrect = answer.IsCorrect
+			answerRes := exam_answer_domain.ExamAnswerResponse{
+				ID:          answer.ID,
+				UserID:      answer.UserID,
+				Question:    question,
+				Answer:      answer.Answer,
+				SubmittedAt: answer.SubmittedAt,
+				IsCorrect:   answer.IsCorrect,
+			}
 
-			answer.QuestionID = idQuestion
+			mutex.Lock()
 			answers = append(answers, answerRes)
+			mutex.Unlock()
 		}
 	}()
 
-	internal.Wg.Wait()
+	wg.Wait()
+
+	if decodeErr != nil {
+		return exam_answer_domain.Response{}, decodeErr
+	}
+
+	// Lấy danh sách tất cả các câu hỏi
+	filterQuestionAll := bson.M{"_id": idQuestion}
+	cursorQuestion, err := collectionQuestion.Find(ctx, filterQuestionAll)
+	if err != nil {
+		return exam_answer_domain.Response{}, err
+	}
+	defer cursorQuestion.Close(ctx)
+
+	var questions []exam_question_domain.ExamQuestion
+	for cursorQuestion.Next(ctx) {
+		var question exam_question_domain.ExamQuestion
+		if err := cursorQuestion.Decode(&question); err != nil {
+			return exam_answer_domain.Response{}, err
+		}
+		questions = append(questions, question)
+	}
+
+	// Kiểm tra số lượng câu hỏi và câu trả lời
+	if len(answers) != len(questions) {
+		return exam_answer_domain.Response{}, errors.New("số câu trả lời không bằng số câu hỏi nên chưa thể tạo kết quả")
+	}
+
+	// Tính điểm
+	var score int
+	for _, answer := range answers {
+		if answer.IsCorrect == 1 {
+			score++
+		}
+	}
 
 	response := exam_answer_domain.Response{
 		ExamAnswerResponse: answers,
+		Score:              score,
 	}
 
 	return response, nil

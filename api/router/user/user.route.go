@@ -27,7 +27,7 @@ func UserRouter(env *bootstrap.Database, timeout time.Duration, db *mongo.Databa
 	router.PATCH("/verify/password", user.VerificationCodeForChangePassword)
 	router.PATCH("/password/forget", user.ChangePassword)
 	router.POST("/forget", user.ForgetPasswordInUser)
-	router.GET("/info", middleware.DeserializeUser(), user.GetMe)
-	router.GET("/refresh", middleware.DeserializeUser(), user.RefreshToken)
-	router.GET("/logout", middleware.DeserializeUser(), user.LogoutUser)
+	router.GET("/info", user.GetMe)
+	router.GET("/refresh", user.RefreshToken)
+	router.GET("/logout", user.LogoutUser)
 }

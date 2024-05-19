@@ -13,7 +13,7 @@ const (
 
 type QuizQuestion struct {
 	ID           primitive.ObjectID `bson:"_id" json:"_id"`
-	QuizID       primitive.ObjectID `bson:"exam_id" json:"exam_id"`
+	QuizID       primitive.ObjectID `bson:"quiz_id" json:"quiz_id"`
 	VocabularyID primitive.ObjectID `bson:"vocabulary_id" json:"vocabulary_id"`
 
 	Content       string   `bson:"content" json:"content"`

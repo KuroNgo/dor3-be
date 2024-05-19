@@ -49,6 +49,7 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 		QuestionID:  answerInput.QuestionID,
 		Answer:      answerInput.Answer,
 		SubmittedAt: time.Now(),
+		Learner:     user.FullName,
 	}
 
 	err = e.ExamAnswerUseCase.CreateOne(ctx, &answer)
@@ -60,60 +61,62 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 	data, err := e.ExamAnswerUseCase.FetchManyAnswerByUserIDAndQuestionID(ctx, answerInput.QuestionID.Hex(), user.ID.Hex())
 	if err != nil {
 		handleError(ctx, http.StatusInternalServerError, "Failed to fetch answers", err)
+	}
+
+	var examID primitive.ObjectID
+	var totalCorrect int16
+
+	for i, res := range data.ExamAnswerResponse {
+		if i == 0 {
+			examID = res.Question.ExamID
+		}
+		if res.IsCorrect == IsCorrect {
+			totalCorrect++
+		}
+	}
+
+	if examID != primitive.NilObjectID {
+		examResult := &exam_result_domain.ExamResult{
+			ID:         primitive.NewObjectID(),
+			UserID:     user.ID,
+			ExamID:     examID,
+			Score:      totalCorrect,
+			StartedAt:  time.Now(),
+			IsComplete: IsCorrect,
+		}
+
+		err := e.ExamResultUseCase.CreateOne(ctx, examResult)
+		if err != nil {
+			handleError(ctx, http.StatusInternalServerError, "Failed to create exam result", err)
+			return
+		}
+
+		userProcess := user_attempt_domain.UserProcess{
+			ID:            primitive.NewObjectID(),
+			UserID:        user.ID,
+			ExamID:        examID,
+			QuizID:        primitive.NilObjectID,
+			ExerciseID:    primitive.NilObjectID,
+			Score:         float32(totalCorrect),
+			ProcessStatus: 0,
+			CompletedDate: time.Now(),
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
+		}
+
+		err = e.UserAttemptUseCase.CreateOneByUserID(ctx, userProcess)
+		if err != nil {
+			handleError(ctx, http.StatusInternalServerError, "Failed to create user process", err)
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"status": "success",
+		})
 		return
 	}
 
-	if len(data.ExamAnswerResponse) == 9 {
-		var examID primitive.ObjectID
-		var totalCorrect int16
-
-		for i, res := range data.ExamAnswerResponse {
-			if i == 1 {
-				examID = res.Question.ExamID
-			}
-			if res.IsCorrect == IsCorrect {
-				totalCorrect++
-			}
-		}
-
-		if examID != primitive.NilObjectID {
-			examResult := &exam_result_domain.ExamResult{
-				ID:         primitive.NewObjectID(),
-				UserID:     user.ID,
-				ExamID:     examID,
-				Score:      totalCorrect,
-				StartedAt:  time.Now(),
-				IsComplete: IsCorrect,
-			}
-
-			err := e.ExamResultUseCase.CreateOne(ctx, examResult)
-			if err != nil {
-				handleError(ctx, http.StatusInternalServerError, "Failed to create exam result", err)
-				return
-			}
-
-			userProcess := user_attempt_domain.UserProcess{
-				ID:            primitive.NewObjectID(),
-				UserID:        user.ID,
-				ExamID:        examID,
-				QuizID:        primitive.NilObjectID,
-				ExerciseID:    primitive.NilObjectID,
-				Score:         float32(totalCorrect),
-				ProcessStatus: 0,
-				CompletedDate: time.Now(),
-				CreatedAt:     time.Now(),
-				UpdatedAt:     time.Now(),
-			}
-
-			err = e.UserAttemptUseCase.CreateOneByUserID(ctx, userProcess)
-			if err != nil {
-				handleError(ctx, http.StatusInternalServerError, "Failed to create user process", err)
-				return
-			}
-
-			ctx.JSON(http.StatusOK, gin.H{
-				"status": "success",
-			})
-		}
-	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "success",
+	})
 }

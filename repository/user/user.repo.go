@@ -230,10 +230,10 @@ func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.Use
 	}
 
 	err = collectionUser.FindOne(c, bson.M{"_id": idHex}).Decode(&user)
-	return &user, err
+	return &user, nil
 }
 
-func (u *userRepository) UpsertOne(c context.Context, email string, user *user_domain.UserInput) (*user_domain.User, error) {
+func (u *userRepository) UpsertOne(c context.Context, email string, user *user_domain.User) (*user_domain.User, error) {
 	collectionUser := u.database.Collection(u.collectionUser)
 
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
