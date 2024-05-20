@@ -95,9 +95,7 @@ func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.
 
 		var question exam_question_domain.ExamQuestion
 		filterQuestion := bson.M{"_id": answer.QuestionID}
-		if err := collectionQuestion.FindOne(ctx, filterQuestion).Decode(&question); err != nil {
-			return exam_answer_domain.Response{}, err
-		}
+		_ = collectionQuestion.FindOne(ctx, filterQuestion).Decode(&question)
 
 		answerRes := exam_answer_domain.ExamAnswerResponse{
 			ID:          answer.ID,

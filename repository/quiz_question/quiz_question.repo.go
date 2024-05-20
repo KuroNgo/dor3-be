@@ -2,6 +2,7 @@ package quiz_question_repository
 
 import (
 	quiz_question_domain "clean-architecture/domain/quiz_question"
+	vocabulary_domain "clean-architecture/domain/vocabulary"
 	context2 "context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,21 +14,24 @@ import (
 )
 
 type quizQuestionRepository struct {
-	database           *mongo.Database
-	collectionQuestion string
-	collectionQuiz     string
+	database             *mongo.Database
+	collectionQuestion   string
+	collectionQuiz       string
+	collectionVocabulary string
 }
 
-func NewQuizQuestionRepository(db *mongo.Database, collectionQuestion string, collectionQuiz string) quiz_question_domain.IQuizQuestionRepository {
+func NewQuizQuestionRepository(db *mongo.Database, collectionQuestion string, collectionQuiz string, collectionVocabulary string) quiz_question_domain.IQuizQuestionRepository {
 	return &quizQuestionRepository{
-		database:           db,
-		collectionQuestion: collectionQuestion,
-		collectionQuiz:     collectionQuiz,
+		database:             db,
+		collectionQuestion:   collectionQuestion,
+		collectionQuiz:       collectionQuiz,
+		collectionVocabulary: collectionVocabulary,
 	}
 }
 
 func (q quizQuestionRepository) FetchMany(ctx context.Context, page string) (quiz_question_domain.Response, error) {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
+	collectionVocabulary := q.database.Collection(q.collectionVocabulary)
 
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
@@ -55,14 +59,24 @@ func (q quizQuestionRepository) FetchMany(ctx context.Context, page string) (qui
 		return quiz_question_domain.Response{}, err
 	}
 
-	var questions []quiz_question_domain.QuizQuestion
+	var questions []quiz_question_domain.QuizQuestionResponse
 	for cursor.Next(ctx) {
 		var question quiz_question_domain.QuizQuestion
 		if err = cursor.Decode(&question); err != nil {
 			return quiz_question_domain.Response{}, err
 		}
 
-		questions = append(questions, question)
+		var vocabulary vocabulary_domain.Vocabulary
+		filterVocabulary := bson.M{"_id": question.VocabularyID}
+		_ = collectionVocabulary.FindOne(ctx, filterVocabulary).Decode(vocabulary)
+
+		var questionRes quiz_question_domain.QuizQuestionResponse
+		if err = cursor.Decode(&questionRes); err != nil {
+			return quiz_question_domain.Response{}, err
+		}
+
+		questionRes.Vocabulary = vocabulary
+		questions = append(questions, questionRes)
 	}
 	questionsRes := quiz_question_domain.Response{
 		Page:         cal,
@@ -112,6 +126,7 @@ func (q quizQuestionRepository) FetchByID(ctx context2.Context, id string) (quiz
 
 func (q quizQuestionRepository) FetchManyByQuizID(ctx context.Context, quizID string) (quiz_question_domain.Response, error) {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
+	collectionVocabulary := q.database.Collection(q.collectionVocabulary)
 
 	idQuiz, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
@@ -130,7 +145,7 @@ func (q quizQuestionRepository) FetchManyByQuizID(ctx context.Context, quizID st
 		}
 	}(cursor, ctx)
 
-	var questions []quiz_question_domain.QuizQuestion
+	var questions []quiz_question_domain.QuizQuestionResponse
 	for cursor.Next(ctx) {
 		var question quiz_question_domain.QuizQuestion
 		if err = cursor.Decode(&question); err != nil {
@@ -139,7 +154,18 @@ func (q quizQuestionRepository) FetchManyByQuizID(ctx context.Context, quizID st
 
 		question.QuizID = idQuiz
 
-		questions = append(questions, question)
+		var vocabulary vocabulary_domain.Vocabulary
+		filterVocabulary := bson.M{"_id": question.VocabularyID}
+		_ = collectionVocabulary.FindOne(ctx, filterVocabulary).Decode(vocabulary)
+
+		var questionRes quiz_question_domain.QuizQuestionResponse
+		if err = cursor.Decode(&questionRes); err != nil {
+			return quiz_question_domain.Response{}, err
+		}
+
+		questionRes.Vocabulary = vocabulary
+
+		questions = append(questions, questionRes)
 	}
 
 	questionsRes := quiz_question_domain.Response{
@@ -174,7 +200,7 @@ func (q quizQuestionRepository) CreateOne(ctx context.Context, quizQuestion *qui
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
-	filterQuizID := bson.M{"quiz_id": quizQuestion.QuizID}
+	filterQuizID := bson.M{"_id": quizQuestion.QuizID}
 	countQuiz, err := collectionQuiz.CountDocuments(ctx, filterQuizID)
 	if err != nil {
 		return err

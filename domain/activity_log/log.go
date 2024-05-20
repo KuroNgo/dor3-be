@@ -42,10 +42,10 @@ type ActivityLogResponse struct {
 }
 
 type Response struct {
-	PageCurrent int64                 `json:"page_current" bson:"page_current"`
-	Page        int64                 `json:"page" bson:"page"`
-	ActivityLog []ActivityLogResponse `json:"activity_log" bson:"activity_log"`
-	Statistics  Statistics            `json:"statistics" bson:"statistics"`
+	PageCurrent int64         `json:"page_current" bson:"page_current"`
+	Page        int64         `json:"page" bson:"page"`
+	ActivityLog []ActivityLog `json:"activity_log" bson:"activity_log"`
+	Statistics  Statistics    `json:"statistics" bson:"statistics"`
 }
 
 type Statistics struct {

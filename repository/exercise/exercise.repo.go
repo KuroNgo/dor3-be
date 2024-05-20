@@ -24,27 +24,6 @@ type exerciseRepository struct {
 	collectionQuestion   string
 }
 
-func (e *exerciseRepository) FetchByID(ctx context.Context, id string) (exercise_domain.Exercise, error) {
-	collectionExercise := e.database.Collection(e.collectionExercise)
-
-	idExercise, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return exercise_domain.Exercise{}, err
-	}
-
-	var exercise exercise_domain.Exercise
-	filter := bson.M{"_id": idExercise}
-	err = collectionExercise.FindOne(ctx, filter).Decode(&exercise)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return exercise_domain.Exercise{}, errors.New("exercise not found")
-		}
-		return exercise_domain.Exercise{}, err
-	}
-
-	return exercise, nil
-}
-
 func NewExerciseRepository(db *mongo.Database, collectionLesson string, collectionUnit string, collectionVocabulary string, collectionExercise string, collectionQuestion string) exercise_domain.IExerciseRepository {
 	return &exerciseRepository{
 		database:             db,
@@ -101,6 +80,27 @@ func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string
 	randomExercise := exercises[randomIndex]
 
 	return randomExercise, nil
+}
+
+func (e *exerciseRepository) FetchByID(ctx context.Context, id string) (exercise_domain.Exercise, error) {
+	collectionExercise := e.database.Collection(e.collectionExercise)
+
+	idExercise, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return exercise_domain.Exercise{}, err
+	}
+
+	var exercise exercise_domain.Exercise
+	filter := bson.M{"_id": idExercise}
+	err = collectionExercise.FindOne(ctx, filter).Decode(&exercise)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return exercise_domain.Exercise{}, errors.New("exercise not found")
+		}
+		return exercise_domain.Exercise{}, err
+	}
+
+	return exercise, nil
 }
 
 func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
@@ -197,9 +197,6 @@ func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exer
 
 	var exercises []exercise_domain.Exercise
 
-	//internal.Wg.Add(1)
-	//go func() {
-	//	defer internal.Wg.Done()
 	for cursor.Next(ctx) {
 		var exercise exercise_domain.Exercise
 		if err := cursor.Decode(&exercise); err != nil {
@@ -208,13 +205,7 @@ func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exer
 		}
 
 		exercises = append(exercises, exercise)
-
 	}
-	//	if err := cursor.Err(); err != nil {
-	//		log.Printf("cursor error: %v", err)
-	//	}
-	//}()
-	internal.Wg.Wait()
 
 	statisticsCh := make(chan exercise_domain.Statistics)
 	go func() {
@@ -239,12 +230,9 @@ func (e *exerciseRepository) UpdateOne(ctx context.Context, exercise *exercise_d
 	filter := bson.D{{Key: "_id", Value: exercise.Id}}
 	update := bson.M{
 		"$set": bson.M{
-			"lesson_id":  exercise.LessonID,
-			"unit_id":    exercise.UnitID,
-			"title":      exercise.Title,
-			"duration":   exercise.Duration,
-			"update_at":  exercise.UpdatedAt,
-			"who_update": exercise.WhoUpdates,
+			"title":       exercise.Title,
+			"duration":    exercise.Duration,
+			"description": exercise.Description,
 		},
 	}
 
@@ -262,7 +250,7 @@ func (e *exerciseRepository) UpdateCompleted(ctx context.Context, exercise *exer
 	update := bson.M{
 		"$set": bson.M{
 			"is_complete": exercise.IsComplete,
-			"update_at":   time.Now(),
+			"updated_at":  time.Now(),
 			"learner":     exercise.Learner,
 		},
 	}

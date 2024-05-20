@@ -58,36 +58,36 @@ func (f *feedbackRepository) FetchMany(ctx context.Context, page string) (feedba
 	}
 
 	var feedbacks []feedback_domain.FeedbackResponse
-	//internal.Wg.Add(1)
-	//go func() {
-	//	defer internal.Wg.Done()
-	for cursor.Next(ctx) {
-		var feedback feedback_domain.Feedback
-		if err = cursor.Decode(&feedback); err != nil {
-			return feedback_domain.Response{}, err
+	internal.Wg.Add(1)
+	go func() {
+		defer internal.Wg.Done()
+		for cursor.Next(ctx) {
+			var feedback feedback_domain.Feedback
+			if err = cursor.Decode(&feedback); err != nil {
+				return
+			}
+
+			var user user_domain.User
+			filterUser := bson.M{"_id": feedback.UserID}
+			_ = collectionUser.FindOne(ctx, filterUser).Decode(&user)
+
+			feedbackRes := feedback_domain.FeedbackResponse{
+				ID:            feedback.ID,
+				User:          user,
+				Feeling:       feedback.Feeling,
+				Content:       feedback.Content,
+				Title:         feedback.Title,
+				IsSeen:        feedback.IsSeen,
+				SeenAt:        feedback.SeenAt,
+				IsLoveWeb:     feedback.IsLoveWeb,
+				SubmittedDate: feedback.SubmittedDate,
+			}
+
+			feedbacks = append(feedbacks, feedbackRes)
 		}
+	}()
 
-		var user user_domain.User
-		filterUser := bson.M{"_id": feedback.UserID}
-		_ = collectionUser.FindOne(ctx, filterUser).Decode(&user)
-
-		feedbackRes := feedback_domain.FeedbackResponse{
-			ID:            feedback.ID,
-			User:          user,
-			Feeling:       feedback.Feeling,
-			Content:       feedback.Content,
-			Title:         feedback.Title,
-			IsSeen:        feedback.IsSeen,
-			SeenAt:        feedback.SeenAt,
-			IsLoveWeb:     feedback.IsLoveWeb,
-			SubmittedDate: feedback.SubmittedDate,
-		}
-
-		feedbacks = append(feedbacks, feedbackRes)
-	}
-	//}()
-	//
-	//internal.Wg.Wait()
+	internal.Wg.Wait()
 
 	var statisticsCh = make(chan feedback_domain.Statistics)
 	go func() {
@@ -155,10 +155,7 @@ func (f *feedbackRepository) FetchByUserID(ctx context.Context, userID string, p
 			feedback.UserID = idUser
 			var user user_domain.User
 			filterUser := bson.M{"_id": feedback.UserID}
-			err = collectionUser.FindOne(ctx, filterUser).Decode(&user)
-			if err != nil {
-				return
-			}
+			_ = collectionUser.FindOne(ctx, filterUser).Decode(&user)
 
 			var feedbackRes feedback_domain.FeedbackResponse
 			feedbackRes.ID = feedback.ID

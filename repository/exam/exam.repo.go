@@ -30,27 +30,6 @@ type examRepository struct {
 	cacheMutex        sync.RWMutex
 }
 
-func (e *examRepository) FetchExamByID(ctx context.Context, id string) (exam_domain.Exam, error) {
-	collectionExam := e.database.Collection(e.collectionExam)
-
-	idExam, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return exam_domain.Exam{}, err
-	}
-
-	var exam exam_domain.Exam
-	filter := bson.M{"_id": idExam}
-	err = collectionExam.FindOne(ctx, filter).Decode(&exam)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return exam_domain.Exam{}, errors.New("exam not found")
-		}
-		return exam_domain.Exam{}, err
-	}
-
-	return exam, nil
-}
-
 func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionExamQuestion string, collectionVocabulary string) exam_domain.IExamRepository {
 	return &examRepository{
 		database:               db,
@@ -137,6 +116,27 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 	}
 
 	return exams, detail, nil
+}
+
+func (e *examRepository) FetchExamByID(ctx context.Context, id string) (exam_domain.Exam, error) {
+	collectionExam := e.database.Collection(e.collectionExam)
+
+	idExam, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return exam_domain.Exam{}, err
+	}
+
+	var exam exam_domain.Exam
+	filter := bson.M{"_id": idExam}
+	err = collectionExam.FindOne(ctx, filter).Decode(&exam)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return exam_domain.Exam{}, errors.New("exam not found")
+		}
+		return exam_domain.Exam{}, err
+	}
+
+	return exam, nil
 }
 
 func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
@@ -344,7 +344,7 @@ func (e *examRepository) UpdateCompleted(ctx context.Context, exam *exam_domain.
 	update := bson.M{
 		"$set": bson.M{
 			"is_complete": exam.IsComplete,
-			"update_at":   time.Now(),
+			"updated_at":  time.Now(),
 			"learner":     exam.Learner,
 		},
 	}
@@ -369,7 +369,7 @@ func (e *examRepository) DeleteOne(ctx context.Context, examID string) error {
 		return err
 	}
 	if count == 0 {
-		return errors.New(`exam is removed`)
+		return errors.New(`exam is removed or have not exist`)
 	}
 
 	_, err = collectionExam.DeleteOne(ctx, filter)

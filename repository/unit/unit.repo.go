@@ -20,21 +20,6 @@ type unitRepository struct {
 	errCh                chan error
 }
 
-var (
-	units []unit_domain.UnitResponse
-	unit  unit_domain.UnitResponse
-)
-
-func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLesson string, collectionVocabulary string) unit_domain.IUnitRepository {
-	return &unitRepository{
-		database:             db,
-		collectionUnit:       collectionUnit,
-		collectionLesson:     collectionLesson,
-		collectionVocabulary: collectionVocabulary,
-		errCh:                make(chan error),
-	}
-}
-
 func (u *unitRepository) FetchManyNotPagination(ctx context.Context) ([]unit_domain.UnitResponse, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 	cursor, err := collectionUnit.Find(ctx, bson.D{})
@@ -68,6 +53,21 @@ func (u *unitRepository) FetchManyNotPagination(ctx context.Context) ([]unit_dom
 	}()
 	internal.Wg.Wait()
 	return units, nil
+}
+
+var (
+	units []unit_domain.UnitResponse
+	unit  unit_domain.UnitResponse
+)
+
+func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLesson string, collectionVocabulary string) unit_domain.IUnitRepository {
+	return &unitRepository{
+		database:             db,
+		collectionUnit:       collectionUnit,
+		collectionLesson:     collectionLesson,
+		collectionVocabulary: collectionVocabulary,
+		errCh:                make(chan error),
+	}
 }
 
 func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {

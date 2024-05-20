@@ -11,13 +11,14 @@ import (
 	file_internal "clean-architecture/internal/file"
 	"clean-architecture/internal/file/excel"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
@@ -231,10 +232,7 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		WhoUpdated:  admin.FullName,
 	}
 
-	if err := c.CourseUseCase.CreateOne(ctx, &course); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	_ = c.CourseUseCase.CreateOne(ctx, &course)
 
 	sendSSE("running", "Start create lesson")
 	resLesson, err := excel.ReadFileForLesson(file.Filename)
@@ -261,10 +259,7 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 			WhoUpdates:  admin.FullName,
 		}
 
-		if err := c.LessonUseCase.CreateOneByNameCourse(ctx, &lesson); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+		_ = c.LessonUseCase.CreateOneByNameCourse(ctx, &lesson)
 	}
 
 	sendSSE("running", "Start create unit")
@@ -293,10 +288,7 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 			WhoCreate:  admin.FullName,
 		}
 
-		if err := c.UnitUseCase.CreateOneByNameLesson(ctx, &unit); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+		_ = c.UnitUseCase.CreateOneByNameLesson(ctx, &unit)
 	}
 
 	sendSSE("running", "Start create vocabulary")
@@ -338,8 +330,7 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 
 	for _, vocabulary := range vocabularies {
 		if err := c.VocabularyUseCase.CreateOneByNameUnit(ctx, &vocabulary); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
+			continue
 		}
 	}
 

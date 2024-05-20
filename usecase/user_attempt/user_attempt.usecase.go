@@ -11,6 +11,11 @@ type userAttemptUseCase struct {
 	contextTimeout        time.Duration
 }
 
+func (u *userAttemptUseCase) FetchOneByUnitIDAndUserID(ctx context.Context, userID string, unit string) (user_attempt_domain.UserProcess, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (u *userAttemptUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (user_attempt_domain.UserProcess, error) {
 	//TODO implement me
 	panic("implement me")

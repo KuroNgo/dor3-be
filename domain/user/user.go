@@ -29,25 +29,6 @@ type User struct {
 	UpdatedAt        time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
-type UserResponse struct {
-	ID               primitive.ObjectID `bson:"_id" json:"_id"`
-	IP               string             `bson:"ip" json:"ip"`
-	FullName         string             `bson:"full_name"  json:"full_name"`
-	Email            string             `bson:"email"  json:"email"`
-	Password         string             `bson:"password"  json:"password"`
-	Role             string             `bson:"role" json:"role"`
-	CoverURL         string             `bson:"cover_url" json:"cover_url"`
-	AvatarURL        string             `bson:"avatar_url"  json:"avatar_url"`
-	AssetID          string             `bson:"asset_id"  json:"asset_id"`
-	Phone            string             `bson:"phone"   json:"phone"`
-	Specialize       string             `bson:"specialize"  json:"specialize"`
-	Provider         string             `bson:"provider" json:"provider"`
-	Verified         bool               `bson:"verified" json:"verified"`
-	VerificationCode string             `bson:"verification_code" json:"verification_code"`
-	CreatedAt        time.Time          `bson:"created_at" json:"created_at"`
-	UpdatedAt        time.Time          `bson:"updated_at" json:"updated_at"`
-}
-
 type Response struct {
 	User       []User     `bson:"user" json:"user"`
 	Statistics Statistics `bson:"statistics" json:"statistics"`

@@ -44,23 +44,6 @@ func (v *VocabularyController) CreateOneVocabulary(ctx *gin.Context) {
 	fieldOfIt := ctx.Request.FormValue("field_of_it")
 	linkUrl := ctx.Request.FormValue("link_url")
 
-	//var vocabularyInput vocabulary_domain.Input
-	//if err := ctx.ShouldBindJSON(&vocabularyInput); err != nil {
-	//	ctx.JSON(http.StatusBadRequest, gin.H{
-	//		"status":  "error",
-	//		"message": err.Error(),
-	//	})
-	//	return
-	//}
-	//
-	//if err := internal.IsValidVocabulary(vocabularyInput); err != nil {
-	//	ctx.JSON(http.StatusBadRequest, gin.H{
-	//		"status":  "error",
-	//		"message": err.Error(),
-	//	})
-	//	return
-	//}
-
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -128,6 +111,9 @@ func (v *VocabularyController) CreateOneVocabulary(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})
+
+	v.CreateAudioLatest(ctx)
+	v.UploadAudioToCloudinary(ctx)
 }
 
 func (v *VocabularyController) CreateVocabularyWithFileInAdmin(ctx *gin.Context) {
@@ -233,8 +219,8 @@ func (v *VocabularyController) CreateVocabularyWithFileInAdmin(ctx *gin.Context)
 		"success_count": successCount,
 	})
 
-	//v.CreateAudioLatest(ctx)
-	//v.UploadAudioToCloudinary(ctx)
+	v.CreateAudioLatest(ctx)
+	v.UploadAudioToCloudinary(ctx)
 }
 
 func (v *VocabularyController) CreateVocabularyWithFileInUser(ctx *gin.Context) {

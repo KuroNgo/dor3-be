@@ -537,7 +537,6 @@ func (l *lessonRepository) UpdateImage(ctx context.Context, lesson *lesson_domai
 func (l *lessonRepository) CreateOne(ctx context.Context, lesson *lesson_domain.Lesson) error {
 	collectionLesson := l.database.Collection(l.collectionLesson)
 	collectionCourse := l.database.Collection(l.collectionCourse)
-	collectionUnit := l.database.Collection(l.collectionUnit)
 
 	filter := bson.M{"name": lesson.Name}
 
@@ -560,30 +559,6 @@ func (l *lessonRepository) CreateOne(ctx context.Context, lesson *lesson_domain.
 	}
 
 	_, err = collectionLesson.InsertOne(ctx, lesson)
-
-	data, err := l.getLastLesson(ctx)
-	filterUnit := bson.M{"lesson_id": data.ID}
-	countUnit, err := collectionUnit.CountDocuments(ctx, filterUnit)
-	if err != nil {
-		return err
-	}
-
-	unit := unit_domain.Unit{
-		ID:         primitive.NewObjectID(),
-		LessonID:   data.ID,
-		Name:       "Unit 1",
-		Level:      1,
-		IsComplete: 0,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
-		WhoCreate:  lesson.WhoUpdates,
-	}
-	if countUnit == 0 {
-		_, err := collectionUnit.InsertOne(ctx, unit)
-		if err != nil {
-			return err
-		}
-	}
 
 	return nil
 }
