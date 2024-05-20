@@ -2,6 +2,7 @@ package exercise_result_repository
 
 import (
 	exercise_result_domain "clean-architecture/domain/exercise_result"
+	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -75,28 +76,41 @@ func (e *exerciseResultRepository) FetchMany(ctx context.Context, page string) (
 func (e *exerciseResultRepository) FetchManyByExerciseID(ctx context.Context, exerciseID string) (exercise_result_domain.Response, error) {
 	collectionResult := e.database.Collection(e.collectionExerciseResult)
 
-	idExam, err := primitive.ObjectIDFromHex(exerciseID)
+	idExercise, err := primitive.ObjectIDFromHex(exerciseID)
 	if err != nil {
 		return exercise_result_domain.Response{}, err
 	}
 
-	filter := bson.M{"exam_id": idExam}
+	filter := bson.M{"exercise_id": idExercise}
 	cursor, err := collectionResult.Find(ctx, filter)
 	if err != nil {
 		return exercise_result_domain.Response{}, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	var results []exercise_result_domain.ExerciseResult
-	for cursor.Next(ctx) {
-		var result exercise_result_domain.ExerciseResult
-		if err = cursor.Decode(&result); err != nil {
-			return exercise_result_domain.Response{}, err
-		}
 
-		result.ExerciseID = idExam
-		results = append(results, result)
-	}
+	internal.Wg.Add(1)
+
+	go func() {
+		defer internal.Wg.Done()
+		for cursor.Next(ctx) {
+			var result exercise_result_domain.ExerciseResult
+			if err = cursor.Decode(&result); err != nil {
+				return
+			}
+
+			result.ExerciseID = idExercise
+			results = append(results, result)
+		}
+	}()
+
+	internal.Wg.Wait()
 
 	resultRes := exercise_result_domain.Response{
 		ExerciseResult: results,
@@ -150,8 +164,24 @@ func (e *exerciseResultRepository) FetchManyByUserID(ctx context.Context, userID
 }
 
 func (e *exerciseResultRepository) GetResultsByUserIDAndExerciseID(ctx context.Context, userID string, exerciseID string) (exercise_result_domain.ExerciseResult, error) {
-	//TODO implement me
-	panic("implement me")
+	collection := e.database.Collection(e.collectionExerciseResult)
+
+	var result exercise_result_domain.ExerciseResult
+
+	idUser, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return exercise_result_domain.ExerciseResult{}, err
+	}
+
+	idExercise, err := primitive.ObjectIDFromHex(exerciseID)
+	if err != nil {
+		return exercise_result_domain.ExerciseResult{}, err
+	}
+
+	filter := bson.M{"user_id": idUser, "exercise_id": idExercise}
+
+	err = collection.FindOne(ctx, filter).Decode(&result)
+	return result, err
 }
 
 func (e *exerciseResultRepository) GetAverageScoreByUser(ctx context.Context, userID string) (float64, error) {

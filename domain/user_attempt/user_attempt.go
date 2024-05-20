@@ -30,15 +30,13 @@ type Response struct {
 }
 
 type Statistics struct {
-	StudyTime                  time.Time `bson:"study_time" json:"study_time"`
-	TotalNumberOfLessonLearned int16     `bson:"total_number_of_lesson_learned" json:"total_number_of_lesson_learned"`
-	TotalScore                 int64     `bson:"total_score" json:"total_score"`
-	AverageScore               int8      `bson:"average_score" json:"average_score"`
+	TotalScore   int64 `bson:"total_score" json:"total_score"`
+	AverageScore int8  `bson:"average_score" json:"average_score"`
 }
 
 type IUserProcessRepository interface {
 	FetchManyByUserID(ctx context.Context, userID string) (Response, error)
-	FetchOneByUnitID(ctx context.Context, unitID string) (UserProcess, error)
+	FetchOneByUnitIDAndUserID(ctx context.Context, userID string, unit string) (UserProcess, error)
 	CreateAttemptByExerciseID(ctx context.Context, userID UserProcess) error
 	UpdateAttemptByUserID(ctx context.Context, userID UserProcess) error
 	UpdateAttemptByExamID(ctx context.Context, userID UserProcess) error

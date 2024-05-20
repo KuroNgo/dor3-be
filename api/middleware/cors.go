@@ -10,7 +10,8 @@ func CORSPublic() gin.HandlerFunc {
 		if origin == "http://localhost:3000" || origin == "http://localhost:5173" {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-			c.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization,Content-Type,Content-Length,Accept-Encoding,X-CSRF-Token,Authorization,accept,origin,Cache-Control,X-Requested-With,Access-Control-Allow-Origin,access-control-allow-methods")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization,Content-Type,Content-Length,Accept-Encoding,"+
+				"X-CSRF-Token,Authorization,accept,origin,Cache-Control,X-Requested-With,Access-Control-Allow-Origin,access-control-allow-methods")
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, PUT, POST, PATCH, DELETE, OPTIONS")
 
 			if c.Request.Method == "OPTIONS" {

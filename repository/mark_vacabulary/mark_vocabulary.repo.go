@@ -92,25 +92,19 @@ func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Co
 				return
 			}
 
-			// Gắn MarkListID vào mark vocabulary
-			var vocabulary vocabulary_domain.Vocabulary
-			filterVocabulary := bson.M{"_id": markVocabulary.VocabularyID}
-			err = collectionVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
-			if err != nil {
-				return
-			}
-
-			var markList mark_list_domain.MarkList
-			filterMarkList := bson.D{{Key: "_id", Value: markListObjID}}
-			err = collectionMarkList.FindOne(ctx, filterMarkList).Decode(&markList)
-			if err != nil {
-				return
-			}
-
 			var markVocabularyRes mark_vocabulary_domain.MarkToFavouriteResponse
 			if err = cursor.Decode(&markVocabulary); err != nil {
 				return
 			}
+
+			// Gắn MarkListID vào mark vocabulary
+			var vocabulary vocabulary_domain.Vocabulary
+			filterVocabulary := bson.M{"_id": markVocabulary.VocabularyID}
+			_ = collectionVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
+
+			var markList mark_list_domain.MarkList
+			filterMarkList := bson.D{{Key: "_id", Value: markListObjID}}
+			_ = collectionMarkList.FindOne(ctx, filterMarkList).Decode(&markList)
 
 			markVocabularyRes.ID = markVocabulary.ID
 			markVocabularyRes.UserId = markVocabulary.UserId

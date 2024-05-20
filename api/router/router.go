@@ -24,6 +24,7 @@ import (
 	quiz_result_route "clean-architecture/api/router/quiz_result"
 	unit_route "clean-architecture/api/router/unit"
 	user_route "clean-architecture/api/router/user"
+	user_attempt_route "clean-architecture/api/router/user_attempt"
 	vocabulary_route "clean-architecture/api/router/vocabulary"
 	"clean-architecture/bootstrap"
 	"github.com/gin-contrib/gzip"
@@ -66,6 +67,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	user_route.GoogleAuthRoute(env, timeout, db, publicRouter)
 	user_route.UserRouter(env, timeout, db, publicRouter)
 	user_route.LoginFromRoleRoute(env, timeout, db, publicRouter)
+	user_attempt_route.UserAttemptRoute(env, timeout, db, publicRouter)
 
 	feedback_route.FeedbackRoute(env, timeout, db, publicRouter)
 

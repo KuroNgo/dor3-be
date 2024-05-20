@@ -145,13 +145,9 @@ func (e *exerciseQuestionRepository) FetchMany(ctx context.Context, page string)
 
 		var vocabulary vocabulary_domain.Vocabulary
 		filterVocabulary := bson.M{"_id": question.VocabularyID}
-		err := collectVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
-		if err != nil {
-			return exercise_questions_domain.Response{}, err
-		}
+		_ = collectVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
 
 		question2.Vocabulary = vocabulary
-
 		questions = append(questions, question2)
 	}
 	questionsRes := exercise_questions_domain.Response{
@@ -217,13 +213,9 @@ func (e *exerciseQuestionRepository) FetchManyByExerciseID(ctx context.Context, 
 
 		var vocabulary vocabulary_domain.Vocabulary
 		filterVocabulary := bson.M{"_id": question.VocabularyID}
-		err := collectVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
-		if err != nil {
-			return exercise_questions_domain.Response{}, err
-		}
+		_ = collectVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
 
 		question2.Vocabulary = vocabulary
-
 		questions = append(questions, question2)
 	}
 

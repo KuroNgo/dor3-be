@@ -7,14 +7,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"strconv"
 	"sync"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type vocabularyRepository struct {
@@ -195,70 +196,42 @@ func (v *vocabularyRepository) GetAllVocabulary(ctx context.Context) ([]string, 
 }
 
 func (v *vocabularyRepository) CreateOneByNameUnit(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
-	// Xét vocabulary với trường field of it để tìm lesson phù hợp
-	// Từ lesson, mình tìm unit của lesson đó thông qua id của lesson
-	// Từ đó gắn giá trị vocabulary vào unit thích hợp
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
-	collectionLesson := v.database.Collection(v.collectionLesson)
 
-	// tìm lesson
-	filterUnit := bson.M{"_id": vocabulary.UnitID}
+	// Tìm unit dựa trên ID
 	var unit unit_domain.Unit
+	filterUnit := bson.M{"_id": vocabulary.UnitID}
 	err := collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
 	if err != nil {
 		return err
 	}
-	//
-	//filterLesson := bson.M{"_id": unit.LessonID}
-	//var lesson lesson_domain.Lesson
-	//err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
-	//if err != nil {
-	//	return err
-	//}
 
-	cursor, err := collectionLesson.Find(ctx, bson.D{})
+	// Kiểm tra xem unit có thuộc bài học nào không
+	var count int64
+	filterUnit2 := bson.M{"_id": vocabulary.UnitID, "lesson_id": unit.LessonID}
+	count, err = collectionUnit.CountDocuments(ctx, filterUnit2)
 	if err != nil {
 		return err
 	}
-
-	var lessons []lesson_domain.Lesson
-	for cursor.Next(ctx) {
-		var lesson lesson_domain.Lesson
-		if err = cursor.Decode(&lesson); err != nil {
-			return err
-		}
-
-		lessons = append(lessons, lesson)
+	if count == 0 {
+		return errors.New("parent unit not found")
 	}
 
-	for _, data := range lessons {
-		if vocabulary.FieldOfIT == data.Name {
-			filterUnit2 := bson.M{"_id": vocabulary.UnitID, "lesson_id": unit.LessonID}
-			countUnit, err := collectionUnit.CountDocuments(ctx, filterUnit2)
-			if err != nil {
-				return err
-			}
-			if countUnit == 0 {
-				return errors.New("parent unit not found")
-			}
+	// Kiểm tra xem từ vựng đã tồn tại trong unit và bài học đó chưa
+	filter := bson.M{"word": vocabulary.Word, "unit_id": vocabulary.UnitID, "lesson_id": unit.LessonID}
+	count, err = collectionVocabulary.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("the vocabulary already exists in the lesson")
+	}
 
-			filter := bson.M{"word": vocabulary.Word, "unit_id": vocabulary.UnitID, "lesson_id": unit.LessonID}
-			count, err := collectionVocabulary.CountDocuments(ctx, filter)
-			if err != nil {
-				return err
-			}
-			if count > 0 {
-				return errors.New("the vocabulary already exists in the lesson")
-			}
-
-			_, err = collectionVocabulary.InsertOne(ctx, vocabulary)
-			if err != nil {
-				return err
-			}
-
-			break
-		}
+	// Nếu không có lỗi, tạo bản ghi mới cho từ vựng
+	_, err = collectionVocabulary.InsertOne(ctx, vocabulary)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -281,6 +254,7 @@ func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string)
 		return nil, err
 	}
 
+	// Find documents based on the filter
 	filter := bson.M{"unit_id": unit.ID}
 	cursor, err := collectionVocabulary.Find(ctx, filter)
 	if err != nil {
@@ -292,16 +266,21 @@ func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string)
 		}
 	}()
 
+	// Slice to hold the vocabulary results
 	var vocabularies []vocabulary_domain.Vocabulary
 
+	// Iterate over the cursor
 	for cursor.Next(ctx) {
 		var vocabulary vocabulary_domain.Vocabulary
 		if err = cursor.Decode(&vocabulary); err != nil {
 			return nil, errors.New("failed to decode vocabulary")
 		}
 
+		// No need to set vocabulary.UnitID as it is already in the document fetched
 		vocabularies = append(vocabularies, vocabulary)
 	}
+
+	// Check if there were any errors during the iteration
 	if err := cursor.Err(); err != nil {
 		return nil, errors.New("cursor iteration error: ")
 	}

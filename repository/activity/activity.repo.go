@@ -3,7 +3,6 @@ package activity_repository
 import (
 	activity_log_domain "clean-architecture/domain/activity_log"
 	admin_domain "clean-architecture/domain/admin"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -83,44 +82,41 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 		}
 	}(cursor, ctx)
 
-	var activities []activity_log_domain.ActivityLogResponse
+	var activities []activity_log_domain.ActivityLog
 
-	internal.Wg.Add(1)
-	go func() {
-		defer internal.Wg.Done()
-		for cursor.Next(ctx) {
-			var activity activity_log_domain.ActivityLog
-			if err := cursor.Decode(&activity); err != nil {
-				return
-			}
-			activity.ActivityTime = activity.ActivityTime.Add(7 * time.Hour)
-
-			var admin admin_domain.Admin
-			filterUser := bson.M{"_id": activity.UserID}
-			err = collectionAdmin.FindOne(ctx, filterUser).Decode(&admin)
-			if err != nil {
-				return
-			}
-
-			var activityResponse activity_log_domain.ActivityLogResponse
-			activityResponse.LogID = activity.LogID
-			activityResponse.UserID = admin
-			activityResponse.ClientIP = activity.ClientIP
-			activityResponse.Method = activity.Method
-			activityResponse.StatusCode = activity.StatusCode
-			activityResponse.BodySize = activity.BodySize
-			activityResponse.Path = activity.Path
-			activityResponse.Latency = activity.Latency
-			activityResponse.Error = activity.Error
-			activityResponse.ActivityTime = activity.ActivityTime
-			activityResponse.ExpireAt = activity.ExpireAt
-
-			// Thêm activity vào slice activities
-			activities = append(activities, activityResponse)
+	//internal.Wg.Add(1)
+	//go func() {
+	//	defer internal.Wg.Done()
+	for cursor.Next(ctx) {
+		var activity activity_log_domain.ActivityLog
+		if err := cursor.Decode(&activity); err != nil {
+			return activity_log_domain.Response{}, err
 		}
-	}()
+		activity.ActivityTime = activity.ActivityTime.Add(7 * time.Hour)
 
-	internal.Wg.Wait()
+		var admin admin_domain.Admin
+		filterUser := bson.M{"_id": activity.UserID}
+		_ = collectionAdmin.FindOne(ctx, filterUser).Decode(&admin)
+
+		var activityResponse activity_log_domain.ActivityLogResponse
+		activityResponse.LogID = activity.LogID
+		activityResponse.UserID = admin
+		activityResponse.ClientIP = activity.ClientIP
+		activityResponse.Method = activity.Method
+		activityResponse.StatusCode = activity.StatusCode
+		activityResponse.BodySize = activity.BodySize
+		activityResponse.Path = activity.Path
+		activityResponse.Latency = activity.Latency
+		activityResponse.Error = activity.Error
+		activityResponse.ActivityTime = activity.ActivityTime
+		activityResponse.ExpireAt = activity.ExpireAt
+
+		// Thêm activity vào slice activities
+		activities = append(activities, activity)
+	}
+	//}()
+
+	//internal.Wg.Wait()
 
 	count := <-cal
 	statisticsCh := make(chan activity_log_domain.Statistics)

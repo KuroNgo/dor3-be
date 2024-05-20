@@ -4,6 +4,7 @@ import (
 	quiz_question_domain "clean-architecture/domain/quiz_question"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"time"
 )
@@ -36,7 +37,7 @@ func (q *QuizQuestionsController) CreateOneQuizQuestions(ctx *gin.Context) {
 	}
 
 	question := quiz_question_domain.QuizQuestion{
-		ID:            questionInput.ID,
+		ID:            primitive.NewObjectID(),
 		QuizID:        questionInput.QuizID,
 		VocabularyID:  questionInput.VocabularyID,
 		Content:       questionInput.Content,

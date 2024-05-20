@@ -2,12 +2,26 @@ package exercise_answer_controller
 
 import (
 	exercise_answer_domain "clean-architecture/domain/exercise_answer"
+	exercise_result_domain "clean-architecture/domain/exercise_result"
+	user_attempt_domain "clean-architecture/domain/user_attempt"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"time"
 )
+
+// handleError xử lý lỗi chung
+func handleError(ctx *gin.Context, statusCode int, message string, err error) {
+	ctx.JSON(statusCode, gin.H{
+		"status":  "error",
+		"message": message,
+		"error":   err.Error(),
+	})
+}
+
+// IsCorrect là hằng số để biểu thị câu trả lời đúng
+const IsCorrect = 1
 
 func (e *ExerciseAnswerController) CreateOneExerciseAnswer(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
@@ -50,6 +64,62 @@ func (e *ExerciseAnswerController) CreateOneExerciseAnswer(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"message": err.Error(),
+		})
+		return
+	}
+
+	data, err := e.ExerciseAnswerUseCase.FetchManyAnswerByUserIDAndQuestionID(ctx, answerInput.QuestionID.Hex(), user.ID.Hex())
+	if err != nil {
+		handleError(ctx, http.StatusInternalServerError, "Failed to fetch answers", err)
+	}
+
+	var exerciseID primitive.ObjectID
+	var totalCorrect int16
+
+	for i, res := range data.ExerciseAnswer {
+		if i == 0 {
+			exerciseID = res.Question.ExerciseID
+		}
+		if res.IsCorrect == IsCorrect {
+			totalCorrect++
+		}
+	}
+
+	if exerciseID != primitive.NilObjectID {
+		exerciseResult := &exercise_result_domain.ExerciseResult{
+			ID:         primitive.NewObjectID(),
+			UserID:     user.ID,
+			ExerciseID: exerciseID,
+			Score:      totalCorrect,
+			StartedAt:  time.Now(),
+			IsComplete: IsCorrect,
+		}
+
+		err := e.ExerciseResultUseCase.CreateOne(ctx, exerciseResult)
+		if err != nil {
+			handleError(ctx, http.StatusInternalServerError, "Failed to create exam result", err)
+			return
+		}
+
+		userProcess := user_attempt_domain.UserProcess{
+			ID:            primitive.NewObjectID(),
+			UserID:        user.ID,
+			ExerciseID:    exerciseID,
+			Score:         float32(totalCorrect),
+			ProcessStatus: 0,
+			CompletedDate: time.Now(),
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
+		}
+
+		err = e.UserAttemptUseCase.CreateAttemptByExerciseID(ctx, userProcess)
+		if err != nil {
+			handleError(ctx, http.StatusInternalServerError, "Failed to create user process", err)
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"status": "success",
 		})
 		return
 	}

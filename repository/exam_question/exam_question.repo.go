@@ -3,7 +3,6 @@ package exam_question_repository
 import (
 	exam_question_domain "clean-architecture/domain/exam_question"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"fmt"
@@ -47,15 +46,12 @@ func (e *examQuestionRepository) FetchMany(ctx context.Context, page string) (ex
 		return exam_question_domain.Response{}, err
 	}
 
-	calCh := make(chan int64)
-	go func() {
-		defer close(calCh)
-		cal1 := count / int64(perPage)
-		cal2 := count % int64(perPage)
-		if cal2 != 0 {
-			calCh <- cal1 + 1
-		}
-	}()
+	cal1 := count / int64(perPage)
+	cal2 := count % int64(perPage)
+	var cal int64 = 0
+	if cal2 != 0 {
+		cal = cal1 + 1
+	}
 
 	cursor, err := collectionQuestion.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
@@ -63,67 +59,28 @@ func (e *examQuestionRepository) FetchMany(ctx context.Context, page string) (ex
 	}
 
 	var questions []exam_question_domain.ExamQuestionResponse
-
-	pipeline := bson.A{
-		bson.D{
-			{"$lookup", bson.D{
-				{"from", "vocabulary"},
-				{"localField", "VocabularyID"},
-				{"foreignField", "_id"},
-				{"as", "vocabulary"},
-			}},
-		},
-	}
-
-	internal.Wg.Add(1)
-	go func() {
-		defer internal.Wg.Done()
-		for cursor.Next(ctx) {
-			var question exam_question_domain.ExamQuestionResponse
-			if err := cursor.Decode(&question); err != nil {
-				return
-			}
-
-			// Thực hiện truy vấn aggregation để thêm thông tin vocabulary cho câu hỏi
-			cursorV, err := collectVocabulary.Aggregate(ctx, pipeline)
-			if err != nil {
-				return
-			}
-
-			// Duyệt qua kết quả của truy vấn aggregation
-			var vocabularies []vocabulary_domain.Vocabulary
-			if err := cursorV.All(ctx, &vocabularies); err != nil {
-				return
-			}
-
-			// Gán vocabulary cho câu hỏi
-			if len(vocabularies) > 0 {
-				question.Vocabulary = vocabularies[0]
-			}
-
-			err = cursorV.Close(ctx)
-			if err != nil {
-				return
-			}
-			questions = append(questions, question)
+	for cursor.Next(ctx) {
+		var question exam_question_domain.ExamQuestion
+		if err := cursor.Decode(&question); err != nil {
+			fmt.Println("Error decoding question:", err)
+			return exam_question_domain.Response{}, err
 		}
 
-	}()
+		var question2 exam_question_domain.ExamQuestionResponse
+		if err := cursor.Decode(&question2); err != nil {
+			fmt.Println("Error decoding question:", err)
+			return exam_question_domain.Response{}, err
+		}
 
-	internal.Wg.Wait()
+		var vocabulary vocabulary_domain.Vocabulary
+		filterVocabulary := bson.M{"_id": question.VocabularyID}
+		_ = collectVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
 
-	cal := <-calCh
-	statisticsCh := make(chan exam_question_domain.Statistics)
-	go func() {
-		statistics, _ := e.Statistics(ctx)
-		statisticsCh <- statistics
-	}()
-	statistics := <-statisticsCh
-
+		question2.Vocabulary = vocabulary
+		questions = append(questions, question2)
+	}
 	questionsRes := exam_question_domain.Response{
-		Statistics:           statistics,
 		Page:                 cal,
-		CurrentPage:          pageNumber,
 		ExamQuestionResponse: questions,
 	}
 	return questionsRes, nil
@@ -147,23 +104,21 @@ func (e *examQuestionRepository) FetchOneByExamID(ctx context.Context, examID st
 
 	var vocabulary vocabulary_domain.Vocabulary
 	filterVocabulary := bson.M{"_id": examQuestion.VocabularyID}
-	err = collectionVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
-	if err != nil {
-		return exam_question_domain.ExamQuestionResponse{}, err
-	}
+	_ = collectionVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
 
-	var examQuestionRes exam_question_domain.ExamQuestionResponse
-	examQuestionRes.ID = examQuestion.ID
-	examQuestionRes.ExamID = examQuestion.ExamID
-	examQuestionRes.Vocabulary = vocabulary
-	examQuestionRes.Content = examQuestion.Content
-	examQuestionRes.Type = examQuestion.Type
-	examQuestionRes.Level = examQuestion.Level
-	examQuestionRes.Options = examQuestion.Options
-	examQuestionRes.CorrectAnswer = examQuestion.CorrectAnswer
-	examQuestionRes.CreatedAt = examQuestion.CreatedAt
-	examQuestionRes.UpdateAt = examQuestion.UpdateAt
-	examQuestionRes.WhoUpdate = examQuestion.WhoUpdate
+	examQuestionRes := exam_question_domain.ExamQuestionResponse{
+		ID:            examQuestion.ID,
+		ExamID:        examQuestion.ExamID,
+		Vocabulary:    vocabulary,
+		Content:       examQuestion.Content,
+		Type:          examQuestion.Type,
+		Level:         examQuestion.Level,
+		Options:       examQuestion.Options,
+		CorrectAnswer: examQuestion.CorrectAnswer,
+		CreatedAt:     examQuestion.CreatedAt,
+		UpdateAt:      examQuestion.UpdateAt,
+		WhoUpdate:     examQuestion.WhoUpdate,
+	}
 
 	return examQuestionRes, nil
 }
@@ -245,13 +200,9 @@ func (e *examQuestionRepository) FetchManyByExamID(ctx context.Context, examID s
 
 		var vocabulary vocabulary_domain.Vocabulary
 		filterVocabulary := bson.M{"_id": question2.VocabularyID}
-		err := collectVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
-		if err != nil {
-			return exam_question_domain.Response{}, err
-		}
+		_ = collectVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
 
 		question.Vocabulary = vocabulary
-
 		questions = append(questions, question)
 	}
 

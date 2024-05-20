@@ -15,8 +15,7 @@ var (
 )
 
 func ReadFileForUnit(filename string) ([]file_internal.Unit, error) {
-	//unitCh := make(chan file_internal.Unit)
-
+	// Open the Excel file
 	f, err := excelize.OpenFile(filename)
 	if err != nil {
 		return nil, err
@@ -27,43 +26,52 @@ func ReadFileForUnit(filename string) ([]file_internal.Unit, error) {
 		}
 	}()
 
+	// Get the list of sheets in the Excel file
 	sheetList := f.GetSheetList()
 	if sheetList == nil {
 		return nil, errors.New("empty sheet name")
 	}
 
-	for _, elementSheet := range sheetList {
-		unitCount := 1 // Reset unitCount for each lesson
+	var units []file_internal.Unit
 
+	// Iterate through each sheet
+	for _, elementSheet := range sheetList {
+		// Get the rows in the current sheet
 		rows, err := f.GetRows(elementSheet)
 		if err != nil {
 			continue
 		}
 
-		for i, row := range rows {
-			if i == 0 {
-				continue
+		// Calculate the number of rows per unit, excluding the header
+		totalRows := len(rows) - 1
+		if totalRows <= 0 {
+			continue
+		}
+
+		unitCount := (totalRows + maximumVocabulary - 1) / maximumVocabulary // Ceil division
+		rowsPerUnit := totalRows / unitCount
+		remainderRows := totalRows % unitCount
+
+		unitIndex := 1
+		currentRow := 1 // Start from the second row to skip the header
+		for currentRow < len(rows) {
+			unitSize := rowsPerUnit
+			if remainderRows > 0 {
+				unitSize++
+				remainderRows--
 			}
 
-			if len(row) >= 2 && i%5 == 0 || i == 0 {
-				unit := file_internal.Unit{
-					LessonID: elementSheet,
-					Name:     fmt.Sprintf("Unit %d", unitCount),
-					Level:    unitCount,
-				}
-
-				units = append(units, unit)
-
-				// Increase unit count for the current lesson
-				unitCount++
+			unit := file_internal.Unit{
+				LessonID: elementSheet,
+				Name:     fmt.Sprintf("Unit %d", unitIndex),
+				Level:    unitIndex,
 			}
+			units = append(units, unit)
+
+			currentRow += unitSize
+			unitIndex++
 		}
 	}
-
-	//var units []file_internal.Unit
-	//for unit := range unitCh {
-	//	units = append(units, unit)
-	//}
 
 	return units, nil
 }

@@ -11,13 +11,14 @@ import (
 	file_internal "clean-architecture/internal/file"
 	"clean-architecture/internal/file/excel"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
@@ -155,27 +156,6 @@ func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
 }
 
 func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
-	ctx.Writer.Header().Set("Content-Type", "text/event-stream")
-	ctx.Writer.Header().Set("Cache-Control", "no-cache")
-	ctx.Writer.Header().Set("Connection", "keep-alive")
-	ctx.Writer.Flush()
-
-	sendSSE := func(event, message string) {
-		ctx.SSEvent(event, message)
-		ctx.Writer.Flush()
-	}
-
-	ticker := time.NewTicker(10 * time.Second)
-	defer ticker.Stop()
-
-	go func() {
-		for range ticker.C {
-			sendSSE("keep-alive", "ping")
-		}
-	}()
-
-	sendSSE("running", "Start create lesson management with file process")
-
 	currentUser := ctx.MustGet("currentUser")
 	admin, err := c.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
@@ -203,7 +183,6 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		return
 	}
 
-	sendSSE("running", "Processing file")
 	err = ctx.SaveUploadedFile(file, file.Filename)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -215,7 +194,6 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		}
 	}()
 
-	sendSSE("running", "Start create course")
 	resCourse, err := excel.ReadFileForCourse(file.Filename)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -231,12 +209,8 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		WhoUpdated:  admin.FullName,
 	}
 
-	if err := c.CourseUseCase.CreateOne(ctx, &course); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	_ = c.CourseUseCase.CreateOne(ctx, &course)
 
-	sendSSE("running", "Start create lesson")
 	resLesson, err := excel.ReadFileForLesson(file.Filename)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -261,13 +235,9 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 			WhoUpdates:  admin.FullName,
 		}
 
-		if err := c.LessonUseCase.CreateOneByNameCourse(ctx, &lesson); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+		_ = c.LessonUseCase.CreateOneByNameCourse(ctx, &lesson)
 	}
 
-	sendSSE("running", "Start create unit")
 	resUnit, err := excel.ReadFileForUnit(file.Filename)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -293,13 +263,9 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 			WhoCreate:  admin.FullName,
 		}
 
-		if err := c.UnitUseCase.CreateOneByNameLesson(ctx, &unit); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+		_ = c.UnitUseCase.CreateOneByNameLesson(ctx, &unit)
 	}
 
-	sendSSE("running", "Start create vocabulary")
 	resVocabulary, err := excel.ReadFileForVocabulary(file.Filename)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -338,12 +304,10 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 
 	for _, vocabulary := range vocabularies {
 		if err := c.VocabularyUseCase.CreateOneByNameUnit(ctx, &vocabulary); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
+			continue
 		}
 	}
 
-	sendSSE("running", "Start create audio")
 	data, err := c.VocabularyUseCase.GetLatestVocabulary(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -357,7 +321,6 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		}
 	}
 
-	sendSSE("running", "Start upload audio to cloud")
 	dir := "audio"
 	files, err := google.ListFilesInDirectory(dir)
 	if err != nil {
@@ -403,7 +366,6 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		}
 	}
 
-	sendSSE("running", "Start delete audio")
 	if err := google.DeleteAllFilesInDirectory("audio"); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
 		return
