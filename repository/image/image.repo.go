@@ -9,9 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
 	"strconv"
-	"sync"
 )
 
 type imageRepository struct {
@@ -108,70 +106,59 @@ func (i *imageRepository) GetURLByName(ctx context.Context, name string) (image_
 	err := collection.FindOne(ctx, bson.M{"image_name": name}).Decode(&image)
 	return image, err
 }
-
 func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_domain.Response, error) {
 	collection := i.database.Collection(i.collection)
 
 	pageNumber, err := strconv.Atoi(page)
-	if err != nil {
+	if err != nil || pageNumber < 1 {
 		return image_domain.Response{}, errors.New("invalid page number")
 	}
 
-	perPage := 7
+	const perPage = 7
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
-	var count, size int64
+	var count int64
 	var images []image_domain.Image
-	var mu sync.Mutex
 
-	// Đồng bộ hóa việc đếm số lượng tài liệu và tính toán
-	mu.Lock()
-	defer mu.Unlock()
-
-	// Đếm tổng số lượng tài liệu trong collection
+	// Count the total number of documents in the collection
 	count, err = collection.CountDocuments(ctx, bson.D{})
 	if err != nil {
 		return image_domain.Response{}, fmt.Errorf("error counting documents: %v", err)
 	}
 
+	// Fetch the current page of images
 	cursor, err := collection.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
 		return image_domain.Response{}, fmt.Errorf("error finding documents: %v", err)
 	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
-		if err != nil {
-			return
-		}
-	}(cursor, ctx)
+	defer cursor.Close(ctx)
 
-	go func() {
-		for cursor.Next(ctx) {
-			var doc image_domain.Image
-			if err := cursor.Decode(&doc); err != nil {
-				log.Println("Error decoding document:", err)
-				continue
-			}
-			size += doc.Size
-			images = append(images, doc)
+	for cursor.Next(ctx) {
+		var doc image_domain.Image
+		if err := cursor.Decode(&doc); err != nil {
+			return image_domain.Response{}, fmt.Errorf("error decoding document: %v", err)
 		}
-	}()
-
-	statistics := image_domain.Statistics{
-		Count:           count,
-		MaxSizeMB:       1024 / 1024,
-		MaxSizeKB:       1024 * 1024,
-		SizeKB:          size,
-		SizeMB:          size / 1024,
-		SizeRemainingKB: (1024 * 1024) - size,
-		SizeRemainingMB: (1024 * 1024 * 1024) - size,
+		images = append(images, doc)
 	}
+
+	if err := cursor.Err(); err != nil {
+		return image_domain.Response{}, fmt.Errorf("error iterating cursor: %v", err)
+	}
+
+	totalPages := (count + int64(perPage) - 1) / int64(perPage)
+
+	statisticsCh := make(chan image_domain.Statistics)
+	go func() {
+		statistics, _ := i.Statistics(ctx)
+		statisticsCh <- statistics
+	}()
+	statistics := <-statisticsCh
 
 	response := image_domain.Response{
 		Image:      images,
 		Statistics: statistics,
-		Page:       count/int64(perPage) + 1,
+		Page:       totalPages,
 	}
 
 	return response, nil
@@ -253,4 +240,59 @@ func (i *imageRepository) DeleteMany(ctx context.Context, imageID ...string) err
 	}
 	_, err = collection.DeleteMany(ctx, filter)
 	return err
+}
+
+func (i *imageRepository) Statistics(ctx context.Context) (image_domain.Statistics, error) {
+	collectionImage := i.database.Collection(i.collection)
+
+	const (
+		MaxSizeMB   = 1024.0
+		MaxSizeKB   = 1024 * 1024
+		TotalSizeKB = 1024 * 1024 // 1GB in KB
+		TotalSizeMB = 1024        // 1GB in MB
+	)
+
+	count, err := collectionImage.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return image_domain.Statistics{}, err
+	}
+
+	// Use an aggregation pipeline to calculate the total size
+	pipeline := mongo.Pipeline{
+		{{"$group", bson.D{{"_id", nil}, {"totalSize", bson.D{{"$sum", "$size"}}}}}},
+	}
+
+	var result struct {
+		TotalSize int64 `bson:"totalSize"`
+	}
+
+	cursor, err := collectionImage.Aggregate(ctx, pipeline)
+	if err != nil {
+		return image_domain.Statistics{}, fmt.Errorf("error aggregating documents: %v", err)
+	}
+	defer cursor.Close(ctx)
+
+	if cursor.Next(ctx) {
+		if err := cursor.Decode(&result); err != nil {
+			return image_domain.Statistics{}, fmt.Errorf("error decoding aggregation result: %v", err)
+		}
+	}
+
+	if err := cursor.Err(); err != nil {
+		return image_domain.Statistics{}, fmt.Errorf("error iterating cursor: %v", err)
+	}
+
+	totalSize := result.TotalSize
+
+	statistics := image_domain.Statistics{
+		Count:           count,
+		MaxSizeMB:       MaxSizeMB,
+		MaxSizeKB:       MaxSizeKB,
+		SizeKB:          totalSize,
+		SizeMB:          totalSize / 1024,
+		SizeRemainingKB: TotalSizeKB - totalSize,
+		SizeRemainingMB: (TotalSizeKB - totalSize) / 1024,
+	}
+
+	return statistics, nil
 }
