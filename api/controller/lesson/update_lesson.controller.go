@@ -128,7 +128,7 @@ func (l *LessonController) UpdateImageLesson(ctx *gin.Context) {
 		ImageName: file.Filename,
 		ImageUrl:  result.ImageURL,
 		Size:      file.Size / 1024,
-		Category:  "static",
+		Category:  "lesson",
 		AssetId:   result.AssetID,
 	}
 

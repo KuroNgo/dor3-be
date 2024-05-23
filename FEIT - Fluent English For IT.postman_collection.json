@@ -152,7 +152,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"email\": \"kurokaze1106@gmail.com\",\r\n    \"password\":\"01012002Phong.\"\r\n}",
+									"raw": "{\r\n    \"email\": \"kurokaze1106@gmail.com\",\r\n    \"password\":\"01012002Phong\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -187,7 +187,7 @@
 										},
 										{
 											"key": "email",
-											"value": "kurokaze1106@gmail.com",
+											"value": "hoaiphong01012002@gmail.com",
 											"type": "text"
 										},
 										{
@@ -228,12 +228,37 @@
 						{
 							"name": "update",
 							"request": {
-								"method": "PUT",
+								"method": "PATCH",
 								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "full_name",
+											"value": "Ngo Hoai Phong",
+											"type": "text"
+										},
+										{
+											"key": "phone",
+											"value": "0329245971",
+											"type": "text"
+										},
+										{
+											"key": "email",
+											"value": "hoaiphong01012002@gmail.com",
+											"type": "text"
+										},
+										{
+											"key": "files",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/428633768_2155035114882664_1075630429634198785_n.jpg"
+										}
+									]
+								},
 								"url": {
-									"raw": "{{Host}}/update",
+									"raw": "{{HostUser}}/update",
 									"host": [
-										"{{Host}}"
+										"{{HostUser}}"
 									],
 									"path": [
 										"update"
@@ -249,7 +274,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"verification_code\":\"663343\"\r\n}",
+									"raw": "{\r\n    \"verification_code\":\"465950\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -365,132 +390,193 @@
 							"response": []
 						}
 					]
-				}
-			]
-		},
-		{
-			"name": "admin",
-			"item": [
+				},
 				{
-					"name": "sign up",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n  \"full_name\": \"John Doe\",\r\n  \"email\": \"kurodev@gmail.com\",\r\n  \"password\": \"01012002Phong\",\r\n  \"avatar_url\": \"https://example.com/avatar.jpg\",\r\n  \"specialize\": \"Software Engineering\",\r\n  \"phone\": \"0329245971\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+					"name": "admin",
+					"item": [
+						{
+							"name": "sign up",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"full_name\": \"Admin\",\r\n  \"email\": \"kurodev@gmail.com\",\r\n  \"password\": \"01012002Phong\",\r\n  \"avatar_url\": \"https://example.com/avatar.jpg\",\r\n  \"specialize\": \"Software Engineering\",\r\n  \"phone\": \"0329245971\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{HostAdmin}}/signup",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"signup"
+									]
 								}
-							}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "{{HostAdmin}}/signup",
-							"host": [
-								"{{HostAdmin}}"
-							],
-							"path": [
-								"signup"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "get me",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{HostAdmin}}/get-me",
-							"host": [
-								"{{HostAdmin}}"
-							],
-							"path": [
-								"get-me"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "refreshtoken",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{HostAdmin}}/refresh",
-							"host": [
-								"{{HostAdmin}}"
-							],
-							"path": [
-								"refresh"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "logout",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{HostAdmin}}/logout",
-							"host": [
-								"{{HostAdmin}}"
-							],
-							"path": [
-								"logout"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "login",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"email\": \"kurodev@gmail.com\",\r\n    \"password\":\"01012002Phong\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+						{
+							"name": "get me",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/get-me",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"get-me"
+									]
 								}
-							}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "{{Host}}/login/admin",
-							"host": [
-								"{{Host}}"
-							],
-							"path": [
-								"login",
-								"admin"
-							]
+						{
+							"name": "refreshtoken",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/refresh",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"refresh"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "logout",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/logout",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"logout"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "login",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"email\": \"kurodev@gmail.com\",\r\n    \"password\":\"01012002Phong\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Host}}/login/admin",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"login",
+										"admin"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/update",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update admin",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/admin/update",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"admin",
+										"update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch many user",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/user/fetch",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"user",
+										"fetch"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get user by id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/user/fetch/user_id?user_id=66367ac9b4a540008ff0e7ae",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"user",
+										"fetch",
+										"user_id"
+									],
+									"query": [
+										{
+											"key": "user_id",
+											"value": "66367ac9b4a540008ff0e7ae"
+										}
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
-				},
-				{
-					"name": "update",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"url": {
-							"raw": "{{HostAdmin}}/update",
-							"host": [
-								"{{HostAdmin}}"
-							],
-							"path": [
-								"update"
-							]
-						}
-					},
-					"response": []
+					]
 				}
 			]
 		},
@@ -671,7 +757,7 @@
 									}
 								},
 								"url": {
-									"raw": "{{HostAdmin}}/course/delete/_id?_id=663f5ad8f50f817348a186cf",
+									"raw": "{{HostAdmin}}/course/delete/_id?_id=66424b8fa051dc8af21bc9c9",
 									"host": [
 										"{{HostAdmin}}"
 									],
@@ -683,7 +769,7 @@
 									"query": [
 										{
 											"key": "_id",
-											"value": "663f5ad8f50f817348a186cf"
+											"value": "66424b8fa051dc8af21bc9c9"
 										}
 									]
 								}
@@ -1091,6 +1177,25 @@
 							"response": []
 						},
 						{
+							"name": "fetch 2",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/lesson/fetch/not",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"lesson",
+										"fetch",
+										"not"
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "fetch-id",
 							"request": {
 								"method": "GET",
@@ -1173,13 +1278,44 @@
 								"method": "POST",
 								"header": [],
 								"body": {
-									"mode": "raw",
-									"raw": "{\r\n  \"word\": \"Function\",\r\n  \"unit_id\": \"660ae15d1298127ed00c2acd\",\r\n  \"part_of_speech\": \"noun\",\r\n  \"pronunciation\": \"ˈfəNG(k)SHən\",\r\n  \"example\": \"A named block of code that performs a specific task when called.\",\r\n  \"field_of_it\": \"computer science\",\r\n  \"link_url\": \"https://en.wikipedia.org/wiki/Algorithm\"\r\n}\r\n\r\n",
-									"options": {
-										"raw": {
-											"language": "json"
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "word",
+											"value": "Hello word",
+											"type": "text"
+										},
+										{
+											"key": "unit_id",
+											"value": "664b60d0c760934e2dea5344",
+											"type": "text"
+										},
+										{
+											"key": "part_of_speech",
+											"value": "noun",
+											"type": "text"
+										},
+										{
+											"key": "pronunciation",
+											"value": "fəNG(k)SHən",
+											"type": "text"
+										},
+										{
+											"key": "example",
+											"value": "A named block of code that performs a specific task when called.",
+											"type": "text"
+										},
+										{
+											"key": "example_vie",
+											"value": "computer science",
+											"type": "text"
+										},
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/C:/Users/hoaip/Downloads/405322854_2103782273341282_1087981601149428114_n (1).jpg"
 										}
-									}
+									]
 								},
 								"url": {
 									"raw": "{{HostAdmin}}/vocabulary/create",
@@ -1450,13 +1586,19 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{Host}}/vocabulary/fetch",
+									"raw": "{{Host}}/vocabulary/fetch?page=8",
 									"host": [
 										"{{Host}}"
 									],
 									"path": [
 										"vocabulary",
 										"fetch"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "8"
+										}
 									]
 								}
 							},
@@ -1486,7 +1628,7 @@
 									"formdata": []
 								},
 								"url": {
-									"raw": "http://localhost:8080/api/vocabulary/fetch/unit?unit_id=6638ba944fc42f9e085c6e5a",
+									"raw": "http://localhost:8080/api/vocabulary/fetch/unit?unit_id=6646375a6c4c00abf5dee061",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -1501,7 +1643,53 @@
 									"query": [
 										{
 											"key": "unit_id",
-											"value": "6638ba944fc42f9e085c6e5a"
+											"value": "6646375a6c4c00abf5dee061"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch-byid",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": true
+									},
+									{
+										"key": "Content-Length",
+										"value": "<calculated when request is sent>",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/vocabulary/fetch/_id?_id=6638ba9d4fc42f9e085c6ea8",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"vocabulary",
+										"fetch",
+										"_id"
+									],
+									"query": [
+										{
+											"key": "_id",
+											"value": "6638ba9d4fc42f9e085c6ea8"
 										}
 									]
 								}
@@ -1644,13 +1832,19 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{Host}}/unit/fetch",
+									"raw": "{{Host}}/unit/fetch?page=4",
 									"host": [
 										"{{Host}}"
 									],
 									"path": [
 										"unit",
 										"fetch"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "4"
+										}
 									]
 								}
 							},
@@ -1719,6 +1913,25 @@
 								}
 							},
 							"response": []
+						},
+						{
+							"name": "fetch 2",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{Host}}/unit/fetch/not",
+									"host": [
+										"{{Host}}"
+									],
+									"path": [
+										"unit",
+										"fetch",
+										"not"
+									]
+								}
+							},
+							"response": []
 						}
 					]
 				},
@@ -1740,13 +1953,19 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{HostAdmin}}/activity/fetch",
+									"raw": "{{HostAdmin}}/activity/fetch?page=1",
 									"host": [
 										"{{HostAdmin}}"
 									],
 									"path": [
 										"activity",
 										"fetch"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										}
 									]
 								}
 							},
@@ -2264,7 +2483,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{HostAdmin}}/mark_vocabulary/fetch/mark_list_id?mark_list_id",
+									"raw": "{{HostAdmin}}/mark_vocabulary/fetch/mark_list_id?mark_list_id=6649b66a074cb4de04e1a2bd",
 									"host": [
 										"{{HostAdmin}}"
 									],
@@ -2276,7 +2495,7 @@
 									"query": [
 										{
 											"key": "mark_list_id",
-											"value": null
+											"value": "6649b66a074cb4de04e1a2bd"
 										}
 									]
 								}
@@ -2406,12 +2625,39 @@
 							"response": []
 						},
 						{
+							"name": "fetch by user",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/feedback/fetch/user_id",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"feedback",
+										"fetch",
+										"user_id"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch by submitted date",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
 							"name": "delete",
 							"request": {
 								"method": "DELETE",
 								"header": [],
 								"url": {
-									"raw": "{{HostAdmin}}/feedback/delete/_id?_id=66367b4d0604e128ea5c46b9",
+									"raw": "{{HostAdmin}}/feedback/delete/_id?_id=664a276df8872ea1249a6686",
 									"host": [
 										"{{HostAdmin}}"
 									],
@@ -2423,7 +2669,32 @@
 									"query": [
 										{
 											"key": "_id",
-											"value": "66367b4d0604e128ea5c46b9"
+											"value": "664a276df8872ea1249a6686"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{HostAdmin}}/feedback/update/is_seen?_id=6644877bd2e674472c42c471",
+									"host": [
+										"{{HostAdmin}}"
+									],
+									"path": [
+										"feedback",
+										"update",
+										"is_seen"
+									],
+									"query": [
+										{
+											"key": "_id",
+											"value": "6644877bd2e674472c42c471"
 										}
 									]
 								}
@@ -2442,7 +2713,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n      \"title\": \"Example Title\",\r\n      \"content\": \"Example Content\",\r\n      \"feeling\": \"happy\",\r\n      \"is_love_web\": 1\r\n}",
+									"raw": "{\r\n      \"title\": \"Example Title\",\r\n      \"content\": \"Example Content\",\r\n      \"feeling\": \"sad\",\r\n      \"is_love_web\": 1\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2480,13 +2751,56 @@
 							"name": "admin",
 							"item": [
 								{
+									"name": "fetch",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/quiz/fetch",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"quiz",
+												"fetch"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch by id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/quiz/fetch/_id?_id",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"quiz",
+												"fetch",
+												"_id"
+											],
+											"query": [
+												{
+													"key": "_id",
+													"value": null
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
 									"name": "create",
 									"request": {
 										"method": "POST",
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n  \"question\": \"What is the capital of France?\",\r\n  \"options\": [\"London\", \"Paris\", \"Berlin\", \"Madrid\"],\r\n  \"correct_answer\": \"Paris\",\r\n  \"explanation\": \"Paris is the capital city of France.\",\r\n  \"question_type\": \"checkbox\"\r\n}\r\n",
+											"raw": "{\r\n  \"lesson_id\": \"abcdef012345678901234567\",\r\n  \"unit_id\": \"567890123456789012345678\",\r\n  \"title\": \"Example Title\",\r\n  \"description\": \"This is an example description.\",\r\n  \"duration\": \"2 hours\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2592,6 +2906,31 @@
 										}
 									},
 									"response": []
+								},
+								{
+									"name": "fetch by id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/quiz/fetch/_id?_id",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"quiz",
+												"fetch",
+												"_id"
+											],
+											"query": [
+												{
+													"key": "_id",
+													"value": null
+												}
+											]
+										}
+									},
+									"response": []
 								}
 							]
 						}
@@ -2608,6 +2947,15 @@
 									"request": {
 										"method": "POST",
 										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"quiz_id\": \"6649c0895203beb5cf246035\",\r\n    \"vocabulary_id\": \"66462208fa38922174a20540\",\r\n    \"content\": \"Listen to the following and choose the correct answer\",\r\n    \"type\": \"Listen\",\r\n    \"level\": 1,\r\n    \"options\": [\"A\", \"B\", \"C\", \"D\"],\r\n    \"correct_answer\": \"A\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
 										"url": {
 											"raw": "{{HostAdmin}}/quiz/question/create",
 											"host": [
@@ -2660,6 +3008,103 @@
 										}
 									},
 									"response": []
+								},
+								{
+									"name": "fetch by id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/quiz/question/fetch/_id?_id",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"quiz",
+												"question",
+												"fetch",
+												"_id"
+											],
+											"query": [
+												{
+													"key": "_id",
+													"value": null
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch one by unit Copy",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/quiz/fetch/1/exam_id?exam_id",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"quiz",
+												"fetch",
+												"1",
+												"exam_id"
+											],
+											"query": [
+												{
+													"key": "exam_id",
+													"value": null
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch many by unit Copy",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/quiz/fetch/n/exam_id?exam_id",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"quiz",
+												"fetch",
+												"n",
+												"exam_id"
+											],
+											"query": [
+												{
+													"key": "exam_id",
+													"value": null
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/quiz/question/fetch",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"quiz",
+												"question",
+												"fetch"
+											]
+										}
+									},
+									"response": []
 								}
 							]
 						},
@@ -2684,94 +3129,81 @@
 										}
 									},
 									"response": []
-								}
-							]
-						}
-					]
-				},
-				{
-					"name": "quiz_options",
-					"item": [
-						{
-							"name": "admin",
-							"item": [
-								{
-									"name": "create",
-									"request": {
-										"method": "POST",
-										"header": [],
-										"url": {
-											"raw": "{{HostAdmin}}/quiz/options/create",
-											"host": [
-												"{{HostAdmin}}"
-											],
-											"path": [
-												"quiz",
-												"options",
-												"create"
-											]
-										}
-									},
-									"response": []
 								},
 								{
-									"name": "update",
-									"request": {
-										"method": "PATCH",
-										"header": [],
-										"url": {
-											"raw": "{{HostAdmin}}/quiz/options/update",
-											"host": [
-												"{{HostAdmin}}"
-											],
-											"path": [
-												"quiz",
-												"options",
-												"update"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "delete",
-									"request": {
-										"method": "DELETE",
-										"header": [],
-										"url": {
-											"raw": "{{HostAdmin}}/quiz/options/delete/_id",
-											"host": [
-												"{{HostAdmin}}"
-											],
-											"path": [
-												"quiz",
-												"options",
-												"delete",
-												"_id"
-											]
-										}
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "user",
-							"item": [
-								{
-									"name": "fetch",
+									"name": "fetch by id",
 									"request": {
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{HostAdmin}}/quiz/options/fetch",
+											"raw": "{{HostAdmin}}/quiz/question/fetch/_id?_id",
 											"host": [
 												"{{HostAdmin}}"
 											],
 											"path": [
 												"quiz",
-												"options",
-												"fetch"
+												"question",
+												"fetch",
+												"_id"
+											],
+											"query": [
+												{
+													"key": "_id",
+													"value": null
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch one by unit",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{Host}}/quiz/question/fetch/1/quiz_id?quiz_id",
+											"host": [
+												"{{Host}}"
+											],
+											"path": [
+												"quiz",
+												"question",
+												"fetch",
+												"1",
+												"quiz_id"
+											],
+											"query": [
+												{
+													"key": "quiz_id",
+													"value": null
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch many by unit",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{Host}}/quiz/fetch/n/quiz_id?quiz_id",
+											"host": [
+												"{{Host}}"
+											],
+											"path": [
+												"quiz",
+												"fetch",
+												"n",
+												"quiz_id"
+											],
+											"query": [
+												{
+													"key": "quiz_id",
+													"value": null
+												}
 											]
 										}
 									},
@@ -2973,7 +3405,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n  \"lesson_id\": \"661e94b29570433c92f0b25b\",\r\n  \"unit_id\": \"661e9545bf5e01057936ab84\",\r\n  \"title\": \"NetWork\",\r\n  \"description\": \"This is a sample description.\",\r\n  \"duration\": \"1h30m\"\r\n}\r\n",
+											"raw": "{\r\n  \"lesson_id\": \"664637556c4c00abf5dee037\",\r\n  \"unit_id\": \"6646375a6c4c00abf5dee061\",\r\n  \"title\": \"Code review\",\r\n  \"description\": \"This is a sample description.\",\r\n  \"duration\": \"1h30m\"\r\n}\r\n",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3030,12 +3462,55 @@
 									"response": []
 								},
 								{
+									"name": "fetch",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/exercise/fetch",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"exercise",
+												"fetch"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch by id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/exercise/fetch/_id?_id=6648e32b36adf934bb2c93cd",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"exercise",
+												"fetch",
+												"_id"
+											],
+											"query": [
+												{
+													"key": "_id",
+													"value": "6648e32b36adf934bb2c93cd"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
 									"name": "fetch by many unit",
 									"request": {
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{HostAdmin}}/exercise/fetch/n/unit?unit_id=661e9545bf5e01057936ab84",
+											"raw": "{{HostAdmin}}/exercise/fetch/n/unit_id?unit_id=6646375a6c4c00abf5dee061",
 											"host": [
 												"{{HostAdmin}}"
 											],
@@ -3043,12 +3518,12 @@
 												"exercise",
 												"fetch",
 												"n",
-												"unit"
+												"unit_id"
 											],
 											"query": [
 												{
 													"key": "unit_id",
-													"value": "661e9545bf5e01057936ab84"
+													"value": "6646375a6c4c00abf5dee061"
 												}
 											]
 										}
@@ -3084,7 +3559,7 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{Host}}/exercise/fetch/1/unit?unit_id=661e9545bf5e01057936ab84",
+											"raw": "{{Host}}/exercise/fetch/1/unit_id?unit_id=664637576c4c00abf5dee043",
 											"host": [
 												"{{Host}}"
 											],
@@ -3092,12 +3567,37 @@
 												"exercise",
 												"fetch",
 												"1",
-												"unit"
+												"unit_id"
 											],
 											"query": [
 												{
 													"key": "unit_id",
-													"value": "661e9545bf5e01057936ab84"
+													"value": "664637576c4c00abf5dee043"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch by id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{Host}}/exercise/fetch/_id?_id=6648e32b36adf934bb2c93cd",
+											"host": [
+												"{{Host}}"
+											],
+											"path": [
+												"exercise",
+												"fetch",
+												"_id"
+											],
+											"query": [
+												{
+													"key": "_id",
+													"value": "6648e32b36adf934bb2c93cd"
 												}
 											]
 										}
@@ -3119,14 +3619,122 @@
 							"name": "admin",
 							"item": [
 								{
+									"name": "fetch by id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/exercise/question/fetch/_id?_id",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"exercise",
+												"question",
+												"fetch",
+												"_id"
+											],
+											"query": [
+												{
+													"key": "_id",
+													"value": null
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/exercise/question/fetch",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"exercise",
+												"question",
+												"fetch"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch n by exercise id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/exercise/question/fetch/n/exercise_id?exercise_id=6648e32b36adf934bb2c93cd",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"exercise",
+												"question",
+												"fetch",
+												"n",
+												"exercise_id"
+											],
+											"query": [
+												{
+													"key": "exercise_id",
+													"value": "6648e32b36adf934bb2c93cd"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch 1 by exercise id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/exercise/question/fetch/1/exercise_id?exercise_id=6648e32b36adf934bb2c93cd",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"exercise",
+												"question",
+												"fetch",
+												"1",
+												"exercise_id"
+											],
+											"query": [
+												{
+													"key": "exercise_id",
+													"value": "6648e32b36adf934bb2c93cd"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
 									"name": "create",
 									"request": {
 										"method": "POST",
 										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"exercise_id\": \"6648e32b36adf934bb2c93cd\",\r\n  \"vocabulary_id\": \"6646376c6c4c00abf5dee0e5\",\r\n  \"content\": \"Listen to the following and choose the correct answer\",\r\n  \"type\": \"Listen\",\r\n  \"level\": 1,\r\n  \"options\": [\"A\", \"B\", \"C\", \"D\"],\r\n  \"correct_answer\": \"A\"\r\n}\r\n\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
 										"url": {
-											"raw": "{{Host}}/exercise/question/create",
+											"raw": "{{HostAdmin}}/exercise/question/create",
 											"host": [
-												"{{Host}}"
+												"{{HostAdmin}}"
 											],
 											"path": [
 												"exercise",
@@ -3198,97 +3806,82 @@
 										}
 									},
 									"response": []
-								}
-							]
-						},
-						{
-							"name": "both",
-							"item": []
-						}
-					]
-				},
-				{
-					"name": "exercise_options",
-					"item": [
-						{
-							"name": "admin",
-							"item": [
-								{
-									"name": "create",
-									"request": {
-										"method": "POST",
-										"header": [],
-										"url": {
-											"raw": "{{Host}}/exercise/options/create",
-											"host": [
-												"{{Host}}"
-											],
-											"path": [
-												"exercise",
-												"options",
-												"create"
-											]
-										}
-									},
-									"response": []
 								},
 								{
-									"name": "update",
-									"request": {
-										"method": "PATCH",
-										"header": [],
-										"url": {
-											"raw": "{{Host}}/exercise/options/update",
-											"host": [
-												"{{Host}}"
-											],
-											"path": [
-												"exercise",
-												"options",
-												"update"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "delete",
-									"request": {
-										"method": "DELETE",
-										"header": [],
-										"url": {
-											"raw": "{{Host}}/exercise/options/delete",
-											"host": [
-												"{{Host}}"
-											],
-											"path": [
-												"exercise",
-												"options",
-												"delete"
-											]
-										}
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "user",
-							"item": [
-								{
-									"name": "fetch",
+									"name": "fetch by id",
 									"request": {
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{Host}}/exercise/options/fetch",
+											"raw": "{{Host}}/exercise/question/fetch/_id?_id",
 											"host": [
 												"{{Host}}"
 											],
 											"path": [
 												"exercise",
-												"options",
-												"fetch"
+												"question",
+												"fetch",
+												"_id"
+											],
+											"query": [
+												{
+													"key": "_id",
+													"value": null
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch n by exercise id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{Host}}/exercise/question/fetch/n/exercise_id?exercise_id=6648e32b36adf934bb2c93cd",
+											"host": [
+												"{{Host}}"
+											],
+											"path": [
+												"exercise",
+												"question",
+												"fetch",
+												"n",
+												"exercise_id"
+											],
+											"query": [
+												{
+													"key": "exercise_id",
+													"value": "6648e32b36adf934bb2c93cd"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch 1 by exercise id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{Host}}/exercise/question/fetch/1/exercise_id?exercise_id=6648e32b36adf934bb2c93cd",
+											"host": [
+												"{{Host}}"
+											],
+											"path": [
+												"exercise",
+												"question",
+												"fetch",
+												"1",
+												"exercise_id"
+											],
+											"query": [
+												{
+													"key": "exercise_id",
+													"value": "6648e32b36adf934bb2c93cd"
+												}
 											]
 										}
 									},
@@ -3496,20 +4089,20 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{HostAdmin}}/exam/fetch/n/unit_id?unit_id=6638ba944fc42f9e085c6e5a",
+											"raw": "{{HostAdmin}}/exam/fetch/ns/unit_id?unit_id=6645b9d5715a57671c9ead5a",
 											"host": [
 												"{{HostAdmin}}"
 											],
 											"path": [
 												"exam",
 												"fetch",
-												"n",
+												"ns",
 												"unit_id"
 											],
 											"query": [
 												{
 													"key": "unit_id",
-													"value": "6638ba944fc42f9e085c6e5a"
+													"value": "6645b9d5715a57671c9ead5a"
 												}
 											]
 										}
@@ -3517,27 +4110,44 @@
 									"response": []
 								},
 								{
-									"name": "create",
+									"name": "fetch",
 									"request": {
-										"method": "POST",
+										"method": "GET",
 										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\r\n  \"lesson_id\": \"6638b36d780b69091d6178a0\",\r\n  \"unit_id\": \"6638ba944fc42f9e085c6e5a\",\r\n    \"title\": \"Programming\",\r\n  \"description\": \"Algorithm\",\r\n  \"duration\": \"1 minute\"\r\n}\r\n",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
 										"url": {
-											"raw": "{{HostAdmin}}/exam/create",
+											"raw": "{{HostAdmin}}/exam/all/fetch",
 											"host": [
 												"{{HostAdmin}}"
 											],
 											"path": [
 												"exam",
-												"create"
+												"all",
+												"fetch"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch by id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/exam/fetch/_id?_id=6646fa6b35279cdcdb392056",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"exam",
+												"fetch",
+												"_id"
+											],
+											"query": [
+												{
+													"key": "_id",
+													"value": "6646fa6b35279cdcdb392056"
+												}
 											]
 										}
 									},
@@ -3601,30 +4211,12 @@
 							"name": "user",
 							"item": [
 								{
-									"name": "fetch",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "{{Host}}/exam/fetch",
-											"host": [
-												"{{Host}}"
-											],
-											"path": [
-												"exam",
-												"fetch"
-											]
-										}
-									},
-									"response": []
-								},
-								{
 									"name": "fetch one by unit",
 									"request": {
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{Host}}/exam/fetch/1/unit_id?unit_id=6638ba944fc42f9e085c6e5a",
+											"raw": "{{Host}}/exam/fetch/1/unit_id?unit_id=6645b9d5715a57671c9ead5a",
 											"host": [
 												"{{Host}}"
 											],
@@ -3637,8 +4229,51 @@
 											"query": [
 												{
 													"key": "unit_id",
-													"value": "6638ba944fc42f9e085c6e5a"
+													"value": "6645b9d5715a57671c9ead5a"
 												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch by id Copy",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{Host}}/exam/fetch/_id?_id=664673c0f2effa8aa3ade1e8",
+											"host": [
+												"{{Host}}"
+											],
+											"path": [
+												"exam",
+												"fetch",
+												"_id"
+											],
+											"query": [
+												{
+													"key": "_id",
+													"value": "664673c0f2effa8aa3ade1e8"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{Host}}/exam/fetch",
+											"host": [
+												"{{Host}}"
+											],
+											"path": [
+												"exam",
+												"fetch"
 											]
 										}
 									},
@@ -3659,13 +4294,118 @@
 							"name": "admin",
 							"item": [
 								{
+									"name": "fetch",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/exam/question/fetch?page=1",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"exam",
+												"question",
+												"fetch"
+											],
+											"query": [
+												{
+													"key": "page",
+													"value": "1"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch by id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/exam/question/fetch/_id?_id=6647ca5935001039cde79ca2",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"exam",
+												"question",
+												"fetch",
+												"_id"
+											],
+											"query": [
+												{
+													"key": "_id",
+													"value": "6647ca5935001039cde79ca2"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch n by exam id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/exam/question/fetch/n/exam_id?exam_id=6646fa6b35279cdcdb392056",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"exam",
+												"question",
+												"fetch",
+												"n",
+												"exam_id"
+											],
+											"query": [
+												{
+													"key": "exam_id",
+													"value": "6646fa6b35279cdcdb392056"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch 1 by exam id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{HostAdmin}}/exam/question/fetch/1/exam_id?exam_id=6646fa6b35279cdcdb392056",
+											"host": [
+												"{{HostAdmin}}"
+											],
+											"path": [
+												"exam",
+												"question",
+												"fetch",
+												"1",
+												"exam_id"
+											],
+											"query": [
+												{
+													"key": "exam_id",
+													"value": "6646fa6b35279cdcdb392056"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
 									"name": "create",
 									"request": {
 										"method": "POST",
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n  \"exam_id\": \"663c984271e38d173f2354ef\",\r\n  \"vocabulary_id\": \"6638ba9d4fc42f9e085c6ea8\",\r\n  \"content\": \"Listen to the following and choose the correct answer\",\r\n  \"type\": \"Listen\",\r\n  \"level\": 1\r\n}\r\n",
+											"raw": "{\r\n  \"exam_id\": \"66476d8dd39225ba15976880\",\r\n  \"vocabulary_id\": \"66462208fa38922174a20540\",\r\n  \"content\": \"Listen to the following and choose the correct answer\",\r\n  \"type\": \"Listen\",\r\n  \"level\": 1,\r\n  \"options\": [\"A\", \"B\", \"C\", \"D\"],\r\n  \"correct_answer\": \"A\"\r\n}\r\n\r\n",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3693,7 +4433,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n  \"_id\": \"6634fd946da4ee99ccf75895\",\r\n  \"exam_id\": \"6634f2de73c0d6c04bd2dfcc\",\r\n  \"vocabulary_id\": \"663613c091fea8603e7125f7\",\r\n  \"content\": \"What does 'hello' mean in Vietnamese?\",\r\n  \"type\": \"Question\",\r\n  \"level\": 1\r\n}\r\n",
+											"raw": "{\r\n  \"_id\": \"6647ca5935001039cde79ca2\",\r\n  \"exam_id\": \"6646fa6b35279cdcdb392056\",\r\n  \"vocabulary_id\": \"664637626c4c00abf5dee0a1\",\r\n  \"content\": \"Syntax là cú pháp ?\",\r\n  \"type\": \"true/false\",\r\n  \"correct_answer\":\"0\",\r\n  \"level\": 1\r\n}\r\n",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3751,7 +4491,7 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{Host}}/exam/question/fetch",
+											"raw": "{{Host}}/exam/question/fetch?page=1",
 											"host": [
 												"{{Host}}"
 											],
@@ -3759,18 +4499,24 @@
 												"exam",
 												"question",
 												"fetch"
+											],
+											"query": [
+												{
+													"key": "page",
+													"value": "1"
+												}
 											]
 										}
 									},
 									"response": []
 								},
 								{
-									"name": "fetch by exam id",
+									"name": "fetch by id",
 									"request": {
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{Host}}/exam/question/fetch/exam_id?exam_id=6634f2de73c0d6c04bd2dfcc",
+											"raw": "{{Host}}/exam/question/fetch/_id?_id=6646fa6b35279cdcdb392056",
 											"host": [
 												"{{Host}}"
 											],
@@ -3778,119 +4524,66 @@
 												"exam",
 												"question",
 												"fetch",
+												"_id"
+											],
+											"query": [
+												{
+													"key": "_id",
+													"value": "6646fa6b35279cdcdb392056"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "fetch n by exam id",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{Host}}/exam/question/fetch/n/exam_id?exam_id=6646fa6b35279cdcdb392056",
+											"host": [
+												"{{Host}}"
+											],
+											"path": [
+												"exam",
+												"question",
+												"fetch",
+												"n",
 												"exam_id"
 											],
 											"query": [
 												{
 													"key": "exam_id",
-													"value": "6634f2de73c0d6c04bd2dfcc"
+													"value": "6646fa6b35279cdcdb392056"
 												}
-											]
-										}
-									},
-									"response": []
-								}
-							]
-						}
-					]
-				},
-				{
-					"name": "exam_options",
-					"item": [
-						{
-							"name": "admin",
-							"item": [
-								{
-									"name": "create",
-									"request": {
-										"method": "POST",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\r\n  \"question_id\": \"663dab07fedc37b587f0cb38\",\r\n  \"options\": [\"Paris\"],\r\n  \"correct_answer\": \"Paris\"\r\n}\r\n",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": {
-											"raw": "{{HostAdmin}}/exam/options/create",
-											"host": [
-												"{{HostAdmin}}"
-											],
-											"path": [
-												"exam",
-												"options",
-												"create"
 											]
 										}
 									},
 									"response": []
 								},
 								{
-									"name": "update",
-									"request": {
-										"method": "PATCH",
-										"header": [],
-										"url": {
-											"raw": "{{Host}}/exam/options/update",
-											"host": [
-												"{{Host}}"
-											],
-											"path": [
-												"exam",
-												"options",
-												"update"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "delete",
-									"request": {
-										"method": "DELETE",
-										"header": [],
-										"url": {
-											"raw": "{{HostAdmin}}/exam/options/delete/_id",
-											"host": [
-												"{{HostAdmin}}"
-											],
-											"path": [
-												"exam",
-												"options",
-												"delete",
-												"_id"
-											]
-										}
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "user",
-							"item": [
-								{
-									"name": "fetch",
+									"name": "fetch 1 by exam id",
 									"request": {
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{Host}}/exam/options/fetch?question_id=663dab07fedc37b587f0cb38",
+											"raw": "{{Host}}/exam/question/fetch/1/exam_id?exam_id=6646fa6b35279cdcdb392056",
 											"host": [
 												"{{Host}}"
 											],
 											"path": [
 												"exam",
-												"options",
-												"fetch"
+												"question",
+												"fetch",
+												"1",
+												"exam_id"
 											],
 											"query": [
 												{
-													"key": "question_id",
-													"value": "663dab07fedc37b587f0cb38"
+													"key": "exam_id",
+													"value": "6646fa6b35279cdcdb392056"
 												}
 											]
 										}
@@ -3913,7 +4606,7 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{Host}}/exam/answer/fetch",
+											"raw": "{{Host}}/exam/answer/fetch?question_id=6647ca5935001039cde79ca2",
 											"host": [
 												"{{Host}}"
 											],
@@ -3921,6 +4614,12 @@
 												"exam",
 												"answer",
 												"fetch"
+											],
+											"query": [
+												{
+													"key": "question_id",
+													"value": "6647ca5935001039cde79ca2"
+												}
 											]
 										}
 									},
@@ -3933,7 +4632,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"answer\":\"\"\r\n}",
+											"raw": "{\r\n    \"question_id\":\"6648296c0f0a5b2ad9445551\",\r\n    \"answer\":\"Variable\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3941,14 +4640,14 @@
 											}
 										},
 										"url": {
-											"raw": "{{Host}}/exam/answer/fetch",
+											"raw": "{{Host}}/exam/answer/create",
 											"host": [
 												"{{Host}}"
 											],
 											"path": [
 												"exam",
 												"answer",
-												"fetch"
+												"create"
 											]
 										}
 									},
