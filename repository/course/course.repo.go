@@ -3,12 +3,14 @@ package course_repository
 import (
 	course_domain "clean-architecture/domain/course"
 	"clean-architecture/internal"
+	"clean-architecture/internal/cache"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"reflect"
 	"strconv"
 	"sync"
 	"time"
@@ -20,12 +22,6 @@ type courseRepository struct {
 	collectionLesson     string
 	collectionUnit       string
 	collectionVocabulary string
-
-	courseResponseCache map[string]course_domain.DetailForManyResponse
-	courseManyCache     map[string][]course_domain.CourseResponse
-	courseOneCache      map[string]course_domain.CourseResponse
-	courseCacheExpires  map[string]time.Time
-	cacheMutex          sync.RWMutex
 }
 
 func NewCourseRepository(db *mongo.Database, collectionCourse string, collectionLesson string, collectionUnit string, collectionVocabulary string) course_domain.ICourseRepository {
@@ -35,21 +31,40 @@ func NewCourseRepository(db *mongo.Database, collectionCourse string, collection
 		collectionLesson:     collectionLesson,
 		collectionUnit:       collectionUnit,
 		collectionVocabulary: collectionVocabulary,
-
-		courseResponseCache: make(map[string]course_domain.DetailForManyResponse),
-		courseManyCache:     make(map[string][]course_domain.CourseResponse),
-		courseOneCache:      make(map[string]course_domain.CourseResponse),
-		courseCacheExpires:  make(map[string]time.Time),
 	}
 }
 
-func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
-	c.cacheMutex.RLock()
-	cachedData, found := c.courseOneCache[courseID]
-	c.cacheMutex.RUnlock()
+var (
+	courseResponse       = cache.NewTTL[string, course_domain.CourseResponse]()
+	coursesResponses     = cache.NewTTL[string, []course_domain.CourseResponse]()
+	detailCourseResponse = cache.NewTTL[string, course_domain.DetailForManyResponse]()
+	wg                   sync.WaitGroup
+)
 
-	if found {
-		return cachedData, nil
+func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
+	// implement channel
+	courseCh := make(chan course_domain.CourseResponse)
+	wg.Add(1)
+
+	// a goroutine do check data value in cache
+	go func() {
+		defer wg.Done()
+		value, found := courseResponse.Get(courseID)
+		if found {
+			courseCh <- value
+			return
+		}
+	}()
+
+	// to prevent panic "send to channel close", implement goroutine
+	go func() {
+		defer close(courseCh)
+		wg.Wait()
+	}()
+
+	courseData := <-courseCh
+	if !isZeroValue(courseData) {
+		return courseData, nil
 	}
 
 	collectionCourse := c.database.Collection(c.collectionCourse)
@@ -92,23 +107,45 @@ func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (cour
 	course.CountVocabulary = countVocab
 	course.CountLesson = countLesson
 
-	c.cacheMutex.Lock()
-	c.courseOneCache[courseID] = course
-	c.courseCacheExpires[courseID] = time.Now().Add(5 * time.Minute)
-	c.cacheMutex.Unlock()
+	courseResponse.Set(courseID, course, 5*time.Minute)
 
 	return course, nil
 }
 
 func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page string) ([]course_domain.CourseResponse, course_domain.DetailForManyResponse, error) {
-	//c.cacheMutex.RLock()
-	//cachedData, foundData := c.courseManyCache["course"]
-	//cachedResponseData, foundRes := c.courseResponseCache[page]
-	//c.cacheMutex.RUnlock()
-	//
-	//if foundData && foundRes {
-	//	return cachedData, cachedResponseData, nil
-	//}
+	// buffer channel with increase performance
+	// note: use buffer have target
+	coursesCh := make(chan []course_domain.CourseResponse, 5)
+	detailCh := make(chan course_domain.DetailForManyResponse, 1)
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		data, found := coursesResponses.Get(page)
+		if found {
+			coursesCh <- data
+			return
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		detailData, foundDetail := detailCourseResponse.Get("detail")
+		if foundDetail {
+			detailCh <- detailData
+			return
+		}
+	}()
+
+	go func() {
+		defer close(coursesCh)
+		defer close(detailCh)
+		wg.Wait()
+	}()
+
+	courseData := <-coursesCh
+	responseData := <-detailCh
+	if !isZeroValue(courseData) && !isZeroValue(responseData) {
+		return courseData, responseData, nil
+	}
 
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
@@ -183,12 +220,8 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 		CurrentPage: pageNumber,
 	}
 
-	//c.cacheMutex.Lock()
-	//c.courseManyCache["course"] = courses
-	//c.courseResponseCache[page] = detail
-	//c.courseCacheExpires["course"] = time.Now().Add(5 * time.Minute)
-	//c.courseCacheExpires[page] = time.Now().Add(5 * time.Minute)
-	//c.cacheMutex.Unlock()
+	coursesResponses.Set(page, courses, 5*time.Minute)
+	detailCourseResponse.Set("detail", detail, 5*time.Minute)
 
 	return courses, detail, nil
 }
@@ -215,10 +248,20 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.
 		return nil, err
 	}
 
-	//c.cacheMutex.Lock()
-	//delete(c.courseOneCache, course.Id.Hex())
-	//c.courseCacheExpires[course.Id.Hex()] = time.Now().Add(-1 * time.Second)
-	//c.cacheMutex.Unlock()
+	// Clear data value in cache memory for courses
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		coursesResponses.Clear()
+	}()
+
+	// clear data value with id courseID in cache
+	go func() {
+		defer wg.Done()
+		courseResponse.Remove(course.Id.Hex())
+	}()
+	wg.Wait()
+
 	return data, nil
 }
 
@@ -239,10 +282,20 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 		return err
 	}
 
-	//c.cacheMutex.Lock()
-	//delete(c.courseManyCache, "course")
-	//c.courseCacheExpires = make(map[string]time.Time)
-	//c.cacheMutex.Unlock()
+	// Clear data value in cache memory
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		coursesResponses.Clear()
+	}()
+
+	// clear data value in cache memory due to increase num
+	go func() {
+		defer wg.Done()
+		detailCourseResponse.Clear()
+	}()
+
+	wg.Wait()
 
 	return nil
 }
@@ -267,18 +320,25 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 
 	// Delete the course
 	filter := bson.M{"_id": objID}
-	result, err := collectionCourse.DeleteOne(ctx, filter)
+	_, err = collectionCourse.DeleteOne(ctx, filter)
 	if err != nil {
 		return err
 	}
 
-	if result == nil {
-		return errors.New("the course was not found or already deleted")
-	}
-	//c.cacheMutex.Lock()
-	//delete(c.courseOneCache, courseID)
-	//c.courseCacheExpires[courseID] = time.Now().Add(-1 * time.Second)
-	//c.cacheMutex.Unlock()
+	// clear data value with courseID in cache
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		courseResponse.Remove(courseID)
+	}()
+
+	// clear data value with detail in cache due to decrease num
+	go func() {
+		defer wg.Done()
+		detailCourseResponse.Clear()
+	}()
+	wg.Wait()
+
 	return nil
 }
 
@@ -359,4 +419,8 @@ func (c *courseRepository) Statistics(ctx context.Context) (course_domain.Statis
 		Total: count,
 	}
 	return statistics, nil
+}
+
+func isZeroValue(x interface{}) bool {
+	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
 }
