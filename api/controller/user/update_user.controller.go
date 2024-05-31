@@ -74,9 +74,7 @@ func (u *UserController) UpdateUser(ctx *gin.Context) {
 	}
 	defer f.Close()
 
-	// Tải file lên Cloudinary
-	filename, _ := ctx.Get("filePath")
-	imageURL, err := cloudinary.UploadImageToCloudinary(f, filename.(string), u.Database.CloudinaryUploadFolderUser)
+	imageURL, err := cloudinary.UploadImageToCloudinary(f, file.Filename, u.Database.CloudinaryUploadFolderUser)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),

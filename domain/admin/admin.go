@@ -39,6 +39,7 @@ type IAdminRepository interface {
 	GetByID(ctx context.Context, id string) (*Admin, error)
 	FetchMany(ctx context.Context) (Response, error)
 	GetByEmail(ctx context.Context, username string) (*Admin, error)
+
 	CreateOne(ctx context.Context, admin Admin) error
 	UpdateOne(ctx context.Context, admin *Admin) (*mongo.UpdateResult, error)
 	ChangeEmail(ctx context.Context, admin *Admin) (*mongo.UpdateResult, error)
