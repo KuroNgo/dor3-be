@@ -2,7 +2,6 @@ package exam_repository
 
 import (
 	exam_domain "clean-architecture/domain/exam"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,12 +21,6 @@ type examRepository struct {
 	collectionExam         string
 	collectionExamQuestion string
 	collectionVocabulary   string
-
-	examResponseCache map[string]exam_domain.DetailResponse
-	examManyCache     map[string][]exam_domain.Exam
-	examOneCache      map[string]exam_domain.Exam
-	examCacheExpires  map[string]time.Time
-	cacheMutex        sync.RWMutex
 }
 
 func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionExamQuestion string, collectionVocabulary string) exam_domain.IExamRepository {
@@ -38,24 +31,14 @@ func NewExamRepository(db *mongo.Database, collectionExam string, collectionLess
 		collectionUnit:         collectionUnit,
 		collectionExamQuestion: collectionExamQuestion,
 		collectionVocabulary:   collectionVocabulary,
-
-		examResponseCache: make(map[string]exam_domain.DetailResponse),
-		examManyCache:     make(map[string][]exam_domain.Exam),
-		examOneCache:      make(map[string]exam_domain.Exam),
-		examCacheExpires:  make(map[string]time.Time),
 	}
 }
 
-func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
-	//e.cacheMutex.RLock()
-	//cacheData, found := e.examManyCache["exam"]
-	//cachedResponseData, found := e.examResponseCache[page]
-	//e.cacheMutex.RUnlock()
-	//
-	//if found {
-	//	return cacheData, cachedResponseData, nil
-	//}
+var (
+	wg sync.WaitGroup
+)
 
+func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -118,37 +101,7 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 	return exams, detail, nil
 }
 
-func (e *examRepository) FetchExamByID(ctx context.Context, id string) (exam_domain.Exam, error) {
-	collectionExam := e.database.Collection(e.collectionExam)
-
-	idExam, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return exam_domain.Exam{}, err
-	}
-
-	var exam exam_domain.Exam
-	filter := bson.M{"_id": idExam}
-	err = collectionExam.FindOne(ctx, filter).Decode(&exam)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return exam_domain.Exam{}, errors.New("exam not found")
-		}
-		return exam_domain.Exam{}, err
-	}
-
-	return exam, nil
-}
-
 func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
-	//e.cacheMutex.RLock()
-	//cacheData, found := e.examManyCache[unitID]
-	//cachedResponseData, found := e.examResponseCache[page]
-	//e.cacheMutex.RUnlock()
-	//
-	//if found {
-	//	return cacheData, cachedResponseData, nil
-	//}
-
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -217,23 +170,30 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 	}
 
 	return exams, detail, nil
-	//e.cacheMutex.Lock()
-	//e.examManyCache[unitID] = exams
-	//e.examResponseCache[page] = response
-	//e.examCacheExpires[page] = time.Now().Add(5 * time.Minute)
-	//e.examCacheExpires[unitID] = time.Now().Add(5 * time.Minute)
-	//e.cacheMutex.Unlock()
+}
+
+func (e *examRepository) FetchExamByID(ctx context.Context, id string) (exam_domain.Exam, error) {
+	collectionExam := e.database.Collection(e.collectionExam)
+
+	idExam, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return exam_domain.Exam{}, err
+	}
+
+	var exam exam_domain.Exam
+	filter := bson.M{"_id": idExam}
+	err = collectionExam.FindOne(ctx, filter).Decode(&exam)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return exam_domain.Exam{}, errors.New("exam not found")
+		}
+		return exam_domain.Exam{}, err
+	}
+
+	return exam, nil
 }
 
 func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.Exam, error) {
-	//e.cacheMutex.RLock()
-	//cacheData, found := e.examOneCache[unitID]
-	//e.cacheMutex.RUnlock()
-
-	//if found {
-	//	return cacheData, nil
-	//}
-
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	idUnit, err := primitive.ObjectIDFromHex(unitID)
@@ -254,9 +214,10 @@ func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (e
 	}(cursor, ctx)
 
 	var exams []exam_domain.Exam
-	internal.Wg.Add(1)
+
+	wg.Add(1)
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for cursor.Next(ctx) {
 			var exam exam_domain.Exam
 			if err = cursor.Decode(&exam); err != nil {
@@ -267,7 +228,7 @@ func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (e
 
 		}
 	}()
-	internal.Wg.Wait()
+	wg.Wait()
 
 	// Kiểm tra nếu danh sách exercises không rỗng
 	if len(exams) == 0 {
@@ -279,31 +240,6 @@ func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (e
 	randomExam := exams[randomIndex]
 
 	return randomExam, nil
-
-	//e.cacheMutex.Lock()
-	//e.examOneCache[unitID] = exam
-	//e.examCacheExpires[unitID] = time.Now().Add(5 * time.Minute)
-	//e.cacheMutex.Unlock()
-}
-
-func (e *examRepository) UpdateOne(ctx context.Context, exam *exam_domain.Exam) (*mongo.UpdateResult, error) {
-	collection := e.database.Collection(e.collectionExam)
-
-	filter := bson.M{"_id": exam.ID}
-	update := bson.M{
-		"$set": bson.M{
-			"description": exam.Description,
-			"title":       exam.Title,
-			"duration":    exam.Duration,
-		},
-	}
-
-	data, err := collection.UpdateOne(ctx, filter, &update)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, err
 }
 
 func (e *examRepository) CreateOne(ctx context.Context, exam *exam_domain.Exam) error {
@@ -335,6 +271,26 @@ func (e *examRepository) CreateOne(ctx context.Context, exam *exam_domain.Exam) 
 	}
 
 	return nil
+}
+
+func (e *examRepository) UpdateOne(ctx context.Context, exam *exam_domain.Exam) (*mongo.UpdateResult, error) {
+	collection := e.database.Collection(e.collectionExam)
+
+	filter := bson.M{"_id": exam.ID}
+	update := bson.M{
+		"$set": bson.M{
+			"description": exam.Description,
+			"title":       exam.Title,
+			"duration":    exam.Duration,
+		},
+	}
+
+	data, err := collection.UpdateOne(ctx, filter, &update)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, err
 }
 
 func (e *examRepository) UpdateCompleted(ctx context.Context, exam *exam_domain.Exam) error {
@@ -376,7 +332,7 @@ func (e *examRepository) DeleteOne(ctx context.Context, examID string) error {
 	return err
 }
 
-func (e *examRepository) CountQuestion(ctx context.Context, examID string) int64 {
+func (e *examRepository) countQuestion(ctx context.Context, examID string) int64 {
 	collectionExamQuestion := e.database.Collection(e.collectionExamQuestion)
 
 	idExam, err := primitive.ObjectIDFromHex(examID)

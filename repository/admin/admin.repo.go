@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"sync"
 	"time"
 )
 
@@ -26,6 +27,10 @@ func NewAdminRepository(db *mongo.Database, collectionAdmin string, collectionUs
 		collectionUser:  collectionUser,
 	}
 }
+
+var (
+	wg sync.WaitGroup
+)
 
 func (a *adminRepository) GetByID(c context.Context, id string) (*admin_domain.Admin, error) {
 	collection := a.database.Collection(a.collectionAdmin)
@@ -51,9 +56,9 @@ func (a *adminRepository) FetchMany(c context.Context) (admin_domain.Response, e
 
 	var admins []admin_domain.Admin
 
-	internal.Wg.Add(1)
+	wg.Add(1)
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for cursor.Next(c) {
 			var admin admin_domain.Admin
 			if err = cursor.Decode(&admin); err != nil {
@@ -68,7 +73,7 @@ func (a *adminRepository) FetchMany(c context.Context) (admin_domain.Response, e
 		}
 	}()
 
-	internal.Wg.Wait()
+	wg.Wait()
 
 	statisticsCh := make(chan admin_domain.Statistics)
 	go func() {

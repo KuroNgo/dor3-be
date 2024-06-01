@@ -2,7 +2,7 @@ package internal
 
 import (
 	"go.mongodb.org/mongo-driver/bson"
-	"sync"
+	"reflect"
 )
 
 func ToDoc(v interface{}) (doc *bson.D, err error) {
@@ -15,6 +15,6 @@ func ToDoc(v interface{}) (doc *bson.D, err error) {
 	return
 }
 
-var (
-	Wg sync.WaitGroup
-)
+func IsZeroValue(x interface{}) bool {
+	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
+}

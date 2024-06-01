@@ -1,10 +1,10 @@
 package marklist_controller
 
 import (
-	"clean-architecture/internal"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"sync"
 )
 
 // DeleteOneMarkList chỉ user mới có thể xóa
@@ -46,9 +46,10 @@ func (m *MarkListController) DeleteOneMarkList(ctx *gin.Context) {
 		return
 	}
 
-	internal.Wg.Add(1)
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for _, elMarkVocab := range data {
 			err = m.MarkVocabularyUseCase.DeleteOne(ctx, elMarkVocab.ID.Hex())
 			if err != nil {
@@ -61,7 +62,7 @@ func (m *MarkListController) DeleteOneMarkList(ctx *gin.Context) {
 		}
 	}()
 
-	internal.Wg.Wait()
+	wg.Wait()
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})

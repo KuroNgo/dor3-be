@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"reflect"
 	"strconv"
 	"sync"
 	"time"
@@ -35,10 +34,14 @@ func NewCourseRepository(db *mongo.Database, collectionCourse string, collection
 }
 
 var (
-	courseResponse       = cache.NewTTL[string, course_domain.CourseResponse]()
-	coursesResponses     = cache.NewTTL[string, []course_domain.CourseResponse]()
-	detailCourseResponse = cache.NewTTL[string, course_domain.DetailForManyResponse]()
-	wg                   sync.WaitGroup
+	courseCache  = cache.NewTTL[string, course_domain.CourseResponse]()
+	coursesCache = cache.NewTTL[string, []course_domain.CourseResponse]()
+	detailCache  = cache.NewTTL[string, course_domain.DetailForManyResponse]()
+
+	wg sync.WaitGroup
+	mu sync.Mutex
+
+	statisticsCh = make(chan course_domain.Statistics)
 )
 
 func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
@@ -49,7 +52,7 @@ func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (cour
 	// a goroutine do check data value in cache
 	go func() {
 		defer wg.Done()
-		value, found := courseResponse.Get(courseID)
+		value, found := courseCache.Get(courseID)
 		if found {
 			courseCh <- value
 			return
@@ -63,7 +66,7 @@ func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (cour
 	}()
 
 	courseData := <-courseCh
-	if !isZeroValue(courseData) {
+	if !internal.IsZeroValue(courseData) {
 		return courseData, nil
 	}
 
@@ -107,7 +110,7 @@ func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (cour
 	course.CountVocabulary = countVocab
 	course.CountLesson = countLesson
 
-	courseResponse.Set(courseID, course, 5*time.Minute)
+	courseCache.Set(courseID, course, 5*time.Minute)
 
 	return course, nil
 }
@@ -120,7 +123,7 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		data, found := coursesResponses.Get(page)
+		data, found := coursesCache.Get(page)
 		if found {
 			coursesCh <- data
 			return
@@ -128,7 +131,7 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 	}()
 	go func() {
 		defer wg.Done()
-		detailData, foundDetail := detailCourseResponse.Get("detail")
+		detailData, foundDetail := detailCache.Get("detail")
 		if foundDetail {
 			detailCh <- detailData
 			return
@@ -143,7 +146,7 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 
 	courseData := <-coursesCh
 	responseData := <-detailCh
-	if !isZeroValue(courseData) && !isZeroValue(responseData) {
+	if !internal.IsZeroValue(courseData) && !internal.IsZeroValue(responseData) {
 		return courseData, responseData, nil
 	}
 
@@ -176,18 +179,18 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 
 	var courses []course_domain.CourseResponse
 
-	internal.Wg.Add(1)
+	wg.Add(1)
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for cursor.Next(ctx) {
 			var course course_domain.CourseResponse
 			if err := cursor.Decode(&course); err != nil {
 				return
 			}
 
-			internal.Wg.Add(1)
+			wg.Add(1)
 			go func(course2 course_domain.CourseResponse) {
-				defer internal.Wg.Done()
+				defer wg.Done()
 				countLesson, err := c.countLessonsByCourseID(ctx, course2.Id)
 				if err != nil {
 					return
@@ -204,9 +207,8 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 		}
 	}()
 
-	internal.Wg.Wait()
+	wg.Wait()
 
-	statisticsCh := make(chan course_domain.Statistics)
 	go func() {
 		statistics, _ := c.Statistics(ctx)
 		statisticsCh <- statistics
@@ -220,8 +222,8 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 		CurrentPage: pageNumber,
 	}
 
-	coursesResponses.Set(page, courses, 5*time.Minute)
-	detailCourseResponse.Set("detail", detail, 5*time.Minute)
+	coursesCache.Set(page, courses, 5*time.Minute)
+	detailCache.Set("detail", detail, 5*time.Minute)
 
 	return courses, detail, nil
 }
@@ -239,8 +241,6 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.
 		},
 	}
 
-	var mu sync.Mutex // Mutex để bảo vệ courses
-
 	mu.Lock()
 	data, err := collectionCourse.UpdateOne(ctx, filter, &update)
 	mu.Unlock()
@@ -252,13 +252,13 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		coursesResponses.Clear()
+		coursesCache.Clear()
 	}()
 
 	// clear data value with id courseID in cache
 	go func() {
 		defer wg.Done()
-		courseResponse.Remove(course.Id.Hex())
+		courseCache.Remove(course.Id.Hex())
 	}()
 	wg.Wait()
 
@@ -277,7 +277,9 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 		return errors.New("the course name already exists")
 	}
 
+	mu.Lock()
 	_, err = collectionCourse.InsertOne(ctx, course)
+	mu.Unlock()
 	if err != nil {
 		return err
 	}
@@ -286,13 +288,13 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		coursesResponses.Clear()
+		coursesCache.Clear()
 	}()
 
 	// clear data value in cache memory due to increase num
 	go func() {
 		defer wg.Done()
-		detailCourseResponse.Clear()
+		detailCache.Clear()
 	}()
 
 	wg.Wait()
@@ -320,7 +322,9 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 
 	// Delete the course
 	filter := bson.M{"_id": objID}
+	mu.Lock()
 	_, err = collectionCourse.DeleteOne(ctx, filter)
+	mu.Unlock()
 	if err != nil {
 		return err
 	}
@@ -329,13 +333,13 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		courseResponse.Remove(courseID)
+		courseCache.Remove(courseID)
 	}()
 
 	// clear data value with detail in cache due to decrease num
 	go func() {
 		defer wg.Done()
-		detailCourseResponse.Clear()
+		detailCache.Clear()
 	}()
 	wg.Wait()
 
@@ -419,8 +423,4 @@ func (c *courseRepository) Statistics(ctx context.Context) (course_domain.Statis
 		Total: count,
 	}
 	return statistics, nil
-}
-
-func isZeroValue(x interface{}) bool {
-	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
 }
