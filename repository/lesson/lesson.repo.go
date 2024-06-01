@@ -43,17 +43,6 @@ var (
 	wg sync.WaitGroup
 	mu sync.Mutex
 
-	statisticsCh = make(chan lesson_domain.Statistics)
-	// Khởi tạo channel để lưu trữ kết quả lesson
-	lessonsCh = make(chan []lesson_domain.LessonResponse, 1)
-	// Khởi tạo channel để lưu trữ kết quả detail
-	detailCh = make(chan lesson_domain.DetailResponse, 1)
-	// Khởi tạo channel để luu trữ lỗi
-	errCh = make(chan error)
-	// tạo channel để thu thập kết quả
-	countVocabularyCh = make(chan int32)
-	countUnitCh       = make(chan int32)
-
 	lessons []lesson_domain.LessonResponse
 )
 
@@ -61,6 +50,12 @@ var (
 // Hàm này nhận vào số trang (page) và trả về một mảng bài học làm khóa và nội dung của bài học tương ứng làm giá trị.
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả với các kết quả đã lấy được
 func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
+	// Khởi tạo channel để luu trữ lỗi
+	errCh := make(chan error)
+	// Khởi tạo channel để lưu trữ kết quả lesson
+	lessonsCh := make(chan []lesson_domain.LessonResponse, 1)
+	// Khởi tạo channel để lưu trữ kết quả detail
+	detailCh := make(chan lesson_domain.DetailResponse, 1)
 	// Sử dụng WaitGroup để đợi tất cả các goroutine hoàn thành
 	wg.Add(2)
 	// Khởi động một goroutine cho tìm dữ liệu lesson trong cache memory
@@ -137,6 +132,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
 		err := cursor.Close(ctx)
 		if err != nil {
+			errCh <- err
 			return
 		}
 	}(cursor, ctx)
@@ -153,6 +149,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 			// chuyển đổi sang JSON cho lesson
 			var lesson lesson_domain.LessonResponse
 			if err = cursor.Decode(&lesson); err != nil {
+				errCh <- err
 				return
 			}
 
@@ -161,6 +158,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 			filterLesson := bson.M{"lesson_id": lesson.ID}
 			cursorUnit, err := collectionUnit.Find(ctx, filterLesson)
 			if err != nil {
+				errCh <- err
 				return
 			}
 
@@ -168,6 +166,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 				var unit unit_domain.UnitResponse
 				err := cursorUnit.Decode(&unit)
 				if err != nil {
+					errCh <- err
 					return
 				}
 
@@ -181,6 +180,9 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 
 			// gắn giá trị complete của từng unit vào mảng và gưi giá trị đó cho lesson
 			lesson.UnitIsComplete = arrIsComplete
+			// tạo channel để thu thập kết quả
+			countVocabularyCh := make(chan int32)
+			countUnitCh := make(chan int32)
 
 			// Goroutine giúp lấy kết quả đếm unit cho chủ đề
 			go func() {
@@ -188,6 +190,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 				// Lấy thông tin liên quan cho mỗi chủ đề
 				countUnit, err := l.countUnitsByLessonsID(ctx, lesson.ID)
 				if err != nil {
+					errCh <- err
 					return
 				}
 
@@ -200,6 +203,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 				defer close(countVocabularyCh)
 				countVocabulary, err := l.countVocabularyByLessonID(ctx, lesson.ID)
 				if err != nil {
+					errCh <- err
 					return
 				}
 
@@ -219,8 +223,11 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 	}()
 	wg.Wait()
 
+	// Channel để thu thập kết quả thống kê
+	statisticsCh := make(chan lesson_domain.Statistics)
 	// Goroutine thực hiện lấy giá trị thống kê toàn bộ
 	go func() {
+		defer close(statisticsCh)
 		statistics, _ := l.Statistics(ctx)
 		statisticsCh <- statistics
 	}()
@@ -233,11 +240,19 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 		Statistics:  statistics,
 	}
 
-	// Thiết lập Set cache memory với dữ liệu cần thiết với thời gian sống là 5 phút (TTL - time to live)
+	// Thiết lập Set cache memory với dữ liệu cần thiết với thơi
 	lessonsCache.Set(page, lessons, 5*time.Minute)
 	detailCache.Set("detail", response, 5*time.Minute)
 
-	return lessons, response, err
+	// thu thập kết quả
+	select {
+	// nếu có lỗi, sẽ thực hiện về lỗi
+	// ngược lại, sẽ trả về giá trị
+	case err = <-errCh:
+		return nil, lesson_domain.DetailResponse{}, nil
+	default:
+		return lessons, response, err
+	}
 }
 
 func (l *lessonRepository) FetchManyNotPagination(ctx context.Context) ([]lesson_domain.LessonResponse, error) {
