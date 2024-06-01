@@ -2,7 +2,6 @@ package unit_repo
 
 import (
 	unit_domain "clean-architecture/domain/unit"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -10,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
+	"sync"
 )
 
 type unitRepository struct {
@@ -20,46 +20,6 @@ type unitRepository struct {
 	errCh                chan error
 }
 
-func (u *unitRepository) FetchManyNotPagination(ctx context.Context) ([]unit_domain.UnitResponse, error) {
-	collectionUnit := u.database.Collection(u.collectionUnit)
-	cursor, err := collectionUnit.Find(ctx, bson.D{})
-	if err != nil {
-		return nil, err
-	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
-		if err != nil {
-			return
-		}
-	}(cursor, ctx)
-
-	internal.Wg.Add(1)
-	go func() {
-		defer internal.Wg.Done()
-		for cursor.Next(ctx) {
-			if err = cursor.Decode(&unit); err != nil {
-				return
-			}
-
-			countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
-			if err != nil {
-				return
-			}
-
-			unit.CountVocabulary = countVocabulary
-			units = append(units, unit)
-		}
-
-	}()
-	internal.Wg.Wait()
-	return units, nil
-}
-
-var (
-	units []unit_domain.UnitResponse
-	unit  unit_domain.UnitResponse
-)
-
 func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLesson string, collectionVocabulary string) unit_domain.IUnitRepository {
 	return &unitRepository{
 		database:             db,
@@ -69,6 +29,12 @@ func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLess
 		errCh:                make(chan error),
 	}
 }
+
+var (
+	units []unit_domain.UnitResponse
+	unit  unit_domain.UnitResponse
+	wg    sync.WaitGroup
+)
 
 func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
@@ -109,9 +75,9 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 		}
 	}(cursor, ctx)
 
-	internal.Wg.Add(1)
+	wg.Add(1)
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for cursor.Next(ctx) {
 			if err = cursor.Decode(&unit); err != nil {
 				return
@@ -127,7 +93,7 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 		}
 
 	}()
-	internal.Wg.Wait()
+	wg.Wait()
 
 	cal := <-calCh
 	detail := unit_domain.DetailResponse{
@@ -138,34 +104,39 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 	return units, detail, nil
 }
 
-func (u *unitRepository) CreateOneByNameLesson(ctx context.Context, unit *unit_domain.Unit) error {
+func (u *unitRepository) FetchManyNotPagination(ctx context.Context) ([]unit_domain.UnitResponse, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
-	collectionLesson := u.database.Collection(u.collectionLesson)
-
-	filter := bson.M{"name": unit.Name, "lesson_id": unit.LessonID}
-
-	filterParent := bson.M{"_id": unit.LessonID}
-	countParent, err := collectionLesson.CountDocuments(ctx, filterParent)
+	cursor, err := collectionUnit.Find(ctx, bson.D{})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if countParent == 0 {
-		return errors.New("parent lesson not found")
-	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
-	count, err := collectionUnit.CountDocuments(ctx, filter)
-	if err != nil {
-		return err
-	}
-	if count > 0 {
-		return errors.New("the unit name already exists in the lesson")
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for cursor.Next(ctx) {
+			if err = cursor.Decode(&unit); err != nil {
+				return
+			}
 
-	_, err = collectionUnit.InsertOne(ctx, unit)
-	if err != nil {
-		return err
-	}
-	return nil
+			countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
+			if err != nil {
+				return
+			}
+
+			unit.CountVocabulary = countVocabulary
+			units = append(units, unit)
+		}
+
+	}()
+	wg.Wait()
+	return units, nil
 }
 
 func (u *unitRepository) FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error) {
@@ -252,10 +223,80 @@ func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, p
 	return units, response, nil
 }
 
+func (u *unitRepository) CreateOneByNameLesson(ctx context.Context, unit *unit_domain.Unit) error {
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	collectionLesson := u.database.Collection(u.collectionLesson)
+
+	filter := bson.M{"name": unit.Name, "lesson_id": unit.LessonID}
+
+	filterParent := bson.M{"_id": unit.LessonID}
+	countParent, err := collectionLesson.CountDocuments(ctx, filterParent)
+	if err != nil {
+		return err
+	}
+	if countParent == 0 {
+		return errors.New("parent lesson not found")
+	}
+
+	count, err := collectionUnit.CountDocuments(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("the unit name already exists in the lesson")
+	}
+
+	_, err = collectionUnit.InsertOne(ctx, unit)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) error {
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	collectionLesson := u.database.Collection(u.collectionLesson)
+	collectionVocabulary := u.database.Collection(u.collectionVocabulary)
+
+	filterUnit := bson.M{"name": unit.Name, "lesson_id": unit.LessonID}
+	filterLess := bson.M{"_id": unit.LessonID}
+
+	// check exists with CountDocuments
+	countLess, err := collectionLesson.CountDocuments(ctx, filterLess)
+	if err != nil {
+		return err
+	}
+	if countLess == 0 {
+		return errors.New("the lesson ID do not exist")
+	}
+
+	// đếm số lượng document trong unit
+	countUnit, err := collectionUnit.CountDocuments(ctx, filterUnit)
+	if err != nil {
+		return err
+	}
+	if countUnit > 0 {
+		return errors.New("the unit name in lesson did exist")
+	}
+
+	// tạo unit dựa trên vocabulary
+	data, err := u.getLastUnit(ctx)
+	filterVocabulary := bson.M{"unit_id": data.ID}
+	countVocabulary, err := collectionVocabulary.CountDocuments(ctx, filterVocabulary)
+	if err != nil {
+		return err
+	}
+	if countVocabulary == 0 || countVocabulary > 5 {
+		_, err = collectionUnit.InsertOne(ctx, unit)
+	}
+
+	return nil
+}
+
 func (u *unitRepository) UpdateComplete(ctx context.Context, updateData *unit_domain.Unit) error {
-	internal.Wg.Add(2)
+	wg.Add(2)
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		collection := u.database.Collection(u.collectionUnit)
 
 		filter := bson.D{{Key: "_id", Value: updateData.ID}}
@@ -271,7 +312,7 @@ func (u *unitRepository) UpdateComplete(ctx context.Context, updateData *unit_do
 	}()
 
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		isLessonComplete, err := u.CheckLessonComplete(ctx, updateData.LessonID)
 		if err != nil {
 			u.errCh <- err
@@ -293,7 +334,7 @@ func (u *unitRepository) UpdateComplete(ctx context.Context, updateData *unit_do
 		}
 	}()
 
-	internal.Wg.Wait()
+	wg.Wait()
 	close(u.errCh)
 
 	select {
@@ -334,47 +375,6 @@ func (u *unitRepository) CheckLessonComplete(ctx context.Context, lessonID primi
 	}
 
 	return true, nil
-}
-
-// CreateOne: hệ thống sẽ tự tạo unit nếu số lượng vocabulary là 5
-func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) error {
-	collectionUnit := u.database.Collection(u.collectionUnit)
-	collectionLesson := u.database.Collection(u.collectionLesson)
-	collectionVocabulary := u.database.Collection(u.collectionVocabulary)
-
-	filterUnit := bson.M{"name": unit.Name, "lesson_id": unit.LessonID}
-	filterLess := bson.M{"_id": unit.LessonID}
-
-	// check exists with CountDocuments
-	countLess, err := collectionLesson.CountDocuments(ctx, filterLess)
-	if err != nil {
-		return err
-	}
-	if countLess == 0 {
-		return errors.New("the lesson ID do not exist")
-	}
-
-	// đếm số lượng document trong unit
-	countUnit, err := collectionUnit.CountDocuments(ctx, filterUnit)
-	if err != nil {
-		return err
-	}
-	if countUnit > 0 {
-		return errors.New("the unit name in lesson did exist")
-	}
-
-	// tạo unit dựa trên vocabulary
-	data, err := u.getLastUnit(ctx)
-	filterVocabulary := bson.M{"unit_id": data.ID}
-	countVocabulary, err := collectionVocabulary.CountDocuments(ctx, filterVocabulary)
-	if err != nil {
-		return err
-	}
-	if countVocabulary == 0 || countVocabulary > 5 {
-		_, err = collectionUnit.InsertOne(ctx, unit)
-	}
-
-	return nil
 }
 
 func (u *unitRepository) UpdateOne(ctx context.Context, unit *unit_domain.Unit) (*mongo.UpdateResult, error) {

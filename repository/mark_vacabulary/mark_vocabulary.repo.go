@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"sync"
 )
 
 type markVocabularyRepository struct {
@@ -18,6 +19,19 @@ type markVocabularyRepository struct {
 	collectionVocabulary     string
 	collectionMarkVocabulary string
 }
+
+func NewMarkVocabularyRepository(db *mongo.Database, collectionMarkList string, collectionVocabulary string, collectionMarkVocabulary string) mark_vocabulary_domain.IMarkToFavouriteRepository {
+	return &markVocabularyRepository{
+		database:                 db,
+		collectionMarkList:       collectionMarkList,
+		collectionVocabulary:     collectionVocabulary,
+		collectionMarkVocabulary: collectionMarkVocabulary,
+	}
+}
+
+var (
+	wg sync.WaitGroup
+)
 
 func (m *markVocabularyRepository) FetchManyByMarkListID(ctx context.Context, markListId string) ([]mark_vocabulary_domain.MarkToFavourite, error) {
 	collectionMarkVocabulary := m.database.Collection(m.collectionMarkList)
@@ -47,15 +61,6 @@ func (m *markVocabularyRepository) FetchManyByMarkListID(ctx context.Context, ma
 	return markVocabs, nil
 }
 
-func NewMarkVocabularyRepository(db *mongo.Database, collectionMarkList string, collectionVocabulary string, collectionMarkVocabulary string) mark_vocabulary_domain.IMarkToFavouriteRepository {
-	return &markVocabularyRepository{
-		database:                 db,
-		collectionMarkList:       collectionMarkList,
-		collectionVocabulary:     collectionVocabulary,
-		collectionMarkVocabulary: collectionMarkVocabulary,
-	}
-}
-
 func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Context, markListID string, userID string) (mark_vocabulary_domain.Response, error) {
 	collectionMarkVocabulary := m.database.Collection(m.collectionMarkVocabulary)
 	collectionVocabulary := m.database.Collection(m.collectionVocabulary)
@@ -83,9 +88,9 @@ func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Co
 	}(cursor, ctx)
 
 	var markVocabularies []mark_vocabulary_domain.MarkToFavouriteResponse
-	internal.Wg.Add(1)
+	wg.Add(1)
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for cursor.Next(ctx) {
 			var markVocabulary mark_vocabulary_domain.MarkToFavourite
 			if err = cursor.Decode(&markVocabulary); err != nil {
@@ -115,7 +120,7 @@ func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Co
 		}
 	}()
 
-	internal.Wg.Wait()
+	wg.Wait()
 
 	// Tạo và trả về response
 	response := mark_vocabulary_domain.Response{
@@ -158,9 +163,9 @@ func (m *markVocabularyRepository) FetchManyByMarkList(ctx context.Context, mark
 
 	var markVocabularies []mark_vocabulary_domain.MarkToFavouriteResponse
 
-	internal.Wg.Add(1)
+	wg.Add(1)
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for cursor.Next(ctx) {
 			var markVocabulary mark_vocabulary_domain.MarkToFavourite
 			if err = cursor.Decode(&markVocabulary); err != nil {
@@ -192,7 +197,7 @@ func (m *markVocabularyRepository) FetchManyByMarkList(ctx context.Context, mark
 		}
 	}()
 
-	internal.Wg.Wait()
+	wg.Wait()
 
 	response := mark_vocabulary_domain.Response{
 		Total:                   len(markVocabularies),

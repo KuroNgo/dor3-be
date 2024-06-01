@@ -53,6 +53,7 @@ type DetailResponse struct {
 }
 
 type Statistics struct {
+	Total           int64 `json:"total"`
 	CountVocabulary int64 `json:"count_vocabulary"`
 	CountUnit       int64 `json:"count_unit"`
 }
@@ -67,12 +68,10 @@ type ILessonRepository interface {
 
 	CreateOne(ctx context.Context, lesson *Lesson) error
 	CreateOneByNameCourse(ctx context.Context, lesson *Lesson) error
-
 	DeleteOne(ctx context.Context, lessonID string) error
-
 	UpdateImage(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
 	UpdateOne(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
-	// UpdateComplete automation
 	UpdateComplete(ctx context.Context, lessonID string, lesson Lesson) error
+
 	Statistics(ctx context.Context) (Statistics, error)
 }

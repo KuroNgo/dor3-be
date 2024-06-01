@@ -102,3 +102,8 @@ func (e *examUseCase) DeleteOne(ctx context.Context, examID string) error {
 
 	return nil
 }
+
+func (e *examUseCase) UpdateCompleted(ctx context.Context, exam *exam_domain.Exam) error {
+	//TODO implement me
+	panic("implement me")
+}

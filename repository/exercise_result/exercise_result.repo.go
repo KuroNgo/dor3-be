@@ -2,7 +2,6 @@ package exercise_result_repository
 
 import (
 	exercise_result_domain "clean-architecture/domain/exercise_result"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -10,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -26,6 +26,10 @@ func NewExerciseResultRepository(db *mongo.Database, collectionExerciseResult st
 		collectionExercise:       collectionExercise,
 	}
 }
+
+var (
+	wg sync.WaitGroup
+)
 
 func (e *exerciseResultRepository) FetchMany(ctx context.Context, page string) (exercise_result_domain.Response, error) {
 	collectionResult := e.database.Collection(e.collectionExerciseResult)
@@ -95,10 +99,10 @@ func (e *exerciseResultRepository) FetchManyByExerciseID(ctx context.Context, ex
 
 	var results []exercise_result_domain.ExerciseResult
 
-	internal.Wg.Add(1)
+	wg.Add(1)
 
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for cursor.Next(ctx) {
 			var result exercise_result_domain.ExerciseResult
 			if err = cursor.Decode(&result); err != nil {
@@ -110,7 +114,7 @@ func (e *exerciseResultRepository) FetchManyByExerciseID(ctx context.Context, ex
 		}
 	}()
 
-	internal.Wg.Wait()
+	wg.Wait()
 
 	resultRes := exercise_result_domain.Response{
 		ExerciseResult: results,

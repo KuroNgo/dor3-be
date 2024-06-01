@@ -2,7 +2,6 @@ package exam_result_repository
 
 import (
 	exam_result_domain "clean-architecture/domain/exam_result"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -28,6 +27,10 @@ func NewExamResultRepository(db *mongo.Database, collectionExamResult string, co
 		collectionExam:       collectionExam,
 	}
 }
+
+var (
+	wg sync.WaitGroup
+)
 
 func (e *examResultRepository) GetResultByID(ctx context.Context, id string) (exam_result_domain.ExamResult, error) {
 	collectionResult := e.database.Collection(e.collectionExamResult)
@@ -180,10 +183,10 @@ func (e *examResultRepository) FetchManyByExamID(ctx context.Context, examID str
 
 	var results []exam_result_domain.ExamResult
 
-	internal.Wg.Add(1)
+	wg.Add(1)
 
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for cursor.Next(ctx) {
 			var result exam_result_domain.ExamResult
 			if err = cursor.Decode(&result); err != nil {
@@ -195,7 +198,7 @@ func (e *examResultRepository) FetchManyByExamID(ctx context.Context, examID str
 		}
 	}()
 
-	internal.Wg.Wait()
+	wg.Wait()
 
 	resultRes := exam_result_domain.Response{
 		ExamResult: results,

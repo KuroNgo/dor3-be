@@ -48,8 +48,8 @@ type ICourseRepository interface {
 	FetchManyForEachCourse(ctx context.Context, page string) ([]CourseResponse, DetailForManyResponse, error)
 	FetchByID(ctx context.Context, courseID string) (CourseResponse, error)
 
-	UpdateOne(ctx context.Context, course *Course) (*mongo.UpdateResult, error)
 	CreateOne(ctx context.Context, course *Course) error
+	UpdateOne(ctx context.Context, course *Course) (*mongo.UpdateResult, error)
 	DeleteOne(ctx context.Context, courseID string) error
 	Statistics(ctx context.Context) (Statistics, error)
 }

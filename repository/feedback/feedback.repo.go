@@ -3,7 +3,6 @@ package feedback_repository
 import (
 	feedback_domain "clean-architecture/domain/feedback"
 	user_domain "clean-architecture/domain/user"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -27,6 +27,10 @@ func NewFeedbackRepository(db *mongo.Database, collectionFeedback string, collec
 		collectionUser:     collectionUser,
 	}
 }
+
+var (
+	wg sync.WaitGroup
+)
 
 func (f *feedbackRepository) FetchMany(ctx context.Context, page string) (feedback_domain.Response, error) {
 	collection := f.database.Collection(f.collectionFeedback)
@@ -58,9 +62,9 @@ func (f *feedbackRepository) FetchMany(ctx context.Context, page string) (feedba
 	}
 
 	var feedbacks []feedback_domain.FeedbackResponse
-	internal.Wg.Add(1)
+	wg.Add(1)
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for cursor.Next(ctx) {
 			var feedback feedback_domain.Feedback
 			if err = cursor.Decode(&feedback); err != nil {
@@ -87,7 +91,7 @@ func (f *feedbackRepository) FetchMany(ctx context.Context, page string) (feedba
 		}
 	}()
 
-	internal.Wg.Wait()
+	wg.Wait()
 
 	var statisticsCh = make(chan feedback_domain.Statistics)
 	go func() {
@@ -143,9 +147,9 @@ func (f *feedbackRepository) FetchByUserID(ctx context.Context, userID string, p
 	}
 
 	var feedbacks []feedback_domain.FeedbackResponse
-	internal.Wg.Add(1)
+	wg.Add(1)
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for cursor.Next(ctx) {
 			var feedback feedback_domain.Feedback
 			if err := cursor.Decode(&feedback); err != nil {
@@ -171,7 +175,7 @@ func (f *feedbackRepository) FetchByUserID(ctx context.Context, userID string, p
 			feedbacks = append(feedbacks, feedbackRes)
 		}
 	}()
-	internal.Wg.Wait()
+	wg.Wait()
 
 	var statisticsCh = make(chan feedback_domain.Statistics)
 	go func() {

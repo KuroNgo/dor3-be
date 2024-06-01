@@ -4,7 +4,6 @@ import (
 	lesson_domain "clean-architecture/domain/lesson"
 	quiz_domain "clean-architecture/domain/quiz"
 	unit_domain "clean-architecture/domain/unit"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"math/rand"
 	"strconv"
+	"sync"
 )
 
 type quizRepository struct {
@@ -79,35 +79,33 @@ func (q *quizRepository) FetchOneByUnitID(ctx context.Context, unitID string) (q
 		}
 	}(cursor, ctx)
 
-	var quizs []quiz_domain.Quiz
-	internal.Wg.Add(1)
+	var questions []quiz_domain.Quiz
+
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for cursor.Next(ctx) {
 			var quiz quiz_domain.Quiz
 			if err = cursor.Decode(&quiz); err != nil {
 				return
 			}
 
-			quizs = append(quizs, quiz)
+			questions = append(questions, quiz)
 		}
 	}()
-	internal.Wg.Wait()
+	wg.Wait()
 
 	// Kiểm tra nếu danh sách exercises không rỗng
-	if len(quizs) == 0 {
+	if len(questions) == 0 {
 		return quiz_domain.Quiz{}, errors.New("no exercises found")
 	}
 
 	// Chọn một giá trị ngẫu nhiên từ danh sách exercises
-	randomIndex := rand.Intn(len(quizs))
-	randomExercise := quizs[randomIndex]
+	randomIndex := rand.Intn(len(questions))
+	randomExercise := questions[randomIndex]
 
 	return randomExercise, nil
-	//e.cacheMutex.Lock()
-	//e.examOneCache[unitID] = exam
-	//e.examCacheExpires[unitID] = time.Now().Add(5 * time.Minute)
-	//e.cacheMutex.Unlock()
 }
 
 func (q *quizRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]quiz_domain.Quiz, quiz_domain.Response, error) {

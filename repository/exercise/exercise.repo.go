@@ -2,7 +2,6 @@ package exercise_repository
 
 import (
 	exercise_domain "clean-architecture/domain/exercise"
-	"clean-architecture/internal"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,6 +11,7 @@ import (
 	"log"
 	"math/rand"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -35,6 +35,10 @@ func NewExerciseRepository(db *mongo.Database, collectionLesson string, collecti
 	}
 }
 
+var (
+	wg sync.WaitGroup
+)
+
 func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.Exercise, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
 
@@ -56,9 +60,9 @@ func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string
 	}(cursor, ctx)
 
 	var exercises []exercise_domain.Exercise
-	internal.Wg.Add(1)
+	wg.Add(1)
 	go func() {
-		defer internal.Wg.Done()
+		defer wg.Done()
 		for cursor.Next(ctx) {
 			var exercise exercise_domain.Exercise
 			if err = cursor.Decode(&exercise); err != nil {
@@ -68,7 +72,7 @@ func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string
 			exercises = append(exercises, exercise)
 		}
 	}()
-	internal.Wg.Wait()
+	wg.Wait()
 
 	// Kiểm tra nếu danh sách exercises không rỗng
 	if len(exercises) == 0 {
