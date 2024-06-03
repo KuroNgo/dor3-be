@@ -42,16 +42,14 @@ var (
 
 	wg sync.WaitGroup
 	mu sync.Mutex
-
-	// Khởi tạo channel để luu trữ lỗi
-	errCh   = make(chan error)
-	courses []course_domain.CourseResponse
 )
 
 // FetchByID lấy khóa học (course) theo ID
 // Hàm này nhận đầu vào (input) là courseID và trả về một bài học làm khóa và nội dung cuủa bài học tương ứng làm giá trị
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với các kết quả đã lấy được
 func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
+	// Khởi tạo channel để luu trữ lỗi
+	errCh := make(chan error)
 	// Khởi tạo channel để lưu trữ kết quả lesson
 	courseCh := make(chan course_domain.CourseResponse)
 
@@ -148,10 +146,10 @@ func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (cour
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả với các kết quả đã lấy được
 // FIXME: thực hiện gắn lỗi vào channel giúp tối ưu hóa xử lý
 func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page string) ([]course_domain.CourseResponse, course_domain.DetailForManyResponse, error) {
-	// buffer channel with increase performance
-	// note: use buffer have target
+	// Khởi tạo channel để luu trữ lỗi
+	errCh := make(chan error)
 	// Khởi tạo channel để lưu trữ kết quả course
-	coursesCh := make(chan []course_domain.CourseResponse, 5)
+	coursesCh := make(chan []course_domain.CourseResponse, 1)
 	// Khởi tạo channel để lưu trữ kết quả detail
 	detailCh := make(chan course_domain.DetailForManyResponse, 1)
 	// Sử dụng WaitGroup để đợi tất cả các goroutine hoàn thành
@@ -159,6 +157,7 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 	// Khởi động một goroutine cho tìm dữ liệu lesson trong cache memory
 	go func() {
 		defer wg.Done()
+		defer close(coursesCh)
 		data, found := coursesCache.Get(page)
 		if found {
 			coursesCh <- data
@@ -169,6 +168,7 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 	// Khởi động một goroutine cho tìm dữ liệu detail trong cache memory
 	go func() {
 		defer wg.Done()
+		defer close(detailCh)
 		detailData, foundDetail := detailCache.Get("detail")
 		if foundDetail {
 			detailCh <- detailData
@@ -176,12 +176,7 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 		}
 	}()
 
-	// Goroutine để đóng các channel khi tất cả các công việc hoàn thành
-	go func() {
-		defer close(coursesCh)
-		defer close(detailCh)
-		wg.Wait()
-	}()
+	wg.Wait()
 
 	// Gán giá trị từ channel
 	courseData := <-coursesCh
@@ -232,6 +227,7 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 		}
 	}()
 
+	var courses []course_domain.CourseResponse
 	wg.Add(1)
 	// Khởi động một goroutine cho mỗi cursor
 	// TODO: Xử lý tìm từng dữ liệu liên quan đến course bao gồm các thông tin cơ bản và các thông tin khác
