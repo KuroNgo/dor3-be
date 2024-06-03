@@ -25,7 +25,7 @@ func (l *LessonController) FetchMany(ctx *gin.Context) {
 }
 
 func (l *LessonController) FetchManyNotPagination(ctx *gin.Context) {
-	lesson, err := l.LessonUseCase.FetchManyNotPagination(ctx)
+	lesson, detail, err := l.LessonUseCase.FetchManyNotPagination(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -37,6 +37,7 @@ func (l *LessonController) FetchManyNotPagination(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
 		"data":   lesson,
+		"detail": detail,
 	})
 }
 

@@ -22,9 +22,20 @@ func main() {
 
 	router.SetUp(env, timeout, db, _gin)
 
+	//var memStats runtime.MemStats
+	//runtime.ReadMemStats(&memStats)
+	//fmt.Printf("Alloc = %v MiB\n", bToMb(memStats.Alloc))
+	//fmt.Printf("TotalAlloc = %v MiB\n", bToMb(memStats.TotalAlloc))
+	//fmt.Printf("Sys = %v MiB\n", bToMb(memStats.Sys))
+	//fmt.Printf("NumGC = %v\n", memStats.NumGC)
+
 	err := _gin.Run(env.ServerAddress)
 	if err != nil {
 		return
 	}
 
+}
+
+func bToMb(b uint64) uint64 {
+	return b / 1024 / 1024
 }
