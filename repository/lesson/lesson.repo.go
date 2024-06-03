@@ -627,7 +627,9 @@ func (l *lessonRepository) UpdateOne(ctx context.Context, lesson *lesson_domain.
 		},
 	}
 
+	mu.Lock()
 	data, err := collection.UpdateOne(ctx, filter, &update)
+	mu.Unlock()
 	if err != nil {
 		return nil, err
 	}

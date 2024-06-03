@@ -23,6 +23,7 @@ type courseRepository struct {
 	collectionVocabulary string
 }
 
+// NewCourseRepository hàm khởi tạo (constructor) để khởi tạo instance của struct
 func NewCourseRepository(db *mongo.Database, collectionCourse string, collectionLesson string, collectionUnit string, collectionVocabulary string) course_domain.ICourseRepository {
 	return &courseRepository{
 		database:             db,
@@ -34,9 +35,10 @@ func NewCourseRepository(db *mongo.Database, collectionCourse string, collection
 }
 
 var (
-	courseCache  = cache.NewTTL[string, course_domain.CourseResponse]()
-	coursesCache = cache.NewTTL[string, []course_domain.CourseResponse]()
-	detailCache  = cache.NewTTL[string, course_domain.DetailForManyResponse]()
+	courseCache     = cache.NewTTL[string, course_domain.CourseResponse]()
+	coursesCache    = cache.NewTTL[string, []course_domain.CourseResponse]()
+	detailCache     = cache.NewTTL[string, course_domain.DetailForManyResponse]()
+	statisticsCache = cache.NewTTL[string, course_domain.Statistics]()
 
 	wg sync.WaitGroup
 	mu sync.Mutex
@@ -46,6 +48,9 @@ var (
 	courses []course_domain.CourseResponse
 )
 
+// FetchByID lấy khóa học (course) theo ID
+// Hàm này nhận đầu vào (input) là courseID và trả về một bài học làm khóa và nội dung cuủa bài học tương ứng làm giá trị
+// Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với các kết quả đã lấy được
 func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
 	// Khởi tạo channel để lưu trữ kết quả lesson
 	courseCh := make(chan course_domain.CourseResponse)
@@ -138,7 +143,7 @@ func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (cour
 	}
 }
 
-// FetchMany lấy tất cả khóa học (course) cùng một lúc (concurrency).
+// FetchManyForEachCourse lấy tất cả khóa học (course) cùng một lúc (concurrency).
 // Hàm này nhận vào số trang (page) và trả về một mảng khóa học làm khóa và nội dung của bài học tương ứng làm giá trị.
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả với các kết quả đã lấy được
 // FIXME: thực hiện gắn lỗi vào channel giúp tối ưu hóa xử lý
@@ -295,6 +300,10 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 	}
 }
 
+// UpdateOne cập nhật khóa học (course) theo đối tượng course
+// Hàm nhận tham số là đối tượng Course. Nếu thành công sẽ trả về thông tin cập nhật (không phải thông tin đối tượng).
+// Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với kết quả đã lấy được
+// Hàm có sử dụng concurrency, giúp xử lý các tác vụ về người dùng hiệu quả
 func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {
 	// khởi tạo đối tượng collection, ở đây là course
 	collectionCourse := c.database.Collection(c.collectionCourse)
@@ -321,7 +330,7 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.
 	}
 
 	// Clear data value in cache memory for courses
-	wg.Add(2)
+	wg.Add(3)
 	go func() {
 		defer wg.Done()
 		coursesCache.Clear()
@@ -334,13 +343,21 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.
 	}()
 	wg.Wait()
 
+	go func() {
+		defer wg.Done()
+		statisticsCache.Clear()
+	}()
 	return data, nil
 }
 
+// CreateOne khởi tạo khóa học (course) theo đối tượng Course
+// Hàm này nhận tham số là một đối tượng và trả về kết quả thông tin xử lý (không phải là thông tin của đối tượng đó)
+// Nếu có lỗi xảy ra trong quá trình xử lý, lỗi sẽ được trả về với kết quả đã lấy được và dừng chương trình
 func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.Course) error {
 	// khởi tạo đối tượng collection, ở đây là course
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
+	// Thực hiện tìm kiếm theo name để kiểm tra có dữ liệu trùng không
 	filter := bson.M{"name": course.Name}
 	count, err := collectionCourse.CountDocuments(ctx, filter)
 	if err != nil {
@@ -350,15 +367,14 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 		return errors.New("the course name already exists")
 	}
 
-	mu.Lock()
 	_, err = collectionCourse.InsertOne(ctx, course)
-	mu.Unlock()
+
 	if err != nil {
 		return err
 	}
 
 	// Clear data value in cache memory
-	wg.Add(2)
+	wg.Add(3)
 	go func() {
 		defer wg.Done()
 		coursesCache.Clear()
@@ -370,11 +386,19 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 		detailCache.Clear()
 	}()
 
+	// clear data value in cache memory due to increase num
+	go func() {
+		defer wg.Done()
+		statisticsCache.Clear()
+	}()
 	wg.Wait()
 
 	return nil
 }
 
+// DeleteOne xóa khóa học (course) theo ID
+// Hàm này nhận đầu vào là courseID và trả về kết quả sau khi xóa
+// Nếu có lỗi xảy ra trong quá trình xử lý, hệ thống sẽ trả về lỗi và dừng chương trình
 func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error {
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
@@ -393,17 +417,18 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 		return errors.New("the course cannot be deleted because it is associated with lessons")
 	}
 
-	// Delete the course
 	filter := bson.M{"_id": objID}
+	// Khóa lock giúp bảo vệ course
 	mu.Lock()
 	_, err = collectionCourse.DeleteOne(ctx, filter)
+	// Mở lock khi thực thi xong hành động delete
 	mu.Unlock()
 	if err != nil {
 		return err
 	}
 
 	// clear data value with courseID in cache
-	wg.Add(2)
+	wg.Add(3)
 	go func() {
 		defer wg.Done()
 		courseCache.Remove(courseID)
@@ -414,9 +439,63 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 		defer wg.Done()
 		detailCache.Clear()
 	}()
+
+	// clear data value with detail in cache due to decrease num
+	go func() {
+		defer wg.Done()
+		statisticsCache.Clear()
+	}()
 	wg.Wait()
 
 	return nil
+}
+
+// Statistics thống kê khóa học (có bao nhiêu bài học, số lượng từ vựng, unit)
+// Hàm này không nhận đầu vào (input), trả về thông tin thống kê
+// Nếu có lỗi xảy ra trong quá trình thống kê, lỗi đó sẽ được trả về và dừng chương trình
+func (c *courseRepository) Statistics(ctx context.Context) (course_domain.Statistics, error) {
+	// Khởi tạo channel để lưu kết quả statistics
+	statisticsCh := make(chan course_domain.Statistics, 1)
+	// Sử dụng waitGroup để đợi tất cả goroutine hoàn thành
+	wg.Add(1)
+	// Khởi động Goroutine giúp tìm dữ liệu lesson
+	// theo id trong cache (đã từng tìm lessonID này hay chưa)
+	go func() {
+		defer wg.Done()
+		data, found := statisticsCache.Get("statistics")
+		if found {
+			statisticsCh <- data
+			return
+		}
+	}()
+
+	// Goroutine để đóng các channel khi tất cả các công việc hoàn thành
+	go func() {
+		defer close(statisticsCh)
+		wg.Wait()
+	}()
+
+	// Channel gửi giá trị cho biến statisticsData
+	statisticsData := <-statisticsCh
+	// Kiểm tra giá trị statisticsData có null ?
+	// Nếu không thì sẽ thực hiện trả về giá trị
+	if !internal.IsZeroValue(statisticsData) {
+		return statisticsData, nil
+	}
+
+	collectionCourse := c.database.Collection(c.collectionCourse)
+	count, err := collectionCourse.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return course_domain.Statistics{}, err
+	}
+
+	statistics := course_domain.Statistics{
+		Total: count,
+	}
+
+	// Thiết lập Set cache memory với dữ liệu cần thiết với thơi gian là 5 phút
+	statisticsCache.Set("statistics", statistics, 5*time.Minute)
+	return statistics, nil
 }
 
 // countLessonsByCourseID counts the number of lessons associated with a course.
@@ -432,6 +511,7 @@ func (c *courseRepository) countLessonsByCourseID(ctx context.Context, courseID 
 	return int32(count), nil
 }
 
+// countVocabularyByCourseID counts the number of vocabularies associated with a course.
 func (c *courseRepository) countVocabularyByCourseID(ctx context.Context, courseID primitive.ObjectID) (int32, error) {
 	collectionVocabulary := c.database.Collection(c.collectionVocabulary)
 
@@ -482,18 +562,4 @@ func (c *courseRepository) countVocabularyByCourseID(ctx context.Context, course
 	}
 
 	return result.TotalVocabulary, nil
-}
-
-func (c *courseRepository) Statistics(ctx context.Context) (course_domain.Statistics, error) {
-	collectionCourse := c.database.Collection(c.collectionCourse)
-
-	count, err := collectionCourse.CountDocuments(ctx, bson.D{})
-	if err != nil {
-		return course_domain.Statistics{}, err
-	}
-
-	statistics := course_domain.Statistics{
-		Total: count,
-	}
-	return statistics, nil
 }
