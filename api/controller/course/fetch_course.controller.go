@@ -7,8 +7,25 @@ import (
 )
 
 func (c *CourseController) FetchCourse(ctx *gin.Context) {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	user, err := c.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
 	page := ctx.DefaultQuery("page", "1")
-	course, detail, err := c.CourseUseCase.FetchManyForEachCourse(ctx, page)
+	course, detail, err := c.CourseUseCase.FetchManyInUser(ctx, user.ID, page)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -25,9 +42,26 @@ func (c *CourseController) FetchCourse(ctx *gin.Context) {
 }
 
 func (c *CourseController) FetchCourseByID(ctx *gin.Context) {
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	user, err := c.UserUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || user == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
+		return
+	}
+
 	courseID := ctx.Query("_id")
 
-	course, err := c.CourseUseCase.FetchByID(ctx, courseID)
+	course, err := c.CourseUseCase.FetchByIDInUser(ctx, user.ID, courseID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -61,7 +95,7 @@ func (c *CourseController) FetchCourseInAdmin(ctx *gin.Context) {
 	}
 
 	page := ctx.DefaultQuery("page", "1")
-	course, detail, err := c.CourseUseCase.FetchManyForEachCourse(ctx, page)
+	course, detail, err := c.CourseUseCase.FetchManyForEachCourseInAdmin(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -97,7 +131,7 @@ func (c *CourseController) FetchCourseByIDInAdmin(ctx *gin.Context) {
 
 	courseID := ctx.Query("_id")
 
-	course, err := c.CourseUseCase.FetchByID(ctx, courseID)
+	course, err := c.CourseUseCase.FetchByIDInAdmin(ctx, courseID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

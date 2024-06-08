@@ -2,6 +2,7 @@ package course_repository
 
 import (
 	course_domain "clean-architecture/domain/course"
+	lesson_management_domain "clean-architecture/domain/user_process/lesson_management"
 	"clean-architecture/internal"
 	"clean-architecture/internal/cache"
 	"context"
@@ -10,46 +11,343 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"strconv"
 	"sync"
 	"time"
 )
 
 type courseRepository struct {
-	database             *mongo.Database
-	collectionCourse     string
-	collectionLesson     string
-	collectionUnit       string
-	collectionVocabulary string
+	database                *mongo.Database
+	collectionCourse        string
+	collectionCourseProcess string
+	collectionLesson        string
+	collectionUnit          string
+	collectionVocabulary    string
 }
 
 // NewCourseRepository hàm khởi tạo (constructor) để khởi tạo instance của struct
-func NewCourseRepository(db *mongo.Database, collectionCourse string, collectionLesson string, collectionUnit string, collectionVocabulary string) course_domain.ICourseRepository {
+func NewCourseRepository(db *mongo.Database, collectionCourse string, collectionCourseProcess string, collectionLesson string, collectionUnit string, collectionVocabulary string) course_domain.ICourseRepository {
 	return &courseRepository{
-		database:             db,
-		collectionCourse:     collectionCourse,
-		collectionLesson:     collectionLesson,
-		collectionUnit:       collectionUnit,
-		collectionVocabulary: collectionVocabulary,
+		database:                db,
+		collectionCourse:        collectionCourse,
+		collectionCourseProcess: collectionCourseProcess,
+		collectionLesson:        collectionLesson,
+		collectionUnit:          collectionUnit,
+		collectionVocabulary:    collectionVocabulary,
 	}
 }
 
 var (
-	courseCache        = cache.NewTTL[string, course_domain.CourseResponse]()
-	coursesCache       = cache.NewTTL[string, []course_domain.CourseResponse]()
-	detailCache        = cache.NewTTL[string, course_domain.DetailForManyResponse]()
-	statisticsCache    = cache.NewTTL[string, course_domain.Statistics]()
-	coursePrimOIDCache = cache.NewTTL[string, primitive.ObjectID]()
+	courseCache             = cache.NewTTL[string, course_domain.CourseResponse]()
+	coursesCache            = cache.NewTTL[string, []course_domain.CourseResponse]()
+	detailCache             = cache.NewTTL[string, course_domain.DetailForManyResponse]()
+	statisticsCache         = cache.NewTTL[string, course_domain.Statistics]()
+	coursePrimOIDCache      = cache.NewTTL[string, primitive.ObjectID]()
+	coursesUserProcessCache = cache.NewTTL[string, []lesson_management_domain.CourseProcess]()
+	courseUserProcessCache  = cache.NewTTL[string, lesson_management_domain.CourseProcess]()
 
 	wg           sync.WaitGroup
 	mu           sync.Mutex
 	isProcessing bool
 )
 
-// FetchByID lấy khóa học (course) theo ID
+func (c *courseRepository) FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, courseID string) (lesson_management_domain.CourseProcess, error) {
+	errCh := make(chan error)
+	defer close(errCh)
+
+	courseUserProcessCh := make(chan lesson_management_domain.CourseProcess)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := courseUserProcessCache.Get(userID.Hex() + courseID)
+		if found {
+			courseUserProcessCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(courseUserProcessCh)
+		wg.Wait()
+	}()
+
+	courseUserProcessData := <-courseUserProcessCh
+	if !internal.IsZeroValue(courseUserProcessData) {
+		return courseUserProcessData, nil
+	}
+
+	collectionCourse := c.database.Collection(c.collectionCourse)
+	collectionCourseProcess := c.database.Collection(c.collectionCourseProcess)
+
+	idCourse, _ := primitive.ObjectIDFromHex(courseID)
+	filterCourseProcessByUser := bson.M{"user_id": userID, "course": idCourse}
+
+	// Đếm số lượng khóa học trong collection 'courses'
+	countCourse, err := collectionCourse.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return lesson_management_domain.CourseProcess{}, err
+	}
+
+	// Đếm số lượng CourseProcess của người dùng
+	count, err := collectionCourseProcess.CountDocuments(ctx, filterCourseProcessByUser)
+	if err != nil {
+		return lesson_management_domain.CourseProcess{}, err
+	}
+
+	// Nếu không có CourseProcess cho người dùng, khởi tạo chúng
+	var courseUserProcess lesson_management_domain.CourseProcess
+	if count != countCourse {
+		cursorCourse, err := collectionCourse.Find(ctx, bson.D{})
+		if err != nil {
+			return lesson_management_domain.CourseProcess{}, err
+		}
+		defer func(cursorCourse *mongo.Cursor, ctx context.Context) {
+			err := cursorCourse.Close(ctx)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}(cursorCourse, ctx)
+
+		for cursorCourse.Next(ctx) {
+			var course course_domain.Course
+			if err = cursorCourse.Decode(&course); err != nil {
+				return lesson_management_domain.CourseProcess{}, err
+			}
+
+			wg.Add(1)
+			go func(course course_domain.Course) {
+				defer wg.Done()
+				courseProcess := lesson_management_domain.CourseProcess{
+					CourseID:   course.Id,
+					UserID:     userID,
+					IsComplete: 0,
+				}
+
+				// Thực hiện tìm kiếm theo name để kiểm tra có dữ liệu trùng không
+				filter := bson.M{"course": course.Id}
+				countCourseChild, err := collectionCourse.CountDocuments(ctx, filter)
+				if err != nil {
+					errCh <- err
+					return
+				}
+
+				if countCourseChild == 0 {
+					_, err = collectionCourseProcess.InsertOne(ctx, &courseProcess)
+					if err != nil {
+						log.Println("Error inserting course process:", err)
+						errCh <- err
+						return
+					}
+				}
+			}(course)
+		}
+		wg.Wait()
+
+		// Tìm các CourseProcess của người dùng với phân trang
+		err = collectionCourseProcess.FindOne(ctx, filterCourseProcessByUser).Decode(&courseUserProcess)
+		if err != nil {
+			return lesson_management_domain.CourseProcess{}, err
+		}
+	}
+
+	err = collectionCourseProcess.FindOne(ctx, filterCourseProcessByUser).Decode(&courseUserProcess)
+	if err != nil {
+		return lesson_management_domain.CourseProcess{}, err
+	}
+
+	courseUserProcessCache.Set(userID.Hex()+courseID, courseUserProcess, 5*time.Minute)
+
+	select {
+	case err = <-errCh:
+		return lesson_management_domain.CourseProcess{}, err
+	default:
+		return courseUserProcess, nil
+	}
+}
+
+func (c *courseRepository) FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]lesson_management_domain.CourseProcess, course_domain.DetailForManyResponse, error) {
+	errCh := make(chan error)
+	defer close(errCh)
+
+	courseUserProcessCh := make(chan []lesson_management_domain.CourseProcess)
+	detailCh := make(chan course_domain.DetailForManyResponse)
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		data, found := coursesUserProcessCache.Get(userID.Hex())
+		if found {
+			courseUserProcessCh <- data
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		data, found := detailCache.Get(userID.Hex() + "detail")
+		if found {
+			detailCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(detailCh)
+		defer close(courseUserProcessCh)
+		wg.Wait()
+	}()
+
+	courseUserProcessData := <-courseUserProcessCh
+	detailData := <-detailCh
+	if !internal.IsZeroValue(courseUserProcessData) && !internal.IsZeroValue(detailData) {
+		return courseUserProcessData, detailData, nil
+	}
+
+	collectionCourse := c.database.Collection(c.collectionCourse)
+	collectionCourseProcess := c.database.Collection(c.collectionCourseProcess)
+
+	filterCourseProcessByUser := bson.M{"user_id": userID}
+
+	// Thực hiện phân trang
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return nil, course_domain.DetailForManyResponse{}, errors.New("invalid page number")
+	}
+	perPage := 5
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	// Đếm số lượng khóa học trong collection 'courses'
+	countCourse, err := collectionCourse.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return nil, course_domain.DetailForManyResponse{}, err
+	}
+
+	// Tính toán tổng số trang dựa trên số lượng khóa học và số khóa học mỗi trang
+	totalPages := (countCourse + int64(perPage) - 1) / int64(perPage)
+
+	// Đếm số lượng CourseProcess của người dùng
+	count, err := collectionCourseProcess.CountDocuments(ctx, filterCourseProcessByUser)
+	if err != nil {
+		return nil, course_domain.DetailForManyResponse{}, err
+	}
+
+	var coursesProcess []lesson_management_domain.CourseProcess
+	// Nếu không có CourseProcess cho người dùng, khởi tạo chúng
+	if count != countCourse {
+		cursorCourse, err := collectionCourse.Find(ctx, bson.D{})
+		if err != nil {
+			return nil, course_domain.DetailForManyResponse{}, err
+		}
+		defer func(cursorCourse *mongo.Cursor, ctx context.Context) {
+			err := cursorCourse.Close(ctx)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}(cursorCourse, ctx)
+
+		for cursorCourse.Next(ctx) {
+			var course course_domain.Course
+			if err = cursorCourse.Decode(&course); err != nil {
+				return nil, course_domain.DetailForManyResponse{}, err
+			}
+
+			wg.Add(1)
+			go func(course course_domain.Course) {
+				defer wg.Done()
+				courseProcess := lesson_management_domain.CourseProcess{
+					CourseID:   course.Id,
+					UserID:     userID,
+					IsComplete: 0,
+				}
+
+				// Thực hiện tìm kiếm theo name để kiểm tra có dữ liệu trùng không
+				filter := bson.M{"course": course.Id}
+				countCourseChild, err := collectionCourse.CountDocuments(ctx, filter)
+				if err != nil {
+					errCh <- err
+					return
+				}
+
+				if countCourseChild == 0 {
+					_, err = collectionCourseProcess.InsertOne(ctx, &courseProcess)
+					if err != nil {
+						log.Println("Error inserting course process:", err)
+						errCh <- err
+						return
+					}
+				}
+			}(course)
+		}
+		wg.Wait()
+
+		// Tìm các CourseProcess của người dùng với phân trang
+		cursor, err := collectionCourseProcess.Find(ctx, filterCourseProcessByUser, findOptions)
+		if err != nil {
+			return nil, course_domain.DetailForManyResponse{}, err
+		}
+		defer func(cursor *mongo.Cursor, ctx context.Context) {
+			err := cursor.Close(ctx)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}(cursor, ctx)
+	}
+
+	// Tìm các CourseProcess của người dùng với phân trang
+	cursor, err := collectionCourseProcess.Find(ctx, filterCourseProcessByUser, findOptions)
+	if err != nil {
+		return nil, course_domain.DetailForManyResponse{}, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			errCh <- err
+			return
+		}
+	}(cursor, ctx)
+
+	// Đọc dữ liệu từ cursor và thêm vào slice coursesProcess
+	for cursor.Next(ctx) {
+		var courseProcess lesson_management_domain.CourseProcess
+		if err := cursor.Decode(&courseProcess); err != nil {
+			return nil, course_domain.DetailForManyResponse{}, err
+		}
+		mu.Lock()
+		coursesProcess = append(coursesProcess, courseProcess)
+		mu.Unlock()
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, course_domain.DetailForManyResponse{}, err
+	}
+
+	// Lấy thống kê cho detail response
+	statistics, _ := c.Statistics(ctx)
+	detail := course_domain.DetailForManyResponse{
+		Statistics:  statistics,
+		Page:        totalPages,
+		CurrentPage: pageNumber,
+		CountCourse: countCourse,
+	}
+
+	coursesUserProcessCache.Set(userID.Hex(), coursesProcess, 5*time.Minute)
+	detailCache.Set(userID.Hex()+"detail", detail, 5*time.Minute)
+
+	select {
+	case err = <-errCh:
+		return nil, course_domain.DetailForManyResponse{}, err
+	default:
+		return coursesProcess, detail, nil
+	}
+}
+
+// FetchByIDInAdmin lấy khóa học (course) theo ID
 // Hàm này nhận đầu vào (input) là courseID và trả về một bài học làm khóa và nội dung cuủa bài học tương ứng làm giá trị
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với các kết quả đã lấy được
-func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
+func (c *courseRepository) FetchByIDInAdmin(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
 	// Khởi tạo channel để luu trữ lỗi
 	errCh := make(chan error, 1)
 	// Khởi tạo channel để lưu trữ kết quả lesson
@@ -143,11 +441,11 @@ func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (cour
 	}
 }
 
-// FetchManyForEachCourse lấy tất cả khóa học (course) cùng một lúc (concurrency).
+// FetchManyForEachCourseInAdmin lấy tất cả khóa học (course) cùng một lúc (concurrency).
 // Hàm này nhận vào số trang (page) và trả về một mảng khóa học làm khóa và nội dung của bài học tương ứng làm giá trị.
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả với các kết quả đã lấy được
 // FIXME: thực hiện gắn lỗi vào channel giúp tối ưu hóa xử lý
-func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page string) ([]course_domain.CourseResponse, course_domain.DetailForManyResponse, error) {
+func (c *courseRepository) FetchManyForEachCourseInAdmin(ctx context.Context, page string) ([]course_domain.CourseResponse, course_domain.DetailForManyResponse, error) {
 	// Khởi tạo channel để luu trữ lỗi
 	errCh := make(chan error, 1)
 	// Khởi tạo channel để lưu trữ kết quả course
@@ -298,11 +596,11 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 	}
 }
 
-// FindCourseIDByCourseName retrieves the course ID (courseid) based on the given course name.
+// FindCourseIDByCourseNameInAdmin retrieves the course ID (courseid) based on the given course name.
 // This function accepts courseName as a parameter and returns a primitive.ObjectID.
 // If an error occurs during data retrieval, the error is returned along with any partially retrieved results.
 // TODO: This function is intended to be a helper and not used as an API (controller).
-func (c *courseRepository) FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error) {
+func (c *courseRepository) FindCourseIDByCourseNameInAdmin(ctx context.Context, courseName string) (primitive.ObjectID, error) {
 	// Channel to receive the course ID
 	courseIDCh := make(chan primitive.ObjectID)
 
@@ -355,11 +653,16 @@ func (c *courseRepository) FindCourseIDByCourseName(ctx context.Context, courseN
 	return data.Id, nil
 }
 
-// UpdateOne cập nhật khóa học (course) theo đối tượng course
+func (c *courseRepository) UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+// UpdateOneInAdmin cập nhật khóa học (course) theo đối tượng course
 // Hàm nhận tham số là đối tượng Course. Nếu thành công sẽ trả về thông tin cập nhật (không phải thông tin đối tượng).
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với kết quả đã lấy được
 // Hàm có sử dụng concurrency, giúp xử lý các tác vụ về người dùng hiệu quả
-func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {
+func (c *courseRepository) UpdateOneInAdmin(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {
 	// Khóa lock giúp bảo vệ course
 	mu.Lock()
 	defer mu.Unlock()
@@ -394,7 +697,7 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.
 	}
 
 	// Clear data value in cache memory for courses
-	wg.Add(3)
+	wg.Add(4)
 	go func() {
 		defer wg.Done()
 		coursesCache.Clear()
@@ -410,15 +713,20 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.
 		defer wg.Done()
 		statisticsCache.Clear()
 	}()
+
+	go func() {
+		defer wg.Done()
+		coursesUserProcessCache.Clear()
+	}()
 	wg.Wait()
 
 	return data, nil
 }
 
-// CreateOne khởi tạo khóa học (course) theo đối tượng Course
+// CreateOneInAdmin khởi tạo khóa học (course) theo đối tượng Course
 // Hàm này nhận tham số là một đối tượng và trả về kết quả thông tin xử lý (không phải là thông tin của đối tượng đó)
 // Nếu có lỗi xảy ra trong quá trình xử lý, lỗi sẽ được trả về với kết quả đã lấy được và dừng chương trình
-func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.Course) error {
+func (c *courseRepository) CreateOneInAdmin(ctx context.Context, course *course_domain.Course) error {
 	// Khóa lock giúp bảo vệ course
 	mu.Lock()
 	defer mu.Unlock()
@@ -451,7 +759,7 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 	}
 
 	// Clear data value in cache memory
-	wg.Add(3)
+	wg.Add(4)
 	go func() {
 		defer wg.Done()
 		coursesCache.Clear()
@@ -468,15 +776,20 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 		defer wg.Done()
 		statisticsCache.Clear()
 	}()
+
+	go func() {
+		defer wg.Done()
+		coursesUserProcessCache.Clear()
+	}()
 	wg.Wait()
 
 	return nil
 }
 
-// DeleteOne xóa khóa học (course) theo ID
+// DeleteOneInAdmin xóa khóa học (course) theo ID
 // Hàm này nhận đầu vào là courseID và trả về kết quả sau khi xóa
 // Nếu có lỗi xảy ra trong quá trình xử lý, hệ thống sẽ trả về lỗi và dừng chương trình
-func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error {
+func (c *courseRepository) DeleteOneInAdmin(ctx context.Context, courseID string) error {
 	// Khóa lock giúp bảo vệ course
 	mu.Lock()
 	defer mu.Unlock()
@@ -519,7 +832,7 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 	}
 
 	// clear data value with courseID in cache
-	wg.Add(4)
+	wg.Add(5)
 	go func() {
 		defer wg.Done()
 		courseCache.Remove(courseID)
@@ -541,6 +854,11 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 	go func() {
 		defer wg.Done()
 		coursePrimOIDCache.Clear()
+	}()
+
+	go func() {
+		defer wg.Done()
+		coursesUserProcessCache.Clear()
 	}()
 	wg.Wait()
 

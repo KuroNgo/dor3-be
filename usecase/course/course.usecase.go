@@ -2,6 +2,7 @@ package course_usecase
 
 import (
 	course_domain "clean-architecture/domain/course"
+	lesson_management_domain "clean-architecture/domain/user_process/lesson_management"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -20,23 +21,16 @@ func NewCourseUseCase(courseRepository course_domain.ICourseRepository, timeout 
 	}
 }
 
-func (c *courseUseCase) FetchByID(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
-	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
-	defer cancel()
-
-	course, err := c.courseRepository.FetchByID(ctx, courseID)
-	if err != nil {
-		return course_domain.CourseResponse{}, err
-	}
-
-	return course, err
+func (c *courseUseCase) UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
-func (c *courseUseCase) FetchManyForEachCourse(ctx context.Context, page string) ([]course_domain.CourseResponse, course_domain.DetailForManyResponse, error) {
+func (c *courseUseCase) FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]lesson_management_domain.CourseProcess, course_domain.DetailForManyResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
 
-	course, detail, err := c.courseRepository.FetchManyForEachCourse(ctx, page)
+	course, detail, err := c.courseRepository.FetchManyInUser(ctx, userID, page)
 	if err != nil {
 		return nil, course_domain.DetailForManyResponse{}, err
 	}
@@ -44,11 +38,47 @@ func (c *courseUseCase) FetchManyForEachCourse(ctx context.Context, page string)
 	return course, detail, nil
 }
 
-func (c *courseUseCase) FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error) {
+func (c *courseUseCase) FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, courseID string) (lesson_management_domain.CourseProcess, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
 
-	course, err := c.courseRepository.FindCourseIDByCourseName(ctx, courseName)
+	course, err := c.courseRepository.FetchByIDInUser(ctx, userID, courseID)
+	if err != nil {
+		return lesson_management_domain.CourseProcess{}, err
+	}
+
+	return course, nil
+}
+
+func (c *courseUseCase) FetchByIDInAdmin(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
+	defer cancel()
+
+	course, err := c.courseRepository.FetchByIDInAdmin(ctx, courseID)
+	if err != nil {
+		return course_domain.CourseResponse{}, err
+	}
+
+	return course, err
+}
+
+func (c *courseUseCase) FetchManyForEachCourseInAdmin(ctx context.Context, page string) ([]course_domain.CourseResponse, course_domain.DetailForManyResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
+	defer cancel()
+
+	course, detail, err := c.courseRepository.FetchManyForEachCourseInAdmin(ctx, page)
+	if err != nil {
+		return nil, course_domain.DetailForManyResponse{}, err
+	}
+
+	return course, detail, nil
+}
+
+func (c *courseUseCase) FindCourseIDByCourseNameInAdmin(ctx context.Context, courseName string) (primitive.ObjectID, error) {
+	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
+	defer cancel()
+
+	course, err := c.courseRepository.FindCourseIDByCourseNameInAdmin(ctx, courseName)
 	if err != nil {
 		return primitive.NilObjectID, err
 	}
@@ -56,10 +86,10 @@ func (c *courseUseCase) FindCourseIDByCourseName(ctx context.Context, courseName
 	return course, err
 }
 
-func (c *courseUseCase) CreateOne(ctx context.Context, course *course_domain.Course) error {
+func (c *courseUseCase) CreateOneInAdmin(ctx context.Context, course *course_domain.Course) error {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
-	err := c.courseRepository.CreateOne(ctx, course)
+	err := c.courseRepository.CreateOneInAdmin(ctx, course)
 
 	if err != nil {
 		return err
@@ -68,11 +98,11 @@ func (c *courseUseCase) CreateOne(ctx context.Context, course *course_domain.Cou
 	return nil
 }
 
-func (c *courseUseCase) UpdateOne(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {
+func (c *courseUseCase) UpdateOneInAdmin(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
 
-	data, err := c.courseRepository.UpdateOne(ctx, course)
+	data, err := c.courseRepository.UpdateOneInAdmin(ctx, course)
 	if err != nil {
 		return nil, err
 	}
@@ -80,11 +110,11 @@ func (c *courseUseCase) UpdateOne(ctx context.Context, course *course_domain.Cou
 	return data, nil
 }
 
-func (c *courseUseCase) DeleteOne(ctx context.Context, courseID string) error {
+func (c *courseUseCase) DeleteOneInAdmin(ctx context.Context, courseID string) error {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
 
-	err := c.courseRepository.DeleteOne(ctx, courseID)
+	err := c.courseRepository.DeleteOneInAdmin(ctx, courseID)
 	if err != nil {
 		return err
 	}

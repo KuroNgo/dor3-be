@@ -66,7 +66,7 @@ func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
 		WhoUpdated:  admin.FullName,
 	}
 
-	err = c.CourseUseCase.CreateOne(ctx, course)
+	err = c.CourseUseCase.CreateOneInAdmin(ctx, course)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -81,7 +81,14 @@ func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
 }
 
 func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
-	currentUser := ctx.MustGet("currentUser")
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
 	admin, err := c.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -141,7 +148,7 @@ func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
 		WhoUpdated:  admin.FullName,
 	}
 
-	err = c.CourseUseCase.CreateOne(ctx, &course)
+	err = c.CourseUseCase.CreateOneInAdmin(ctx, &course)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -158,7 +165,14 @@ func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
 }
 
 func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
-	currentUser := ctx.MustGet("currentUser")
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
 	admin, err := c.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -211,7 +225,7 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		WhoUpdated:  admin.FullName,
 	}
 
-	_ = c.CourseUseCase.CreateOne(ctx, &course)
+	_ = c.CourseUseCase.CreateOneInAdmin(ctx, &course)
 
 	resLesson, err := excel.ReadFileForLesson(file.Filename)
 	if err != nil {
@@ -220,7 +234,7 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 	}
 
 	for _, data := range resLesson {
-		courseID, err := c.CourseUseCase.FindCourseIDByCourseName(ctx, data.CourseID)
+		courseID, err := c.CourseUseCase.FindCourseIDByCourseNameInAdmin(ctx, data.CourseID)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

@@ -1,7 +1,7 @@
 package user_attempt_usecase
 
 import (
-	"clean-architecture/domain/user_process/exam_management"
+	exam_management "clean-architecture/domain/user_process/exam_management"
 	"context"
 	"time"
 )
