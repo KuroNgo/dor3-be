@@ -4,6 +4,7 @@ import (
 	"clean-architecture/domain/user"
 	user_detail_domain "clean-architecture/domain/user_detail"
 	"clean-architecture/internal"
+	"clean-architecture/internal/cache"
 	"context"
 	"errors"
 	"fmt"
@@ -11,6 +12,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"sync"
+	"time"
 )
 
 type userRepository struct {
@@ -26,6 +29,14 @@ func NewUserRepository(db *mongo.Database, collectionUser string, collectionUser
 		collectionUserDetail: collectionUserDetail,
 	}
 }
+
+var (
+	userCache  = cache.New[string, *user_domain.User]()
+	usersCache = cache.NewTTL[string, user_domain.Response]()
+
+	wg sync.WaitGroup
+	mu sync.Mutex
+)
 
 func (u *userRepository) UpdateVerifyForChangePassword(ctx context.Context, user *user_domain.User) (*mongo.UpdateResult, error) {
 	collectionUser := u.database.Collection(u.collectionUser)
@@ -62,6 +73,7 @@ func (u *userRepository) UpdatePassword(ctx context.Context, user *user_domain.U
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -79,6 +91,13 @@ func (u *userRepository) Update(ctx context.Context, user *user_domain.User) err
 	if err != nil {
 		return err
 	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		userCache.Clear()
+	}()
+	wg.Wait()
 	return nil
 }
 
@@ -119,6 +138,14 @@ func (u *userRepository) UpdateImage(c context.Context, userID string, imageURL 
 	update := bson.D{{Key: "$set", Value: doc}}
 
 	_, err = collectionUser.UpdateOne(c, filter, update)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		userCache.Clear()
+	}()
+	wg.Wait()
+
 	return err
 }
 
@@ -152,10 +179,39 @@ func (u *userRepository) Create(c context.Context, user *user_domain.User) error
 		return errors.New("the email do not unique")
 	}
 	_, err = collectionUser.InsertOne(c, &user)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		usersCache.Clear()
+	}()
+	wg.Wait()
+
 	return err
 }
 
 func (u *userRepository) FetchMany(c context.Context) (user_domain.Response, error) {
+	usersCh := make(chan user_domain.Response)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := usersCache.Get("users")
+		if found {
+			usersCh <- data
+			return
+		}
+	}()
+
+	go func() {
+		defer close(usersCh)
+		wg.Wait()
+	}()
+
+	userData := <-usersCh
+	if !internal.IsZeroValue(userData) {
+		return userData, nil
+	}
+
 	collectionUser := u.database.Collection(u.collectionUser)
 
 	opts := options.Find().SetProjection(bson.D{{Key: "password", Value: 0}})
@@ -185,6 +241,7 @@ func (u *userRepository) FetchMany(c context.Context) (user_domain.Response, err
 		Statistics: statistics,
 	}
 
+	usersCache.Set("users", response, 5*time.Minute)
 	return response, err
 }
 
@@ -199,6 +256,19 @@ func (u *userRepository) DeleteOne(c context.Context, userID string) error {
 		"_id": objID,
 	}
 	_, err = collectionUser.DeleteOne(c, filter)
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		userCache.Clear()
+	}()
+
+	go func() {
+		defer wg.Done()
+		usersCache.Clear()
+	}()
+	wg.Wait()
+
 	return err
 }
 
@@ -210,16 +280,60 @@ func (u *userRepository) GetByEmail(c context.Context, email string) (*user_doma
 }
 
 func (u *userRepository) Login(c context.Context, request user_domain.SignIn) (*user_domain.User, error) {
+	userCh := make(chan *user_domain.User)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := userCache.Get(request.Email + request.Password)
+		if found {
+			userCh <- data
+			return
+		}
+	}()
+
+	go func() {
+		defer close(userCh)
+		wg.Wait()
+	}()
+
+	userData := <-userCh
+	if !internal.IsZeroValue(userData) {
+		return userData, nil
+	}
+
 	user, err := u.GetByEmail(c, request.Email)
 
 	// Kiểm tra xem mật khẩu đã nhập có đúng với mật khẩu đã hash trong cơ sở dữ liệu không
 	if err = internal.VerifyPassword(user.Password, request.Password); err != nil {
 		return &user_domain.User{}, errors.New("email or password not found! ")
 	}
+
+	userCache.Set(request.Email+request.Password, user)
 	return user, nil
 }
 
 func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.User, error) {
+	userCh := make(chan *user_domain.User)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := userCache.Get(id)
+		if found {
+			userCh <- data
+			return
+		}
+	}()
+
+	go func() {
+		defer close(userCh)
+		wg.Wait()
+	}()
+
+	userData := <-userCh
+	if !internal.IsZeroValue(userData) {
+		return userData, nil
+	}
+
 	collectionUser := u.database.Collection(u.collectionUser)
 
 	var user user_domain.User
@@ -230,6 +344,8 @@ func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.Use
 	}
 
 	err = collectionUser.FindOne(c, bson.M{"_id": idHex}).Decode(&user)
+
+	userCache.Set(id, &user)
 	return &user, nil
 }
 
@@ -257,6 +373,13 @@ func (u *userRepository) UpsertOne(c context.Context, email string, user *user_d
 		}
 		return nil, err
 	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		userCache.Clear()
+	}()
+	wg.Wait()
 
 	return updatedUser, nil
 }

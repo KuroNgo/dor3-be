@@ -11,8 +11,8 @@ import (
 	exercise_domain "clean-architecture/domain/exercise"
 	quiz_domain "clean-architecture/domain/quiz"
 	user_domain "clean-architecture/domain/user"
-	user_attempt_domain "clean-architecture/domain/user_attempt"
 	user_detail_domain "clean-architecture/domain/user_detail"
+	user_attempt_domain "clean-architecture/domain/user_process/exam_management"
 	exam_answer_repository "clean-architecture/repository/exam_answer"
 	exam_result_repository "clean-architecture/repository/exam_result"
 	user_repository "clean-architecture/repository/user"
@@ -30,7 +30,7 @@ func ExamAnswerRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.D
 	ans := exam_answer_repository.NewExamAnswerRepository(db, exam_question_domain.CollectionExamQuestion, exam_answer_domain.CollectionExamAnswers, exam_domain.CollectionExam)
 	res := exam_result_repository.NewExamResultRepository(db, exam_result_domain.CollectionExamResult, exam_domain.CollectionExam)
 	users := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
-	userAttempt := user_attempt_repository.NewUserAttemptRepository(db, user_attempt_domain.CollectionUserAttempt, exam_domain.CollectionExam, quiz_domain.CollectionQuiz, exercise_domain.CollectionExercise)
+	userAttempt := user_attempt_repository.NewUserAttemptRepository(db, user_attempt_domain.CollectionUserExamManagement, exam_domain.CollectionExam, quiz_domain.CollectionQuiz, exercise_domain.CollectionExercise)
 
 	answer := &exam_answer_controller.ExamAnswerController{
 		ExamAnswerUseCase:  exam_answer_usecase.NewExamAnswerUseCase(ans, timeout),

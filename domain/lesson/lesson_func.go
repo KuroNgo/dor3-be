@@ -29,16 +29,12 @@ type ILessonUseCase interface {
 	FetchMany(ctx context.Context, page string) ([]LessonResponse, DetailResponse, error)
 	FetchManyNotPagination(ctx context.Context) ([]LessonResponse, DetailResponse, error)
 	FetchByID(ctx context.Context, lessonID string) (LessonResponse, error)
-	FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error)
+	FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error)
 	FetchByIdCourse(ctx context.Context, idCourse string, page string) ([]LessonResponse, DetailResponse, error)
 
 	CreateOne(ctx context.Context, lesson *Lesson) error
 	CreateOneByNameCourse(ctx context.Context, lesson *Lesson) error
-
 	DeleteOne(ctx context.Context, lessonID string) error
-
 	UpdateImage(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
 	UpdateOne(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
-	// UpdateComplete automation
-	UpdateComplete(ctx context.Context, lessonID string, lesson Lesson) error
 }

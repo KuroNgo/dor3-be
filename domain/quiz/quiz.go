@@ -20,11 +20,9 @@ type Quiz struct {
 	Description string `bson:"description" json:"description"`
 	Duration    string `bson:"duration" json:"duration"`
 
-	IsComplete int       `bson:"is_complete" json:"is_complete"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
 	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
-	Learner    string    `bson:"learner" json:"learner"`
 }
 
 type Response struct {
@@ -47,8 +45,6 @@ type IQuizRepository interface {
 
 	CreateOne(ctx context.Context, quiz *Quiz) error
 	UpdateOne(ctx context.Context, quiz *Quiz) (*mongo.UpdateResult, error)
-	UpdateCompleted(ctx context.Context, quiz *Quiz) error
-
 	DeleteOne(ctx context.Context, quizID string) error
 	Statistics(ctx context.Context) (Statistics, error)
 }

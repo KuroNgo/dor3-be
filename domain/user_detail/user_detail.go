@@ -15,6 +15,7 @@ type UserDetail struct {
 	UserID     primitive.ObjectID `bson:"user_id" json:"user_id"`
 	Specialize string             `bson:"specialize"  json:"specialize"`
 	Detail     string             `bson:"detail"  json:"detail"`
+	Jade       int64              `bson:"jade"  json:"jade"`
 }
 
 type Response struct {

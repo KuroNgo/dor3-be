@@ -14,7 +14,14 @@ import (
 )
 
 func (u *UnitController) CreateOneUnit(ctx *gin.Context) {
-	currentUser := ctx.MustGet("currentUser")
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
 	admin, err := u.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
 	if err != nil || admin == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -66,10 +73,20 @@ func (u *UnitController) CreateOneUnit(ctx *gin.Context) {
 }
 
 func (u *UnitController) CreateUnitWithFile(ctx *gin.Context) {
-	currentUser := ctx.MustGet("currentUser")
-	user, err := u.AdminUseCase.GetByID(ctx, fmt.Sprint(currentUser))
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	currentUser, exists := ctx.Get("currentUser")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "You are not logged in!",
+		})
+		return
+	}
+	admin, err := u.AdminUseCase.GetByID(ctx, fmt.Sprintf("%s", currentUser))
+	if err != nil || admin == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "Unauthorized",
+			"message": "You are not authorized to perform this action!",
+		})
 		return
 	}
 
@@ -127,7 +144,7 @@ func (u *UnitController) CreateUnitWithFile(ctx *gin.Context) {
 	for _, unit := range result {
 		go func(unit file_internal.Unit) {
 			// Tìm ID của bài học từ tên bài học
-			lessonID, err := u.UnitUseCase.FindLessonIDByLessonName(ctx, unit.LessonID)
+			lessonID, err := u.LessonUseCase.FindLessonIDByLessonName(ctx, unit.LessonID)
 			if err != nil {
 				errChan <- fmt.Errorf("failed to find lesson ID for lesson '%s': %v", unit.LessonID, err)
 				return
@@ -135,15 +152,14 @@ func (u *UnitController) CreateUnitWithFile(ctx *gin.Context) {
 
 			// Tạo đơn vị
 			elUnit := unit_domain.Unit{
-				ID:         primitive.NewObjectID(),
-				LessonID:   lessonID,
-				Name:       unit.Name,
-				ImageURL:   "",
-				Level:      unit.Level,
-				IsComplete: 0,
-				CreatedAt:  time.Now(),
-				UpdatedAt:  time.Now(),
-				WhoCreate:  user.FullName,
+				ID:        primitive.NewObjectID(),
+				LessonID:  lessonID,
+				Name:      unit.Name,
+				ImageURL:  "",
+				Level:     unit.Level,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+				WhoCreate: admin.FullName,
 			}
 
 			// Tạo đơn vị trong cơ sở dữ liệu

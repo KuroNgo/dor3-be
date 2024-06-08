@@ -55,18 +55,6 @@ func (q *quizUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (quiz
 	return quiz, nil
 }
 
-func (q *quizUseCase) UpdateCompleted(ctx context.Context, quiz *quiz_domain.Quiz) error {
-	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
-	defer cancel()
-
-	err := q.quizRepository.UpdateCompleted(ctx, quiz)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (q *quizUseCase) FetchMany(ctx context.Context, page string) ([]quiz_domain.Quiz, quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()

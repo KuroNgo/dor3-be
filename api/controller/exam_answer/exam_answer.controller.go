@@ -5,7 +5,7 @@ import (
 	exam_answer_domain "clean-architecture/domain/exam_answer"
 	exam_result_domain "clean-architecture/domain/exam_result"
 	user_domain "clean-architecture/domain/user"
-	user_attempt_domain "clean-architecture/domain/user_attempt"
+	user_attempt_domain "clean-architecture/domain/user_process/exam_management"
 )
 
 type ExamAnswerController struct {

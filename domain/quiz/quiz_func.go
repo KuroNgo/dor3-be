@@ -30,8 +30,6 @@ type IQuizUseCase interface {
 	FetchOneByUnitID(ctx context.Context, unitID string) (Quiz, error)
 
 	UpdateOne(ctx context.Context, quiz *Quiz) (*mongo.UpdateResult, error)
-	UpdateCompleted(ctx context.Context, quiz *Quiz) error
-
 	CreateOne(ctx context.Context, quiz *Quiz) error
 	DeleteOne(ctx context.Context, quizID string) error
 }

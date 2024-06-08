@@ -198,6 +198,7 @@ func (v *vocabularyRepository) GetAllVocabulary(ctx context.Context) ([]string, 
 func (v *vocabularyRepository) CreateOneByNameUnit(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
+	collectionLesson := v.database.Collection(v.collectionLesson)
 
 	// Tìm unit dựa trên ID
 	var unit unit_domain.Unit
@@ -207,24 +208,31 @@ func (v *vocabularyRepository) CreateOneByNameUnit(ctx context.Context, vocabula
 		return err
 	}
 
-	// Kiểm tra xem unit có thuộc bài học nào không
-	var count int64
-	filterUnit2 := bson.M{"_id": vocabulary.UnitID, "lesson_id": unit.LessonID}
-	count, err = collectionUnit.CountDocuments(ctx, filterUnit2)
+	filterLesson := bson.M{"_id": unit.LessonID}
+	countLesson, err := collectionLesson.CountDocuments(ctx, filterLesson)
 	if err != nil {
 		return err
 	}
-	if count == 0 {
+	if countLesson == 0 {
+		return errors.New("parent lesson not found")
+	}
+
+	filterUnit2 := bson.M{"_id": vocabulary.UnitID}
+	countUnit, err := collectionUnit.CountDocuments(ctx, filterUnit2)
+	if err != nil {
+		return err
+	}
+	if countUnit == 0 {
 		return errors.New("parent unit not found")
 	}
 
 	// Kiểm tra xem từ vựng đã tồn tại trong unit và bài học đó chưa
-	filter := bson.M{"word": vocabulary.Word, "unit_id": vocabulary.UnitID, "lesson_id": unit.LessonID}
-	count, err = collectionVocabulary.CountDocuments(ctx, filter)
+	filter := bson.M{"word": vocabulary.Word}
+	countVocab, err := collectionVocabulary.CountDocuments(ctx, filter)
 	if err != nil {
 		return err
 	}
-	if count > 0 {
+	if countVocab > 0 && countUnit > 0 {
 		return errors.New("the vocabulary already exists in the lesson")
 	}
 
@@ -465,7 +473,6 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 		vocabularyRes.LinkURL = vocabulary.LinkURL
 		vocabularyRes.VideoURL = vocabulary.ImageURL
 		vocabularyRes.ImageURL = vocabulary.ImageURL
-		vocabularyRes.IsFavourite = vocabulary.IsFavourite
 
 		vocabularies = append(vocabularies, vocabularyRes)
 	}

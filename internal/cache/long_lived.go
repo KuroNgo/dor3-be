@@ -44,6 +44,13 @@ func (c *Cache[K, V]) Remove(key K) {
 	delete(c.items, key)
 }
 
+func (c *Cache[K, V]) Clear() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.items = make(map[K]V)
+}
+
 func (c *Cache[K, V]) Pop(key K) (V, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()

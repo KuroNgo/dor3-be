@@ -3,7 +3,7 @@ package exercise_answer_controller
 import (
 	exercise_answer_domain "clean-architecture/domain/exercise_answer"
 	exercise_result_domain "clean-architecture/domain/exercise_result"
-	user_attempt_domain "clean-architecture/domain/user_attempt"
+	user_attempt_domain "clean-architecture/domain/user_process/exam_management"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -101,7 +101,7 @@ func (e *ExerciseAnswerController) CreateOneExerciseAnswer(ctx *gin.Context) {
 			return
 		}
 
-		userProcess := user_attempt_domain.UserProcess{
+		userProcess := user_attempt_domain.ExamManagement{
 			ID:            primitive.NewObjectID(),
 			UserID:        user.ID,
 			ExerciseID:    exerciseID,
@@ -112,7 +112,7 @@ func (e *ExerciseAnswerController) CreateOneExerciseAnswer(ctx *gin.Context) {
 			UpdatedAt:     time.Now(),
 		}
 
-		err = e.UserAttemptUseCase.CreateAttemptByExerciseID(ctx, userProcess)
+		err = e.UserAttemptUseCase.CreateExamManagementByExerciseID(ctx, userProcess)
 		if err != nil {
 			handleError(ctx, http.StatusInternalServerError, "Failed to create user process", err)
 			return

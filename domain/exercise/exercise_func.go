@@ -33,8 +33,6 @@ type IExerciseUseCase interface {
 	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]Exercise, DetailResponse, error)
 
 	UpdateOne(ctx context.Context, exercise *Exercise) (*mongo.UpdateResult, error)
-	UpdateCompleted(ctx context.Context, exercise *Exercise) error
-
 	CreateOne(ctx context.Context, exercise *Exercise) error
 	DeleteOne(ctx context.Context, exerciseID string) error
 }

@@ -3,7 +3,7 @@ package quiz_answer_controller
 import (
 	quiz_answer_domain "clean-architecture/domain/quiz_answer"
 	quiz_result_domain "clean-architecture/domain/quiz_result"
-	user_attempt_domain "clean-architecture/domain/user_attempt"
+	user_attempt_domain "clean-architecture/domain/user_process/exam_management"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -100,7 +100,7 @@ func (q *QuizAnswerController) CreateOneQuizAnswer(ctx *gin.Context) {
 			return
 		}
 
-		userProcess := user_attempt_domain.UserProcess{
+		userProcess := user_attempt_domain.ExamManagement{
 			ID:            primitive.NewObjectID(),
 			UserID:        user.ID,
 			QuizID:        quizID,
@@ -111,7 +111,7 @@ func (q *QuizAnswerController) CreateOneQuizAnswer(ctx *gin.Context) {
 			UpdatedAt:     time.Now(),
 		}
 
-		err = q.UserAttemptUseCase.UpdateAttemptByQuizID(ctx, userProcess)
+		err = q.UserAttemptUseCase.UpdateExamManagementByQuizID(ctx, userProcess)
 		if err != nil {
 			handleError(ctx, http.StatusInternalServerError, "Failed to create user process", err)
 			return

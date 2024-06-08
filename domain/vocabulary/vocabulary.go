@@ -32,10 +32,9 @@ type Vocabulary struct {
 	ImageURL      string `bson:"image_url" json:"image_url"`
 	AssetURL      string `bson:"asset_url" json:"asset_url"`
 
-	IsFavourite int       `bson:"is_favourite" json:"is_favourite"`
-	CreatedAt   time.Time `bson:"created_at" json:"created_at"`
-	UpdatedAt   time.Time `bson:"updated_at" json:"updated_at"`
-	WhoUpdates  string    `bson:"who_updates" json:"who_updates"`
+	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
+	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
 }
 
 type VocabularyResponse struct {

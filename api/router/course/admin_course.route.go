@@ -5,8 +5,11 @@ import (
 	"clean-architecture/bootstrap"
 	admin_domain "clean-architecture/domain/admin"
 	course_domain "clean-architecture/domain/course"
+	exam_domain "clean-architecture/domain/exam"
+	exercise_domain "clean-architecture/domain/exercise"
 	lesson_domain "clean-architecture/domain/lesson"
 	mark_domain "clean-architecture/domain/mark_vocabulary"
+	quiz_domain "clean-architecture/domain/quiz"
 	unit_domain "clean-architecture/domain/unit"
 	user_domain "clean-architecture/domain/user"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
@@ -28,7 +31,7 @@ import (
 func AdminCourseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	co := course_repository.NewCourseRepository(db, course_domain.CollectionCourse, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
 	le := lesson_repository.NewLessonRepository(db, lesson_domain.CollectionLesson, course_domain.CollectionCourse, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
-	un := unit_repo.NewUnitRepository(db, unit_domain.CollectionUnit, lesson_domain.CollectionLesson, vocabulary_domain.CollectionVocabulary)
+	un := unit_repo.NewUnitRepository(db, unit_domain.CollectionUnit, lesson_domain.CollectionLesson, vocabulary_domain.CollectionVocabulary, exam_domain.CollectionExam, exercise_domain.CollectionExercise, quiz_domain.CollectionQuiz)
 	vo := vocabulary_repository.NewVocabularyRepository(db, vocabulary_domain.CollectionVocabulary, mark_domain.CollectionMark, unit_domain.CollectionUnit, lesson_domain.CollectionLesson)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 

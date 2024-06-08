@@ -265,23 +265,6 @@ func (q *quizRepository) UpdateOne(ctx context.Context, quiz *quiz_domain.Quiz) 
 	return data, nil
 }
 
-func (q *quizRepository) UpdateCompleted(ctx context.Context, quiz *quiz_domain.Quiz) error {
-	collection := q.database.Collection(q.collectionUnit)
-
-	filter := bson.D{{Key: "_id", Value: quiz.Id}}
-	update := bson.M{"$set": bson.M{
-		"is_complete": quiz.IsComplete,
-		"who_updates": quiz.WhoUpdates,
-	}}
-
-	_, err := collection.UpdateOne(ctx, filter, &update)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (q *quizRepository) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) error {
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
 	collectionUnit := q.database.Collection(q.collectionUnit)

@@ -12,7 +12,6 @@ import (
 	"math/rand"
 	"strconv"
 	"sync"
-	"time"
 )
 
 type exerciseRepository struct {
@@ -245,25 +244,6 @@ func (e *exerciseRepository) UpdateOne(ctx context.Context, exercise *exercise_d
 		return nil, err
 	}
 	return data, nil
-}
-
-func (e *exerciseRepository) UpdateCompleted(ctx context.Context, exercise *exercise_domain.Exercise) error {
-	collection := e.database.Collection(e.collectionExercise)
-
-	filter := bson.D{{Key: "_id", Value: exercise.Id}}
-	update := bson.M{
-		"$set": bson.M{
-			"is_complete": exercise.IsComplete,
-			"updated_at":  time.Now(),
-			"learner":     exercise.Learner,
-		},
-	}
-
-	_, err := collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (e *exerciseRepository) CreateOne(ctx context.Context, exercise *exercise_domain.Exercise) error {

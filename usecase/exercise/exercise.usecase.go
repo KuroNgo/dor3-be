@@ -55,18 +55,6 @@ func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string, 
 	return vocabulary, detail, err
 }
 
-func (e *exerciseUseCase) UpdateCompleted(ctx context.Context, exercise *exercise_domain.Exercise) error {
-	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
-	defer cancel()
-
-	err := e.exerciseRepository.UpdateCompleted(ctx, exercise)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (e *exerciseUseCase) FetchMany(ctx context.Context, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
