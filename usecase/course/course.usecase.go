@@ -3,6 +3,7 @@ package course_usecase
 import (
 	course_domain "clean-architecture/domain/course"
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
@@ -41,6 +42,18 @@ func (c *courseUseCase) FetchManyForEachCourse(ctx context.Context, page string)
 	}
 
 	return course, detail, nil
+}
+
+func (c *courseUseCase) FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error) {
+	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
+	defer cancel()
+
+	course, err := c.courseRepository.FindCourseIDByCourseName(ctx, courseName)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	return course, err
 }
 
 func (c *courseUseCase) CreateOne(ctx context.Context, course *course_domain.Course) error {

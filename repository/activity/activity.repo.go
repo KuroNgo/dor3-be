@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -17,10 +16,6 @@ type activityRepository struct {
 	database           *mongo.Database
 	collectionActivity string
 	collectionAdmin    string
-
-	activityResponseCache map[string]activity_log_domain.Response
-	activityCacheExpires  map[string]time.Time
-	cacheMutex            sync.RWMutex
 }
 
 func NewActivityRepository(db *mongo.Database, collectionActivity string, collectionAdmin string) activity_log_domain.IActivityRepository {
@@ -28,9 +23,6 @@ func NewActivityRepository(db *mongo.Database, collectionActivity string, collec
 		database:           db,
 		collectionActivity: collectionActivity,
 		collectionAdmin:    collectionAdmin,
-
-		activityResponseCache: make(map[string]activity_log_domain.Response),
-		activityCacheExpires:  make(map[string]time.Time),
 	}
 }
 

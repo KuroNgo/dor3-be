@@ -299,9 +299,7 @@ func (e *examRepository) UpdateCompleted(ctx context.Context, exam *exam_domain.
 	filter := bson.D{{Key: "_id", Value: exam.ID}}
 	update := bson.M{
 		"$set": bson.M{
-			"is_complete": exam.IsComplete,
-			"updated_at":  time.Now(),
-			"learner":     exam.Learner,
+			"updated_at": time.Now(),
 		},
 	}
 

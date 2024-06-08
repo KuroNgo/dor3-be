@@ -16,6 +16,7 @@ type Input struct {
 type ICourseUseCase interface {
 	FetchManyForEachCourse(ctx context.Context, page string) ([]CourseResponse, DetailForManyResponse, error)
 	FetchByID(ctx context.Context, courseID string) (CourseResponse, error)
+	FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error)
 
 	UpdateOne(ctx context.Context, course *Course) (*mongo.UpdateResult, error)
 	CreateOne(ctx context.Context, course *Course) error

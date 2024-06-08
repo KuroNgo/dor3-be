@@ -3,7 +3,6 @@ package unit_usecase
 import (
 	unit_domain "clean-architecture/domain/unit"
 	"context"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
@@ -56,16 +55,16 @@ func (u *unitUseCase) FetchByIdLesson(ctx context.Context, idLesson string, page
 	return unit, detail, err
 }
 
-func (u *unitUseCase) FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error) {
+func (u *unitUseCase) FetchOneByID(ctx context.Context, id string) (unit_domain.UnitResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
+	data, err := u.unitRepository.FetchOneByID(ctx, id)
 
-	data, err := u.unitRepository.FindLessonIDByLessonName(ctx, lessonName)
 	if err != nil {
-		return primitive.NilObjectID, err
+		return unit_domain.UnitResponse{}, err
 	}
 
-	return data, err
+	return data, nil
 }
 
 func (u *unitUseCase) CreateOne(ctx context.Context, unit *unit_domain.Unit) error {
@@ -101,18 +100,6 @@ func (u *unitUseCase) UpdateOne(ctx context.Context, unit *unit_domain.Unit) (*m
 		return nil, err
 	}
 	return data, nil
-}
-
-func (u *unitUseCase) UpdateComplete(ctx context.Context, update *unit_domain.Unit) error {
-	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
-	defer cancel()
-
-	err := u.unitRepository.UpdateComplete(ctx, update)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (u *unitUseCase) DeleteOne(ctx context.Context, unitID string) error {

@@ -2,7 +2,7 @@ package exam_result_controller
 
 import (
 	exam_result_domain "clean-architecture/domain/exam_result"
-	user_attempt_domain "clean-architecture/domain/user_attempt"
+	user_attempt_domain "clean-architecture/domain/user_process/exam_management"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -70,7 +70,7 @@ func (e *ExamResultController) CreateOneExamResult(ctx *gin.Context) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		userAttempt := user_attempt_domain.UserProcess{
+		userAttempt := user_attempt_domain.ExamManagement{
 			UserID:        user.ID,
 			ExamID:        idExam,
 			Score:         float32(inputResult.Score / 2),
@@ -80,7 +80,7 @@ func (e *ExamResultController) CreateOneExamResult(ctx *gin.Context) {
 		}
 
 		mutex.Lock()
-		err = e.UserAttemptUseCase.UpdateAttemptByUserID(ctx, userAttempt)
+		err = e.UserAttemptUseCase.UpdateExamManagementByUserID(ctx, userAttempt)
 		mutex.Unlock()
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{

@@ -1,7 +1,7 @@
 package user_attempt_repository
 
 import (
-	"clean-architecture/domain/user_attempt"
+	"clean-architecture/domain/user_process/exam_management"
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,7 +17,17 @@ type userAttemptRepository struct {
 	collectionUserAttempt string
 }
 
-func (u *userAttemptRepository) FetchOneByUnitIDAndUserID(ctx context.Context, userID string, unit string) (user_attempt_domain.UserProcess, error) {
+func NewUserAttemptRepository(db *mongo.Database, collectionUserAttempt string, collectionExam string, collectionQuiz string, collectionExercise string) exam_management.IUserProcessRepository {
+	return &userAttemptRepository{
+		database:              db,
+		collectionUserAttempt: collectionUserAttempt,
+		collectionExam:        collectionExam,
+		collectionExercise:    collectionExercise,
+		collectionQuiz:        collectionQuiz,
+	}
+}
+
+func (u *userAttemptRepository) FetchOneByUnitIDAndUserID(ctx context.Context, userID string, unit string) (exam_management.ExamManagement, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -43,7 +53,7 @@ func (u *userAttemptRepository) FetchOneByUnitIDAndUserID(ctx context.Context, u
 //
 //}
 
-func (u *userAttemptRepository) UpdateAttemptByExamID(ctx context.Context, userID user_attempt_domain.UserProcess) error {
+func (u *userAttemptRepository) UpdateExamManagementByExamID(ctx context.Context, userID exam_management.ExamManagement) error {
 	collectionUserAttempt := u.database.Collection(u.collectionUserAttempt)
 
 	filter := bson.D{{Key: "user_id", Value: userID.UserID}}
@@ -59,7 +69,7 @@ func (u *userAttemptRepository) UpdateAttemptByExamID(ctx context.Context, userI
 	return err
 }
 
-func (u *userAttemptRepository) UpdateAttemptByQuizID(ctx context.Context, userID user_attempt_domain.UserProcess) error {
+func (u *userAttemptRepository) UpdateExamManagementByQuizID(ctx context.Context, userID exam_management.ExamManagement) error {
 	collectionUserAttempt := u.database.Collection(u.collectionUserAttempt)
 
 	filter := bson.D{{Key: "user_id", Value: userID.UserID}}
@@ -75,40 +85,29 @@ func (u *userAttemptRepository) UpdateAttemptByQuizID(ctx context.Context, userI
 	return err
 }
 
-func NewUserAttemptRepository(db *mongo.Database, collectionUserAttempt string, collectionExam string, collectionQuiz string, collectionExercise string) user_attempt_domain.IUserProcessRepository {
-	return &userAttemptRepository{
-		database:              db,
-		collectionUserAttempt: collectionUserAttempt,
-		collectionExam:        collectionExam,
-		collectionExercise:    collectionExercise,
-		collectionQuiz:        collectionQuiz,
-	}
-}
-
-func (u *userAttemptRepository) FetchManyByUserID(ctx context.Context, userID string) (user_attempt_domain.Response, error) {
+func (u *userAttemptRepository) FetchManyByUserID(ctx context.Context, userID string) (exam_management.Response, error) {
 	collectionUserAttempt := u.database.Collection(u.collectionUserAttempt)
 
 	idUser, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
-		return user_attempt_domain.Response{}, err
+		return exam_management.Response{}, err
 	}
 
 	filter := bson.M{"user_id": idUser}
 
-	var userAttempt user_attempt_domain.UserProcess
-	err = collectionUserAttempt.FindOne(ctx, filter).Decode(userAttempt)
+	var examManagement exam_management.ExamManagement
+	err = collectionUserAttempt.FindOne(ctx, filter).Decode(examManagement)
 	if err != nil {
-		return user_attempt_domain.Response{}, err
+		return exam_management.Response{}, err
 	}
 
-	userAttemptRes := user_attempt_domain.Response{
-		UserProcess: userAttempt,
+	userAttemptRes := exam_management.Response{
+		ExamManagement: examManagement,
 	}
 	return userAttemptRes, nil
-
 }
 
-func (u *userAttemptRepository) CreateAttemptByExerciseID(ctx context.Context, userProcess user_attempt_domain.UserProcess) error {
+func (u *userAttemptRepository) CreateExamManagementByExerciseID(ctx context.Context, userID exam_management.ExamManagement) error {
 	collectionUserAttempt := u.database.Collection(u.collectionUserAttempt)
 	collectionExam := u.database.Collection(u.collectionExam)
 	collectionQuiz := u.database.Collection(u.collectionQuiz)
@@ -131,34 +130,34 @@ func (u *userAttemptRepository) CreateAttemptByExerciseID(ctx context.Context, u
 	}
 
 	// Kiểm tra sự tồn tại của Exam
-	if err := checkExistence(collectionExam, userProcess.ExamID, "exam"); err != nil {
+	if err := checkExistence(collectionExam, userID.ExamID, "exam"); err != nil {
 		return err
 	}
 
 	// Kiểm tra sự tồn tại của Quiz
-	if err := checkExistence(collectionQuiz, userProcess.QuizID, "quiz"); err != nil {
+	if err := checkExistence(collectionQuiz, userID.QuizID, "quiz"); err != nil {
 		return err
 	}
 
 	// Kiểm tra sự tồn tại của Exercise
-	if err := checkExistence(collectionExercise, userProcess.ExerciseID, "exercise"); err != nil {
+	if err := checkExistence(collectionExercise, userID.ExerciseID, "exercise"); err != nil {
 		return err
 	}
 
 	// Chèn userProcess vào collectionUserAttempt
-	_, err := collectionUserAttempt.InsertOne(ctx, userProcess)
+	_, err := collectionUserAttempt.InsertOne(ctx, userID)
 	return err
 }
 
-func (u *userAttemptRepository) UpdateAttemptByUserID(ctx context.Context, user user_attempt_domain.UserProcess) error {
+func (u *userAttemptRepository) UpdateExamManagementByUserID(ctx context.Context, userID exam_management.ExamManagement) error {
 	collectionUserAttempt := u.database.Collection(u.collectionUserAttempt)
 
-	filter := bson.D{{Key: "user_id", Value: user.UserID}}
+	filter := bson.D{{Key: "user_id", Value: userID.UserID}}
 	update := bson.D{{Key: "$set", Value: bson.M{
-		"score":          user.Score,
-		"process_status": user.ProcessStatus,
-		"completed_date": user.CompletedDate,
-		"updated_at":     user.UpdatedAt,
+		"score":          userID.Score,
+		"process_status": userID.ProcessStatus,
+		"completed_date": userID.CompletedDate,
+		"updated_at":     userID.UpdatedAt,
 	}}}
 
 	_, err := collectionUserAttempt.UpdateOne(ctx, filter, &update)

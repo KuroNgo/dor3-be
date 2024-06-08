@@ -1,4 +1,4 @@
-package user_attempt_domain
+package exam_management
 
 import (
 	"context"
@@ -7,15 +7,15 @@ import (
 )
 
 const (
-	CollectionUserAttempt = "user_attempt"
+	CollectionUserExamManagement = "user_process"
 )
 
-type UserProcess struct {
+type ExamManagement struct {
 	ID         primitive.ObjectID `bson:"_id" json:"_id"`
 	UserID     primitive.ObjectID `bson:"user_id" json:"user_id"`
-	ExamID     primitive.ObjectID `bson:"exam_id" json:"exam_id"`
-	QuizID     primitive.ObjectID `bson:"quiz_id" json:"quiz_id"`
 	ExerciseID primitive.ObjectID `bson:"exercise_id" json:"exercise_id"`
+	QuizID     primitive.ObjectID `bson:"quiz_id" json:"quiz_id"`
+	ExamID     primitive.ObjectID `bson:"exam_id" json:"exam_id"`
 
 	Score         float32   `bson:"score" json:"score"`
 	ProcessStatus int       `bson:"process_status" json:"process_status"`
@@ -25,8 +25,8 @@ type UserProcess struct {
 }
 
 type Response struct {
-	Statistics  Statistics  `json:"statistics"`
-	UserProcess UserProcess `bson:"user_process" json:"user_process"`
+	Statistics     Statistics     `json:"statistics"`
+	ExamManagement ExamManagement `bson:"exam_management" json:"exam_management"`
 }
 
 type Statistics struct {
@@ -36,10 +36,10 @@ type Statistics struct {
 
 type IUserProcessRepository interface {
 	FetchManyByUserID(ctx context.Context, userID string) (Response, error)
-	FetchOneByUnitIDAndUserID(ctx context.Context, userID string, unit string) (UserProcess, error)
-	CreateAttemptByExerciseID(ctx context.Context, userID UserProcess) error
-	UpdateAttemptByUserID(ctx context.Context, userID UserProcess) error
-	UpdateAttemptByExamID(ctx context.Context, userID UserProcess) error
-	UpdateAttemptByQuizID(ctx context.Context, userID UserProcess) error
+	FetchOneByUnitIDAndUserID(ctx context.Context, userID string, unit string) (ExamManagement, error)
+	CreateExamManagementByExerciseID(ctx context.Context, userID ExamManagement) error
+	UpdateExamManagementByUserID(ctx context.Context, userID ExamManagement) error
+	UpdateExamManagementByExamID(ctx context.Context, userID ExamManagement) error
+	UpdateExamManagementByQuizID(ctx context.Context, userID ExamManagement) error
 	DeleteAllByUserID(ctx context.Context, userID string) error
 }

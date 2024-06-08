@@ -53,11 +53,11 @@ func (i *imageUseCase) FetchMany(ctx context.Context, page string) (image_domain
 	return quiz, err
 }
 
-func (i *imageUseCase) UpdateOne(ctx context.Context, imageID string, image *image_domain.Image) error {
+func (i *imageUseCase) UpdateOne(ctx context.Context, image *image_domain.Image) error {
 	ctx, cancel := context.WithTimeout(ctx, i.contextTimeout)
 	defer cancel()
 
-	err := i.imageRepository.UpdateOne(ctx, imageID, image)
+	err := i.imageRepository.UpdateOne(ctx, image)
 	if err != nil {
 		return err
 	}

@@ -298,75 +298,79 @@ func (f *feedbackRepository) DeleteOneByAdmin(ctx context.Context, feedbackID st
 }
 
 func (f *feedbackRepository) Statistics(ctx context.Context) (feedback_domain.Statistics, error) {
+	// Lấy collection từ database
 	collection := f.database.Collection(f.collectionFeedback)
 
+	// Đếm tổng số tài liệu trong collection
 	count, err := collection.CountDocuments(ctx, bson.D{})
 	if err != nil {
 		return feedback_domain.Statistics{}, err
 	}
 
+	// Tìm tất cả tài liệu trong collection
 	cursor, err := collection.Find(ctx, bson.D{})
 	if err != nil {
 		return feedback_domain.Statistics{}, err
 	}
+	// Đảm bảo con trỏ được đóng sau khi sử dụng
+	defer cursor.Close(ctx)
 
-	var feedbacks []feedback_domain.Feedback
-	var feedback feedback_domain.Feedback
-
+	// Khởi tạo các biến đếm
 	var (
 		countIsLove       int32 = 0
 		countIsSeen       int32 = 0
 		countIsNotSeen    int32 = 0
-		countSad          int32 = 0 //sad, happy, disappointed, good
+		countSad          int32 = 0
 		countHappy        int32 = 0
 		countDisappointed int32 = 0
 		countGood         int32 = 0
 	)
 
+	// Lặp qua các tài liệu và cập nhật các biến đếm
 	for cursor.Next(ctx) {
+		var feedback feedback_domain.Feedback
 		if err = cursor.Decode(&feedback); err != nil {
 			return feedback_domain.Statistics{}, err
 		}
 
+		// Kiểm tra và cập nhật các biến đếm tương ứng
 		if feedback.IsLoveWeb == 1 {
 			countIsLove++
 		}
 		if feedback.IsSeen == 1 {
 			countIsSeen++
-		}
-		if feedback.IsSeen == 0 {
+		} else {
 			countIsNotSeen++
 		}
-		if feedback.Feeling == "sad" {
+
+		// Sử dụng switch-case để kiểm tra cảm xúc và cập nhật biến đếm tương ứng
+		switch feedback.Feeling {
+		case "sad":
 			countSad++
-		}
-		if feedback.Feeling == "happy" {
+		case "happy":
 			countHappy++
-		}
-		if feedback.Feeling == "disappointed" {
+		case "disappointed":
 			countDisappointed++
-		}
-		if feedback.Feeling == "good" {
+		case "good":
 			countGood++
 		}
-
-		feedbacks = append(feedbacks, feedback)
 	}
 
+	// Kiểm tra xem có lỗi nào xảy ra trong quá trình lặp qua con trỏ không
+	if err := cursor.Err(); err != nil {
+		return feedback_domain.Statistics{}, err
+	}
+
+	// Tính toán phần trăm các cảm xúc
 	var percentSad, percentHappy, percentDisappointed, percentGood float32
-	if countSad != 0 {
-		percentSad = float32((float64(countSad) / float64(count)) * 100)
-	}
-	if countHappy != 0 {
-		percentHappy = float32((float64(countHappy) / float64(count)) * 100)
-	}
-	if countDisappointed != 0 {
-		percentDisappointed = float32((float64(countDisappointed) / float64(count)) * 100)
-	}
-	if countGood != 0 {
-		percentGood = float32((float64(countGood) / float64(count)) * 100)
+	if count > 0 {
+		percentSad = float32(countSad) / float32(count) * 100
+		percentHappy = float32(countHappy) / float32(count) * 100
+		percentDisappointed = float32(countDisappointed) / float32(count) * 100
+		percentGood = float32(countGood) / float32(count) * 100
 	}
 
+	// Tạo đối tượng feedbackRes để trả về
 	feedbackRes := feedback_domain.Statistics{
 		Total:             count,
 		TotalIsLoveWeb:    countIsLove,
@@ -379,5 +383,6 @@ func (f *feedbackRepository) Statistics(ctx context.Context) (feedback_domain.St
 		CountGood:         percentGood,
 	}
 
+	// Trả về kết quả
 	return feedbackRes, nil
 }

@@ -1,7 +1,7 @@
 package exam_result_controller
 
 import (
-	user_attempt_domain "clean-architecture/domain/user_attempt"
+	user_attempt_domain "clean-architecture/domain/user_process/exam_management"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -63,7 +63,7 @@ func (e *ExamResultController) DeleteOneExamResult(ctx *gin.Context) {
 			return
 		}
 
-		userAttempt := user_attempt_domain.UserProcess{
+		userAttempt := user_attempt_domain.ExamManagement{
 			UserID:        res.UserID,
 			ExamID:        res.ExamID,
 			Score:         0,
@@ -71,7 +71,7 @@ func (e *ExamResultController) DeleteOneExamResult(ctx *gin.Context) {
 			CompletedDate: time.Now(),
 			UpdatedAt:     time.Now(),
 		}
-		err = e.UserAttemptUseCase.UpdateAttemptByUserID(ctx, userAttempt)
+		err = e.UserAttemptUseCase.UpdateExamManagementByUserID(ctx, userAttempt)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",

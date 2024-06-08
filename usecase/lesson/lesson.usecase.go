@@ -44,10 +44,10 @@ func (l *lessonUseCase) FetchManyNotPagination(ctx context.Context) ([]lesson_do
 	return data, detail, nil
 }
 
-func (l *lessonUseCase) FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error) {
+func (l *lessonUseCase) FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error) {
 	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
 	defer cancel()
-	data, err := l.lessonRepository.FindCourseIDByCourseName(ctx, courseName)
+	data, err := l.lessonRepository.FindLessonIDByLessonName(ctx, lessonName)
 
 	if err != nil {
 		return primitive.NilObjectID, err
@@ -78,18 +78,6 @@ func (l *lessonUseCase) FetchByIdCourse(ctx context.Context, idCourse string, pa
 	}
 
 	return lesson, detail, err
-}
-
-func (l *lessonUseCase) UpdateComplete(ctx context.Context, lessonID string, lesson lesson_domain.Lesson) error {
-	ctx, cancel := context.WithTimeout(ctx, l.contextTimeout)
-	defer cancel()
-
-	err := l.lessonRepository.UpdateComplete(ctx, lessonID, lesson)
-	if err != nil {
-		return err
-	}
-
-	return err
 }
 
 func (l *lessonUseCase) UpdateImage(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {

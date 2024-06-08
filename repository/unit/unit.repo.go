@@ -2,6 +2,8 @@ package unit_repo
 
 import (
 	unit_domain "clean-architecture/domain/unit"
+	"clean-architecture/internal"
+	"clean-architecture/internal/cache"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -10,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type unitRepository struct {
@@ -17,29 +20,96 @@ type unitRepository struct {
 	collectionUnit       string
 	collectionLesson     string
 	collectionVocabulary string
-	errCh                chan error
+	collectionExam       string
+	collectionExercise   string
+	collectionQuiz       string
 }
 
-func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLesson string, collectionVocabulary string) unit_domain.IUnitRepository {
+// NewUnitRepository hàm khởi tạo (constructor) để khởi tạo instance của struct
+func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLesson string, collectionVocabulary string, collectionExam string, collectionExercise string, collectionQuiz string) unit_domain.IUnitRepository {
 	return &unitRepository{
 		database:             db,
 		collectionUnit:       collectionUnit,
 		collectionLesson:     collectionLesson,
 		collectionVocabulary: collectionVocabulary,
-		errCh:                make(chan error),
+		collectionExam:       collectionExam,
+		collectionExercise:   collectionExercise,
+		collectionQuiz:       collectionQuiz,
 	}
 }
 
 var (
-	units []unit_domain.UnitResponse
-	unit  unit_domain.UnitResponse
-	wg    sync.WaitGroup
+	unitsCache  = cache.NewTTL[string, []unit_domain.UnitResponse]()
+	unitCache   = cache.NewTTL[string, unit_domain.UnitResponse]()
+	detailCache = cache.NewTTL[string, unit_domain.DetailResponse]()
+
+	wg           sync.WaitGroup
+	mu           sync.Mutex
+	isProcessing bool
 )
 
+// FetchMany retrieves multiple unit responses and a detail response for a given page number.
+// It first attempts to retrieve data from the cache. If the data is not found in the cache,
+// it queries the database to fetch the data. The results are then cached for future use.
+//
+// Parameters:
+// - ctx: context.Context: The context to control cancellations and timeouts.
+// - page: string: The page number as a string, used for pagination.
+//
+// Returns:
+// - []unit_domain.UnitResponse: A slice of UnitResponse containing the fetched unit data.
+// - unit_domain.DetailResponse: A DetailResponse containing pagination details.
+// - error: An error object if an error occurred during the process, or nil if successful.
 func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
+	// Channel to log errors
+	errCh := make(chan error, 1)
+	defer close(errCh)
+	// Channel to save units
+	unitsCh := make(chan []unit_domain.UnitResponse)
+	// Channel to save detail
+	detailCh := make(chan unit_domain.DetailResponse)
+
+	// Use WaitGroup to wait for all goroutines to complete
+	wg.Add(2)
+
+	// Goroutine to fetch units from cache
+	go func() {
+		defer wg.Done()
+		data, found := unitsCache.Get(page)
+		if found {
+			unitsCh <- data
+			return
+		}
+	}()
+
+	// Goroutine to fetch detail from cache
+	go func() {
+		defer wg.Done()
+		data, found := detailCache.Get("detail")
+		if found {
+			detailCh <- data
+			return
+		}
+	}()
+
+	// Goroutine to close channels once WaitGroup is done
+	go func() {
+		defer close(unitsCh)
+		defer close(detailCh)
+		wg.Wait()
+	}()
+
+	// Read from channels
+	unitsData := <-unitsCh
+	detailData := <-detailCh
+	if !internal.IsZeroValue(unitsData) && !internal.IsZeroValue(detailData) {
+		return unitsData, detailData, nil
+	}
+
+	// MongoDB collections
 	collectionUnit := u.database.Collection(u.collectionUnit)
 
-	// pagination
+	// Pagination
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
 		return nil, unit_domain.DetailResponse{}, errors.New("invalid page number")
@@ -48,85 +118,129 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
 
-	// count unit
-	calCh := make(chan int64)
+	// Count total units
 	count, err := collectionUnit.CountDocuments(ctx, bson.D{})
 	if err != nil {
 		return nil, unit_domain.DetailResponse{}, err
 	}
 
-	go func() {
-		defer close(calCh)
-		cal1 := count / int64(perPage)
-		cal2 := count % int64(perPage)
-		if cal2 != 0 {
-			calCh <- cal1
-		}
-	}()
+	// Calculate total pages
+	totalPages := (count + int64(perPage) - 1) / int64(perPage)
 
+	// Find units with pagination
 	cursor, err := collectionUnit.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
 		return nil, unit_domain.DetailResponse{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+		err = cursor.Close(ctx)
 		if err != nil {
+			errCh <- err
 			return
 		}
 	}(cursor, ctx)
+
+	var units []unit_domain.UnitResponse
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for cursor.Next(ctx) {
+			var unit unit_domain.UnitResponse
 			if err = cursor.Decode(&unit); err != nil {
+				errCh <- err
 				return
 			}
 
+			// Fetch related data for each unit
 			countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
 			if err != nil {
+				errCh <- err
 				return
 			}
 
+			// Set fetched data to unit
 			unit.CountVocabulary = countVocabulary
 			units = append(units, unit)
 		}
-
 	}()
 	wg.Wait()
 
-	cal := <-calCh
+	// Prepare detail response
 	detail := unit_domain.DetailResponse{
-		Page:        cal,
+		Page:        totalPages,
 		CurrentPage: pageNumber,
 	}
 
-	return units, detail, nil
+	// Cache the results
+	unitsCache.Set(page, units, 5*time.Minute)
+	detailCache.Set("detail", detail, 5*time.Minute)
+
+	// Return results or error
+	select {
+	case err = <-errCh:
+		return nil, unit_domain.DetailResponse{}, err
+	default:
+		return units, detail, nil
+	}
 }
 
 func (u *unitRepository) FetchManyNotPagination(ctx context.Context) ([]unit_domain.UnitResponse, error) {
+	errCh := make(chan error)
+	defer close(errCh)
+	// Channel to save units
+	unitsCh := make(chan []unit_domain.UnitResponse)
+	wg.Add(1)
+	// Goroutine to fetch units from cache
+	go func() {
+		defer wg.Done()
+		data, found := unitsCache.Get("units")
+		if found {
+			unitsCh <- data
+			return
+		}
+	}()
+
+	// Goroutine to close channels once WaitGroup is done
+	go func() {
+		defer close(unitsCh)
+		wg.Wait()
+	}()
+
+	// Read from channels
+	unitsData := <-unitsCh
+	if !internal.IsZeroValue(unitsData) {
+		return unitsData, nil
+	}
+
 	collectionUnit := u.database.Collection(u.collectionUnit)
+
 	cursor, err := collectionUnit.Find(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+		err = cursor.Close(ctx)
 		if err != nil {
+			errCh <- err
 			return
 		}
 	}(cursor, ctx)
 
+	var units []unit_domain.UnitResponse
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for cursor.Next(ctx) {
+			var unit unit_domain.UnitResponse
 			if err = cursor.Decode(&unit); err != nil {
+				errCh <- err
 				return
 			}
 
 			countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
 			if err != nil {
+				errCh <- err
 				return
 			}
 
@@ -136,23 +250,17 @@ func (u *unitRepository) FetchManyNotPagination(ctx context.Context) ([]unit_dom
 
 	}()
 	wg.Wait()
-	return units, nil
-}
 
-func (u *unitRepository) FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error) {
-	collectionLesson := u.database.Collection(u.collectionLesson)
+	// Cache the results
+	unitsCache.Set("units", units, 5*time.Minute)
 
-	filter := bson.M{"name": lessonName}
-	var data struct {
-		Id primitive.ObjectID `bson:"_id"`
+	// Return results or error
+	select {
+	case err = <-errCh:
+		return nil, err
+	default:
+		return units, nil
 	}
-
-	err := collectionLesson.FindOne(ctx, filter).Decode(&data)
-	if err != nil {
-		return primitive.NilObjectID, err
-	}
-
-	return data.Id, nil
 }
 
 func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
@@ -166,23 +274,13 @@ func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, p
 	skip := (pageNumber - 1) * perPage
 	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip)).SetSort(bson.D{{"level", 1}})
 
-	calCh := make(chan int64)
-	countUnitCh := make(chan int64)
+	count, err := collectionUnit.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return nil, unit_domain.DetailResponse{}, err
+	}
 
-	go func() {
-		defer close(calCh)
-		defer close(countUnitCh)
-		count, err := collectionUnit.CountDocuments(ctx, bson.D{})
-		if err != nil {
-			return
-		}
-
-		cal1 := count / int64(perPage)
-		cal2 := count % int64(perPage)
-		if cal2 != 0 {
-			calCh <- cal1
-		}
-	}()
+	// Calculate total pages
+	totalPages := (count + int64(perPage) - 1) / int64(perPage)
 
 	idLesson2, err := primitive.ObjectIDFromHex(idLesson)
 	if err != nil {
@@ -208,22 +306,62 @@ func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, p
 			return nil, unit_domain.DetailResponse{}, err
 		}
 
+		countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
+		if err != nil {
+			return nil, unit_domain.DetailResponse{}, err
+		}
+
 		// Gắn LessonID vào đơn vị
 		unit.LessonID = idLesson2
+		unit.CountVocabulary = countVocabulary
 
 		units = append(units, unit)
 	}
 
-	cal := <-calCh
-
 	response := unit_domain.DetailResponse{
-		Page:        cal,
+		Page:        totalPages,
 		CurrentPage: pageNumber,
 	}
 	return units, response, nil
 }
 
+func (u *unitRepository) FetchOneByID(ctx context.Context, id string) (unit_domain.UnitResponse, error) {
+	collectionUnit := u.database.Collection(u.collectionUnit)
+
+	idUnit, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return unit_domain.UnitResponse{}, err
+	}
+
+	filter := bson.M{"_id": idUnit}
+	var unit unit_domain.UnitResponse
+	err = collectionUnit.FindOne(ctx, filter).Decode(&unit)
+	if err != nil {
+		return unit_domain.UnitResponse{}, err
+	}
+
+	countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
+	if err != nil {
+		return unit_domain.UnitResponse{}, err
+	}
+
+	unit.CountVocabulary = countVocabulary
+	return unit, nil
+}
+
 func (u *unitRepository) CreateOneByNameLesson(ctx context.Context, unit *unit_domain.Unit) error {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collectionUnit := u.database.Collection(u.collectionUnit)
 	collectionLesson := u.database.Collection(u.collectionLesson)
 
@@ -254,6 +392,18 @@ func (u *unitRepository) CreateOneByNameLesson(ctx context.Context, unit *unit_d
 }
 
 func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) error {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collectionUnit := u.database.Collection(u.collectionUnit)
 	collectionLesson := u.database.Collection(u.collectionLesson)
 	collectionVocabulary := u.database.Collection(u.collectionVocabulary)
@@ -288,40 +438,28 @@ func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) 
 	}
 	if countVocabulary == 0 || countVocabulary > 5 {
 		_, err = collectionUnit.InsertOne(ctx, unit)
+		return nil
 	}
 
-	return nil
+	return errors.New("the unit cannot be created because the vocabulary in the latest unit is not complete")
 }
 
 func (u *unitRepository) UpdateComplete(ctx context.Context, updateData *unit_domain.Unit) error {
+	// Implement a channel to log errors
+	errCh := make(chan error)
 	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		collection := u.database.Collection(u.collectionUnit)
-
-		filter := bson.D{{Key: "_id", Value: updateData.ID}}
-		update := bson.D{{Key: "$set", Value: bson.D{
-			{Key: "is_complete", Value: updateData.IsComplete},
-			{Key: "learner", Value: updateData.Learner},
-		}}}
-		_, err := collection.UpdateOne(ctx, filter, &update)
-		if err != nil {
-			u.errCh <- err
-			return
-		}
-	}()
 
 	go func() {
 		defer wg.Done()
 		isLessonComplete, err := u.CheckLessonComplete(ctx, updateData.LessonID)
 		if err != nil {
-			u.errCh <- err
+			errCh <- err
 			return
 		}
 
 		lessonCollection := u.database.Collection(u.collectionLesson)
 		if err != nil {
-			u.errCh <- err
+			errCh <- err
 			return
 		}
 
@@ -329,16 +467,16 @@ func (u *unitRepository) UpdateComplete(ctx context.Context, updateData *unit_do
 		lessonFilter := bson.D{{Key: "_id", Value: updateData.LessonID}}
 		_, err = lessonCollection.UpdateOne(ctx, lessonFilter, &lessonUpdate)
 		if err != nil {
-			u.errCh <- err
+			errCh <- err
 			return
 		}
 	}()
 
 	wg.Wait()
-	close(u.errCh)
+	close(errCh)
 
 	select {
-	case err := <-u.errCh:
+	case err := <-errCh:
 		return err
 	default:
 		return nil
@@ -367,10 +505,6 @@ func (u *unitRepository) CheckLessonComplete(ctx context.Context, lessonID primi
 		var unit unit_domain.Unit
 		if err := cursor.Decode(&unit); err != nil {
 			return false, err
-		}
-
-		if unit.IsComplete != 1 {
-			return false, nil
 		}
 	}
 
@@ -425,7 +559,7 @@ func (u *unitRepository) DeleteOne(ctx context.Context, unitID string) error {
 	return err
 }
 
-// countLessonsByCourseID counts the number of lessons associated with a course.
+// countVocabularyByUnitID counts the number of lessons associated with a course.
 func (u *unitRepository) countVocabularyByUnitID(ctx context.Context, unitID primitive.ObjectID) (int32, error) {
 	collectionVocabulary := u.database.Collection(u.collectionVocabulary)
 

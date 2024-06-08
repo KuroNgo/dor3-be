@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -143,7 +144,8 @@ func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
 	err = c.CourseUseCase.CreateOne(ctx, &course)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error creating course: %v\n": err,
+			"status":  "error",
+			"message": err.Error(),
 		})
 		_ = os.Remove(file.Filename)
 		return
@@ -218,21 +220,20 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 	}
 
 	for _, data := range resLesson {
-		courseID, err := c.LessonUseCase.FindCourseIDByCourseName(ctx, data.CourseID)
+		courseID, err := c.CourseUseCase.FindCourseIDByCourseName(ctx, data.CourseID)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		lesson := lesson_domain.Lesson{
-			ID:          primitive.NewObjectID(),
-			CourseID:    courseID,
-			Name:        data.Name,
-			Level:       data.Level,
-			IsCompleted: 0,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-			WhoUpdates:  admin.FullName,
+			ID:         primitive.NewObjectID(),
+			CourseID:   courseID,
+			Name:       data.Name,
+			Level:      data.Level,
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
+			WhoUpdates: admin.FullName,
 		}
 
 		_ = c.LessonUseCase.CreateOneByNameCourse(ctx, &lesson)
@@ -245,25 +246,24 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 	}
 
 	for _, unit := range resUnit {
-		lessonID, err := c.UnitUseCase.FindLessonIDByLessonName(ctx, unit.LessonID)
+		lessonID, err := c.LessonUseCase.FindLessonIDByLessonName(ctx, unit.LessonID)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		unit := unit_domain.Unit{
-			ID:         primitive.NewObjectID(),
-			LessonID:   lessonID,
-			Name:       unit.Name,
-			Level:      unit.Level,
-			ImageURL:   "",
-			IsComplete: 0,
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
-			WhoCreate:  admin.FullName,
+		un := unit_domain.Unit{
+			ID:        primitive.NewObjectID(),
+			LessonID:  lessonID,
+			Name:      unit.Name,
+			Level:     unit.Level,
+			ImageURL:  "",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			WhoCreate: admin.FullName,
 		}
 
-		_ = c.UnitUseCase.CreateOneByNameLesson(ctx, &unit)
+		_ = c.UnitUseCase.CreateOneByNameLesson(ctx, &un)
 	}
 
 	resVocabulary, err := excel.ReadFileForVocabulary(file.Filename)
@@ -294,7 +294,6 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 			ExplainVie:    vocabulary.ExplainVie,
 			FieldOfIT:     vocabulary.FieldOfIT,
 			LinkURL:       "",
-			IsFavourite:   0,
 			CreatedAt:     time.Now(),
 			UpdatedAt:     time.Now(),
 			WhoUpdates:    admin.FullName,
@@ -302,74 +301,99 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 		vocabularies = append(vocabularies, vocab)
 	}
 
-	for _, vocabulary := range vocabularies {
-		if err := c.VocabularyUseCase.CreateOneByNameUnit(ctx, &vocabulary); err != nil {
-			continue
+	var wg sync.WaitGroup
+	wg.Add(1)
+	vocabulariesCount := 0
+	go func() {
+		defer wg.Done()
+		for _, vocabulary := range vocabularies {
+			if err = c.VocabularyUseCase.CreateOneByNameUnit(ctx, &vocabulary); err != nil {
+				continue
+			}
+			vocabulariesCount++
 		}
-	}
+	}()
+	wg.Wait()
 
-	data, err := c.VocabularyUseCase.GetLatestVocabulary(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	for _, audio := range data {
-		if err := google.CreateTextToSpeech(audio); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-	}
-
-	dir := "audio"
-	files, err := google.ListFilesInDirectory(dir)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	for _, audioFileName := range files {
-		audio := strings.TrimSuffix(audioFileName, ".mp3")
-
-		f, err := os.Open(filepath.Join(dir, audioFileName))
+	if vocabulariesCount > 0 {
+		data, err := c.VocabularyUseCase.GetLatestVocabulary(ctx)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		defer f.Close()
 
-		if !file_internal.IsMP3(audioFileName) {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("%s is not an MP3 file", audioFileName)})
-			return
-		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for _, audio := range data {
+				if err = google.CreateTextToSpeech(audio); err != nil {
+					ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+			}
+		}()
+		wg.Wait()
 
-		dataRes, err := cloudinary.UploadAudioToCloudinary(f, audioFileName, c.Database.CloudinaryUploadFolderAudioVocabulary)
+		dir := "audio"
+		files, err := google.ListFilesInDirectory(dir)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error uploading file %s to Cloudinary: %s", audioFileName, err)})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		wordID, err := c.VocabularyUseCase.FindVocabularyIDByVocabularyName(ctx, audio)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error finding vocabulary ID for file %s: %s", audioFileName, err)})
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for _, audioFileName := range files {
+				audio := strings.TrimSuffix(audioFileName, ".mp3")
+
+				f, err := os.Open(filepath.Join(dir, audioFileName))
+				if err != nil {
+					ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+				defer f.Close()
+
+				if !file_internal.IsMP3(audioFileName) {
+					ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("%s is not an MP3 file", audioFileName)})
+					return
+				}
+
+				dataRes, err := cloudinary.UploadAudioToCloudinary(f, audioFileName, c.Database.CloudinaryUploadFolderAudioVocabulary)
+				if err != nil {
+					ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error uploading file %s to Cloudinary: %s", audioFileName, err)})
+					return
+				}
+
+				wordID, err := c.VocabularyUseCase.FindVocabularyIDByVocabularyName(ctx, audio)
+				if err != nil {
+					ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error finding vocabulary ID for file %s: %s", audioFileName, err)})
+					return
+				}
+
+				vocabularyRes := &vocabulary_domain.Vocabulary{
+					Id:      wordID,
+					LinkURL: dataRes.AudioURL,
+				}
+
+				if err := c.VocabularyUseCase.UpdateOneAudio(ctx, vocabularyRes); err != nil {
+					ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error updating vocabulary for file %s: %s", audioFileName, err)})
+					return
+				}
+			}
+		}()
+		wg.Wait()
+
+		if err = google.DeleteAllFilesInDirectory("audio"); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
 			return
 		}
 
-		vocabularyRes := &vocabulary_domain.Vocabulary{
-			Id:      wordID,
-			LinkURL: dataRes.AudioURL,
-		}
-
-		if err := c.VocabularyUseCase.UpdateOneAudio(ctx, vocabularyRes); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error updating vocabulary for file %s: %s", audioFileName, err)})
-			return
-		}
+		ctx.JSON(http.StatusOK, gin.H{"status": "success create vocabulary with file"})
 	}
 
-	if err := google.DeleteAllFilesInDirectory("audio"); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"status": "success create vocabulary with file"})
+	ctx.JSON(http.StatusInternalServerError, gin.H{
+		"status":  "error",
+		"message": "The vocabulary in the files already exists.",
+	})
 }

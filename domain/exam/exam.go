@@ -23,9 +23,6 @@ type Exam struct {
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
 	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
-	Learner    string    `bson:"learner" json:"learner"`
-
-	IsComplete int `bson:"is_complete" json:"is_complete"`
 }
 
 type DetailResponse struct {

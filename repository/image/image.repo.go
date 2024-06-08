@@ -164,11 +164,17 @@ func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_dom
 	return response, nil
 }
 
-func (i *imageRepository) UpdateOne(ctx context.Context, imageID string, updatedImage *image_domain.Image) error {
+func (i *imageRepository) UpdateOne(ctx context.Context, updatedImage *image_domain.Image) error {
 	collection := i.database.Collection(i.collection)
 
-	filter := bson.M{"_id": imageID}
-	update := bson.M{"$set": updatedImage}
+	idImage, _ := primitive.ObjectIDFromHex(updatedImage.Id.Hex())
+	filter := bson.M{"_id": idImage}
+	update := bson.M{"$set": bson.M{
+		"image_name": updatedImage.ImageName,
+		"image_url":  updatedImage.ImageUrl,
+		"asset_id":   updatedImage.AssetId,
+		"size":       updatedImage.Size,
+	}}
 
 	_, err := collection.UpdateOne(ctx, filter, update)
 	if err != nil {

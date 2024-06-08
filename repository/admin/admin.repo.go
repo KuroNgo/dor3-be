@@ -4,6 +4,7 @@ import (
 	admin_domain "clean-architecture/domain/admin"
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal"
+	"clean-architecture/internal/cache"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -29,7 +30,8 @@ func NewAdminRepository(db *mongo.Database, collectionAdmin string, collectionUs
 }
 
 var (
-	wg sync.WaitGroup
+	adminsCache = cache.NewTTL[string, admin_domain.Response]()
+	wg          sync.WaitGroup
 )
 
 func (a *adminRepository) GetByID(c context.Context, id string) (*admin_domain.Admin, error) {
@@ -46,6 +48,22 @@ func (a *adminRepository) GetByID(c context.Context, id string) (*admin_domain.A
 }
 
 func (a *adminRepository) FetchMany(c context.Context) (admin_domain.Response, error) {
+	errCh := make(chan error)
+	adminsCh := make(chan admin_domain.Response)
+	wg.Add(1)
+	go func() {
+		data, found := adminsCache.Get("admins")
+		if found {
+			adminsCh <- data
+		}
+	}()
+	wg.Wait()
+
+	adminData := <-adminsCh
+	if !internal.IsZeroValue(adminData) {
+		return adminData, nil
+	}
+
 	collection := a.database.Collection(a.collectionAdmin)
 
 	opts := options.Find().SetProjection(bson.D{{Key: "password", Value: 0}})
@@ -62,6 +80,7 @@ func (a *adminRepository) FetchMany(c context.Context) (admin_domain.Response, e
 		for cursor.Next(c) {
 			var admin admin_domain.Admin
 			if err = cursor.Decode(&admin); err != nil {
+				errCh <- err
 				return
 			}
 
@@ -88,7 +107,13 @@ func (a *adminRepository) FetchMany(c context.Context) (admin_domain.Response, e
 		Statistics: statistics,
 	}
 
-	return adminRes, err
+	adminsCache.Set("admins", adminRes, 5*time.Minute)
+	select {
+	case err = <-errCh:
+		return admin_domain.Response{}, err
+	default:
+		return adminRes, err
+	}
 }
 
 func (a *adminRepository) GetByEmail(c context.Context, username string) (*admin_domain.Admin, error) {
@@ -106,6 +131,7 @@ func (a *adminRepository) Login(c context.Context, request admin_domain.SignIn) 
 	if err = internal.VerifyPassword(admin.Password, request.Password); err != nil {
 		return &admin_domain.Admin{}, errors.New("email or password not found! ")
 	}
+
 	return admin, nil
 }
 
@@ -131,6 +157,14 @@ func (a *adminRepository) CreateOne(c context.Context, admin admin_domain.Admin)
 	}
 
 	_, err = collectionAdmin.InsertOne(c, admin)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		adminsCache.Clear()
+	}()
+	wg.Wait()
+
 	return err
 }
 
@@ -152,6 +186,14 @@ func (a *adminRepository) UpdateOne(ctx context.Context, admin *admin_domain.Adm
 	if err != nil {
 		return nil, err
 	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		adminsCache.Clear()
+	}()
+	wg.Wait()
+
 	return data, err
 }
 
@@ -197,6 +239,13 @@ func (a *adminRepository) DeleteOne(ctx context.Context, adminID string) error {
 		return errors.New(`the admin can not delete`)
 	}
 	_, err = collection.DeleteOne(ctx, filter)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		adminsCache.Clear()
+	}()
+	wg.Wait()
 	return err
 }
 

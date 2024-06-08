@@ -3,7 +3,7 @@ package exam_answer_controller
 import (
 	exam_answer_domain "clean-architecture/domain/exam_answer"
 	exam_result_domain "clean-architecture/domain/exam_result"
-	user_attempt_domain "clean-architecture/domain/user_attempt"
+	user_attempt_domain "clean-architecture/domain/user_process/exam_management"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -90,7 +90,7 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 			return
 		}
 
-		userProcess := user_attempt_domain.UserProcess{
+		userProcess := user_attempt_domain.ExamManagement{
 			ID:            primitive.NewObjectID(),
 			UserID:        user.ID,
 			ExamID:        examID,
@@ -103,7 +103,7 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 			UpdatedAt:     time.Now(),
 		}
 
-		err = e.UserAttemptUseCase.UpdateAttemptByExamID(ctx, userProcess)
+		err = e.UserAttemptUseCase.UpdateExamManagementByExamID(ctx, userProcess)
 		if err != nil {
 			handleError(ctx, http.StatusInternalServerError, "Failed to create user process", err)
 			return

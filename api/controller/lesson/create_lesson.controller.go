@@ -314,7 +314,7 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 
 		for _, lesson := range result {
 			// Tìm ID của khóa học từ tên khóa học
-			courseID, err := l.LessonUseCase.FindCourseIDByCourseName(ctx, lesson.CourseID)
+			courseID, err := l.CourseUseCase.FindCourseIDByCourseName(ctx, lesson.CourseID)
 			if err != nil {
 				errCh <- err
 				return
@@ -322,14 +322,13 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 
 			// Tạo bài học
 			le := lesson_domain.Lesson{
-				ID:          primitive.NewObjectID(),
-				CourseID:    courseID,
-				Name:        lesson.Name,
-				Level:       lesson.Level,
-				IsCompleted: 0,
-				CreatedAt:   time.Now(),
-				UpdatedAt:   time.Now(),
-				WhoUpdates:  admin.FullName,
+				ID:         primitive.NewObjectID(),
+				CourseID:   courseID,
+				Name:       lesson.Name,
+				Level:      lesson.Level,
+				CreatedAt:  time.Now(),
+				UpdatedAt:  time.Now(),
+				WhoUpdates: admin.FullName,
 			}
 
 			// Tạo bài học trong cơ sở dữ liệu

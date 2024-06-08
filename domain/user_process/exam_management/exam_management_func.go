@@ -1,4 +1,4 @@
-package user_attempt_domain
+package exam_management
 
 import (
 	"context"
@@ -18,10 +18,10 @@ type Auto struct {
 
 type IUserProcessUseCase interface {
 	FetchManyByUserID(ctx context.Context, userID string) (Response, error)
-	FetchOneByUnitIDAndUserID(ctx context.Context, userID string, unit string) (UserProcess, error)
-	CreateAttemptByExerciseID(ctx context.Context, userID UserProcess) error
-	UpdateAttemptByUserID(ctx context.Context, userID UserProcess) error
-	UpdateAttemptByExamID(ctx context.Context, userID UserProcess) error
-	UpdateAttemptByQuizID(ctx context.Context, userID UserProcess) error
+	FetchOneByUnitIDAndUserID(ctx context.Context, userID string, unit string) (ExamManagement, error)
+	CreateExamManagementByExerciseID(ctx context.Context, userID ExamManagement) error
+	UpdateExamManagementByUserID(ctx context.Context, userID ExamManagement) error
+	UpdateExamManagementByExamID(ctx context.Context, userID ExamManagement) error
+	UpdateExamManagementByQuizID(ctx context.Context, userID ExamManagement) error
 	DeleteAllByUserID(ctx context.Context, userID string) error
 }

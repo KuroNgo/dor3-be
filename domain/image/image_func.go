@@ -17,6 +17,6 @@ type IImageUseCase interface {
 	FetchByCategory(ctx context.Context, category string, page string) (Response, error)
 
 	CreateOne(ctx context.Context, image *Image) error
-	UpdateOne(ctx context.Context, imageID string, image *Image) error
+	UpdateOne(ctx context.Context, image *Image) error
 	DeleteOne(ctx context.Context, imageID string) error
 }

@@ -4,7 +4,10 @@ import (
 	unit_controller "clean-architecture/api/controller/unit"
 	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
+	exam_domain "clean-architecture/domain/exam"
+	exercise_domain "clean-architecture/domain/exercise"
 	lesson_domain "clean-architecture/domain/lesson"
+	quiz_domain "clean-architecture/domain/quiz"
 	unit_domain "clean-architecture/domain/unit"
 	user_domain "clean-architecture/domain/user"
 	user_detail_domain "clean-architecture/domain/user_detail"
@@ -19,7 +22,8 @@ import (
 )
 
 func UnitRouter(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	un := unit_repo.NewUnitRepository(db, unit_domain.CollectionUnit, lesson_domain.CollectionLesson, vocabulary_domain.CollectionVocabulary)
+	un := unit_repo.NewUnitRepository(db, unit_domain.CollectionUnit, lesson_domain.CollectionLesson,
+		vocabulary_domain.CollectionVocabulary, exam_domain.CollectionExam, exercise_domain.CollectionExercise, quiz_domain.CollectionQuiz)
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 
 	unit := &unit_controller.UnitController{
@@ -29,8 +33,9 @@ func UnitRouter(env *bootstrap.Database, timeout time.Duration, db *mongo.Databa
 	}
 
 	router := group.Group("/unit")
+	router.Use(middleware.DeserializeUser())
 	router.GET("/fetch", unit.FetchMany)
+	router.GET("/fetch/_id", unit.FetchById)
 	router.GET("/fetch/not", unit.FetchManyNotPagination)
-	router.PATCH("/update/complete", middleware.DeserializeUser(), unit.UpdateCompleteUnit)
 	router.GET("/fetch/lesson_id", unit.FetchByIdLesson)
 }

@@ -35,13 +35,15 @@ func NewCourseRepository(db *mongo.Database, collectionCourse string, collection
 }
 
 var (
-	courseCache     = cache.NewTTL[string, course_domain.CourseResponse]()
-	coursesCache    = cache.NewTTL[string, []course_domain.CourseResponse]()
-	detailCache     = cache.NewTTL[string, course_domain.DetailForManyResponse]()
-	statisticsCache = cache.NewTTL[string, course_domain.Statistics]()
+	courseCache        = cache.NewTTL[string, course_domain.CourseResponse]()
+	coursesCache       = cache.NewTTL[string, []course_domain.CourseResponse]()
+	detailCache        = cache.NewTTL[string, course_domain.DetailForManyResponse]()
+	statisticsCache    = cache.NewTTL[string, course_domain.Statistics]()
+	coursePrimOIDCache = cache.NewTTL[string, primitive.ObjectID]()
 
-	wg sync.WaitGroup
-	mu sync.Mutex
+	wg           sync.WaitGroup
+	mu           sync.Mutex
+	isProcessing bool
 )
 
 // FetchByID lấy khóa học (course) theo ID
@@ -49,7 +51,7 @@ var (
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với các kết quả đã lấy được
 func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
 	// Khởi tạo channel để luu trữ lỗi
-	errCh := make(chan error)
+	errCh := make(chan error, 1)
 	// Khởi tạo channel để lưu trữ kết quả lesson
 	courseCh := make(chan course_domain.CourseResponse)
 
@@ -147,7 +149,7 @@ func (c *courseRepository) FetchByID(ctx context.Context, courseID string) (cour
 // FIXME: thực hiện gắn lỗi vào channel giúp tối ưu hóa xử lý
 func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page string) ([]course_domain.CourseResponse, course_domain.DetailForManyResponse, error) {
 	// Khởi tạo channel để luu trữ lỗi
-	errCh := make(chan error)
+	errCh := make(chan error, 1)
 	// Khởi tạo channel để lưu trữ kết quả course
 	coursesCh := make(chan []course_domain.CourseResponse, 1)
 	// Khởi tạo channel để lưu trữ kết quả detail
@@ -296,11 +298,81 @@ func (c *courseRepository) FetchManyForEachCourse(ctx context.Context, page stri
 	}
 }
 
+// FindCourseIDByCourseName retrieves the course ID (courseid) based on the given course name.
+// This function accepts courseName as a parameter and returns a primitive.ObjectID.
+// If an error occurs during data retrieval, the error is returned along with any partially retrieved results.
+// TODO: This function is intended to be a helper and not used as an API (controller).
+func (c *courseRepository) FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error) {
+	// Channel to receive the course ID
+	courseIDCh := make(chan primitive.ObjectID)
+
+	// Add a goroutine to the wait group
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		// Try to get the course ID from the cache
+		data, found := coursePrimOIDCache.Get(courseName)
+		if found {
+			// Send the cached course ID to the channel
+			courseIDCh <- data
+			return
+		}
+	}()
+
+	// Goroutine to wait for other goroutines and then close the channel
+	go func() {
+		defer close(courseIDCh)
+		wg.Wait()
+	}()
+
+	// Receive the course ID data from the channel
+	courseIDData := <-courseIDCh
+	// Check if the course ID data is non-zero
+	if !internal.IsZeroValue(courseIDData) {
+		return courseIDData, nil
+	}
+
+	// Connect to the courses collection in the database
+	collectionCourse := c.database.Collection(c.collectionCourse)
+
+	// Filter to find the course by name
+	filter := bson.M{"name": courseName}
+	// Struct to hold the result
+	var data struct {
+		Id primitive.ObjectID `bson:"_id"`
+	}
+
+	// Find one course matching the filter and decode the result
+	err := collectionCourse.FindOne(ctx, filter).Decode(&data)
+	if err != nil {
+		// Return an error if the course is not found or another error occurs
+		return primitive.NilObjectID, err
+	}
+
+	// Cache the retrieved course ID
+	coursePrimOIDCache.Set(courseName, data.Id, 5*time.Minute)
+	// Return the retrieved course ID
+	return data.Id, nil
+}
+
 // UpdateOne cập nhật khóa học (course) theo đối tượng course
 // Hàm nhận tham số là đối tượng Course. Nếu thành công sẽ trả về thông tin cập nhật (không phải thông tin đối tượng).
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với kết quả đã lấy được
 // Hàm có sử dụng concurrency, giúp xử lý các tác vụ về người dùng hiệu quả
 func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {
+	// Khóa lock giúp bảo vệ course
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return nil, errors.New("another goroutine is already processing")
+	}
+
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	// khởi tạo đối tượng collection, ở đây là course
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
@@ -316,11 +388,7 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.
 		},
 	}
 
-	// Khóa lock giúp bảo vệ course
-	mu.Lock()
 	data, err := collectionCourse.UpdateOne(ctx, filter, &update)
-	// Mở lock khi thực thi xong hành động update
-	mu.Unlock()
 	if err != nil {
 		return nil, err
 	}
@@ -337,12 +405,13 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.
 		defer wg.Done()
 		courseCache.Remove(course.Id.Hex())
 	}()
-	wg.Wait()
 
 	go func() {
 		defer wg.Done()
 		statisticsCache.Clear()
 	}()
+	wg.Wait()
+
 	return data, nil
 }
 
@@ -350,6 +419,19 @@ func (c *courseRepository) UpdateOne(ctx context.Context, course *course_domain.
 // Hàm này nhận tham số là một đối tượng và trả về kết quả thông tin xử lý (không phải là thông tin của đối tượng đó)
 // Nếu có lỗi xảy ra trong quá trình xử lý, lỗi sẽ được trả về với kết quả đã lấy được và dừng chương trình
 func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.Course) error {
+	// Khóa lock giúp bảo vệ course
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	// khởi tạo đối tượng collection, ở đây là course
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
@@ -364,7 +446,6 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 	}
 
 	_, err = collectionCourse.InsertOne(ctx, course)
-
 	if err != nil {
 		return err
 	}
@@ -396,6 +477,19 @@ func (c *courseRepository) CreateOne(ctx context.Context, course *course_domain.
 // Hàm này nhận đầu vào là courseID và trả về kết quả sau khi xóa
 // Nếu có lỗi xảy ra trong quá trình xử lý, hệ thống sẽ trả về lỗi và dừng chương trình
 func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error {
+	// Khóa lock giúp bảo vệ course
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
 	// Convert courseID string to ObjectID
@@ -414,17 +508,18 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 	}
 
 	filter := bson.M{"_id": objID}
-	// Khóa lock giúp bảo vệ course
-	mu.Lock()
+	count, err := collectionCourse.CountDocuments(ctx, filter)
+	if count == 0 {
+		return errors.New("the course id do not exist")
+	}
+
 	_, err = collectionCourse.DeleteOne(ctx, filter)
-	// Mở lock khi thực thi xong hành động delete
-	mu.Unlock()
 	if err != nil {
 		return err
 	}
 
 	// clear data value with courseID in cache
-	wg.Add(3)
+	wg.Add(4)
 	go func() {
 		defer wg.Done()
 		courseCache.Remove(courseID)
@@ -440,6 +535,12 @@ func (c *courseRepository) DeleteOne(ctx context.Context, courseID string) error
 	go func() {
 		defer wg.Done()
 		statisticsCache.Clear()
+	}()
+
+	// clear data value with detail in cache due to decrease num
+	go func() {
+		defer wg.Done()
+		coursePrimOIDCache.Clear()
 	}()
 	wg.Wait()
 
