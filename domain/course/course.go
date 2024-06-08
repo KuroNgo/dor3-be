@@ -1,6 +1,7 @@
 package course_domain
 
 import (
+	lesson_management_domain "clean-architecture/domain/user_process/lesson_management"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -45,12 +46,16 @@ type Statistics struct {
 
 //go:generate mockery --name ICourseRepository
 type ICourseRepository interface {
-	FetchManyForEachCourse(ctx context.Context, page string) ([]CourseResponse, DetailForManyResponse, error)
-	FetchByID(ctx context.Context, courseID string) (CourseResponse, error)
-	FindCourseIDByCourseName(ctx context.Context, courseName string) (primitive.ObjectID, error)
+	FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]lesson_management_domain.CourseProcess, DetailForManyResponse, error)
+	FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, courseID string) (lesson_management_domain.CourseProcess, error)
+	UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error)
 
-	CreateOne(ctx context.Context, course *Course) error
-	UpdateOne(ctx context.Context, course *Course) (*mongo.UpdateResult, error)
-	DeleteOne(ctx context.Context, courseID string) error
+	FetchManyForEachCourseInAdmin(ctx context.Context, page string) ([]CourseResponse, DetailForManyResponse, error)
+	FetchByIDInAdmin(ctx context.Context, courseID string) (CourseResponse, error)
+	FindCourseIDByCourseNameInAdmin(ctx context.Context, courseName string) (primitive.ObjectID, error)
+
+	CreateOneInAdmin(ctx context.Context, course *Course) error
+	UpdateOneInAdmin(ctx context.Context, course *Course) (*mongo.UpdateResult, error)
+	DeleteOneInAdmin(ctx context.Context, courseID string) error
 	Statistics(ctx context.Context) (Statistics, error)
 }

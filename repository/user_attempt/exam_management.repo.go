@@ -1,7 +1,7 @@
 package user_attempt_repository
 
 import (
-	"clean-architecture/domain/user_process/exam_management"
+	exam_management "clean-architecture/domain/user_process/exam_management"
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"

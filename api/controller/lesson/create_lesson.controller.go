@@ -314,7 +314,7 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 
 		for _, lesson := range result {
 			// Tìm ID của khóa học từ tên khóa học
-			courseID, err := l.CourseUseCase.FindCourseIDByCourseName(ctx, lesson.CourseID)
+			courseID, err := l.CourseUseCase.FindCourseIDByCourseNameInAdmin(ctx, lesson.CourseID)
 			if err != nil {
 				errCh <- err
 				return

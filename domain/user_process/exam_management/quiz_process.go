@@ -1,4 +1,4 @@
-package exam_management
+package exam_management_domain
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 

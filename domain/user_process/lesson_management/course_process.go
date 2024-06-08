@@ -1,16 +1,15 @@
-package lesson_management
+package lesson_management_domain
 
 import (
-	course_domain "clean-architecture/domain/course"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
-	CollectionCourseProcess = "unit_process"
+	CollectionCourseProcess = "course_process"
 )
 
 type CourseProcess struct {
-	CourseID   course_domain.Course `json:"course" bson:"course"`
-	UserID     primitive.ObjectID   `json:"user_id" bson:"user_id"`
-	IsComplete primitive.ObjectID   `json:"is_complete" bson:"is_complete"`
+	CourseID   primitive.ObjectID `json:"course_id" bson:"course_id"`
+	UserID     primitive.ObjectID `json:"user_id" bson:"user_id"`
+	IsComplete int                `json:"is_complete" bson:"is_complete"`
 }

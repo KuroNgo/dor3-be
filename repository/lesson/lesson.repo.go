@@ -50,7 +50,7 @@ var (
 // Hàm này nhận vào số trang (page) và trả về một mảng bài học làm khóa và nội dung của bài học tương ứng làm giá trị.
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả với các kết quả đã lấy được
 // FIXME: thực hiện gắn lỗi vào channel giúp tối ưu hóa xử lý
-func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
+func (l *lessonRepository) FetchManyInAdmin(ctx context.Context, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
 	// Khởi tạo channel để luu trữ lỗi
 	errCh := make(chan error)
 	// Khởi tạo channel để lưu trữ kết quả lesson
@@ -229,7 +229,7 @@ func (l *lessonRepository) FetchMany(ctx context.Context, page string) ([]lesson
 // FetchManyNotPagination lấy tất cả bài học (lesson) cùng một lúc (concurrency)
 // Hàm này không nhận đầu vào (input) và trả về một mảng bài học làm khóa và nội dung của bài học tương ứng làm giá trị
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với các kết quả đã lấy được
-func (l *lessonRepository) FetchManyNotPagination(ctx context.Context) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
+func (l *lessonRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
 	// Khởi tạo channels để lưu trữ lỗi, bài học và chi tiết
 	errCh := make(chan error)
 	lessonsCh := make(chan []lesson_domain.LessonResponse, 1)
@@ -364,7 +364,7 @@ func (l *lessonRepository) FetchManyNotPagination(ctx context.Context) ([]lesson
 	}
 }
 
-func (l *lessonRepository) FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error) {
+func (l *lessonRepository) FindLessonIDByLessonNameInAdmin(ctx context.Context, lessonName string) (primitive.ObjectID, error) {
 	lessonPriOIDCh := make(chan primitive.ObjectID)
 	wg.Add(1)
 	go func() {
@@ -404,7 +404,7 @@ func (l *lessonRepository) FindLessonIDByLessonName(ctx context.Context, lessonN
 // FetchByID lấy bài học (lesson) theo ID
 // Hàm này nhận đầu vào (input) là lessonID và trả về một bài học làm khóa và nội dung cuủa bài học tương ứng làm giá trị
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với các kết quả đã lấy được
-func (l *lessonRepository) FetchByID(ctx context.Context, lessonID string) (lesson_domain.LessonResponse, error) {
+func (l *lessonRepository) FetchByIDInAdmin(ctx context.Context, lessonID string) (lesson_domain.LessonResponse, error) {
 	// Khởi tạo channel để luu trữ lỗi
 	errCh := make(chan error)
 	// Khởi tạo channel để lưu trữ kết quả lesson
@@ -503,7 +503,7 @@ func (l *lessonRepository) FetchByID(ctx context.Context, lessonID string) (less
 // FetchByIdCourse retrieves lessons based on the given course ID and page number.
 // The function accepts idCourse and page as parameters, and returns a list of lessons and a detail response.
 // If any error occurs during data retrieval, the error is returned along with the partially retrieved results.
-func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
+func (l *lessonRepository) FetchByIdCourseInAdmin(ctx context.Context, idCourse string, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
 	// Create channels for errors, lessons, and detail responses
 	errCh := make(chan error)
 	lessonsCh := make(chan []lesson_domain.LessonResponse, 1)
@@ -664,7 +664,7 @@ func (l *lessonRepository) FetchByIdCourse(ctx context.Context, idCourse string,
 // CreateOne khởi tạo bài học (lesson) theo đối tượng lesson
 // Hàm này nhận tham số là một đối tượng và trả về kết quả thông tin xử lý (không phải là thông tin của đối tượng đó)
 // Nếu có lỗi xảy ra trong quá trình xử lý, lỗi sẽ được trả về với kết quả đã lấy được và dừng chương trình
-func (l *lessonRepository) CreateOne(ctx context.Context, lesson *lesson_domain.Lesson) error {
+func (l *lessonRepository) CreateOneInAdmin(ctx context.Context, lesson *lesson_domain.Lesson) error {
 	collectionLesson := l.database.Collection(l.collectionLesson)
 	collectionCourse := l.database.Collection(l.collectionCourse)
 
@@ -707,7 +707,7 @@ func (l *lessonRepository) CreateOne(ctx context.Context, lesson *lesson_domain.
 	return nil
 }
 
-func (l *lessonRepository) CreateOneByNameCourse(ctx context.Context, lesson *lesson_domain.Lesson) error {
+func (l *lessonRepository) CreateOneByNameCourseInAdmin(ctx context.Context, lesson *lesson_domain.Lesson) error {
 	collectionLesson := l.database.Collection(l.collectionLesson)
 
 	filter := bson.M{"name": lesson.Name}
@@ -740,7 +740,7 @@ func (l *lessonRepository) CreateOneByNameCourse(ctx context.Context, lesson *le
 // UpdateOne cập nhật bài học (lesson) theo đối tượng lesson
 // Hàm nhận tham số là đối tượng lesson. Nếu thành công sẽ trả về thông tin cập nhật (không phải thông tin đối tượng).
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với kết quả đã lấy được
-func (l *lessonRepository) UpdateOne(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {
+func (l *lessonRepository) UpdateOneInAdmin(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -792,7 +792,7 @@ func (l *lessonRepository) UpdateOne(ctx context.Context, lesson *lesson_domain.
 // UpdateImage cập nhật bài học (lesson) theo đối tượng lesson
 // Hàm nhận tham số là file image. Nếu thành công sẽ trả về thông tin cập nhật (không phải thông tin đối tượng).
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với kết quả đã lấy được
-func (l *lessonRepository) UpdateImage(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {
+func (l *lessonRepository) UpdateImageInAdmin(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -843,7 +843,7 @@ func (l *lessonRepository) UpdateImage(ctx context.Context, lesson *lesson_domai
 // DeleteOne xóa bài học (lesson) theo ID
 // Hàm này nhận đầu vào là lessonID và trả về kết quả sau khi xóa
 // Nếu có lỗi xảy ra trong quá trình xử lý, hệ thống sẽ trả về lỗi và dừng chương trình
-func (l *lessonRepository) DeleteOne(ctx context.Context, lessonID string) error {
+func (l *lessonRepository) DeleteOneInAdmin(ctx context.Context, lessonID string) error {
 	mu.Lock()
 	defer mu.Unlock()
 

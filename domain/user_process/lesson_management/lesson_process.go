@@ -1,9 +1,9 @@
-package lesson_management
+package lesson_management_domain
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 const (
-	CollectionLessonProcess = "unit_process"
+	CollectionLessonProcess = "lesson_process"
 )
 
 type LessonProcess struct {

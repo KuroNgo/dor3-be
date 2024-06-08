@@ -25,7 +25,7 @@ func (c *CourseController) DeleteCourse(ctx *gin.Context) {
 	}
 
 	courseID := ctx.Query("_id")
-	err = c.CourseUseCase.DeleteOne(ctx, courseID)
+	err = c.CourseUseCase.DeleteOneInAdmin(ctx, courseID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

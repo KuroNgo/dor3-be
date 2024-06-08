@@ -57,17 +57,16 @@ type Statistics struct {
 
 //go:generate mockery --name ILessonRepository
 type ILessonRepository interface {
-	FetchMany(ctx context.Context, page string) ([]LessonResponse, DetailResponse, error)
-	FetchManyNotPagination(ctx context.Context) ([]LessonResponse, DetailResponse, error)
-	FetchByID(ctx context.Context, lessonID string) (LessonResponse, error)
-	FetchByIdCourse(ctx context.Context, idCourse string, page string) ([]LessonResponse, DetailResponse, error)
-	FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error)
+	FetchManyInAdmin(ctx context.Context, page string) ([]LessonResponse, DetailResponse, error)
+	FetchManyNotPaginationInAdmin(ctx context.Context) ([]LessonResponse, DetailResponse, error)
+	FetchByIDInAdmin(ctx context.Context, lessonID string) (LessonResponse, error)
+	FetchByIdCourseInAdmin(ctx context.Context, idCourse string, page string) ([]LessonResponse, DetailResponse, error)
+	FindLessonIDByLessonNameInAdmin(ctx context.Context, lessonName string) (primitive.ObjectID, error)
 
-	CreateOne(ctx context.Context, lesson *Lesson) error
-	CreateOneByNameCourse(ctx context.Context, lesson *Lesson) error
-	DeleteOne(ctx context.Context, lessonID string) error
-	UpdateImage(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
-	UpdateOne(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
-
+	CreateOneInAdmin(ctx context.Context, lesson *Lesson) error
+	CreateOneByNameCourseInAdmin(ctx context.Context, lesson *Lesson) error
+	DeleteOneInAdmin(ctx context.Context, lessonID string) error
+	UpdateImageInAdmin(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
+	UpdateOneInAdmin(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
 	Statistics(ctx context.Context) (Statistics, error)
 }
