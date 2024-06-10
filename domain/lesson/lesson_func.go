@@ -26,15 +26,20 @@ type Update struct {
 
 //go:generate mockery --name ICourseUseCase
 type ILessonUseCase interface {
-	FetchMany(ctx context.Context, page string) ([]LessonResponse, DetailResponse, error)
-	FetchManyNotPagination(ctx context.Context) ([]LessonResponse, DetailResponse, error)
-	FetchByID(ctx context.Context, lessonID string) (LessonResponse, error)
-	FindLessonIDByLessonName(ctx context.Context, lessonName string) (primitive.ObjectID, error)
-	FetchByIdCourse(ctx context.Context, idCourse string, page string) ([]LessonResponse, DetailResponse, error)
+	FetchManyNotPaginationInUser(ctx context.Context, userID primitive.ObjectID) ([]LessonProcessResponse, DetailResponse, error)
+	FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, lessonID string) (LessonProcessResponse, error)
+	FetchByIDCourseInUser(ctx context.Context, userID primitive.ObjectID, courseID string, page string) ([]LessonProcessResponse, DetailResponse, error)
+	FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]LessonProcessResponse, DetailResponse, error)
 
-	CreateOne(ctx context.Context, lesson *Lesson) error
-	CreateOneByNameCourse(ctx context.Context, lesson *Lesson) error
-	DeleteOne(ctx context.Context, lessonID string) error
-	UpdateImage(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
-	UpdateOne(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
+	FetchManyInAdmin(ctx context.Context, page string) ([]LessonResponse, DetailResponse, error)
+	FetchManyNotPaginationInAdmin(ctx context.Context) ([]LessonResponse, DetailResponse, error)
+	FetchByIDInAdmin(ctx context.Context, lessonID string) (LessonResponse, error)
+	FindLessonIDByLessonNameInAdmin(ctx context.Context, lessonName string) (primitive.ObjectID, error)
+	FetchByIdCourseInAdmin(ctx context.Context, idCourse string, page string) ([]LessonResponse, DetailResponse, error)
+
+	CreateOneInAdmin(ctx context.Context, lesson *Lesson) error
+	CreateOneByNameCourseInAdmin(ctx context.Context, lesson *Lesson) error
+	DeleteOneInAdmin(ctx context.Context, lessonID string) error
+	UpdateImageInAdmin(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
+	UpdateOneInAdmin(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
 }

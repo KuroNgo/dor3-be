@@ -144,7 +144,7 @@ func (u *UnitController) CreateUnitWithFile(ctx *gin.Context) {
 	for _, unit := range result {
 		go func(unit file_internal.Unit) {
 			// Tìm ID của bài học từ tên bài học
-			lessonID, err := u.LessonUseCase.FindLessonIDByLessonName(ctx, unit.LessonID)
+			lessonID, err := u.LessonUseCase.FindLessonIDByLessonNameInAdmin(ctx, unit.LessonID)
 			if err != nil {
 				errChan <- fmt.Errorf("failed to find lesson ID for lesson '%s': %v", unit.LessonID, err)
 				return

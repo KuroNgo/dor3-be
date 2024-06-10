@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (c *CourseController) DeleteCourse(ctx *gin.Context) {
+func (c *CourseController) DeleteCourseInAdmin(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

@@ -344,7 +344,9 @@ func (u *userRepository) GetByID(c context.Context, id string) (*user_domain.Use
 	}
 
 	err = collectionUser.FindOne(c, bson.M{"_id": idHex}).Decode(&user)
-
+	if err != nil {
+		return nil, err
+	}
 	userCache.Set(id, &user)
 	return &user, nil
 }

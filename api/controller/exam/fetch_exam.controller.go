@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (e *ExamsController) FetchManyExam(ctx *gin.Context) {
+func (e *ExamsController) FetchManyExamInUser(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -43,7 +43,7 @@ func (e *ExamsController) FetchManyExam(ctx *gin.Context) {
 	})
 }
 
-func (e *ExamsController) FetchManyExamByUnitID(ctx *gin.Context) {
+func (e *ExamsController) FetchManyExamByUnitIDInUser(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -82,7 +82,7 @@ func (e *ExamsController) FetchManyExamByUnitID(ctx *gin.Context) {
 	})
 }
 
-func (e *ExamsController) FetchOneExamByUnitID(ctx *gin.Context) {
+func (e *ExamsController) FetchOneExamByUnitIDInUser(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -118,7 +118,7 @@ func (e *ExamsController) FetchOneExamByUnitID(ctx *gin.Context) {
 	})
 }
 
-func (e *ExamsController) FetchOneExamByID(ctx *gin.Context) {
+func (e *ExamsController) FetchOneExamByIDInUser(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

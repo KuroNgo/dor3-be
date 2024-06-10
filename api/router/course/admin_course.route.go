@@ -12,7 +12,6 @@ import (
 	quiz_domain "clean-architecture/domain/quiz"
 	unit_domain "clean-architecture/domain/unit"
 	user_domain "clean-architecture/domain/user"
-	lesson_management_domain "clean-architecture/domain/user_process/lesson_management"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	admin_repository "clean-architecture/repository/admin"
 	course_repository "clean-architecture/repository/course"
@@ -30,8 +29,8 @@ import (
 )
 
 func AdminCourseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	co := course_repository.NewCourseRepository(db, course_domain.CollectionCourse, lesson_management_domain.CollectionCourseProcess, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
-	le := lesson_repository.NewLessonRepository(db, lesson_domain.CollectionLesson, course_domain.CollectionCourse, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
+	co := course_repository.NewCourseRepository(db, course_domain.CollectionCourse, course_domain.CollectionCourseProcess, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
+	le := lesson_repository.NewLessonRepository(db, lesson_domain.CollectionLesson, lesson_domain.CollectionLessonProcess, course_domain.CollectionCourse, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
 	un := unit_repo.NewUnitRepository(db, unit_domain.CollectionUnit, lesson_domain.CollectionLesson, vocabulary_domain.CollectionVocabulary, exam_domain.CollectionExam, exercise_domain.CollectionExercise, quiz_domain.CollectionQuiz)
 	vo := vocabulary_repository.NewVocabularyRepository(db, vocabulary_domain.CollectionVocabulary, mark_domain.CollectionMark, unit_domain.CollectionUnit, lesson_domain.CollectionLesson)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
@@ -48,9 +47,9 @@ func AdminCourseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.
 	router := group.Group("/course")
 	router.GET("/fetch", course.FetchCourseInAdmin)
 	router.GET("/fetch/_id", course.FetchCourseByIDInAdmin)
-	router.POST("/create", course.CreateOneCourse)
-	router.POST("/create/file", course.CreateCourseWithFile)
-	router.POST("/create/file/final", course.CreateLessonManagementWithFile)
-	router.PATCH("/update", course.UpdateCourse)
-	router.DELETE("/delete/:_id", course.DeleteCourse)
+	router.POST("/create", course.CreateOneCourseInAdmin)
+	router.POST("/create/file", course.CreateCourseWithFileInAdmin)
+	router.POST("/create/file/final", course.CreateLessonManagementWithFileInAdmin)
+	router.PATCH("/update", course.UpdateCourseInAdmin)
+	router.DELETE("/delete/:_id", course.DeleteCourseInAdmin)
 }

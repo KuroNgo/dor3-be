@@ -53,7 +53,7 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 			UpdatedAt:  time.Now(),
 			WhoUpdates: admin.FullName,
 		}
-		err = l.LessonUseCase.CreateOne(ctx, lessonRes)
+		err = l.LessonUseCase.CreateOneInAdmin(ctx, lessonRes)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",
@@ -113,7 +113,7 @@ func (l *LessonController) CreateOneLesson(ctx *gin.Context) {
 		WhoUpdates: admin.FullName,
 	}
 
-	err = l.LessonUseCase.CreateOne(ctx, lessonRes)
+	err = l.LessonUseCase.CreateOneInAdmin(ctx, lessonRes)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -156,7 +156,7 @@ func (l *LessonController) CreateOneLessonNotImage(ctx *gin.Context) {
 		UpdatedAt:  time.Now(),
 		WhoUpdates: admin.FullName,
 	}
-	err = l.LessonUseCase.CreateOne(ctx, lessonRes)
+	err = l.LessonUseCase.CreateOneInAdmin(ctx, lessonRes)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -236,7 +236,7 @@ func (l *LessonController) CreateOneLessonHaveImage(ctx *gin.Context) {
 		WhoUpdates: admin.FullName,
 	}
 
-	err = l.LessonUseCase.CreateOne(ctx, lessonRes)
+	err = l.LessonUseCase.CreateOneInAdmin(ctx, lessonRes)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -332,7 +332,7 @@ func (l *LessonController) CreateLessonWithFile(ctx *gin.Context) {
 			}
 
 			// Tạo bài học trong cơ sở dữ liệu
-			err = l.LessonUseCase.CreateOneByNameCourse(ctx, &le)
+			err = l.LessonUseCase.CreateOneByNameCourseInAdmin(ctx, &le)
 			if err != nil {
 				errCh <- err
 				continue

@@ -1,4 +1,4 @@
-package exam_management_domain
+package user_process
 
 import (
 	"context"

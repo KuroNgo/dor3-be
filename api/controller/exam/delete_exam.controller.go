@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (e *ExamsController) DeleteOneExam(ctx *gin.Context) {
+func (e *ExamsController) DeleteOneExamInAdmin(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

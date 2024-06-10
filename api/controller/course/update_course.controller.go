@@ -9,7 +9,7 @@ import (
 )
 
 // UpdateCourse in this method, system can not need to check valid
-func (c *CourseController) UpdateCourse(ctx *gin.Context) {
+func (c *CourseController) UpdateCourseInAdmin(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

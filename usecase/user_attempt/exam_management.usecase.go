@@ -1,34 +1,34 @@
 package user_attempt_usecase
 
 import (
-	exam_management "clean-architecture/domain/user_process/exam_management"
+	"clean-architecture/domain/user_process"
 	"context"
 	"time"
 )
 
 type userAttemptUseCase struct {
-	userAttemptRepository exam_management.IUserProcessRepository
+	userAttemptRepository user_process.IUserProcessRepository
 	contextTimeout        time.Duration
 }
 
-func NewAttemptUseCase(userAttemptRepository exam_management.IUserProcessRepository, timeout time.Duration) exam_management.IUserProcessUseCase {
+func NewAttemptUseCase(userAttemptRepository user_process.IUserProcessRepository, timeout time.Duration) user_process.IUserProcessUseCase {
 	return &userAttemptUseCase{
 		userAttemptRepository: userAttemptRepository,
 		contextTimeout:        timeout,
 	}
 }
 
-func (u *userAttemptUseCase) FetchOneByUnitIDAndUserID(ctx context.Context, userID string, unit string) (exam_management.ExamManagement, error) {
+func (u *userAttemptUseCase) FetchOneByUnitIDAndUserID(ctx context.Context, userID string, unit string) (user_process.ExamManagement, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (u *userAttemptUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exam_management.ExamManagement, error) {
+func (u *userAttemptUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (user_process.ExamManagement, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (u *userAttemptUseCase) CreateExamManagementByExerciseID(ctx context.Context, userID exam_management.ExamManagement) error {
+func (u *userAttemptUseCase) CreateExamManagementByExerciseID(ctx context.Context, userID user_process.ExamManagement) error {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
@@ -40,7 +40,7 @@ func (u *userAttemptUseCase) CreateExamManagementByExerciseID(ctx context.Contex
 	return nil
 }
 
-func (u *userAttemptUseCase) UpdateExamManagementByExamID(ctx context.Context, userID exam_management.ExamManagement) error {
+func (u *userAttemptUseCase) UpdateExamManagementByExamID(ctx context.Context, userID user_process.ExamManagement) error {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
@@ -52,7 +52,7 @@ func (u *userAttemptUseCase) UpdateExamManagementByExamID(ctx context.Context, u
 	return nil
 }
 
-func (u *userAttemptUseCase) UpdateExamManagementByQuizID(ctx context.Context, userID exam_management.ExamManagement) error {
+func (u *userAttemptUseCase) UpdateExamManagementByQuizID(ctx context.Context, userID user_process.ExamManagement) error {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
@@ -64,19 +64,19 @@ func (u *userAttemptUseCase) UpdateExamManagementByQuizID(ctx context.Context, u
 	return nil
 }
 
-func (u *userAttemptUseCase) FetchManyByUserID(ctx context.Context, userID string) (exam_management.Response, error) {
+func (u *userAttemptUseCase) FetchManyByUserID(ctx context.Context, userID string) (user_process.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
 	userAttempt, err := u.userAttemptRepository.FetchManyByUserID(ctx, userID)
 	if err != nil {
-		return exam_management.Response{}, err
+		return user_process.Response{}, err
 	}
 
 	return userAttempt, err
 }
 
-func (u *userAttemptUseCase) UpdateExamManagementByUserID(ctx context.Context, user exam_management.ExamManagement) error {
+func (u *userAttemptUseCase) UpdateExamManagementByUserID(ctx context.Context, user user_process.ExamManagement) error {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 

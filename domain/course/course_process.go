@@ -1,8 +1,6 @@
-package lesson_management_domain
+package course_domain
 
-import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
+import "go.mongodb.org/mongo-driver/bson/primitive"
 
 const (
 	CollectionCourseProcess = "course_process"

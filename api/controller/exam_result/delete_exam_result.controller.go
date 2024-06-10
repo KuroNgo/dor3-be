@@ -1,7 +1,7 @@
 package exam_result_controller
 
 import (
-	user_attempt_domain "clean-architecture/domain/user_process/exam_management"
+	user_attempt_domain "clean-architecture/domain/user_process"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"

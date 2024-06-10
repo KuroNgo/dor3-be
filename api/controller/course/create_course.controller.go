@@ -22,7 +22,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
+func (c *CourseController) CreateOneCourseInAdmin(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -80,7 +80,7 @@ func (c *CourseController) CreateOneCourse(ctx *gin.Context) {
 	})
 }
 
-func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
+func (c *CourseController) CreateCourseWithFileInAdmin(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -164,7 +164,7 @@ func (c *CourseController) CreateCourseWithFile(ctx *gin.Context) {
 
 }
 
-func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
+func (c *CourseController) CreateLessonManagementWithFileInAdmin(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -250,7 +250,7 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 			WhoUpdates: admin.FullName,
 		}
 
-		_ = c.LessonUseCase.CreateOneByNameCourse(ctx, &lesson)
+		_ = c.LessonUseCase.CreateOneByNameCourseInAdmin(ctx, &lesson)
 	}
 
 	resUnit, err := excel.ReadFileForUnit(file.Filename)
@@ -260,7 +260,7 @@ func (c *CourseController) CreateLessonManagementWithFile(ctx *gin.Context) {
 	}
 
 	for _, unit := range resUnit {
-		lessonID, err := c.LessonUseCase.FindLessonIDByLessonName(ctx, unit.LessonID)
+		lessonID, err := c.LessonUseCase.FindLessonIDByLessonNameInAdmin(ctx, unit.LessonID)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

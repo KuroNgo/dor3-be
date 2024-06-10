@@ -10,43 +10,638 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
 )
 
 type lessonRepository struct {
-	database             *mongo.Database
-	collectionLesson     string
-	collectionCourse     string
-	collectionUnit       string
-	collectionVocabulary string
+	database                *mongo.Database
+	collectionLesson        string
+	collectionLessonProcess string
+	collectionCourse        string
+	collectionUnit          string
+	collectionVocabulary    string
 }
 
 // NewLessonRepository hàm khởi tạo (constructor) để khởi tạo instance của struct
-func NewLessonRepository(db *mongo.Database, collectionLesson string, collectionCourse string, collectionUnit string, collectionVocabulary string) lesson_domain.ILessonRepository {
+func NewLessonRepository(db *mongo.Database, collectionLesson string, collectionLessonProcess string, collectionCourse string, collectionUnit string, collectionVocabulary string) lesson_domain.ILessonRepository {
 	return &lessonRepository{
-		database:             db,
-		collectionLesson:     collectionLesson,
-		collectionCourse:     collectionCourse,
-		collectionUnit:       collectionUnit,
-		collectionVocabulary: collectionVocabulary,
+		database:                db,
+		collectionLesson:        collectionLesson,
+		collectionLessonProcess: collectionLessonProcess,
+		collectionCourse:        collectionCourse,
+		collectionUnit:          collectionUnit,
+		collectionVocabulary:    collectionVocabulary,
 	}
 }
 
 var (
-	lessonsCache       = cache.NewTTL[string, []lesson_domain.LessonResponse]()
-	lessonCache        = cache.NewTTL[string, lesson_domain.LessonResponse]()
-	detailCache        = cache.NewTTL[string, lesson_domain.DetailResponse]()
-	statisticsCache    = cache.NewTTL[string, lesson_domain.Statistics]()
-	lessonPrimOIDCache = cache.NewTTL[string, primitive.ObjectID]()
+	lessonsCache            = cache.NewTTL[string, []lesson_domain.LessonResponse]()
+	lessonCache             = cache.NewTTL[string, lesson_domain.LessonResponse]()
+	lessonPrimOIDCache      = cache.NewTTL[string, primitive.ObjectID]()
+	lessonsUserProcessCache = cache.NewTTL[string, []lesson_domain.LessonProcessResponse]()
+	lessonUserProcessCache  = cache.NewTTL[string, lesson_domain.LessonProcessResponse]()
+
+	detailCache     = cache.NewTTL[string, lesson_domain.DetailResponse]()
+	statisticsCache = cache.NewTTL[string, lesson_domain.Statistics]()
 
 	wg           sync.WaitGroup
 	mu           sync.Mutex
 	isProcessing bool
 )
 
-// FetchMany lấy tất cả bài học (lesson) cùng một lúc (concurrency).
+func (l *lessonRepository) FetchManyNotPaginationInUser(ctx context.Context, userID primitive.ObjectID) ([]lesson_domain.LessonProcessResponse, lesson_domain.DetailResponse, error) {
+	errCh := make(chan error)
+	defer close(errCh)
+
+	lessonsUserProcessCh := make(chan []lesson_domain.LessonProcessResponse)
+	detailCh := make(chan lesson_domain.DetailResponse)
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		data, found := lessonsUserProcessCache.Get(userID.Hex())
+		if found {
+			lessonsUserProcessCh <- data
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		data, found := detailCache.Get(userID.Hex() + "detail")
+		if found {
+			detailCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(detailCh)
+		defer close(lessonsUserProcessCh)
+		wg.Wait()
+	}()
+
+	lessonsUserProcessData := <-lessonsUserProcessCh
+	detailData := <-detailCh
+	if !internal.IsZeroValue(lessonsUserProcessData) && !internal.IsZeroValue(detailData) {
+		return lessonsUserProcessData, detailData, nil
+	}
+
+	collectionLesson := l.database.Collection(l.collectionLesson)
+	collectionLessonProcess := l.database.Collection(l.collectionLessonProcess)
+
+	filterLessonProcessByUser := bson.M{"user_id": userID}
+
+	// Đếm số lượng khóa học trong collection 'lesson'
+	countLesson, err := collectionLesson.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return nil, lesson_domain.DetailResponse{}, err
+	}
+
+	// Đếm số lượng CourseProcess của người dùng
+	count, err := collectionLessonProcess.CountDocuments(ctx, filterLessonProcessByUser)
+	if err != nil {
+		return nil, lesson_domain.DetailResponse{}, err
+	}
+
+	var lessonsProcess []lesson_domain.LessonProcessResponse
+	// Nếu không có LessonProcess cho người dùng, khởi tạo chúng
+	if count != countLesson {
+		cursorLesson, err := collectionLesson.Find(ctx, bson.D{})
+		if err != nil {
+			return nil, lesson_domain.DetailResponse{}, err
+		}
+		defer func(cursorLesson *mongo.Cursor, ctx context.Context) {
+			err := cursorLesson.Close(ctx)
+			if err != nil {
+				return
+			}
+		}(cursorLesson, ctx)
+
+		for cursorLesson.Next(ctx) {
+			var lesson lesson_domain.Lesson
+			if err = cursorLesson.Decode(&lesson); err != nil {
+				return nil, lesson_domain.DetailResponse{}, err
+			}
+
+			wg.Add(1)
+			go func(lesson lesson_domain.Lesson) {
+				defer wg.Done()
+				lessonProcess := lesson_domain.LessonProcess{
+					LessonID:   lesson.ID,
+					CourseID:   lesson.CourseID,
+					UserID:     userID,
+					IsComplete: 0,
+				}
+
+				// Thực hiện tìm kiếm theo name để kiểm tra có dữ liệu trùng không
+				filter := bson.M{"lesson_id": lesson.ID}
+				countLessonChild, err := collectionLesson.CountDocuments(ctx, filter)
+				if err != nil {
+					errCh <- err
+					return
+				}
+
+				if countLessonChild == 0 {
+					_, err = collectionLessonProcess.InsertOne(ctx, &lessonProcess)
+					if err != nil {
+						log.Println("Error inserting course process:", err)
+						errCh <- err
+						return
+					}
+				}
+			}(lesson)
+		}
+		wg.Wait()
+
+		// Tìm các LessonProcess của người dùng với phân trang
+		cursor, err := collectionLessonProcess.Find(ctx, filterLessonProcessByUser)
+		if err != nil {
+			return nil, lesson_domain.DetailResponse{}, err
+		}
+		defer func(cursor *mongo.Cursor, ctx context.Context) {
+			err := cursor.Close(ctx)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}(cursor, ctx)
+	}
+
+	// Tìm các LessonProcess của người dùng với phân trang
+	cursor, err := collectionLessonProcess.Find(ctx, filterLessonProcessByUser)
+	if err != nil {
+		return nil, lesson_domain.DetailResponse{}, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			errCh <- err
+			return
+		}
+	}(cursor, ctx)
+
+	// Đọc dữ liệu từ cursor và thêm vào slice LessonProcess
+	for cursor.Next(ctx) {
+		var lessonProcess lesson_domain.LessonProcess
+		if err := cursor.Decode(&lessonProcess); err != nil {
+			return nil, lesson_domain.DetailResponse{}, err
+		}
+
+		filter := bson.M{"_id": lessonProcess.LessonID}
+		var lesson lesson_domain.Lesson
+		err = collectionLesson.FindOne(ctx, filter).Decode(&lesson)
+
+		var lessonProcessRes = lesson_domain.LessonProcessResponse{
+			Lesson:       lesson,
+			UserID:       lessonProcess.UserID,
+			IsComplete:   lessonProcess.IsComplete,
+			UnitComplete: lessonProcess.UnitComplete,
+			TotalScore:   lessonProcess.TotalScore,
+		}
+
+		mu.Lock()
+		lessonsProcess = append(lessonsProcess, lessonProcessRes)
+		mu.Unlock()
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, lesson_domain.DetailResponse{}, err
+	}
+	sort.Sort(lesson_domain.LessonProcessResponseList(lessonsProcess))
+
+	// Lấy thống kê cho detail response
+	statistics, _ := l.StatisticsProcess(ctx, filterLessonProcessByUser)
+	detail := lesson_domain.DetailResponse{
+		Statistics: statistics,
+	}
+
+	lessonsUserProcessCache.Set(userID.Hex(), lessonsProcess, 5*time.Minute)
+	detailCache.Set(userID.Hex()+"detail", detail, 5*time.Minute)
+
+	select {
+	case err = <-errCh:
+		return nil, lesson_domain.DetailResponse{}, err
+	default:
+		return lessonsProcess, detail, nil
+	}
+}
+
+func (l *lessonRepository) FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, lessonID string) (lesson_domain.LessonProcessResponse, error) {
+	collectionLesson := l.database.Collection(l.collectionLesson)
+	collectionLessonProcess := l.database.Collection(l.collectionLessonProcess)
+
+	idLesson, _ := primitive.ObjectIDFromHex(lessonID)
+	// Đếm số lượng CourseProcess của người dùng
+	filterLessonProcessByUser := bson.M{"lesson_id": idLesson, "user_id": userID}
+	var lessonProcess lesson_domain.LessonProcess
+	err := collectionLessonProcess.FindOne(ctx, filterLessonProcessByUser).Decode(&lessonProcess)
+	if err != nil {
+		return lesson_domain.LessonProcessResponse{}, err
+	}
+
+	filter := bson.M{"_id": idLesson}
+	var lesson lesson_domain.Lesson
+	err = collectionLesson.FindOne(ctx, filter).Decode(&lesson)
+	if err != nil {
+		return lesson_domain.LessonProcessResponse{}, err
+	}
+
+	lessonProcessRes := lesson_domain.LessonProcessResponse{
+		Lesson:       lesson,
+		UserID:       lessonProcess.UserID,
+		IsComplete:   lessonProcess.IsComplete,
+		UnitComplete: lessonProcess.UnitComplete,
+		TotalScore:   lessonProcess.TotalScore,
+	}
+
+	return lessonProcessRes, nil
+}
+
+func (l *lessonRepository) FetchByIDCourseInUser(ctx context.Context, userID primitive.ObjectID, courseID string, page string) ([]lesson_domain.LessonProcessResponse, lesson_domain.DetailResponse, error) {
+	errCh := make(chan error)
+	defer close(errCh)
+
+	lessonsUserProcessCh := make(chan []lesson_domain.LessonProcessResponse)
+	detailCh := make(chan lesson_domain.DetailResponse)
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		data, found := lessonsUserProcessCache.Get(userID.Hex() + courseID + page)
+		if found {
+			lessonsUserProcessCh <- data
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		data, found := detailCache.Get(userID.Hex() + courseID + "detail")
+		if found {
+			detailCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(detailCh)
+		defer close(lessonsUserProcessCh)
+		wg.Wait()
+	}()
+
+	lessonsUserProcessData := <-lessonsUserProcessCh
+	detailData := <-detailCh
+	if !internal.IsZeroValue(lessonsUserProcessData) && !internal.IsZeroValue(detailData) {
+		return lessonsUserProcessData, detailData, nil
+	}
+
+	collectionLesson := l.database.Collection(l.collectionLesson)
+	collectionLessonProcess := l.database.Collection(l.collectionLessonProcess)
+
+	// Thực hiện phân trang
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return nil, lesson_domain.DetailResponse{}, errors.New("invalid page number")
+	}
+	perPage := 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	idCourse, _ := primitive.ObjectIDFromHex(courseID)
+
+	// Đếm số lượng khóa học trong collection 'lesson'
+	filterLesson := bson.M{"course_id": idCourse}
+	countLesson, err := collectionLesson.CountDocuments(ctx, filterLesson)
+	if err != nil {
+		return nil, lesson_domain.DetailResponse{}, err
+	}
+
+	// Đếm số lượng CourseProcess của người dùng
+	filterLessonProcessByUser := bson.M{"course_id": idCourse, "user_id": userID}
+	count, err := collectionLessonProcess.CountDocuments(ctx, filterLesson)
+	if err != nil {
+		return nil, lesson_domain.DetailResponse{}, err
+	}
+
+	// Tính toán tổng số trang dựa trên số lượng khóa học và số khóa học mỗi trang
+	totalPages := (count + int64(perPage) - 1) / int64(perPage)
+
+	var lessonsProcess []lesson_domain.LessonProcessResponse
+	// Nếu không có LessonProcess cho người dùng, khởi tạo chúng
+	if count != countLesson {
+		cursorLesson, err := collectionLesson.Find(ctx, bson.D{})
+		if err != nil {
+			return nil, lesson_domain.DetailResponse{}, err
+		}
+		defer func(cursorLesson *mongo.Cursor, ctx context.Context) {
+			err = cursorLesson.Close(ctx)
+			if err != nil {
+				return
+			}
+		}(cursorLesson, ctx)
+
+		for cursorLesson.Next(ctx) {
+			var lesson lesson_domain.Lesson
+			if err = cursorLesson.Decode(&lesson); err != nil {
+				return nil, lesson_domain.DetailResponse{}, err
+			}
+
+			wg.Add(1)
+			go func(lesson lesson_domain.Lesson) {
+				defer wg.Done()
+				lessonProcess := lesson_domain.LessonProcess{
+					LessonID:   lesson.ID,
+					CourseID:   lesson.CourseID,
+					UserID:     userID,
+					IsComplete: 0,
+				}
+
+				// Thực hiện tìm kiếm theo name để kiểm tra có dữ liệu trùng không
+				filter := bson.M{"lesson_id": lesson.ID}
+				countLessonChild, err := collectionLesson.CountDocuments(ctx, filter)
+				if err != nil {
+					errCh <- err
+					return
+				}
+
+				if countLessonChild == 0 {
+					_, err = collectionLessonProcess.InsertOne(ctx, &lessonProcess)
+					if err != nil {
+						log.Println("Error inserting course process:", err)
+						errCh <- err
+						return
+					}
+				}
+			}(lesson)
+		}
+		wg.Wait()
+
+		// Tìm các LessonProcess của người dùng với phân trang
+		cursor, err := collectionLessonProcess.Find(ctx, filterLessonProcessByUser, findOptions)
+		if err != nil {
+			return nil, lesson_domain.DetailResponse{}, err
+		}
+		defer func(cursor *mongo.Cursor, ctx context.Context) {
+			err := cursor.Close(ctx)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}(cursor, ctx)
+	}
+
+	// Tìm các LessonProcess của người dùng với phân trang
+	cursor, err := collectionLessonProcess.Find(ctx, filterLessonProcessByUser, findOptions)
+	if err != nil {
+		return nil, lesson_domain.DetailResponse{}, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			errCh <- err
+			return
+		}
+	}(cursor, ctx)
+
+	// Đọc dữ liệu từ cursor và thêm vào slice LessonProcess
+	for cursor.Next(ctx) {
+		var lessonProcess lesson_domain.LessonProcess
+		if err := cursor.Decode(&lessonProcess); err != nil {
+			return nil, lesson_domain.DetailResponse{}, err
+		}
+
+		filter := bson.M{"_id": lessonProcess.LessonID}
+		var lesson lesson_domain.Lesson
+		err = collectionLesson.FindOne(ctx, filter).Decode(&lesson)
+
+		var lessonProcessRes = lesson_domain.LessonProcessResponse{
+			Lesson:       lesson,
+			UserID:       lessonProcess.UserID,
+			IsComplete:   lessonProcess.IsComplete,
+			UnitComplete: lessonProcess.UnitComplete,
+			TotalScore:   lessonProcess.TotalScore,
+		}
+
+		mu.Lock()
+		lessonsProcess = append(lessonsProcess, lessonProcessRes)
+		mu.Unlock()
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, lesson_domain.DetailResponse{}, err
+	}
+	sort.Sort(lesson_domain.LessonProcessResponseList(lessonsProcess))
+
+	// Lấy thống kê cho detail response
+	statistics, _ := l.StatisticsProcess(ctx, filterLessonProcessByUser)
+	detail := lesson_domain.DetailResponse{
+		Statistics:  statistics,
+		Page:        totalPages,
+		CurrentPage: pageNumber,
+	}
+
+	lessonsUserProcessCache.Set(userID.Hex()+courseID+page, lessonsProcess, 5*time.Minute)
+	detailCache.Set(userID.Hex()+courseID+"detail", detail, 5*time.Minute)
+
+	select {
+	case err = <-errCh:
+		return nil, lesson_domain.DetailResponse{}, err
+	default:
+		return lessonsProcess, detail, nil
+	}
+}
+
+func (l *lessonRepository) FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]lesson_domain.LessonProcessResponse, lesson_domain.DetailResponse, error) {
+	errCh := make(chan error)
+	defer close(errCh)
+
+	lessonsUserProcessCh := make(chan []lesson_domain.LessonProcessResponse)
+	detailCh := make(chan lesson_domain.DetailResponse)
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		data, found := lessonsUserProcessCache.Get(userID.Hex() + page)
+		if found {
+			lessonsUserProcessCh <- data
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		data, found := detailCache.Get(userID.Hex() + "detail")
+		if found {
+			detailCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(detailCh)
+		defer close(lessonsUserProcessCh)
+		wg.Wait()
+	}()
+
+	lessonsUserProcessData := <-lessonsUserProcessCh
+	detailData := <-detailCh
+	if !internal.IsZeroValue(lessonsUserProcessData) && !internal.IsZeroValue(detailData) {
+		return lessonsUserProcessData, detailData, nil
+	}
+
+	collectionLesson := l.database.Collection(l.collectionLesson)
+	collectionLessonProcess := l.database.Collection(l.collectionLessonProcess)
+
+	filterLessonProcessByUser := bson.M{"user_id": userID}
+	// Thực hiện phân trang
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return nil, lesson_domain.DetailResponse{}, errors.New("invalid page number")
+	}
+	perPage := 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	// Đếm số lượng khóa học trong collection 'lesson'
+	countLesson, err := collectionLesson.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return nil, lesson_domain.DetailResponse{}, err
+	}
+
+	// Tính toán tổng số trang dựa trên số lượng khóa học và số khóa học mỗi trang
+	totalPages := (countLesson + int64(perPage) - 1) / int64(perPage)
+
+	// Đếm số lượng CourseProcess của người dùng
+	count, err := collectionLessonProcess.CountDocuments(ctx, filterLessonProcessByUser)
+	if err != nil {
+		return nil, lesson_domain.DetailResponse{}, err
+	}
+
+	var lessonsProcess []lesson_domain.LessonProcessResponse
+	// Nếu không có LessonProcess cho người dùng, khởi tạo chúng
+	if count != countLesson {
+		cursorLesson, err := collectionLesson.Find(ctx, bson.D{})
+		if err != nil {
+			return nil, lesson_domain.DetailResponse{}, err
+		}
+		defer func(cursorLesson *mongo.Cursor, ctx context.Context) {
+			err := cursorLesson.Close(ctx)
+			if err != nil {
+				return
+			}
+		}(cursorLesson, ctx)
+
+		for cursorLesson.Next(ctx) {
+			var lesson lesson_domain.Lesson
+			if err = cursorLesson.Decode(&lesson); err != nil {
+				return nil, lesson_domain.DetailResponse{}, err
+			}
+
+			wg.Add(1)
+			go func(lesson lesson_domain.Lesson) {
+				defer wg.Done()
+				lessonProcess := lesson_domain.LessonProcess{
+					LessonID:   lesson.ID,
+					CourseID:   lesson.CourseID,
+					UserID:     userID,
+					IsComplete: 0,
+				}
+
+				// Thực hiện tìm kiếm theo name để kiểm tra có dữ liệu trùng không
+				filter := bson.M{"lesson_id": lesson.ID}
+				countLessonChild, err := collectionLesson.CountDocuments(ctx, filter)
+				if err != nil {
+					errCh <- err
+					return
+				}
+
+				if countLessonChild == 0 {
+					_, err = collectionLessonProcess.InsertOne(ctx, &lessonProcess)
+					if err != nil {
+						log.Println("Error inserting course process:", err)
+						errCh <- err
+						return
+					}
+				}
+			}(lesson)
+		}
+		wg.Wait()
+
+		// Tìm các LessonProcess của người dùng với phân trang
+		cursor, err := collectionLessonProcess.Find(ctx, filterLessonProcessByUser, findOptions)
+		if err != nil {
+			return nil, lesson_domain.DetailResponse{}, err
+		}
+		defer func(cursor *mongo.Cursor, ctx context.Context) {
+			err := cursor.Close(ctx)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}(cursor, ctx)
+	}
+
+	// Tìm các LessonProcess của người dùng với phân trang
+	cursor, err := collectionLessonProcess.Find(ctx, filterLessonProcessByUser, findOptions)
+	if err != nil {
+		return nil, lesson_domain.DetailResponse{}, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			errCh <- err
+			return
+		}
+	}(cursor, ctx)
+
+	// Đọc dữ liệu từ cursor và thêm vào slice LessonProcess
+	for cursor.Next(ctx) {
+		var lessonProcess lesson_domain.LessonProcess
+		if err := cursor.Decode(&lessonProcess); err != nil {
+			return nil, lesson_domain.DetailResponse{}, err
+		}
+
+		filter := bson.M{"_id": lessonProcess.LessonID}
+		var lesson lesson_domain.Lesson
+		err = collectionLesson.FindOne(ctx, filter).Decode(&lesson)
+
+		var lessonProcessRes = lesson_domain.LessonProcessResponse{
+			Lesson:       lesson,
+			UserID:       lessonProcess.UserID,
+			IsComplete:   lessonProcess.IsComplete,
+			UnitComplete: lessonProcess.UnitComplete,
+			TotalScore:   lessonProcess.TotalScore,
+		}
+
+		mu.Lock()
+		lessonsProcess = append(lessonsProcess, lessonProcessRes)
+		mu.Unlock()
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, lesson_domain.DetailResponse{}, err
+	}
+	sort.Sort(lesson_domain.LessonProcessResponseList(lessonsProcess))
+
+	// Lấy thống kê cho detail response
+	statistics, _ := l.StatisticsProcess(ctx, filterLessonProcessByUser)
+	detail := lesson_domain.DetailResponse{
+		Statistics:  statistics,
+		Page:        totalPages,
+		CurrentPage: pageNumber,
+	}
+
+	lessonsUserProcessCache.Set(userID.Hex()+page, lessonsProcess, 5*time.Minute)
+	detailCache.Set(userID.Hex()+"detail", detail, 5*time.Minute)
+
+	select {
+	case err = <-errCh:
+		return nil, lesson_domain.DetailResponse{}, err
+	default:
+		return lessonsProcess, detail, nil
+	}
+}
+
+// FetchManyInAdmin lấy tất cả bài học (lesson) cùng một lúc (concurrency).
 // Hàm này nhận vào số trang (page) và trả về một mảng bài học làm khóa và nội dung của bài học tương ứng làm giá trị.
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả với các kết quả đã lấy được
 // FIXME: thực hiện gắn lỗi vào channel giúp tối ưu hóa xử lý
@@ -124,7 +719,8 @@ func (l *lessonRepository) FetchManyInAdmin(ctx context.Context, page string) ([
 	totalPages := (count + int64(perPage) - 1) / int64(perPage)
 
 	// thực hiện tìm kiếm theo điêu kiện options
-	cursor, err := collectionLesson.Find(ctx, bson.D{}, findOptions)
+	filter := bson.M{}
+	cursor, err := collectionLesson.Find(ctx, filter, findOptions)
 	if err != nil {
 		return nil, lesson_domain.DetailResponse{}, err
 	}
@@ -199,7 +795,7 @@ func (l *lessonRepository) FetchManyInAdmin(ctx context.Context, page string) ([
 	// Goroutine thực hiện lấy giá trị thống kê toàn bộ
 	go func() {
 		defer close(statisticsCh)
-		statistics, _ := l.Statistics(ctx)
+		statistics, _ := l.Statistics(ctx, filter)
 		statisticsCh <- statistics
 	}()
 	statistics := <-statisticsCh
@@ -226,7 +822,7 @@ func (l *lessonRepository) FetchManyInAdmin(ctx context.Context, page string) ([
 	}
 }
 
-// FetchManyNotPagination lấy tất cả bài học (lesson) cùng một lúc (concurrency)
+// FetchManyNotPaginationInAdmin lấy tất cả bài học (lesson) cùng một lúc (concurrency)
 // Hàm này không nhận đầu vào (input) và trả về một mảng bài học làm khóa và nội dung của bài học tương ứng làm giá trị
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với các kết quả đã lấy được
 func (l *lessonRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
@@ -276,7 +872,8 @@ func (l *lessonRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([
 	collectionLesson := l.database.Collection(l.collectionLesson)
 
 	// Lấy các bài học từ database
-	cursor, err := collectionLesson.Find(ctx, bson.D{})
+	filter := bson.M{}
+	cursor, err := collectionLesson.Find(ctx, filter)
 	if err != nil {
 		return nil, lesson_domain.DetailResponse{}, err
 	}
@@ -341,7 +938,7 @@ func (l *lessonRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([
 	var statisticsCh = make(chan lesson_domain.Statistics)
 	go func() {
 		defer close(statisticsCh)
-		statistic, _ := l.Statistics(ctx)
+		statistic, _ := l.Statistics(ctx, filter)
 		statisticsCh <- statistic
 	}()
 	statisticsData := <-statisticsCh
@@ -401,7 +998,7 @@ func (l *lessonRepository) FindLessonIDByLessonNameInAdmin(ctx context.Context, 
 	return data.Id, nil
 }
 
-// FetchByID lấy bài học (lesson) theo ID
+// FetchByIDInAdmin lấy bài học (lesson) theo ID
 // Hàm này nhận đầu vào (input) là lessonID và trả về một bài học làm khóa và nội dung cuủa bài học tương ứng làm giá trị
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với các kết quả đã lấy được
 func (l *lessonRepository) FetchByIDInAdmin(ctx context.Context, lessonID string) (lesson_domain.LessonResponse, error) {
@@ -500,7 +1097,7 @@ func (l *lessonRepository) FetchByIDInAdmin(ctx context.Context, lessonID string
 	}
 }
 
-// FetchByIdCourse retrieves lessons based on the given course ID and page number.
+// FetchByIdCourseInAdmin retrieves lessons based on the given course ID and page number.
 // The function accepts idCourse and page as parameters, and returns a list of lessons and a detail response.
 // If any error occurs during data retrieval, the error is returned along with the partially retrieved results.
 func (l *lessonRepository) FetchByIdCourseInAdmin(ctx context.Context, idCourse string, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
@@ -661,7 +1258,7 @@ func (l *lessonRepository) FetchByIdCourseInAdmin(ctx context.Context, idCourse 
 	}
 }
 
-// CreateOne khởi tạo bài học (lesson) theo đối tượng lesson
+// CreateOneInAdmin khởi tạo bài học (lesson) theo đối tượng lesson
 // Hàm này nhận tham số là một đối tượng và trả về kết quả thông tin xử lý (không phải là thông tin của đối tượng đó)
 // Nếu có lỗi xảy ra trong quá trình xử lý, lỗi sẽ được trả về với kết quả đã lấy được và dừng chương trình
 func (l *lessonRepository) CreateOneInAdmin(ctx context.Context, lesson *lesson_domain.Lesson) error {
@@ -737,7 +1334,7 @@ func (l *lessonRepository) CreateOneByNameCourseInAdmin(ctx context.Context, les
 	return nil
 }
 
-// UpdateOne cập nhật bài học (lesson) theo đối tượng lesson
+// UpdateOneInAdmin cập nhật bài học (lesson) theo đối tượng lesson
 // Hàm nhận tham số là đối tượng lesson. Nếu thành công sẽ trả về thông tin cập nhật (không phải thông tin đối tượng).
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với kết quả đã lấy được
 func (l *lessonRepository) UpdateOneInAdmin(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {
@@ -789,7 +1386,7 @@ func (l *lessonRepository) UpdateOneInAdmin(ctx context.Context, lesson *lesson_
 	return data, err
 }
 
-// UpdateImage cập nhật bài học (lesson) theo đối tượng lesson
+// UpdateImageInAdmin cập nhật bài học (lesson) theo đối tượng lesson
 // Hàm nhận tham số là file image. Nếu thành công sẽ trả về thông tin cập nhật (không phải thông tin đối tượng).
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với kết quả đã lấy được
 func (l *lessonRepository) UpdateImageInAdmin(ctx context.Context, lesson *lesson_domain.Lesson) (*mongo.UpdateResult, error) {
@@ -840,7 +1437,7 @@ func (l *lessonRepository) UpdateImageInAdmin(ctx context.Context, lesson *lesso
 	return data, err
 }
 
-// DeleteOne xóa bài học (lesson) theo ID
+// DeleteOneInAdmin xóa bài học (lesson) theo ID
 // Hàm này nhận đầu vào là lessonID và trả về kết quả sau khi xóa
 // Nếu có lỗi xảy ra trong quá trình xử lý, hệ thống sẽ trả về lỗi và dừng chương trình
 func (l *lessonRepository) DeleteOneInAdmin(ctx context.Context, lessonID string) error {
@@ -908,7 +1505,7 @@ func (l *lessonRepository) DeleteOneInAdmin(ctx context.Context, lessonID string
 // Statistics truy vấn thống kê về các bài học (số lượng từ vựng, đơn vị).
 // Hàm này không nhận tham số đầu vào và trả về thông tin thống kê.
 // Nếu có lỗi xảy ra trong quá trình thống kê, hàm sẽ trả về lỗi và dừng chương trình.
-func (l *lessonRepository) Statistics(ctx context.Context) (lesson_domain.Statistics, error) {
+func (l *lessonRepository) Statistics(ctx context.Context, countOptions bson.M) (lesson_domain.Statistics, error) {
 	// Khởi tạo một channel để lưu kết quả thống kê
 	statisticsCh := make(chan lesson_domain.Statistics, 1)
 	// Sử dụng waitGroup để chờ tất cả các goroutine hoàn thành
@@ -943,19 +1540,19 @@ func (l *lessonRepository) Statistics(ctx context.Context) (lesson_domain.Statis
 	collectionLesson := l.database.Collection(l.collectionLesson)
 
 	// Đếm số lượng đơn vị
-	countUnit, err := collectionUnit.CountDocuments(ctx, bson.D{})
+	countUnit, err := collectionUnit.CountDocuments(ctx, countOptions)
 	if err != nil {
 		return lesson_domain.Statistics{}, err
 	}
 
 	// Đếm số lượng từ vựng
-	countVocabulary, err := collectionVocabulary.CountDocuments(ctx, bson.D{})
+	countVocabulary, err := collectionVocabulary.CountDocuments(ctx, countOptions)
 	if err != nil {
 		return lesson_domain.Statistics{}, err
 	}
 
 	// Đếm tổng số lượng bài học
-	count, err := collectionLesson.CountDocuments(ctx, bson.D{})
+	count, err := collectionLesson.CountDocuments(ctx, countOptions)
 	if err != nil {
 		return lesson_domain.Statistics{}, err
 	}
@@ -965,6 +1562,54 @@ func (l *lessonRepository) Statistics(ctx context.Context) (lesson_domain.Statis
 		Total:           count,
 		CountUnit:       countUnit,
 		CountVocabulary: countVocabulary,
+	}
+
+	// Đặt cache memory với dữ liệu cần thiết trong 5 phút
+	statisticsCache.Set("statistics", statistics, 5*time.Minute)
+	return statistics, nil
+}
+
+func (l *lessonRepository) StatisticsProcess(ctx context.Context, countOptions bson.M) (lesson_domain.Statistics, error) {
+	// Khởi tạo một channel để lưu kết quả thống kê
+	statisticsCh := make(chan lesson_domain.Statistics, 1)
+	// Sử dụng waitGroup để chờ tất cả các goroutine hoàn thành
+	wg.Add(1)
+	// Bắt đầu một Goroutine để truy vấn dữ liệu bài học từ cache (nếu có)
+	go func() {
+		defer wg.Done()
+		data, found := statisticsCache.Get("statistics")
+		if found {
+			statisticsCh <- data
+			return
+		}
+	}()
+
+	// Goroutine để đóng channel khi tất cả công việc hoàn thành
+	go func() {
+		defer close(statisticsCh)
+		wg.Wait()
+	}()
+
+	// Nhận giá trị từ channel statisticsCh
+	statisticsData := <-statisticsCh
+	// Kiểm tra nếu statisticsData không null
+	// Nếu không, trả về giá trị đó
+	if !internal.IsZeroValue(statisticsData) {
+		return statisticsData, nil
+	}
+
+	// Khởi tạo các bộ sưu tập
+	collectionLessonProcess := l.database.Collection(l.collectionLessonProcess)
+
+	// Đếm tổng số lượng bài học
+	count, err := collectionLessonProcess.CountDocuments(ctx, countOptions)
+	if err != nil {
+		return lesson_domain.Statistics{}, err
+	}
+
+	// Tạo cấu trúc Thống kê với dữ liệu đếm
+	statistics := lesson_domain.Statistics{
+		Total: count,
 	}
 
 	// Đặt cache memory với dữ liệu cần thiết trong 5 phút

@@ -60,7 +60,7 @@ func (l *LessonController) UpdateOneLesson(ctx *gin.Context) {
 	}
 
 	// Call the use case to update the lesson in the database
-	data, err := l.LessonUseCase.UpdateOne(ctx, &updateLesson)
+	data, err := l.LessonUseCase.UpdateOneInAdmin(ctx, &updateLesson)
 	if err != nil {
 		// Respond with bad request if update fails
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -182,7 +182,7 @@ func (l *LessonController) UpdateImageLesson(ctx *gin.Context) {
 		WhoUpdates: admin.FullName,
 	}
 
-	data, err := l.LessonUseCase.UpdateOne(ctx, &updateLesson)
+	data, err := l.LessonUseCase.UpdateOneInAdmin(ctx, &updateLesson)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

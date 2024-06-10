@@ -2,7 +2,6 @@ package course_usecase
 
 import (
 	course_domain "clean-architecture/domain/course"
-	lesson_management_domain "clean-architecture/domain/user_process/lesson_management"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,12 +20,7 @@ func NewCourseUseCase(courseRepository course_domain.ICourseRepository, timeout 
 	}
 }
 
-func (c *courseUseCase) UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c *courseUseCase) FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]lesson_management_domain.CourseProcess, course_domain.DetailForManyResponse, error) {
+func (c *courseUseCase) FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]course_domain.CourseProcess, course_domain.DetailForManyResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
 
@@ -38,13 +32,13 @@ func (c *courseUseCase) FetchManyInUser(ctx context.Context, userID primitive.Ob
 	return course, detail, nil
 }
 
-func (c *courseUseCase) FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, courseID string) (lesson_management_domain.CourseProcess, error) {
+func (c *courseUseCase) FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, courseID string) (course_domain.CourseProcess, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
 
 	course, err := c.courseRepository.FetchByIDInUser(ctx, userID, courseID)
 	if err != nil {
-		return lesson_management_domain.CourseProcess{}, err
+		return course_domain.CourseProcess{}, err
 	}
 
 	return course, nil
@@ -96,6 +90,11 @@ func (c *courseUseCase) CreateOneInAdmin(ctx context.Context, course *course_dom
 	}
 
 	return nil
+}
+
+func (c *courseUseCase) UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (c *courseUseCase) UpdateOneInAdmin(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {

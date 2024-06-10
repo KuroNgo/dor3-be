@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (e *ExamsController) UpdateOneExam(ctx *gin.Context) {
+func (e *ExamsController) UpdateOneExamInAdmin(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{

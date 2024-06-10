@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (c *CourseController) FetchCourse(ctx *gin.Context) {
+func (c *CourseController) FetchCourseInUser(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -41,7 +41,7 @@ func (c *CourseController) FetchCourse(ctx *gin.Context) {
 	})
 }
 
-func (c *CourseController) FetchCourseByID(ctx *gin.Context) {
+func (c *CourseController) FetchCourseByIDInUser(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -59,8 +59,7 @@ func (c *CourseController) FetchCourseByID(ctx *gin.Context) {
 		return
 	}
 
-	courseID := ctx.Query("_id")
-
+	courseID := ctx.Query("course_id")
 	course, err := c.CourseUseCase.FetchByIDInUser(ctx, user.ID, courseID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{

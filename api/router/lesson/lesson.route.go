@@ -23,7 +23,7 @@ import (
 )
 
 func LessonRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	le := lesson_repository.NewLessonRepository(db, lesson_domain.CollectionLesson, course_domain.CollectionCourse, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
+	le := lesson_repository.NewLessonRepository(db, lesson_domain.CollectionLesson, lesson_domain.CollectionLessonProcess, course_domain.CollectionCourse, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
 	ur := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 	im := image_repository.NewImageRepository(db, image_domain.CollectionImage)
 
@@ -36,8 +36,8 @@ func LessonRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Datab
 
 	router := group.Group("/lesson")
 	router.Use(middleware.DeserializeUser())
-	router.GET("/fetch", lesson.FetchMany)
-	router.GET("/fetch/not", lesson.FetchManyNotPagination)
-	router.GET("/fetch/_id", lesson.FetchById)
-	router.GET("/fetch/course_id", lesson.FetchByIdCourse)
+	router.GET("/fetch", lesson.FetchManyInUser)
+	router.GET("/fetch/course_id", lesson.FetchByIdCourseInUser)
+	router.GET("/fetch/_id", lesson.FetchByIdInUser)
+	router.GET("/fetch/not", lesson.FetchManyNotPaginationInUser)
 }
