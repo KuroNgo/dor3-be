@@ -10,7 +10,7 @@ import (
 	quiz_domain "clean-architecture/domain/quiz"
 	user_domain "clean-architecture/domain/user"
 	user_detail_domain "clean-architecture/domain/user_detail"
-	user_attempt_domain "clean-architecture/domain/user_process/exam_management"
+	user_attempt_domain "clean-architecture/domain/user_process"
 	"clean-architecture/repository/exam_result"
 	user_repository "clean-architecture/repository/user"
 	user_attempt_repository "clean-architecture/repository/user_attempt"

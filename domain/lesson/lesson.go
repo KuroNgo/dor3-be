@@ -2,6 +2,7 @@ package lesson_domain
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
@@ -57,6 +58,11 @@ type Statistics struct {
 
 //go:generate mockery --name ILessonRepository
 type ILessonRepository interface {
+	FetchManyNotPaginationInUser(ctx context.Context, userID primitive.ObjectID) ([]LessonProcessResponse, DetailResponse, error)
+	FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, lessonID string) (LessonProcessResponse, error)
+	FetchByIDCourseInUser(ctx context.Context, userID primitive.ObjectID, courseID string, page string) ([]LessonProcessResponse, DetailResponse, error)
+	FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]LessonProcessResponse, DetailResponse, error)
+
 	FetchManyInAdmin(ctx context.Context, page string) ([]LessonResponse, DetailResponse, error)
 	FetchManyNotPaginationInAdmin(ctx context.Context) ([]LessonResponse, DetailResponse, error)
 	FetchByIDInAdmin(ctx context.Context, lessonID string) (LessonResponse, error)
@@ -68,5 +74,7 @@ type ILessonRepository interface {
 	DeleteOneInAdmin(ctx context.Context, lessonID string) error
 	UpdateImageInAdmin(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
 	UpdateOneInAdmin(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
-	Statistics(ctx context.Context) (Statistics, error)
+
+	Statistics(ctx context.Context, countOptions bson.M) (Statistics, error)
+	StatisticsProcess(ctx context.Context, countOptions bson.M) (Statistics, error)
 }

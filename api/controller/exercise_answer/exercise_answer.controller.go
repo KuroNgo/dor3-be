@@ -5,7 +5,7 @@ import (
 	exercise_answer_domain "clean-architecture/domain/exercise_answer"
 	exercise_result_domain "clean-architecture/domain/exercise_result"
 	user_domain "clean-architecture/domain/user"
-	user_attempt_domain "clean-architecture/domain/user_process/exam_management"
+	user_attempt_domain "clean-architecture/domain/user_process"
 )
 
 type ExerciseAnswerController struct {

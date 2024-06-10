@@ -1,7 +1,6 @@
 package course_domain
 
 import (
-	lesson_management_domain "clean-architecture/domain/user_process/lesson_management"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,8 +14,8 @@ type Input struct {
 
 //go:generate mockery --name ICourseUseCase
 type ICourseUseCase interface {
-	FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]lesson_management_domain.CourseProcess, DetailForManyResponse, error)
-	FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, courseID string) (lesson_management_domain.CourseProcess, error)
+	FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]CourseProcess, DetailForManyResponse, error)
+	FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, courseID string) (CourseProcess, error)
 	UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error)
 
 	FetchManyForEachCourseInAdmin(ctx context.Context, page string) ([]CourseResponse, DetailForManyResponse, error)

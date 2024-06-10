@@ -3,7 +3,7 @@ package user_attempt_controller
 import (
 	"clean-architecture/bootstrap"
 	user_domain "clean-architecture/domain/user"
-	user_attempt_domain "clean-architecture/domain/user_process/exam_management"
+	user_attempt_domain "clean-architecture/domain/user_process"
 )
 
 type UserAttemptController struct {

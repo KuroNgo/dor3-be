@@ -1,13 +1,13 @@
-package exam_management_domain
+package exercise_domain
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 const (
-	CollectionQuizProcess = "quiz_process"
+	CollectionExerciseProcess = "exercise_process"
 )
 
-type QuizProcess struct {
-	QuizID     primitive.ObjectID `json:"quiz_id" bson:"quiz_id"`
+type ExerciseProcess struct {
+	ExerciseID primitive.ObjectID `json:"exercise_id" bson:"exercise_id"`
 	UserID     primitive.ObjectID `json:"user_id" bson:"user_id"`
 	IsComplete int                `json:"is_complete" bson:"is_complete"`
 }

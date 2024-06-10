@@ -1,4 +1,4 @@
-package lesson_management_domain
+package vocabulary_domain
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 

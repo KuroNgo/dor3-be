@@ -3,7 +3,7 @@ package exercise_answer_controller
 import (
 	exercise_answer_domain "clean-architecture/domain/exercise_answer"
 	exercise_result_domain "clean-architecture/domain/exercise_result"
-	user_attempt_domain "clean-architecture/domain/user_process/exam_management"
+	user_attempt_domain "clean-architecture/domain/user_process"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"

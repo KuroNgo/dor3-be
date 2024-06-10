@@ -1,8 +1,8 @@
 package course_domain
 
 import (
-	lesson_management_domain "clean-architecture/domain/user_process/lesson_management"
 	"context"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
@@ -46,8 +46,8 @@ type Statistics struct {
 
 //go:generate mockery --name ICourseRepository
 type ICourseRepository interface {
-	FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]lesson_management_domain.CourseProcess, DetailForManyResponse, error)
-	FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, courseID string) (lesson_management_domain.CourseProcess, error)
+	FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]CourseProcess, DetailForManyResponse, error)
+	FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, courseID string) (CourseProcess, error)
 	UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error)
 
 	FetchManyForEachCourseInAdmin(ctx context.Context, page string) ([]CourseResponse, DetailForManyResponse, error)
@@ -57,5 +57,6 @@ type ICourseRepository interface {
 	CreateOneInAdmin(ctx context.Context, course *Course) error
 	UpdateOneInAdmin(ctx context.Context, course *Course) (*mongo.UpdateResult, error)
 	DeleteOneInAdmin(ctx context.Context, courseID string) error
-	Statistics(ctx context.Context) (Statistics, error)
+	Statistics(ctx context.Context, countOptions bson.M) (Statistics, error)
+	StatisticsProcess(ctx context.Context, countOptions bson.M) (Statistics, error)
 }
