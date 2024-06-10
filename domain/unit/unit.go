@@ -50,13 +50,15 @@ type Statistics struct {
 
 //go:generate mockery --name IUnitRepository
 type IUnitRepository interface {
-	FetchMany(ctx context.Context, page string) ([]UnitResponse, DetailResponse, error)
-	FetchOneByID(ctx context.Context, id string) (UnitResponse, error)
-	FetchManyNotPagination(ctx context.Context) ([]UnitResponse, error)
-	FetchByIdLesson(ctx context.Context, idLesson string, page string) ([]UnitResponse, DetailResponse, error)
+	UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error)
 
-	CreateOne(ctx context.Context, unit *Unit) error
-	CreateOneByNameLesson(ctx context.Context, unit *Unit) error
-	DeleteOne(ctx context.Context, unitID string) error
-	UpdateOne(ctx context.Context, unit *Unit) (*mongo.UpdateResult, error)
+	FetchManyInAdmin(ctx context.Context, page string) ([]UnitResponse, DetailResponse, error)
+	FetchOneByIDInAdmin(ctx context.Context, id string) (UnitResponse, error)
+	FetchManyNotPaginationInAdmin(ctx context.Context) ([]UnitResponse, error)
+	FetchByIdLessonInAdmin(ctx context.Context, idLesson string, page string) ([]UnitResponse, DetailResponse, error)
+
+	CreateOneInAdmin(ctx context.Context, unit *Unit) error
+	CreateOneByNameLessonInAdmin(ctx context.Context, unit *Unit) error
+	DeleteOneInAdmin(ctx context.Context, unitID string) error
+	UpdateOneInAdmin(ctx context.Context, unit *Unit) (*mongo.UpdateResult, error)
 }

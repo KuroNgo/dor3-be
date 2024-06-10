@@ -44,9 +44,8 @@ var (
 	lessonPrimOIDCache      = cache.NewTTL[string, primitive.ObjectID]()
 	lessonsUserProcessCache = cache.NewTTL[string, []lesson_domain.LessonProcessResponse]()
 	lessonUserProcessCache  = cache.NewTTL[string, lesson_domain.LessonProcessResponse]()
-
-	detailCache     = cache.NewTTL[string, lesson_domain.DetailResponse]()
-	statisticsCache = cache.NewTTL[string, lesson_domain.Statistics]()
+	detailCache             = cache.NewTTL[string, lesson_domain.DetailResponse]()
+	statisticsCache         = cache.NewTTL[string, lesson_domain.Statistics]()
 
 	wg           sync.WaitGroup
 	mu           sync.Mutex
@@ -213,7 +212,7 @@ func (l *lessonRepository) FetchManyNotPaginationInUser(ctx context.Context, use
 	sort.Sort(lesson_domain.LessonProcessResponseList(lessonsProcess))
 
 	// Lấy thống kê cho detail response
-	statistics, _ := l.StatisticsProcess(ctx, filterLessonProcessByUser)
+	statistics, _ := l.Statistics(ctx, filterLessonProcessByUser)
 	detail := lesson_domain.DetailResponse{
 		Statistics: statistics,
 	}
@@ -434,7 +433,7 @@ func (l *lessonRepository) FetchByIDCourseInUser(ctx context.Context, userID pri
 	sort.Sort(lesson_domain.LessonProcessResponseList(lessonsProcess))
 
 	// Lấy thống kê cho detail response
-	statistics, _ := l.StatisticsProcess(ctx, filterLessonProcessByUser)
+	statistics, _ := l.Statistics(ctx, filterLessonProcessByUser)
 	detail := lesson_domain.DetailResponse{
 		Statistics:  statistics,
 		Page:        totalPages,
@@ -623,7 +622,7 @@ func (l *lessonRepository) FetchManyInUser(ctx context.Context, userID primitive
 	sort.Sort(lesson_domain.LessonProcessResponseList(lessonsProcess))
 
 	// Lấy thống kê cho detail response
-	statistics, _ := l.StatisticsProcess(ctx, filterLessonProcessByUser)
+	statistics, _ := l.Statistics(ctx, filterLessonProcessByUser)
 	detail := lesson_domain.DetailResponse{
 		Statistics:  statistics,
 		Page:        totalPages,
@@ -639,6 +638,11 @@ func (l *lessonRepository) FetchManyInUser(ctx context.Context, userID primitive
 	default:
 		return lessonsProcess, detail, nil
 	}
+}
+
+func (l *lessonRepository) UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 // FetchManyInAdmin lấy tất cả bài học (lesson) cùng một lúc (concurrency).
@@ -1562,54 +1566,6 @@ func (l *lessonRepository) Statistics(ctx context.Context, countOptions bson.M) 
 		Total:           count,
 		CountUnit:       countUnit,
 		CountVocabulary: countVocabulary,
-	}
-
-	// Đặt cache memory với dữ liệu cần thiết trong 5 phút
-	statisticsCache.Set("statistics", statistics, 5*time.Minute)
-	return statistics, nil
-}
-
-func (l *lessonRepository) StatisticsProcess(ctx context.Context, countOptions bson.M) (lesson_domain.Statistics, error) {
-	// Khởi tạo một channel để lưu kết quả thống kê
-	statisticsCh := make(chan lesson_domain.Statistics, 1)
-	// Sử dụng waitGroup để chờ tất cả các goroutine hoàn thành
-	wg.Add(1)
-	// Bắt đầu một Goroutine để truy vấn dữ liệu bài học từ cache (nếu có)
-	go func() {
-		defer wg.Done()
-		data, found := statisticsCache.Get("statistics")
-		if found {
-			statisticsCh <- data
-			return
-		}
-	}()
-
-	// Goroutine để đóng channel khi tất cả công việc hoàn thành
-	go func() {
-		defer close(statisticsCh)
-		wg.Wait()
-	}()
-
-	// Nhận giá trị từ channel statisticsCh
-	statisticsData := <-statisticsCh
-	// Kiểm tra nếu statisticsData không null
-	// Nếu không, trả về giá trị đó
-	if !internal.IsZeroValue(statisticsData) {
-		return statisticsData, nil
-	}
-
-	// Khởi tạo các bộ sưu tập
-	collectionLessonProcess := l.database.Collection(l.collectionLessonProcess)
-
-	// Đếm tổng số lượng bài học
-	count, err := collectionLessonProcess.CountDocuments(ctx, countOptions)
-	if err != nil {
-		return lesson_domain.Statistics{}, err
-	}
-
-	// Tạo cấu trúc Thống kê với dữ liệu đếm
-	statistics := lesson_domain.Statistics{
-		Total: count,
 	}
 
 	// Đặt cache memory với dữ liệu cần thiết trong 5 phút

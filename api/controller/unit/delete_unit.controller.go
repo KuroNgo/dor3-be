@@ -26,7 +26,7 @@ func (u *UnitController) DeleteOneUnit(ctx *gin.Context) {
 
 	lessonID := ctx.Query("_id")
 
-	err = u.UnitUseCase.DeleteOne(ctx, lessonID)
+	err = u.UnitUseCase.DeleteOneInAdmin(ctx, lessonID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

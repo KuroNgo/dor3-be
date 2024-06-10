@@ -62,6 +62,7 @@ type ILessonRepository interface {
 	FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, lessonID string) (LessonProcessResponse, error)
 	FetchByIDCourseInUser(ctx context.Context, userID primitive.ObjectID, courseID string, page string) ([]LessonProcessResponse, DetailResponse, error)
 	FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]LessonProcessResponse, DetailResponse, error)
+	UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error)
 
 	FetchManyInAdmin(ctx context.Context, page string) ([]LessonResponse, DetailResponse, error)
 	FetchManyNotPaginationInAdmin(ctx context.Context) ([]LessonResponse, DetailResponse, error)
@@ -76,5 +77,4 @@ type ILessonRepository interface {
 	UpdateOneInAdmin(ctx context.Context, lesson *Lesson) (*mongo.UpdateResult, error)
 
 	Statistics(ctx context.Context, countOptions bson.M) (Statistics, error)
-	StatisticsProcess(ctx context.Context, countOptions bson.M) (Statistics, error)
 }

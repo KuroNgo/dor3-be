@@ -58,7 +58,7 @@ func (u *UnitController) CreateOneUnit(ctx *gin.Context) {
 		WhoCreate: admin.FullName,
 	}
 
-	err = u.UnitUseCase.CreateOne(ctx, unitRes)
+	err = u.UnitUseCase.CreateOneInAdmin(ctx, unitRes)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -163,7 +163,7 @@ func (u *UnitController) CreateUnitWithFile(ctx *gin.Context) {
 			}
 
 			// Tạo đơn vị trong cơ sở dữ liệu
-			err = u.UnitUseCase.CreateOneByNameLesson(ctx, &elUnit)
+			err = u.UnitUseCase.CreateOneByNameLessonInAdmin(ctx, &elUnit)
 			if err != nil {
 				errChan <- fmt.Errorf("failed to create unit '%s': %v", elUnit.Name, err)
 				return

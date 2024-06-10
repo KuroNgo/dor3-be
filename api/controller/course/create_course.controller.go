@@ -277,7 +277,7 @@ func (c *CourseController) CreateLessonManagementWithFileInAdmin(ctx *gin.Contex
 			WhoCreate: admin.FullName,
 		}
 
-		_ = c.UnitUseCase.CreateOneByNameLesson(ctx, &un)
+		_ = c.UnitUseCase.CreateOneByNameLessonInAdmin(ctx, &un)
 	}
 
 	resVocabulary, err := excel.ReadFileForVocabulary(file.Filename)
