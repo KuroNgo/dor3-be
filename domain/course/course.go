@@ -57,6 +57,6 @@ type ICourseRepository interface {
 	CreateOneInAdmin(ctx context.Context, course *Course) error
 	UpdateOneInAdmin(ctx context.Context, course *Course) (*mongo.UpdateResult, error)
 	DeleteOneInAdmin(ctx context.Context, courseID string) error
+
 	Statistics(ctx context.Context, countOptions bson.M) (Statistics, error)
-	StatisticsProcess(ctx context.Context, countOptions bson.M) (Statistics, error)
 }

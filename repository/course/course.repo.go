@@ -43,9 +43,8 @@ var (
 	coursePrimOIDCache      = cache.NewTTL[string, primitive.ObjectID]()
 	coursesUserProcessCache = cache.NewTTL[string, []course_domain.CourseProcess]()
 	courseUserProcessCache  = cache.NewTTL[string, course_domain.CourseProcess]()
-
-	detailCache     = cache.NewTTL[string, course_domain.DetailForManyResponse]()
-	statisticsCache = cache.NewTTL[string, course_domain.Statistics]()
+	detailCache             = cache.NewTTL[string, course_domain.DetailForManyResponse]()
+	statisticsCache         = cache.NewTTL[string, course_domain.Statistics]()
 
 	wg           sync.WaitGroup
 	mu           sync.Mutex
@@ -325,7 +324,7 @@ func (c *courseRepository) FetchManyInUser(ctx context.Context, userID primitive
 	}
 
 	// Lấy thống kê cho detail response
-	statistics, _ := c.StatisticsProcess(ctx, filterCourseProcessByUser)
+	statistics, _ := c.Statistics(ctx, filterCourseProcessByUser)
 	detail := course_domain.DetailForManyResponse{
 		Statistics:  statistics,
 		Page:        totalPages,
@@ -342,6 +341,11 @@ func (c *courseRepository) FetchManyInUser(ctx context.Context, userID primitive
 	default:
 		return coursesProcess, detail, nil
 	}
+}
+
+func (c *courseRepository) UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 // FetchByIDInAdmin lấy khóa học (course) theo ID
@@ -654,11 +658,6 @@ func (c *courseRepository) FindCourseIDByCourseNameInAdmin(ctx context.Context, 
 	return data.Id, nil
 }
 
-func (c *courseRepository) UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 // UpdateOneInAdmin cập nhật khóa học (course) theo đối tượng course
 // Hàm nhận tham số là đối tượng Course. Nếu thành công sẽ trả về thông tin cập nhật (không phải thông tin đối tượng).
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với kết quả đã lấy được
@@ -913,52 +912,6 @@ func (c *courseRepository) Statistics(ctx context.Context, countOptions bson.M) 
 
 	collectionCourse := c.database.Collection(c.collectionCourse)
 	count, err := collectionCourse.CountDocuments(ctx, countOptions)
-	if err != nil {
-		return course_domain.Statistics{}, err
-	}
-
-	statistics := course_domain.Statistics{
-		Total: count,
-	}
-
-	// Thiết lập Set cache memory với dữ liệu cần thiết với thơi gian là 5 phút
-	statisticsCache.Set("statistics", statistics, 5*time.Minute)
-	return statistics, nil
-}
-
-func (c *courseRepository) StatisticsProcess(ctx context.Context, countOptions bson.M) (course_domain.Statistics, error) {
-	// Khởi tạo channel để lưu kết quả statistics
-	statisticsCh := make(chan course_domain.Statistics, 1)
-
-	// Sử dụng waitGroup để đợi tất cả goroutine hoàn thành
-	wg.Add(1)
-	// Khởi động Goroutine giúp tìm dữ liệu lesson
-	// theo id trong cache (đã từng tìm lessonID này hay chưa)
-	go func() {
-		defer wg.Done()
-		data, found := statisticsCache.Get("statistics")
-		if found {
-			statisticsCh <- data
-			return
-		}
-	}()
-
-	// Goroutine để đóng các channel khi tất cả các công việc hoàn thành
-	go func() {
-		defer close(statisticsCh)
-		wg.Wait()
-	}()
-
-	// Channel gửi giá trị cho biến statisticsData
-	statisticsData := <-statisticsCh
-	// Kiểm tra giá trị statisticsData có null ?
-	// Nếu không thì sẽ thực hiện trả về giá trị
-	if !internal.IsZeroValue(statisticsData) {
-		return statisticsData, nil
-	}
-
-	collectionCourseProcess := c.database.Collection(c.collectionCourseProcess)
-	count, err := collectionCourseProcess.CountDocuments(ctx, countOptions)
 	if err != nil {
 		return course_domain.Statistics{}, err
 	}

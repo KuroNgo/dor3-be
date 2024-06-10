@@ -48,7 +48,7 @@ var (
 	isProcessing bool
 )
 
-// FetchMany retrieves multiple unit responses and a detail response for a given page number.
+// FetchManyInAdmin retrieves multiple unit responses and a detail response for a given page number.
 // It first attempts to retrieve data from the cache. If the data is not found in the cache,
 // it queries the database to fetch the data. The results are then cached for future use.
 //
@@ -60,7 +60,7 @@ var (
 // - []unit_domain.UnitResponse: A slice of UnitResponse containing the fetched unit data.
 // - unit_domain.DetailResponse: A DetailResponse containing pagination details.
 // - error: An error object if an error occurred during the process, or nil if successful.
-func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
+func (u *unitRepository) FetchManyInAdmin(ctx context.Context, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
 	// Channel to log errors
 	errCh := make(chan error, 1)
 	defer close(errCh)
@@ -185,7 +185,7 @@ func (u *unitRepository) FetchMany(ctx context.Context, page string) ([]unit_dom
 	}
 }
 
-func (u *unitRepository) FetchManyNotPagination(ctx context.Context) ([]unit_domain.UnitResponse, error) {
+func (u *unitRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([]unit_domain.UnitResponse, error) {
 	errCh := make(chan error)
 	defer close(errCh)
 	// Channel to save units
@@ -263,7 +263,7 @@ func (u *unitRepository) FetchManyNotPagination(ctx context.Context) ([]unit_dom
 	}
 }
 
-func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
+func (u *unitRepository) FetchByIdLessonInAdmin(ctx context.Context, idLesson string, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -325,7 +325,7 @@ func (u *unitRepository) FetchByIdLesson(ctx context.Context, idLesson string, p
 	return units, response, nil
 }
 
-func (u *unitRepository) FetchOneByID(ctx context.Context, id string) (unit_domain.UnitResponse, error) {
+func (u *unitRepository) FetchOneByIDInAdmin(ctx context.Context, id string) (unit_domain.UnitResponse, error) {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 
 	idUnit, err := primitive.ObjectIDFromHex(id)
@@ -349,7 +349,7 @@ func (u *unitRepository) FetchOneByID(ctx context.Context, id string) (unit_doma
 	return unit, nil
 }
 
-func (u *unitRepository) CreateOneByNameLesson(ctx context.Context, unit *unit_domain.Unit) error {
+func (u *unitRepository) CreateOneByNameLessonInAdmin(ctx context.Context, unit *unit_domain.Unit) error {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -391,7 +391,7 @@ func (u *unitRepository) CreateOneByNameLesson(ctx context.Context, unit *unit_d
 	return nil
 }
 
-func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) error {
+func (u *unitRepository) CreateOneInAdmin(ctx context.Context, unit *unit_domain.Unit) error {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -444,74 +444,7 @@ func (u *unitRepository) CreateOne(ctx context.Context, unit *unit_domain.Unit) 
 	return errors.New("the unit cannot be created because the vocabulary in the latest unit is not complete")
 }
 
-func (u *unitRepository) UpdateComplete(ctx context.Context, updateData *unit_domain.Unit) error {
-	// Implement a channel to log errors
-	errCh := make(chan error)
-	wg.Add(2)
-
-	go func() {
-		defer wg.Done()
-		isLessonComplete, err := u.CheckLessonComplete(ctx, updateData.LessonID)
-		if err != nil {
-			errCh <- err
-			return
-		}
-
-		lessonCollection := u.database.Collection(u.collectionLesson)
-		if err != nil {
-			errCh <- err
-			return
-		}
-
-		lessonUpdate := bson.D{{Key: "$set", Value: bson.D{{Key: "is_complete", Value: isLessonComplete}}}}
-		lessonFilter := bson.D{{Key: "_id", Value: updateData.LessonID}}
-		_, err = lessonCollection.UpdateOne(ctx, lessonFilter, &lessonUpdate)
-		if err != nil {
-			errCh <- err
-			return
-		}
-	}()
-
-	wg.Wait()
-	close(errCh)
-
-	select {
-	case err := <-errCh:
-		return err
-	default:
-		return nil
-	}
-}
-
-func (u *unitRepository) CheckLessonComplete(ctx context.Context, lessonID primitive.ObjectID) (bool, error) {
-	collection := u.database.Collection(u.collectionUnit)
-
-	cursor, err := collection.Find(ctx, bson.D{{Key: "lesson_id", Value: lessonID}})
-	if err != nil {
-		return false, err
-	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
-		if err != nil {
-			return
-		}
-	}(cursor, ctx)
-
-	if !cursor.Next(ctx) {
-		return false, nil
-	}
-
-	for cursor.Next(ctx) {
-		var unit unit_domain.Unit
-		if err := cursor.Decode(&unit); err != nil {
-			return false, err
-		}
-	}
-
-	return true, nil
-}
-
-func (u *unitRepository) UpdateOne(ctx context.Context, unit *unit_domain.Unit) (*mongo.UpdateResult, error) {
+func (u *unitRepository) UpdateOneInAdmin(ctx context.Context, unit *unit_domain.Unit) (*mongo.UpdateResult, error) {
 	collection := u.database.Collection(u.collectionUnit)
 
 	filter := bson.D{{Key: "_id", Value: unit.ID}}
@@ -524,7 +457,12 @@ func (u *unitRepository) UpdateOne(ctx context.Context, unit *unit_domain.Unit) 
 	return data, nil
 }
 
-func (u *unitRepository) DeleteOne(ctx context.Context, unitID string) error {
+func (u *unitRepository) UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u *unitRepository) DeleteOneInAdmin(ctx context.Context, unitID string) error {
 	collectionUnit := u.database.Collection(u.collectionUnit)
 	collectionVocabulary := u.database.Collection(u.collectionVocabulary)
 	objID, err := primitive.ObjectIDFromHex(unitID)

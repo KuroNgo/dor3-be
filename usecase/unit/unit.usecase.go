@@ -19,11 +19,11 @@ func NewUnitUseCase(unitRepository unit_domain.IUnitRepository, timeout time.Dur
 	}
 }
 
-func (u *unitUseCase) FetchMany(ctx context.Context, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
+func (u *unitUseCase) FetchManyInAdmin(ctx context.Context, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
-	unit, detail, err := u.unitRepository.FetchMany(ctx, page)
+	unit, detail, err := u.unitRepository.FetchManyInAdmin(ctx, page)
 	if err != nil {
 		return nil, unit_domain.DetailResponse{}, err
 	}
@@ -31,11 +31,11 @@ func (u *unitUseCase) FetchMany(ctx context.Context, page string) ([]unit_domain
 	return unit, detail, err
 }
 
-func (u *unitUseCase) FetchManyNotPagination(ctx context.Context) ([]unit_domain.UnitResponse, error) {
+func (u *unitUseCase) FetchManyNotPaginationInAdmin(ctx context.Context) ([]unit_domain.UnitResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
-	unit, err := u.unitRepository.FetchManyNotPagination(ctx)
+	unit, err := u.unitRepository.FetchManyNotPaginationInAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -43,11 +43,11 @@ func (u *unitUseCase) FetchManyNotPagination(ctx context.Context) ([]unit_domain
 	return unit, err
 }
 
-func (u *unitUseCase) FetchByIdLesson(ctx context.Context, idLesson string, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
+func (u *unitUseCase) FetchByIdLessonInAdmin(ctx context.Context, idLesson string, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
-	unit, detail, err := u.unitRepository.FetchByIdLesson(ctx, idLesson, page)
+	unit, detail, err := u.unitRepository.FetchByIdLessonInAdmin(ctx, idLesson, page)
 	if err != nil {
 		return nil, unit_domain.DetailResponse{}, err
 	}
@@ -55,10 +55,10 @@ func (u *unitUseCase) FetchByIdLesson(ctx context.Context, idLesson string, page
 	return unit, detail, err
 }
 
-func (u *unitUseCase) FetchOneByID(ctx context.Context, id string) (unit_domain.UnitResponse, error) {
+func (u *unitUseCase) FetchOneByIDInAdmin(ctx context.Context, id string) (unit_domain.UnitResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
-	data, err := u.unitRepository.FetchOneByID(ctx, id)
+	data, err := u.unitRepository.FetchOneByIDInAdmin(ctx, id)
 
 	if err != nil {
 		return unit_domain.UnitResponse{}, err
@@ -67,10 +67,10 @@ func (u *unitUseCase) FetchOneByID(ctx context.Context, id string) (unit_domain.
 	return data, nil
 }
 
-func (u *unitUseCase) CreateOne(ctx context.Context, unit *unit_domain.Unit) error {
+func (u *unitUseCase) CreateOneInAdmin(ctx context.Context, unit *unit_domain.Unit) error {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
-	err := u.unitRepository.CreateOne(ctx, unit)
+	err := u.unitRepository.CreateOneInAdmin(ctx, unit)
 
 	if err != nil {
 		return err
@@ -79,10 +79,10 @@ func (u *unitUseCase) CreateOne(ctx context.Context, unit *unit_domain.Unit) err
 	return nil
 }
 
-func (u *unitUseCase) CreateOneByNameLesson(ctx context.Context, unit *unit_domain.Unit) error {
+func (u *unitUseCase) CreateOneByNameLessonInAdmin(ctx context.Context, unit *unit_domain.Unit) error {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
-	err := u.unitRepository.CreateOneByNameLesson(ctx, unit)
+	err := u.unitRepository.CreateOneByNameLessonInAdmin(ctx, unit)
 
 	if err != nil {
 		return err
@@ -91,10 +91,10 @@ func (u *unitUseCase) CreateOneByNameLesson(ctx context.Context, unit *unit_doma
 	return nil
 }
 
-func (u *unitUseCase) UpdateOne(ctx context.Context, unit *unit_domain.Unit) (*mongo.UpdateResult, error) {
+func (u *unitUseCase) UpdateOneInAdmin(ctx context.Context, unit *unit_domain.Unit) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
-	data, err := u.unitRepository.UpdateOne(ctx, unit)
+	data, err := u.unitRepository.UpdateOneInAdmin(ctx, unit)
 
 	if err != nil {
 		return nil, err
@@ -102,11 +102,16 @@ func (u *unitUseCase) UpdateOne(ctx context.Context, unit *unit_domain.Unit) (*m
 	return data, nil
 }
 
-func (u *unitUseCase) DeleteOne(ctx context.Context, unitID string) error {
+func (u *unitUseCase) UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u *unitUseCase) DeleteOneInAdmin(ctx context.Context, unitID string) error {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
-	err := u.unitRepository.DeleteOne(ctx, unitID)
+	err := u.unitRepository.DeleteOneInAdmin(ctx, unitID)
 	if err != nil {
 		return err
 	}
