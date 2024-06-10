@@ -53,11 +53,11 @@ var (
 )
 
 func (l *lessonRepository) FetchManyNotPaginationInUser(ctx context.Context, userID primitive.ObjectID) ([]lesson_domain.LessonProcessResponse, lesson_domain.DetailResponse, error) {
-	errCh := make(chan error)
+	errCh := make(chan error, 1)
 	defer close(errCh)
 
-	lessonsUserProcessCh := make(chan []lesson_domain.LessonProcessResponse)
-	detailCh := make(chan lesson_domain.DetailResponse)
+	lessonsUserProcessCh := make(chan []lesson_domain.LessonProcessResponse, 1)
+	detailCh := make(chan lesson_domain.DetailResponse, 1)
 
 	wg.Add(2)
 	go func() {
@@ -229,6 +229,27 @@ func (l *lessonRepository) FetchManyNotPaginationInUser(ctx context.Context, use
 }
 
 func (l *lessonRepository) FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, lessonID string) (lesson_domain.LessonProcessResponse, error) {
+	lessonCh := make(chan lesson_domain.LessonProcessResponse, 1)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := lessonUserProcessCache.Get(userID.Hex() + lessonID)
+		if found {
+			lessonCh <- data
+			return
+		}
+	}()
+
+	go func() {
+		defer close(lessonCh)
+		wg.Wait()
+	}()
+
+	lessonData := <-lessonCh
+	if !internal.IsZeroValue(lessonData) {
+		return lessonData, nil
+	}
+
 	collectionLesson := l.database.Collection(l.collectionLesson)
 	collectionLessonProcess := l.database.Collection(l.collectionLessonProcess)
 
@@ -256,6 +277,7 @@ func (l *lessonRepository) FetchByIDInUser(ctx context.Context, userID primitive
 		TotalScore:   lessonProcess.TotalScore,
 	}
 
+	lessonUserProcessCache.Set(userID.Hex()+lessonID, lessonProcessRes, 5*time.Minute)
 	return lessonProcessRes, nil
 }
 
@@ -452,7 +474,7 @@ func (l *lessonRepository) FetchByIDCourseInUser(ctx context.Context, userID pri
 }
 
 func (l *lessonRepository) FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]lesson_domain.LessonProcessResponse, lesson_domain.DetailResponse, error) {
-	errCh := make(chan error)
+	errCh := make(chan error, 1)
 	defer close(errCh)
 
 	lessonsUserProcessCh := make(chan []lesson_domain.LessonProcessResponse)
@@ -966,7 +988,7 @@ func (l *lessonRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([
 }
 
 func (l *lessonRepository) FindLessonIDByLessonNameInAdmin(ctx context.Context, lessonName string) (primitive.ObjectID, error) {
-	lessonPriOIDCh := make(chan primitive.ObjectID)
+	lessonPriOIDCh := make(chan primitive.ObjectID, 1)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -1007,9 +1029,9 @@ func (l *lessonRepository) FindLessonIDByLessonNameInAdmin(ctx context.Context, 
 // Nếu có lỗi xảy ra trong quá trình lấy dữ liệu, lỗi đó sẽ được trả về với các kết quả đã lấy được
 func (l *lessonRepository) FetchByIDInAdmin(ctx context.Context, lessonID string) (lesson_domain.LessonResponse, error) {
 	// Khởi tạo channel để luu trữ lỗi
-	errCh := make(chan error)
+	errCh := make(chan error, 1)
 	// Khởi tạo channel để lưu trữ kết quả lesson
-	lessonCh := make(chan lesson_domain.LessonResponse)
+	lessonCh := make(chan lesson_domain.LessonResponse, 1)
 	// Sử dụng waitGroup để đợi tất cả goroutine hoàn thành
 	wg.Add(1)
 	// Khởi động Goroutine giúp tìm dữ liệu lesson
@@ -1106,7 +1128,7 @@ func (l *lessonRepository) FetchByIDInAdmin(ctx context.Context, lessonID string
 // If any error occurs during data retrieval, the error is returned along with the partially retrieved results.
 func (l *lessonRepository) FetchByIdCourseInAdmin(ctx context.Context, idCourse string, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
 	// Create channels for errors, lessons, and detail responses
-	errCh := make(chan error)
+	errCh := make(chan error, 1)
 	lessonsCh := make(chan []lesson_domain.LessonResponse, 1)
 	detailCh := make(chan lesson_domain.DetailResponse, 1)
 
