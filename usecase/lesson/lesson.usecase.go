@@ -13,7 +13,7 @@ type lessonUseCase struct {
 	contextTimeout   time.Duration
 }
 
-func (l *lessonUseCase) UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error) {
+func (l *lessonUseCase) UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error) {
 	//TODO implement me
 	panic("implement me")
 }

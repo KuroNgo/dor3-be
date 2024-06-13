@@ -41,7 +41,7 @@ func (v *VocabularyController) UpdateOneVocabulary(ctx *gin.Context) {
 		WhoUpdates:    admin.FullName,
 	}
 
-	data, err := v.VocabularyUseCase.UpdateOne(ctx, &updateVocabulary)
+	data, err := v.VocabularyUseCase.UpdateOneInAdmin(ctx, &updateVocabulary)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

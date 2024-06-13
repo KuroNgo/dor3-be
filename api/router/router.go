@@ -66,6 +66,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	// All Public APIs
 	user_route.GoogleAuthRoute(env, timeout, db, publicRouter)
 	user_route.UserRouter(env, timeout, db, publicRouter)
+	admin_route.AdminRouter(env, timeout, db, publicRouter)
 	user_route.LoginFromRoleRoute(env, timeout, db, publicRouter)
 	user_attempt_route.UserAttemptRoute(env, timeout, db, publicRouter)
 
@@ -108,7 +109,6 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	quiz_route.AdminQuizRouter(env, timeout, db, privateRouter)
 	quiz_question_route.AdminQuizQuestionRoute(env, timeout, db, privateRouter)
 
-	admin_route.AdminRouter(env, timeout, db, privateRouter)
 	image_route.AdminImageRoute(env, timeout, db, privateRouter)
 	course_route.AdminCourseRoute(env, timeout, db, privateRouter)
 	lesson_route.AdminLessonRoute(env, timeout, db, privateRouter)

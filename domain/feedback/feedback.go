@@ -55,12 +55,12 @@ type Statistics struct {
 }
 
 type IFeedbackRepository interface {
-	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchByUserID(ctx context.Context, userID string, page string) (Response, error)
-	FetchBySubmittedDate(ctx context.Context, date string, page string) (Response, error)
+	FetchManyInAdmin(ctx context.Context, page string) (Response, error)
+	FetchByUserIDInAdmin(ctx context.Context, userID string, page string) (Response, error)
+	FetchBySubmittedDateInAdmin(ctx context.Context, date string, page string) (Response, error)
 
-	CreateOneByUser(ctx context.Context, feedback *Feedback) error
-	DeleteOneByAdmin(ctx context.Context, feedbackID string) error
-	UpdateSeen(ctx context.Context, id string, isSeen int) error
+	CreateOneInUser(ctx context.Context, feedback *Feedback) error
+	DeleteOneInAdmin(ctx context.Context, feedbackID string) error
+	UpdateSeenInAdmin(ctx context.Context, id string, isSeen int) error
 	Statistics(ctx context.Context) (Statistics, error)
 }

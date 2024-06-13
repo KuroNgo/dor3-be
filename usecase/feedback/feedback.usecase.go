@@ -18,11 +18,11 @@ func NewFeedbackUseCase(feedbackRepository feedback_domain.IFeedbackRepository, 
 	}
 }
 
-func (f *feedbackUseCase) FetchMany(ctx context.Context, page string) (feedback_domain.Response, error) {
+func (f *feedbackUseCase) FetchManyInAdmin(ctx context.Context, page string) (feedback_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, f.contextTimeout)
 	defer cancel()
 
-	feedback, err := f.feedbackRepository.FetchMany(ctx, page)
+	feedback, err := f.feedbackRepository.FetchManyInAdmin(ctx, page)
 	if err != nil {
 		return feedback_domain.Response{}, err
 	}
@@ -30,11 +30,11 @@ func (f *feedbackUseCase) FetchMany(ctx context.Context, page string) (feedback_
 	return feedback, err
 }
 
-func (f *feedbackUseCase) FetchByUserID(ctx context.Context, userID string, page string) (feedback_domain.Response, error) {
+func (f *feedbackUseCase) FetchByUserIDInAdmin(ctx context.Context, userID string, page string) (feedback_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, f.contextTimeout)
 	defer cancel()
 
-	feedback, err := f.feedbackRepository.FetchByUserID(ctx, userID, page)
+	feedback, err := f.feedbackRepository.FetchByUserIDInAdmin(ctx, userID, page)
 	if err != nil {
 		return feedback_domain.Response{}, err
 	}
@@ -42,11 +42,11 @@ func (f *feedbackUseCase) FetchByUserID(ctx context.Context, userID string, page
 	return feedback, err
 }
 
-func (f *feedbackUseCase) FetchBySubmittedDate(ctx context.Context, date string, page string) (feedback_domain.Response, error) {
+func (f *feedbackUseCase) FetchBySubmittedDateInAdmin(ctx context.Context, date string, page string) (feedback_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, f.contextTimeout)
 	defer cancel()
 
-	feedback, err := f.feedbackRepository.FetchBySubmittedDate(ctx, date, page)
+	feedback, err := f.feedbackRepository.FetchBySubmittedDateInAdmin(ctx, date, page)
 	if err != nil {
 		return feedback_domain.Response{}, err
 	}
@@ -54,11 +54,11 @@ func (f *feedbackUseCase) FetchBySubmittedDate(ctx context.Context, date string,
 	return feedback, err
 }
 
-func (f *feedbackUseCase) CreateOneByUser(ctx context.Context, feedback *feedback_domain.Feedback) error {
+func (f *feedbackUseCase) CreateOneInUser(ctx context.Context, feedback *feedback_domain.Feedback) error {
 	ctx, cancel := context.WithTimeout(ctx, f.contextTimeout)
 	defer cancel()
 
-	err := f.feedbackRepository.CreateOneByUser(ctx, feedback)
+	err := f.feedbackRepository.CreateOneInUser(ctx, feedback)
 	if err != nil {
 		return err
 	}
@@ -66,11 +66,11 @@ func (f *feedbackUseCase) CreateOneByUser(ctx context.Context, feedback *feedbac
 	return nil
 }
 
-func (f *feedbackUseCase) DeleteOneByAdmin(ctx context.Context, feedbackID string) error {
+func (f *feedbackUseCase) DeleteOneInAdmin(ctx context.Context, feedbackID string) error {
 	ctx, cancel := context.WithTimeout(ctx, f.contextTimeout)
 	defer cancel()
 
-	err := f.feedbackRepository.DeleteOneByAdmin(ctx, feedbackID)
+	err := f.feedbackRepository.DeleteOneInAdmin(ctx, feedbackID)
 	if err != nil {
 		return err
 	}
@@ -78,11 +78,11 @@ func (f *feedbackUseCase) DeleteOneByAdmin(ctx context.Context, feedbackID strin
 	return nil
 }
 
-func (f *feedbackUseCase) UpdateSeen(ctx context.Context, id string, isSeen int) error {
+func (f *feedbackUseCase) UpdateSeenInAdmin(ctx context.Context, id string, isSeen int) error {
 	ctx, cancel := context.WithTimeout(ctx, f.contextTimeout)
 	defer cancel()
 
-	err := f.feedbackRepository.UpdateSeen(ctx, id, isSeen)
+	err := f.feedbackRepository.UpdateSeenInAdmin(ctx, id, isSeen)
 	if err != nil {
 		return err
 	}

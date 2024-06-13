@@ -12,18 +12,6 @@ type exerciseUseCase struct {
 	contextTimeout     time.Duration
 }
 
-func (e *exerciseUseCase) FetchByID(ctx context.Context, id string) (exercise_domain.Exercise, error) {
-	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
-	defer cancel()
-
-	vocabulary, err := e.exerciseRepository.FetchByID(ctx, id)
-	if err != nil {
-		return exercise_domain.Exercise{}, err
-	}
-
-	return vocabulary, err
-}
-
 func NewExerciseUseCase(exerciseRepository exercise_domain.IExerciseRepository, timeout time.Duration) exercise_domain.IExerciseUseCase {
 	return &exerciseUseCase{
 		exerciseRepository: exerciseRepository,
@@ -31,11 +19,11 @@ func NewExerciseUseCase(exerciseRepository exercise_domain.IExerciseRepository, 
 	}
 }
 
-func (e *exerciseUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.Exercise, error) {
+func (e *exerciseUseCase) FetchByIDInAdmin(ctx context.Context, id string) (exercise_domain.Exercise, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := e.exerciseRepository.FetchOneByUnitID(ctx, unitID)
+	vocabulary, err := e.exerciseRepository.FetchByIDInAdmin(ctx, id)
 	if err != nil {
 		return exercise_domain.Exercise{}, err
 	}
@@ -43,11 +31,23 @@ func (e *exerciseUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (
 	return vocabulary, err
 }
 
-func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
+func (e *exerciseUseCase) FetchOneByUnitIDInAdmin(ctx context.Context, unitID string) (exercise_domain.Exercise, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	vocabulary, detail, err := e.exerciseRepository.FetchManyByUnitID(ctx, unitID, page)
+	vocabulary, err := e.exerciseRepository.FetchOneByUnitIDInAdmin(ctx, unitID)
+	if err != nil {
+		return exercise_domain.Exercise{}, err
+	}
+
+	return vocabulary, err
+}
+
+func (e *exerciseUseCase) FetchManyByUnitIDInAdmin(ctx context.Context, unitID string, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	vocabulary, detail, err := e.exerciseRepository.FetchManyByUnitIDInAdmin(ctx, unitID, page)
 	if err != nil {
 		return nil, exercise_domain.DetailResponse{}, err
 	}
@@ -55,11 +55,11 @@ func (e *exerciseUseCase) FetchManyByUnitID(ctx context.Context, unitID string, 
 	return vocabulary, detail, err
 }
 
-func (e *exerciseUseCase) FetchMany(ctx context.Context, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
+func (e *exerciseUseCase) FetchManyInAdmin(ctx context.Context, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	exercises, detail, err := e.exerciseRepository.FetchMany(ctx, page)
+	exercises, detail, err := e.exerciseRepository.FetchManyInAdmin(ctx, page)
 	if err != nil {
 		return nil, exercise_domain.DetailResponse{}, err
 	}
@@ -67,22 +67,22 @@ func (e *exerciseUseCase) FetchMany(ctx context.Context, page string) ([]exercis
 	return exercises, detail, err
 }
 
-func (e *exerciseUseCase) UpdateOne(ctx context.Context, exercise *exercise_domain.Exercise) (*mongo.UpdateResult, error) {
+func (e *exerciseUseCase) UpdateOneInAdmin(ctx context.Context, exercise *exercise_domain.Exercise) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.exerciseRepository.UpdateOne(ctx, exercise)
+	data, err := e.exerciseRepository.UpdateOneInAdmin(ctx, exercise)
 	if err != nil {
 		return nil, err
 	}
 	return data, nil
 }
 
-func (e *exerciseUseCase) CreateOne(ctx context.Context, exercise *exercise_domain.Exercise) error {
+func (e *exerciseUseCase) CreateOneInAdmin(ctx context.Context, exercise *exercise_domain.Exercise) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.exerciseRepository.CreateOne(ctx, exercise)
+	err := e.exerciseRepository.CreateOneInAdmin(ctx, exercise)
 	if err != nil {
 		return err
 	}
@@ -90,11 +90,11 @@ func (e *exerciseUseCase) CreateOne(ctx context.Context, exercise *exercise_doma
 	return nil
 }
 
-func (e *exerciseUseCase) DeleteOne(ctx context.Context, exerciseID string) error {
+func (e *exerciseUseCase) DeleteOneInAdmin(ctx context.Context, exerciseID string) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.exerciseRepository.DeleteOne(ctx, exerciseID)
+	err := e.exerciseRepository.DeleteOneInAdmin(ctx, exerciseID)
 	if err != nil {
 		return err
 	}

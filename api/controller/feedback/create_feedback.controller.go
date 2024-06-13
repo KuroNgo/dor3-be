@@ -48,7 +48,7 @@ func (f *FeedbackController) CreateOneFeedback(ctx *gin.Context) {
 		IsSeen:        0,
 	}
 
-	err = f.FeedbackUseCase.CreateOneByUser(ctx, &feedback)
+	err = f.FeedbackUseCase.CreateOneInUser(ctx, &feedback)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

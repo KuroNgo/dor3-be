@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,11 +23,6 @@ type vocabularyRepository struct {
 	collectionMark       string
 	collectionUnit       string
 	collectionLesson     string
-
-	vocabularyManyCache    map[string]vocabulary_domain.Response
-	vocabularyOneCache     map[string][]vocabulary_domain.Vocabulary
-	vocabularyCacheExpires map[string]time.Time
-	cacheMutex             sync.RWMutex
 }
 
 func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, collectionMark string, collectionUnit string, collectionLesson string) vocabulary_domain.IVocabularyRepository {
@@ -38,14 +32,10 @@ func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, co
 		collectionMark:       collectionMark,
 		collectionUnit:       collectionUnit,
 		collectionLesson:     collectionLesson,
-
-		vocabularyManyCache:    make(map[string]vocabulary_domain.Response),
-		vocabularyOneCache:     make(map[string][]vocabulary_domain.Vocabulary),
-		vocabularyCacheExpires: make(map[string]time.Time),
 	}
 }
 
-func (v *vocabularyRepository) FindUnitIDByUnitLevel(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error) {
+func (v *vocabularyRepository) FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error) {
 	//collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
 	collectionLesson := v.database.Collection(v.collectionLesson)
@@ -98,7 +88,7 @@ func (v *vocabularyRepository) FindUnitIDByUnitLevel(ctx context.Context, unitLe
 	return unitMain.ID, nil
 }
 
-func (v *vocabularyRepository) FindVocabularyIDByVocabularyConfig(ctx context.Context, word string) (primitive.ObjectID, error) {
+func (v *vocabularyRepository) FindVocabularyIDByVocabularyConfigInAdmin(ctx context.Context, word string) (primitive.ObjectID, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
 	filter := bson.M{"word_for_config": word}
@@ -113,7 +103,7 @@ func (v *vocabularyRepository) FindVocabularyIDByVocabularyConfig(ctx context.Co
 	return data.Id, nil
 }
 
-func (v *vocabularyRepository) GetLatestVocabulary(ctx context.Context) ([]string, error) {
+func (v *vocabularyRepository) GetLatestVocabularyInAdmin(ctx context.Context) ([]string, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
 	var vocabularies []string
@@ -146,7 +136,7 @@ func (v *vocabularyRepository) GetLatestVocabulary(ctx context.Context) ([]strin
 	return vocabularies, nil
 }
 
-func (v *vocabularyRepository) GetVocabularyById(ctx context.Context, id string) (vocabulary_domain.Vocabulary, error) {
+func (v *vocabularyRepository) GetVocabularyByIdInAdmin(ctx context.Context, id string) (vocabulary_domain.Vocabulary, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	idVocabulary, err := primitive.ObjectIDFromHex(id)
 
@@ -164,7 +154,7 @@ func (v *vocabularyRepository) GetVocabularyById(ctx context.Context, id string)
 	return vocabulary, nil
 }
 
-func (v *vocabularyRepository) GetAllVocabulary(ctx context.Context) ([]string, error) {
+func (v *vocabularyRepository) GetAllVocabularyInAdmin(ctx context.Context) ([]string, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
 	var vocabularies []string
@@ -195,7 +185,7 @@ func (v *vocabularyRepository) GetAllVocabulary(ctx context.Context) ([]string, 
 	return vocabularies, nil
 }
 
-func (v *vocabularyRepository) CreateOneByNameUnit(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
+func (v *vocabularyRepository) CreateOneByNameUnitInAdmin(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
 	collectionLesson := v.database.Collection(v.collectionLesson)
@@ -245,7 +235,7 @@ func (v *vocabularyRepository) CreateOneByNameUnit(ctx context.Context, vocabula
 	return nil
 }
 
-func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string) ([]vocabulary_domain.Vocabulary, error) {
+func (v *vocabularyRepository) FetchByIdUnitInAdmin(ctx context.Context, idUnit string) ([]vocabulary_domain.Vocabulary, error) {
 	// Get the collection
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
@@ -296,7 +286,7 @@ func (v *vocabularyRepository) FetchByIdUnit(ctx context.Context, idUnit string)
 	return vocabularies, nil
 }
 
-func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) (vocabulary_domain.SearchingResponse, error) {
+func (v *vocabularyRepository) FetchByWordInBoth(ctx context.Context, word string) (vocabulary_domain.SearchingResponse, error) {
 	//v.cacheMutex.RLock()
 	//cachedData, found := v.vocabularyOneCache[word]
 	//v.cacheMutex.RUnlock()
@@ -350,7 +340,7 @@ func (v *vocabularyRepository) FetchByWord(ctx context.Context, word string) (vo
 	return vocabularyRes, nil
 }
 
-func (v *vocabularyRepository) FetchByLesson(ctx context.Context, lessonName string) (vocabulary_domain.SearchingResponse, error) {
+func (v *vocabularyRepository) FetchByLessonInBoth(ctx context.Context, lessonName string) (vocabulary_domain.SearchingResponse, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
 	regex := primitive.Regex{Pattern: lessonName, Options: "i"}
@@ -387,7 +377,7 @@ func (v *vocabularyRepository) FetchByLesson(ctx context.Context, lessonName str
 	return vocabularyRes, nil
 }
 
-func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (vocabulary_domain.Response, error) {
+func (v *vocabularyRepository) FetchManyInBoth(ctx context.Context, page string) (vocabulary_domain.Response, error) {
 	// Kiểm tra cache trước khi truy vấn cơ sở dữ liệu
 	//v.cacheMutex.RLock()
 	//cachedData, found := v.vocabularyManyCache[page]
@@ -492,7 +482,7 @@ func (v *vocabularyRepository) FetchMany(ctx context.Context, page string) (voca
 	return vocabularyRes, nil
 }
 
-func (v *vocabularyRepository) UpdateOneImage(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
+func (v *vocabularyRepository) UpdateOneImageInAdmin(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
 	collection := v.database.Collection(v.collectionVocabulary)
 
 	filter := bson.D{{Key: "_id", Value: vocabulary.Id}}
@@ -510,7 +500,7 @@ func (v *vocabularyRepository) UpdateOneImage(ctx context.Context, vocabulary *v
 	return data, nil
 }
 
-func (v *vocabularyRepository) UpdateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
+func (v *vocabularyRepository) UpdateOneInAdmin(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
 	collection := v.database.Collection(v.collectionVocabulary)
 
 	filter := bson.M{"_id": vocabulary.Id}
@@ -536,7 +526,7 @@ func (v *vocabularyRepository) UpdateOne(ctx context.Context, vocabulary *vocabu
 	return data, err
 }
 
-func (v *vocabularyRepository) UpdateOneAudio(c context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
+func (v *vocabularyRepository) UpdateOneAudioInAdmin(c context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
 	collection := v.database.Collection(v.collectionVocabulary)
 
 	filter := bson.D{{Key: "_id", Value: vocabulary.Id}}
@@ -554,7 +544,7 @@ func (v *vocabularyRepository) UpdateOneAudio(c context.Context, vocabulary *voc
 	return nil
 }
 
-func (v *vocabularyRepository) UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error {
+func (v *vocabularyRepository) UpdateIsFavouriteInUser(ctx context.Context, vocabularyID string, isFavourite int) error {
 	collection := v.database.Collection(v.collectionVocabulary)
 	objID, err := primitive.ObjectIDFromHex(vocabularyID)
 
@@ -573,7 +563,7 @@ func (v *vocabularyRepository) UpdateIsFavourite(ctx context.Context, vocabulary
 	return nil
 }
 
-func (v *vocabularyRepository) CreateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
+func (v *vocabularyRepository) CreateOneInAdmin(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
 	session, err := v.database.Client().StartSession()
 	if err != nil {
 		return err
@@ -644,7 +634,7 @@ func (v *vocabularyRepository) CreateOne(ctx context.Context, vocabulary *vocabu
 	return nil
 }
 
-func (v *vocabularyRepository) DeleteOne(ctx context.Context, vocabularyID string) error {
+func (v *vocabularyRepository) DeleteOneInAdmin(ctx context.Context, vocabularyID string) error {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionMark := v.database.Collection(v.collectionMark)
 

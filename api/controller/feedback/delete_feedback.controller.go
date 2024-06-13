@@ -26,7 +26,7 @@ func (f *FeedbackController) DeleteOneFeedback(ctx *gin.Context) {
 	}
 	exerciseID := ctx.Query("_id")
 
-	err = f.FeedbackUseCase.DeleteOneByAdmin(ctx, exerciseID)
+	err = f.FeedbackUseCase.DeleteOneInAdmin(ctx, exerciseID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

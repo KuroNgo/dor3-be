@@ -37,13 +37,13 @@ type Statistics struct {
 }
 
 type IExerciseRepository interface {
-	FetchMany(ctx context.Context, page string) ([]Exercise, DetailResponse, error)
-	FetchByID(ctx context.Context, id string) (Exercise, error)
-	FetchOneByUnitID(ctx context.Context, unitID string) (Exercise, error)
-	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]Exercise, DetailResponse, error)
+	FetchManyInAdmin(ctx context.Context, page string) ([]Exercise, DetailResponse, error)
+	FetchByIDInAdmin(ctx context.Context, id string) (Exercise, error)
+	FetchOneByUnitIDInAdmin(ctx context.Context, unitID string) (Exercise, error)
+	FetchManyByUnitIDInAdmin(ctx context.Context, unitID string, page string) ([]Exercise, DetailResponse, error)
 
-	CreateOne(ctx context.Context, exercise *Exercise) error
-	UpdateOne(ctx context.Context, exercise *Exercise) (*mongo.UpdateResult, error)
-	DeleteOne(ctx context.Context, exerciseID string) error
+	CreateOneInAdmin(ctx context.Context, exercise *Exercise) error
+	UpdateOneInAdmin(ctx context.Context, exercise *Exercise) (*mongo.UpdateResult, error)
+	DeleteOneInAdmin(ctx context.Context, exerciseID string) error
 	Statistics(ctx context.Context) (Statistics, error)
 }

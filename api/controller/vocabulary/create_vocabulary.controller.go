@@ -98,7 +98,7 @@ func (v *VocabularyController) CreateOneVocabulary(ctx *gin.Context) {
 		WhoUpdates:    admin.FullName,
 	}
 
-	err = v.VocabularyUseCase.CreateOne(ctx, vocabularyRes)
+	err = v.VocabularyUseCase.CreateOneInAdmin(ctx, vocabularyRes)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -171,7 +171,7 @@ func (v *VocabularyController) CreateVocabularyWithFileInAdmin(ctx *gin.Context)
 	go func() {
 		defer wg.Done()
 		for _, vocabulary := range result {
-			unitID, err := v.VocabularyUseCase.FindUnitIDByUnitLevel(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
+			unitID, err := v.VocabularyUseCase.FindUnitIDByUnitLevelInAdmin(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
 			if err != nil {
 				ctx.JSON(500, gin.H{"error": err.Error()})
 				return
@@ -205,7 +205,7 @@ func (v *VocabularyController) CreateVocabularyWithFileInAdmin(ctx *gin.Context)
 
 	successCount := 0
 	for _, vocabulary := range vocabularies {
-		err = v.VocabularyUseCase.CreateOneByNameUnit(ctx, &vocabulary)
+		err = v.VocabularyUseCase.CreateOneByNameUnitInAdmin(ctx, &vocabulary)
 		if err != nil {
 			continue
 		}
@@ -275,7 +275,7 @@ func (v *VocabularyController) CreateVocabularyWithFileInUser(ctx *gin.Context) 
 	var vocabularies []vocabulary_domain.Vocabulary
 
 	for _, vocabulary := range result {
-		unitID, err := v.VocabularyUseCase.FindUnitIDByUnitLevel(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
+		unitID, err := v.VocabularyUseCase.FindUnitIDByUnitLevelInAdmin(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
 		if err != nil {
 			ctx.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -303,7 +303,7 @@ func (v *VocabularyController) CreateVocabularyWithFileInUser(ctx *gin.Context) 
 
 	successCount := 0
 	for _, vocabulary := range vocabularies {
-		err = v.VocabularyUseCase.CreateOneByNameUnit(ctx, &vocabulary)
+		err = v.VocabularyUseCase.CreateOneByNameUnitInAdmin(ctx, &vocabulary)
 		if err != nil {
 			continue
 		}
@@ -335,7 +335,7 @@ func (v *VocabularyController) CreateAudio(ctx *gin.Context) {
 		return
 	}
 
-	data, err := v.VocabularyUseCase.GetAllVocabulary(ctx)
+	data, err := v.VocabularyUseCase.GetAllVocabularyInAdmin(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -367,7 +367,7 @@ func (v *VocabularyController) CreateAudioLatest(ctx *gin.Context) {
 		return
 	}
 
-	data, err := v.VocabularyUseCase.GetLatestVocabulary(ctx)
+	data, err := v.VocabularyUseCase.GetLatestVocabularyInAdmin(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -442,7 +442,7 @@ func (v *VocabularyController) UploadAudioToCloudinary(ctx *gin.Context) {
 			}
 
 			// Tìm ID của từ vựng dựa trên tên file
-			wordID, err := v.VocabularyUseCase.FindVocabularyIDByVocabularyName(ctx, audio)
+			wordID, err := v.VocabularyUseCase.FindVocabularyIDByVocabularyConfigInAdmin(ctx, audio)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"error": fmt.Sprintf("Error finding vocabulary ID for file %s: %s", audioFileName, err.Error()),
@@ -455,7 +455,7 @@ func (v *VocabularyController) UploadAudioToCloudinary(ctx *gin.Context) {
 				LinkURL: data.AudioURL,
 			}
 
-			err = v.VocabularyUseCase.UpdateOneAudio(ctx, vocabularyRes)
+			err = v.VocabularyUseCase.UpdateOneAudioInAdmin(ctx, vocabularyRes)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"error": fmt.Sprintf("Error updating vocabulary for file %s: %s", audioFileName, err.Error()),

@@ -60,7 +60,7 @@ func (e *ExerciseController) CreateOneExercise(ctx *gin.Context) {
 		WhoUpdates: admin.FullName,
 	}
 
-	err = e.ExerciseUseCase.CreateOne(ctx, exerciseRes)
+	err = e.ExerciseUseCase.CreateOneInAdmin(ctx, exerciseRes)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

@@ -25,7 +25,7 @@ func (f *FeedbackController) UpdateSeen(ctx *gin.Context) {
 	}
 
 	feedbackId := ctx.Query("_id")
-	err = f.FeedbackUseCase.UpdateSeen(ctx, feedbackId, 1)
+	err = f.FeedbackUseCase.UpdateSeenInAdmin(ctx, feedbackId, 1)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

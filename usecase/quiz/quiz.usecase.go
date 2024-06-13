@@ -12,11 +12,11 @@ type quizUseCase struct {
 	contextTimeout time.Duration
 }
 
-func (q *quizUseCase) FetchByID(ctx context.Context, id string) (quiz_domain.Quiz, error) {
+func (q *quizUseCase) FetchByIDInAdmin(ctx context.Context, id string) (quiz_domain.Quiz, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizRepository.FetchByID(ctx, id)
+	data, err := q.quizRepository.FetchByIDInAdmin(ctx, id)
 	if err != nil {
 		return quiz_domain.Quiz{}, err
 	}
@@ -31,11 +31,11 @@ func NewQuizUseCase(quizRepository quiz_domain.IQuizRepository, timeout time.Dur
 	}
 }
 
-func (q *quizUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]quiz_domain.Quiz, quiz_domain.Response, error) {
+func (q *quizUseCase) FetchManyByUnitIDInAdmin(ctx context.Context, unitID string, page string) ([]quiz_domain.Quiz, quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	quiz, detail, err := q.quizRepository.FetchManyByUnitID(ctx, unitID, page)
+	quiz, detail, err := q.quizRepository.FetchManyByUnitIDInAdmin(ctx, unitID, page)
 	if err != nil {
 		return nil, quiz_domain.Response{}, err
 	}
@@ -43,11 +43,11 @@ func (q *quizUseCase) FetchManyByUnitID(ctx context.Context, unitID string, page
 	return quiz, detail, nil
 }
 
-func (q *quizUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (quiz_domain.Quiz, error) {
+func (q *quizUseCase) FetchOneByUnitIDInAdmin(ctx context.Context, unitID string) (quiz_domain.Quiz, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	quiz, err := q.quizRepository.FetchOneByUnitID(ctx, unitID)
+	quiz, err := q.quizRepository.FetchOneByUnitIDInAdmin(ctx, unitID)
 	if err != nil {
 		return quiz_domain.Quiz{}, err
 	}
@@ -55,11 +55,11 @@ func (q *quizUseCase) FetchOneByUnitID(ctx context.Context, unitID string) (quiz
 	return quiz, nil
 }
 
-func (q *quizUseCase) FetchMany(ctx context.Context, page string) ([]quiz_domain.Quiz, quiz_domain.Response, error) {
+func (q *quizUseCase) FetchManyInAdmin(ctx context.Context, page string) ([]quiz_domain.Quiz, quiz_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	quiz, detail, err := q.quizRepository.FetchMany(ctx, page)
+	quiz, detail, err := q.quizRepository.FetchManyInAdmin(ctx, page)
 	if err != nil {
 		return nil, quiz_domain.Response{}, err
 	}
@@ -67,21 +67,21 @@ func (q *quizUseCase) FetchMany(ctx context.Context, page string) ([]quiz_domain
 	return quiz, detail, nil
 }
 
-func (q *quizUseCase) UpdateOne(ctx context.Context, quiz *quiz_domain.Quiz) (*mongo.UpdateResult, error) {
+func (q *quizUseCase) UpdateOneInAdmin(ctx context.Context, quiz *quiz_domain.Quiz) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizRepository.UpdateOne(ctx, quiz)
+	data, err := q.quizRepository.UpdateOneInAdmin(ctx, quiz)
 	if err != nil {
 		return nil, err
 	}
 	return data, nil
 }
 
-func (q *quizUseCase) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) error {
+func (q *quizUseCase) CreateOneInAdmin(ctx context.Context, quiz *quiz_domain.Quiz) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
-	err := q.quizRepository.CreateOne(ctx, quiz)
+	err := q.quizRepository.CreateOneInAdmin(ctx, quiz)
 
 	if err != nil {
 		return err
@@ -90,11 +90,11 @@ func (q *quizUseCase) CreateOne(ctx context.Context, quiz *quiz_domain.Quiz) err
 	return nil
 }
 
-func (q *quizUseCase) DeleteOne(ctx context.Context, quizID string) error {
+func (q *quizUseCase) DeleteOneInAdmin(ctx context.Context, quizID string) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	err := q.quizRepository.DeleteOne(ctx, quizID)
+	err := q.quizRepository.DeleteOneInAdmin(ctx, quizID)
 	if err != nil {
 		return err
 	}

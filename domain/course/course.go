@@ -48,7 +48,7 @@ type Statistics struct {
 type ICourseRepository interface {
 	FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]CourseProcess, DetailForManyResponse, error)
 	FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, courseID string) (CourseProcess, error)
-	UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error)
+	UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error)
 
 	FetchManyForEachCourseInAdmin(ctx context.Context, page string) ([]CourseResponse, DetailForManyResponse, error)
 	FetchByIDInAdmin(ctx context.Context, courseID string) (CourseResponse, error)

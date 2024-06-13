@@ -1,7 +1,7 @@
 package user_attempt_route
 
 import (
-	user_attempt_controller "clean-architecture/api/controller/user_attempt"
+	user_attempt_controller "clean-architecture/api/controller/user_process"
 	"clean-architecture/api/middleware"
 	"clean-architecture/bootstrap"
 	exam_domain "clean-architecture/domain/exam"
@@ -11,9 +11,9 @@ import (
 	user_detail_domain "clean-architecture/domain/user_detail"
 	user_attempt_domain "clean-architecture/domain/user_process"
 	user_repository "clean-architecture/repository/user"
-	user_attempt_repository "clean-architecture/repository/user_attempt"
+	user_attempt_repository "clean-architecture/repository/user_process"
 	user_usecase "clean-architecture/usecase/user"
-	user_attempt_usecase "clean-architecture/usecase/user_attempt"
+	user_attempt_usecase "clean-architecture/usecase/user_process"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"

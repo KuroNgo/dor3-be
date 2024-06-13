@@ -10,43 +10,647 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
 )
 
 type unitRepository struct {
-	database             *mongo.Database
-	collectionUnit       string
-	collectionLesson     string
-	collectionVocabulary string
-	collectionExam       string
-	collectionExercise   string
-	collectionQuiz       string
+	database              *mongo.Database
+	collectionUnit        string
+	collectionUnitProcess string
+	collectionLesson      string
+	collectionVocabulary  string
+	collectionExam        string
+	collectionExercise    string
+	collectionQuiz        string
 }
 
 // NewUnitRepository hàm khởi tạo (constructor) để khởi tạo instance của struct
-func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionLesson string, collectionVocabulary string, collectionExam string, collectionExercise string, collectionQuiz string) unit_domain.IUnitRepository {
+func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionUnitProcess string, collectionLesson string, collectionVocabulary string, collectionExam string, collectionExercise string, collectionQuiz string) unit_domain.IUnitRepository {
 	return &unitRepository{
-		database:             db,
-		collectionUnit:       collectionUnit,
-		collectionLesson:     collectionLesson,
-		collectionVocabulary: collectionVocabulary,
-		collectionExam:       collectionExam,
-		collectionExercise:   collectionExercise,
-		collectionQuiz:       collectionQuiz,
+		database:              db,
+		collectionUnit:        collectionUnit,
+		collectionUnitProcess: collectionUnitProcess,
+		collectionLesson:      collectionLesson,
+		collectionVocabulary:  collectionVocabulary,
+		collectionExam:        collectionExam,
+		collectionExercise:    collectionExercise,
+		collectionQuiz:        collectionQuiz,
 	}
 }
 
 var (
-	unitsCache  = cache.NewTTL[string, []unit_domain.UnitResponse]()
-	unitCache   = cache.NewTTL[string, unit_domain.UnitResponse]()
-	detailCache = cache.NewTTL[string, unit_domain.DetailResponse]()
+	unitsCache            = cache.NewTTL[string, []unit_domain.UnitResponse]()
+	unitCache             = cache.NewTTL[string, unit_domain.UnitResponse]()
+	unitsUserProcessCache = cache.NewTTL[string, []unit_domain.UnitProcessResponse]()
+	unitUserProcessCache  = cache.NewTTL[string, unit_domain.UnitProcessResponse]()
+	detailCache           = cache.NewTTL[string, unit_domain.DetailResponse]()
 
 	wg           sync.WaitGroup
 	mu           sync.Mutex
 	isProcessing bool
 )
+
+// FetchManyInUser fetches a paginated list of unit processes for a given user.
+// It attempts to retrieve data from cache first; if not found, it fetches from the database.
+// The function returns a list of unit processes, detail response with pagination info, and an error if any.
+func (u *unitRepository) FetchManyInUser(ctx context.Context, user primitive.ObjectID, page string) ([]unit_domain.UnitProcessResponse, unit_domain.DetailResponse, error) {
+	// Create a buffered error channel to handle errors from goroutines
+	errCh := make(chan error, 1)
+	defer close(errCh)
+
+	// Create channels to retrieve unit processes and detail responses
+	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse)
+	detailCh := make(chan unit_domain.DetailResponse)
+
+	// Increment wait group counter by 2 for the two goroutines
+	wg.Add(2)
+
+	// Goroutine to fetch unit processes from cache
+	go func() {
+		defer wg.Done() // Decrement the wait group counter when the goroutine completes
+		data, found := unitsUserProcessCache.Get(user.Hex() + page)
+		if found {
+			unitsUserProcessCh <- data // Send the data to the channel if found
+		}
+	}()
+
+	// Goroutine to fetch detail from cache
+	go func() {
+		defer wg.Done() // Decrement the wait group counter when the goroutine completes
+		data, found := detailCache.Get(user.Hex() + "detail")
+		if found {
+			detailCh <- data // Send the data to the channel if found
+		}
+	}()
+
+	// Goroutine to close the channels after wait group completes
+	go func() {
+		defer close(detailCh)
+		defer close(unitsUserProcessCh)
+		wg.Wait() // Wait for both cache fetch goroutines to complete
+	}()
+
+	// Read data from the channels
+	unitsUserProcessData := <-unitsUserProcessCh
+	detailData := <-detailCh
+	if !internal.IsZeroValue(unitsUserProcessData) && !internal.IsZeroValue(detailData) {
+		return unitsUserProcessData, detailData, nil // Return data if both are non-zero
+	}
+
+	// MongoDB collections
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	collectionUnitProcess := u.database.Collection(u.collectionUnitProcess)
+
+	// Filter for user's unit processes
+	filterUnitProcessByUser := bson.M{"user_id": user}
+
+	// Pagination setup
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return nil, unit_domain.DetailResponse{}, errors.New("invalid page number")
+	}
+	perPage := 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	// Count total lessons
+	countUnit, err := collectionUnit.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return nil, unit_domain.DetailResponse{}, err
+	}
+
+	// Calculate total pages
+	totalPages := (countUnit + int64(perPage) - 1) / int64(perPage)
+
+	// Count user's unit processes
+	count, err := collectionUnitProcess.CountDocuments(ctx, filterUnitProcessByUser)
+	if err != nil {
+		return nil, unit_domain.DetailResponse{}, err
+	}
+
+	var unitsProcess []unit_domain.UnitProcessResponse
+	if count < countUnit {
+		cursorUnit, err := collectionUnit.Find(ctx, bson.M{})
+		if err != nil {
+			return nil, unit_domain.DetailResponse{}, err
+		}
+		defer func(cursorUnit *mongo.Cursor, ctx context.Context) {
+			err := cursorUnit.Close(ctx)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}(cursorUnit, ctx)
+
+		for cursorUnit.Next(ctx) {
+			var unit unit_domain.Unit
+			if err = cursorUnit.Decode(&unit); err != nil {
+				return nil, unit_domain.DetailResponse{}, err
+			}
+			go func(unit unit_domain.Unit) {
+				unitProcess := unit_domain.UnitProcess{
+					UnitID:     unit.ID,
+					LessonID:   unit.LessonID,
+					UserID:     user,
+					IsComplete: 0,
+				}
+
+				filter := bson.M{"unit_id": unit.ID}
+				countUnitChild, err := collectionUnit.CountDocuments(ctx, filter)
+				if err != nil {
+					errCh <- err
+					return
+				}
+
+				if countUnitChild == 0 {
+					_, err := collectionUnitProcess.InsertOne(ctx, &unitProcess)
+					if err != nil {
+						errCh <- err
+						return
+					}
+				}
+			}(unit)
+		}
+		cursor, err := collectionUnitProcess.Find(ctx, filterUnitProcessByUser, findOptions)
+		if err != nil {
+			return nil, unit_domain.DetailResponse{}, err
+		}
+		defer func(cursor *mongo.Cursor, ctx context.Context) {
+			err := cursor.Close(ctx)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}(cursor, ctx)
+	}
+
+	cursor, err := collectionUnitProcess.Find(ctx, filterUnitProcessByUser, findOptions)
+	if err != nil {
+		return nil, unit_domain.DetailResponse{}, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			errCh <- err
+			return
+		}
+	}(cursor, ctx)
+
+	for cursor.Next(ctx) {
+		var unitProcess unit_domain.UnitProcess
+		if err := cursor.Decode(&unitProcess); err != nil {
+			return nil, unit_domain.DetailResponse{}, err
+		}
+
+		filter := bson.M{"_id": unitProcess.UnitID}
+		var unit unit_domain.Unit
+		err = collectionUnit.FindOne(ctx, filter).Decode(&unit)
+
+		var unitProcessRes = unit_domain.UnitProcessResponse{
+			Unit:               unit,
+			UserID:             user,
+			IsComplete:         unitProcess.IsComplete,
+			ExamIsComplete:     unitProcess.ExamIsComplete,
+			ExerciseIsComplete: unitProcess.ExerciseIsComplete,
+			QuizIsComplete:     unitProcess.QuizIsComplete,
+			TotalScore:         unitProcess.TotalScore,
+		}
+
+		mu.Lock()
+		unitsProcess = append(unitsProcess, unitProcessRes)
+		mu.Unlock()
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, unit_domain.DetailResponse{}, err
+	}
+	sort.Sort(unit_domain.UnitProcessResponseList(unitsProcess))
+
+	detail := unit_domain.DetailResponse{
+		Page:        totalPages,
+		CurrentPage: pageNumber,
+	}
+
+	select {
+	case err = <-errCh:
+		return nil, unit_domain.DetailResponse{}, err
+	default:
+		return unitsProcess, detail, nil
+	}
+}
+
+func (u *unitRepository) FetchOneByIDInUser(ctx context.Context, user primitive.ObjectID, id string) (unit_domain.UnitProcessResponse, error) {
+	unitCh := make(chan unit_domain.UnitProcessResponse, 1)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := unitUserProcessCache.Get(user.Hex() + id)
+		if found {
+			unitCh <- data
+			return
+		}
+	}()
+
+	go func() {
+		defer close(unitCh)
+		wg.Wait()
+	}()
+
+	unitData := <-unitCh
+	if !internal.IsZeroValue(unitData) {
+		return unitData, nil
+	}
+
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	collectionUnitProcess := u.database.Collection(u.collectionUnitProcess)
+
+	idUnit, _ := primitive.ObjectIDFromHex(id)
+	filterUnitProcessByUser := bson.M{"unit_id": idUnit, "user_id": user}
+	var unitProcess unit_domain.UnitProcess
+	err := collectionUnitProcess.FindOne(ctx, filterUnitProcessByUser).Decode(&unitProcess)
+	if err != nil {
+		return unit_domain.UnitProcessResponse{}, err
+	}
+
+	filter := bson.M{"_id": idUnit}
+	var unit unit_domain.Unit
+	err = collectionUnit.FindOne(ctx, filter).Decode(&unit)
+	if err != nil {
+		return unit_domain.UnitProcessResponse{}, err
+	}
+
+	unitProcessRes := unit_domain.UnitProcessResponse{
+		Unit:               unit,
+		UserID:             user,
+		IsComplete:         unitProcess.IsComplete,
+		ExamIsComplete:     unitProcess.ExamIsComplete,
+		ExerciseIsComplete: unitProcess.ExerciseIsComplete,
+		QuizIsComplete:     unitProcess.QuizIsComplete,
+		TotalScore:         unitProcess.TotalScore,
+	}
+
+	unitUserProcessCache.Set(user.Hex()+id, unitProcessRes, 5*time.Minute)
+	return unitProcessRes, nil
+
+}
+
+func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user primitive.ObjectID) ([]unit_domain.UnitProcessResponse, error) {
+	// Create a buffered error channel to handle errors from goroutines
+	errCh := make(chan error, 1)
+	defer close(errCh)
+
+	// Create channels to retrieve unit processes and detail responses
+	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse)
+
+	// Increment wait group counter by 2 for the two goroutines
+	wg.Add(2)
+
+	// Goroutine to fetch unit processes from cache
+	go func() {
+		defer wg.Done() // Decrement the wait group counter when the goroutine completes
+		data, found := unitsUserProcessCache.Get(user.Hex())
+		if found {
+			unitsUserProcessCh <- data // Send the data to the channel if found
+		}
+	}()
+
+	// Goroutine to close the channels after wait group completes
+	go func() {
+		defer close(unitsUserProcessCh)
+		wg.Wait() // Wait for both cache fetch goroutines to complete
+	}()
+
+	// Read data from the channels
+	unitsUserProcessData := <-unitsUserProcessCh
+	if !internal.IsZeroValue(unitsUserProcessData) {
+		return unitsUserProcessData, nil // Return data if both are non-zero
+	}
+
+	// MongoDB collections
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	collectionUnitProcess := u.database.Collection(u.collectionUnitProcess)
+
+	// Filter for user's unit processes
+	filterUnitProcessByUser := bson.M{"user_id": user}
+
+	// Count total lessons
+	countUnit, err := collectionUnit.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Count user's unit processes
+	count, err := collectionUnitProcess.CountDocuments(ctx, filterUnitProcessByUser)
+	if err != nil {
+		return nil, err
+	}
+
+	var unitsProcess []unit_domain.UnitProcessResponse
+	if count < countUnit {
+		cursorUnit, err := collectionUnit.Find(ctx, bson.M{})
+		if err != nil {
+			return nil, err
+		}
+		defer func(cursorUnit *mongo.Cursor, ctx context.Context) {
+			err := cursorUnit.Close(ctx)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}(cursorUnit, ctx)
+
+		for cursorUnit.Next(ctx) {
+			var unit unit_domain.Unit
+			if err = cursorUnit.Decode(&unit); err != nil {
+				return nil, err
+			}
+			go func(unit unit_domain.Unit) {
+				unitProcess := unit_domain.UnitProcess{
+					UnitID:     unit.ID,
+					LessonID:   unit.LessonID,
+					UserID:     user,
+					IsComplete: 0,
+				}
+
+				filter := bson.M{"unit_id": unit.ID}
+				countUnitChild, err := collectionUnit.CountDocuments(ctx, filter)
+				if err != nil {
+					errCh <- err
+					return
+				}
+
+				if countUnitChild == 0 {
+					_, err := collectionUnitProcess.InsertOne(ctx, &unitProcess)
+					if err != nil {
+						errCh <- err
+						return
+					}
+				}
+			}(unit)
+		}
+		cursor, err := collectionUnitProcess.Find(ctx, filterUnitProcessByUser)
+		if err != nil {
+			return nil, err
+		}
+		defer func(cursor *mongo.Cursor, ctx context.Context) {
+			err := cursor.Close(ctx)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}(cursor, ctx)
+	}
+
+	cursor, err := collectionUnitProcess.Find(ctx, filterUnitProcessByUser)
+	if err != nil {
+		return nil, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			errCh <- err
+			return
+		}
+	}(cursor, ctx)
+
+	for cursor.Next(ctx) {
+		var unitProcess unit_domain.UnitProcess
+		if err := cursor.Decode(&unitProcess); err != nil {
+			return nil, err
+		}
+
+		filter := bson.M{"_id": unitProcess.UnitID}
+		var unit unit_domain.Unit
+		err = collectionUnit.FindOne(ctx, filter).Decode(&unit)
+
+		var unitProcessRes = unit_domain.UnitProcessResponse{
+			Unit:               unit,
+			UserID:             user,
+			IsComplete:         unitProcess.IsComplete,
+			ExamIsComplete:     unitProcess.ExamIsComplete,
+			ExerciseIsComplete: unitProcess.ExerciseIsComplete,
+			QuizIsComplete:     unitProcess.QuizIsComplete,
+			TotalScore:         unitProcess.TotalScore,
+		}
+
+		mu.Lock()
+		unitsProcess = append(unitsProcess, unitProcessRes)
+		mu.Unlock()
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+	sort.Sort(unit_domain.UnitProcessResponseList(unitsProcess))
+
+	select {
+	case err = <-errCh:
+		return nil, err
+	default:
+		return unitsProcess, nil
+	}
+}
+
+func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string, page string) ([]unit_domain.UnitProcessResponse, unit_domain.DetailResponse, error) {
+	errCh := make(chan error)
+	defer close(errCh)
+
+	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse)
+	detailCh := make(chan unit_domain.DetailResponse)
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		data, found := unitsUserProcessCache.Get(user.Hex() + idLesson + page)
+		if found {
+			unitsUserProcessCh <- data
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		data, found := detailCache.Get(user.Hex() + idLesson + "detail")
+		if found {
+			detailCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(detailCh)
+		defer close(unitsUserProcessCh)
+		wg.Wait()
+	}()
+
+	unitsUserProcessData := <-unitsUserProcessCh
+	detailData := <-detailCh
+	if !internal.IsZeroValue(unitsUserProcessData) && !internal.IsZeroValue(detailData) {
+		return unitsUserProcessData, detailData, nil
+	}
+
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	collectionUnitProcess := u.database.Collection(u.collectionUnitProcess)
+
+	// Thực hiện phân trang
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return nil, unit_domain.DetailResponse{}, errors.New("invalid page number")
+	}
+	perPage := 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	lessonID, _ := primitive.ObjectIDFromHex(idLesson)
+
+	// Đếm số lượng khóa học trong collection 'lesson'
+	filterUnit := bson.M{"lesson_id": lessonID}
+	countUnit, err := collectionUnit.CountDocuments(ctx, filterUnit)
+	if err != nil {
+		return nil, unit_domain.DetailResponse{}, err
+	}
+
+	// Đếm số lượng CourseProcess của người dùng
+	filterLessonProcessByUser := bson.M{"lesson_id": lessonID, "user_id": user}
+	count, err := collectionUnitProcess.CountDocuments(ctx, filterLessonProcessByUser)
+	if err != nil {
+		return nil, unit_domain.DetailResponse{}, err
+	}
+
+	// Tính toán tổng số trang dựa trên số lượng khóa học và số khóa học mỗi trang
+	totalPages := (count + int64(perPage) - 1) / int64(perPage)
+
+	var unitsProcess []unit_domain.UnitProcessResponse
+	// Nếu không có LessonProcess cho người dùng, khởi tạo chúng
+	if count != countUnit {
+		cursorUnit, err := collectionUnit.Find(ctx, bson.D{})
+		if err != nil {
+			return nil, unit_domain.DetailResponse{}, err
+		}
+		defer func(cursorUnit *mongo.Cursor, ctx context.Context) {
+			err = cursorUnit.Close(ctx)
+			if err != nil {
+				return
+			}
+		}(cursorUnit, ctx)
+
+		for cursorUnit.Next(ctx) {
+			var unit unit_domain.Unit
+			if err = cursorUnit.Decode(&unit); err != nil {
+				return nil, unit_domain.DetailResponse{}, err
+			}
+
+			wg.Add(1)
+			go func(unit unit_domain.Unit) {
+				defer wg.Done()
+				unitProcess := unit_domain.UnitProcess{
+					LessonID:   unit.LessonID,
+					UnitID:     unit.ID,
+					UserID:     user,
+					IsComplete: 0,
+				}
+
+				// Thực hiện tìm kiếm theo name để kiểm tra có dữ liệu trùng không
+				filter := bson.M{"unit_id": unit.ID}
+				countUnitChild, err := collectionUnit.CountDocuments(ctx, filter)
+				if err != nil {
+					errCh <- err
+					return
+				}
+
+				if countUnitChild == 0 {
+					_, err = collectionUnitProcess.InsertOne(ctx, &unitProcess)
+					if err != nil {
+						log.Println("Error inserting course process:", err)
+						errCh <- err
+						return
+					}
+				}
+			}(unit)
+		}
+		wg.Wait()
+
+		// Tìm các LessonProcess của người dùng với phân trang
+		cursor, err := collectionUnitProcess.Find(ctx, filterLessonProcessByUser, findOptions)
+		if err != nil {
+			return nil, unit_domain.DetailResponse{}, err
+		}
+		defer func(cursor *mongo.Cursor, ctx context.Context) {
+			err := cursor.Close(ctx)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}(cursor, ctx)
+	}
+
+	// Tìm các LessonProcess của người dùng với phân trang
+	cursor, err := collectionUnitProcess.Find(ctx, filterLessonProcessByUser, findOptions)
+	if err != nil {
+		return nil, unit_domain.DetailResponse{}, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			errCh <- err
+			return
+		}
+	}(cursor, ctx)
+
+	// Đọc dữ liệu từ cursor và thêm vào slice LessonProcess
+	for cursor.Next(ctx) {
+		var unitProcess unit_domain.UnitProcess
+		if err := cursor.Decode(&unitProcess); err != nil {
+			return nil, unit_domain.DetailResponse{}, err
+		}
+
+		filter := bson.M{"_id": unitProcess.UnitID}
+		var unit unit_domain.Unit
+		err = collectionUnit.FindOne(ctx, filter).Decode(&unit)
+
+		var unitProcessRes = unit_domain.UnitProcessResponse{
+			Unit:               unit,
+			UserID:             unitProcess.UserID,
+			IsComplete:         unitProcess.IsComplete,
+			ExamIsComplete:     unitProcess.ExamIsComplete,
+			ExerciseIsComplete: unitProcess.ExerciseIsComplete,
+			QuizIsComplete:     unitProcess.QuizIsComplete,
+			TotalScore:         unitProcess.TotalScore,
+		}
+
+		mu.Lock()
+		unitsProcess = append(unitsProcess, unitProcessRes)
+		mu.Unlock()
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, unit_domain.DetailResponse{}, err
+	}
+	sort.Sort(unit_domain.UnitProcessResponseList(unitsProcess))
+
+	// Lấy thống kê cho detail response
+	detail := unit_domain.DetailResponse{
+		Page:        totalPages,
+		CurrentPage: pageNumber,
+	}
+
+	unitsUserProcessCache.Set(user.Hex()+idLesson+page, unitsProcess, 5*time.Minute)
+	detailCache.Set(user.Hex()+idLesson+"detail", detail, 5*time.Minute)
+
+	select {
+	case err = <-errCh:
+		return nil, unit_domain.DetailResponse{}, err
+	default:
+		return unitsProcess, detail, nil
+	}
+}
+
+func (u *unitRepository) UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error) {
+	//TODO implement me
+	panic("implement me")
+}
 
 // FetchManyInAdmin retrieves multiple unit responses and a detail response for a given page number.
 // It first attempts to retrieve data from the cache. If the data is not found in the cache,
@@ -141,7 +745,6 @@ func (u *unitRepository) FetchManyInAdmin(ctx context.Context, page string) ([]u
 	}(cursor, ctx)
 
 	var units []unit_domain.UnitResponse
-
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -326,6 +929,26 @@ func (u *unitRepository) FetchByIdLessonInAdmin(ctx context.Context, idLesson st
 }
 
 func (u *unitRepository) FetchOneByIDInAdmin(ctx context.Context, id string) (unit_domain.UnitResponse, error) {
+	unitCh := make(chan unit_domain.UnitResponse)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := unitCache.Get(id)
+		if found {
+			unitCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(unitCh)
+		wg.Wait()
+	}()
+
+	unitData := <-unitCh
+	if !internal.IsZeroValue(unitData) {
+		return unitData, nil
+	}
+
 	collectionUnit := u.database.Collection(u.collectionUnit)
 
 	idUnit, err := primitive.ObjectIDFromHex(id)
@@ -346,6 +969,8 @@ func (u *unitRepository) FetchOneByIDInAdmin(ctx context.Context, id string) (un
 	}
 
 	unit.CountVocabulary = countVocabulary
+
+	unitCache.Set(id, unit, 5*time.Minute)
 	return unit, nil
 }
 
@@ -455,11 +1080,6 @@ func (u *unitRepository) UpdateOneInAdmin(ctx context.Context, unit *unit_domain
 		return nil, err
 	}
 	return data, nil
-}
-
-func (u *unitRepository) UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (u *unitRepository) DeleteOneInAdmin(ctx context.Context, unitID string) error {

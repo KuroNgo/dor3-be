@@ -26,7 +26,7 @@ func (e *ExerciseController) FetchManyExercise(ctx *gin.Context) {
 
 	page := ctx.DefaultQuery("page", "1")
 
-	exercise, count, err := e.ExerciseUseCase.FetchMany(ctx, page)
+	exercise, count, err := e.ExerciseUseCase.FetchManyInAdmin(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -69,7 +69,7 @@ func (e *ExerciseController) FetchManyByUnitID(ctx *gin.Context) {
 
 	page := ctx.DefaultQuery("page", "1")
 
-	exercise, detail, err := e.ExerciseUseCase.FetchManyByUnitID(ctx, unitID, page)
+	exercise, detail, err := e.ExerciseUseCase.FetchManyByUnitIDInAdmin(ctx, unitID, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -111,7 +111,7 @@ func (e *ExerciseController) FetchOneByUnitID(ctx *gin.Context) {
 		return
 	}
 
-	ex, err := e.ExerciseUseCase.FetchOneByUnitID(ctx, unitID)
+	ex, err := e.ExerciseUseCase.FetchOneByUnitIDInAdmin(ctx, unitID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -145,7 +145,7 @@ func (e *ExerciseController) FetchOneExerciseByID(ctx *gin.Context) {
 	}
 
 	id := ctx.Query("_id")
-	exercise, err := e.ExerciseUseCase.FetchByID(ctx, id)
+	exercise, err := e.ExerciseUseCase.FetchByIDInAdmin(ctx, id)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -181,7 +181,7 @@ func (e *ExerciseController) FetchManyExerciseInAdmin(ctx *gin.Context) {
 
 	page := ctx.DefaultQuery("page", "1")
 
-	exercise, count, err := e.ExerciseUseCase.FetchMany(ctx, page)
+	exercise, count, err := e.ExerciseUseCase.FetchManyInAdmin(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -225,7 +225,7 @@ func (e *ExerciseController) FetchManyByUnitIDInAdmin(ctx *gin.Context) {
 
 	page := ctx.DefaultQuery("page", "1")
 
-	exercise, detail, err := e.ExerciseUseCase.FetchManyByUnitID(ctx, unitID, page)
+	exercise, detail, err := e.ExerciseUseCase.FetchManyByUnitIDInAdmin(ctx, unitID, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -267,7 +267,7 @@ func (e *ExerciseController) FetchOneByUnitIDInAdmin(ctx *gin.Context) {
 		return
 	}
 
-	ex, err := e.ExerciseUseCase.FetchOneByUnitID(ctx, unitID)
+	ex, err := e.ExerciseUseCase.FetchOneByUnitIDInAdmin(ctx, unitID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -301,7 +301,7 @@ func (e *ExerciseController) FetchOneExerciseByIDInAdmin(ctx *gin.Context) {
 	}
 
 	id := ctx.Query("_id")
-	exercise, err := e.ExerciseUseCase.FetchByID(ctx, id)
+	exercise, err := e.ExerciseUseCase.FetchByIDInAdmin(ctx, id)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{

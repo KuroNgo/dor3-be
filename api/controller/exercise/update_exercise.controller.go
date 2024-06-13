@@ -48,7 +48,7 @@ func (e *ExerciseController) UpdateOneExercise(ctx *gin.Context) {
 		WhoUpdates: admin.FullName,
 	}
 
-	data, err := e.ExerciseUseCase.UpdateOne(ctx, &updateExercise)
+	data, err := e.ExerciseUseCase.UpdateOneInAdmin(ctx, &updateExercise)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

@@ -3,6 +3,7 @@ package unit_usecase
 import (
 	unit_domain "clean-architecture/domain/unit"
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
@@ -10,6 +11,26 @@ import (
 type unitUseCase struct {
 	unitRepository unit_domain.IUnitRepository
 	contextTimeout time.Duration
+}
+
+func (u *unitUseCase) FetchManyInUser(ctx context.Context, user primitive.ObjectID, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u *unitUseCase) FetchOneByIDInUser(ctx context.Context, user primitive.ObjectID, id string) (unit_domain.UnitResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u *unitUseCase) FetchManyNotPaginationInUser(ctx context.Context, user primitive.ObjectID) ([]unit_domain.UnitResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u *unitUseCase) FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewUnitUseCase(unitRepository unit_domain.IUnitRepository, timeout time.Duration) unit_domain.IUnitUseCase {
@@ -102,7 +123,7 @@ func (u *unitUseCase) UpdateOneInAdmin(ctx context.Context, unit *unit_domain.Un
 	return data, nil
 }
 
-func (u *unitUseCase) UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error) {
+func (u *unitUseCase) UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error) {
 	//TODO implement me
 	panic("implement me")
 }
