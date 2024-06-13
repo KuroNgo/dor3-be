@@ -26,7 +26,6 @@ type ActivityLog struct {
 	ExpireAt     time.Time          `json:"expire_at" bson:"expire_at"`
 }
 
-// ActivityLog this code process write log user automation
 type ActivityLogResponse struct {
 	LogID        primitive.ObjectID `json:"_id" bson:"_id"`
 	ClientIP     string             `json:"client_ip" bson:"client_ip"`

@@ -3,7 +3,7 @@ package vocabulary_domain
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 const (
-	CollectionVocabularyFavourite = "vocabulary_favourite"
+	CollectionVocabularyProcess = "vocabulary_process"
 )
 
 type VocabularyProcess struct {

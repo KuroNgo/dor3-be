@@ -25,7 +25,7 @@ func (f *FeedbackController) FetchMany(ctx *gin.Context) {
 	}
 
 	page := ctx.DefaultQuery("page", "1")
-	data, err := f.FeedbackUseCase.FetchMany(ctx, page)
+	data, err := f.FeedbackUseCase.FetchManyInAdmin(ctx, page)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{

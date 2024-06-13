@@ -47,7 +47,7 @@ func (q *QuizController) UpdateOneQuiz(ctx *gin.Context) {
 		UpdatedAt:   time.Now(),
 	}
 
-	_, err = q.QuizUseCase.UpdateOne(ctx, &updateQuiz)
+	_, err = q.QuizUseCase.UpdateOneInAdmin(ctx, &updateQuiz)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

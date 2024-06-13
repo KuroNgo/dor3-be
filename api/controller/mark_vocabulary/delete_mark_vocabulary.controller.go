@@ -36,7 +36,7 @@ func (m *MarkVocabularyController) DeleteOneMarkVocabulary(ctx *gin.Context) {
 		return
 	}
 
-	err = m.VocabularyUseCase.UpdateIsFavourite(ctx, vocabularyID, 0)
+	err = m.VocabularyUseCase.UpdateIsFavouriteInUser(ctx, vocabularyID, 0)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Error create mark vocabulary",

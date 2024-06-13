@@ -288,7 +288,7 @@ func (c *CourseController) CreateLessonManagementWithFileInAdmin(ctx *gin.Contex
 
 	var vocabularies []vocabulary_domain.Vocabulary
 	for _, vocabulary := range resVocabulary {
-		unitID, err := c.VocabularyUseCase.FindUnitIDByUnitLevel(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
+		unitID, err := c.VocabularyUseCase.FindUnitIDByUnitLevelInAdmin(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -321,7 +321,7 @@ func (c *CourseController) CreateLessonManagementWithFileInAdmin(ctx *gin.Contex
 	go func() {
 		defer wg.Done()
 		for _, vocabulary := range vocabularies {
-			if err = c.VocabularyUseCase.CreateOneByNameUnit(ctx, &vocabulary); err != nil {
+			if err = c.VocabularyUseCase.CreateOneByNameUnitInAdmin(ctx, &vocabulary); err != nil {
 				continue
 			}
 			vocabulariesCount++
@@ -330,7 +330,7 @@ func (c *CourseController) CreateLessonManagementWithFileInAdmin(ctx *gin.Contex
 	wg.Wait()
 
 	if vocabulariesCount > 0 {
-		data, err := c.VocabularyUseCase.GetLatestVocabulary(ctx)
+		data, err := c.VocabularyUseCase.GetLatestVocabularyInAdmin(ctx)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -379,7 +379,7 @@ func (c *CourseController) CreateLessonManagementWithFileInAdmin(ctx *gin.Contex
 					return
 				}
 
-				wordID, err := c.VocabularyUseCase.FindVocabularyIDByVocabularyName(ctx, audio)
+				wordID, err := c.VocabularyUseCase.FindVocabularyIDByVocabularyConfigInAdmin(ctx, audio)
 				if err != nil {
 					ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error finding vocabulary ID for file %s: %s", audioFileName, err)})
 					return
@@ -390,7 +390,7 @@ func (c *CourseController) CreateLessonManagementWithFileInAdmin(ctx *gin.Contex
 					LinkURL: dataRes.AudioURL,
 				}
 
-				if err := c.VocabularyUseCase.UpdateOneAudio(ctx, vocabularyRes); err != nil {
+				if err := c.VocabularyUseCase.UpdateOneAudioInAdmin(ctx, vocabularyRes); err != nil {
 					ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error updating vocabulary for file %s: %s", audioFileName, err)})
 					return
 				}

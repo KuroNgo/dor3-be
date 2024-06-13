@@ -24,24 +24,22 @@ type Input struct {
 
 //go:generate mockery --name IVocabularyUseCase
 type IVocabularyUseCase interface {
-	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchByIdUnit(ctx context.Context, idUnit string) ([]Vocabulary, error)
-	FindUnitIDByUnitLevel(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error)
-	FindVocabularyIDByVocabularyName(ctx context.Context, word string) (primitive.ObjectID, error)
-	FetchByWord(ctx context.Context, word string) (SearchingResponse, error)
-	FetchByLesson(ctx context.Context, unitName string) (SearchingResponse, error)
+	FetchByLessonInBoth(ctx context.Context, unitName string) (SearchingResponse, error)
+	FetchByWordInBoth(ctx context.Context, word string) (SearchingResponse, error)
+	FetchManyInBoth(ctx context.Context, page string) (Response, error)
+	UpdateIsFavouriteInUser(ctx context.Context, vocabularyID string, isFavourite int) error
 
-	GetAllVocabulary(ctx context.Context) ([]string, error)
-	GetVocabularyById(ctx context.Context, id string) (Vocabulary, error)
-	GetLatestVocabulary(ctx context.Context) ([]string, error)
+	FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error)
+	FindVocabularyIDByVocabularyConfigInAdmin(ctx context.Context, word string) (primitive.ObjectID, error)
+	FetchByIdUnitInAdmin(ctx context.Context, idUnit string) ([]Vocabulary, error)
+	GetAllVocabularyInAdmin(ctx context.Context) ([]string, error)
+	GetVocabularyByIdInAdmin(ctx context.Context, id string) (Vocabulary, error)
+	GetLatestVocabularyInAdmin(ctx context.Context) ([]string, error)
 
-	UpdateOne(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
-	UpdateOneAudio(ctx context.Context, vocabulary *Vocabulary) error
-	UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error
-	UpdateOneImage(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
-
-	CreateOne(ctx context.Context, vocabulary *Vocabulary) error
-	CreateOneByNameUnit(ctx context.Context, vocabulary *Vocabulary) error
-
-	DeleteOne(ctx context.Context, vocabularyID string) error
+	CreateOneInAdmin(ctx context.Context, vocabulary *Vocabulary) error
+	CreateOneByNameUnitInAdmin(ctx context.Context, vocabulary *Vocabulary) error
+	UpdateOneInAdmin(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
+	UpdateOneImageInAdmin(ctx context.Context, vocabulary *Vocabulary) (*mongo.UpdateResult, error)
+	UpdateOneAudioInAdmin(ctx context.Context, vocabulary *Vocabulary) error
+	DeleteOneInAdmin(ctx context.Context, vocabularyID string) error
 }

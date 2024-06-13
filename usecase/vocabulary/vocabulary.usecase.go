@@ -20,11 +20,11 @@ func NewVocabularyUseCase(vocabularyRepository vocabulary_domain.IVocabularyRepo
 	}
 }
 
-func (v *vocabularyUseCase) FindVocabularyIDByVocabularyName(ctx context.Context, word string) (primitive.ObjectID, error) {
+func (v *vocabularyUseCase) FindVocabularyIDByVocabularyConfigInAdmin(ctx context.Context, word string) (primitive.ObjectID, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := v.vocabularyRepository.FindVocabularyIDByVocabularyConfig(ctx, word)
+	vocabulary, err := v.vocabularyRepository.FindVocabularyIDByVocabularyConfigInAdmin(ctx, word)
 	if err != nil {
 		return primitive.NilObjectID, err
 	}
@@ -32,11 +32,11 @@ func (v *vocabularyUseCase) FindVocabularyIDByVocabularyName(ctx context.Context
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) GetLatestVocabulary(ctx context.Context) ([]string, error) {
+func (v *vocabularyUseCase) GetLatestVocabularyInAdmin(ctx context.Context) ([]string, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := v.vocabularyRepository.GetLatestVocabulary(ctx)
+	vocabulary, err := v.vocabularyRepository.GetLatestVocabularyInAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -44,11 +44,11 @@ func (v *vocabularyUseCase) GetLatestVocabulary(ctx context.Context) ([]string, 
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) GetVocabularyById(ctx context.Context, id string) (vocabulary_domain.Vocabulary, error) {
+func (v *vocabularyUseCase) GetVocabularyByIdInAdmin(ctx context.Context, id string) (vocabulary_domain.Vocabulary, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := v.vocabularyRepository.GetVocabularyById(ctx, id)
+	vocabulary, err := v.vocabularyRepository.GetVocabularyByIdInAdmin(ctx, id)
 	if err != nil {
 		return vocabulary_domain.Vocabulary{}, err
 	}
@@ -56,11 +56,11 @@ func (v *vocabularyUseCase) GetVocabularyById(ctx context.Context, id string) (v
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) FetchByIdUnit(ctx context.Context, idUnit string) ([]vocabulary_domain.Vocabulary, error) {
+func (v *vocabularyUseCase) FetchByIdUnitInAdmin(ctx context.Context, idUnit string) ([]vocabulary_domain.Vocabulary, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := v.vocabularyRepository.FetchByIdUnit(ctx, idUnit)
+	vocabulary, err := v.vocabularyRepository.FetchByIdUnitInAdmin(ctx, idUnit)
 	if err != nil {
 		return nil, err
 	}
@@ -68,11 +68,11 @@ func (v *vocabularyUseCase) FetchByIdUnit(ctx context.Context, idUnit string) ([
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) FetchByWord(ctx context.Context, word string) (vocabulary_domain.SearchingResponse, error) {
+func (v *vocabularyUseCase) FetchByWordInBoth(ctx context.Context, word string) (vocabulary_domain.SearchingResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := v.vocabularyRepository.FetchByWord(ctx, word)
+	vocabulary, err := v.vocabularyRepository.FetchByWordInBoth(ctx, word)
 	if err != nil {
 		return vocabulary_domain.SearchingResponse{}, err
 	}
@@ -80,11 +80,11 @@ func (v *vocabularyUseCase) FetchByWord(ctx context.Context, word string) (vocab
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) FetchByLesson(ctx context.Context, lessonName string) (vocabulary_domain.SearchingResponse, error) {
+func (v *vocabularyUseCase) FetchByLessonInBoth(ctx context.Context, lessonName string) (vocabulary_domain.SearchingResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := v.vocabularyRepository.FetchByLesson(ctx, lessonName)
+	vocabulary, err := v.vocabularyRepository.FetchByLessonInBoth(ctx, lessonName)
 	if err != nil {
 		return vocabulary_domain.SearchingResponse{}, err
 	}
@@ -92,11 +92,11 @@ func (v *vocabularyUseCase) FetchByLesson(ctx context.Context, lessonName string
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) FetchMany(ctx context.Context, page string) (vocabulary_domain.Response, error) {
+func (v *vocabularyUseCase) FetchManyInBoth(ctx context.Context, page string) (vocabulary_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := v.vocabularyRepository.FetchMany(ctx, page)
+	vocabulary, err := v.vocabularyRepository.FetchManyInBoth(ctx, page)
 	if err != nil {
 		return vocabulary_domain.Response{}, err
 	}
@@ -104,11 +104,11 @@ func (v *vocabularyUseCase) FetchMany(ctx context.Context, page string) (vocabul
 	return vocabulary, err
 }
 
-func (v *vocabularyUseCase) GetAllVocabulary(ctx context.Context) ([]string, error) {
+func (v *vocabularyUseCase) GetAllVocabularyInAdmin(ctx context.Context) ([]string, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	vocabulary, err := v.vocabularyRepository.GetAllVocabulary(ctx)
+	vocabulary, err := v.vocabularyRepository.GetAllVocabularyInAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -116,11 +116,11 @@ func (v *vocabularyUseCase) GetAllVocabulary(ctx context.Context) ([]string, err
 	return vocabulary, nil
 }
 
-func (v *vocabularyUseCase) FindUnitIDByUnitLevel(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error) {
+func (v *vocabularyUseCase) FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	unitID, err := v.vocabularyRepository.FindUnitIDByUnitLevel(ctx, unitLevel, fieldOfIT)
+	unitID, err := v.vocabularyRepository.FindUnitIDByUnitLevelInAdmin(ctx, unitLevel, fieldOfIT)
 	if err != nil {
 		return primitive.NilObjectID, err
 	}
@@ -128,10 +128,10 @@ func (v *vocabularyUseCase) FindUnitIDByUnitLevel(ctx context.Context, unitLevel
 	return unitID, err
 }
 
-func (v *vocabularyUseCase) CreateOneByNameUnit(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
+func (v *vocabularyUseCase) CreateOneByNameUnitInAdmin(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
-	err := v.vocabularyRepository.CreateOneByNameUnit(ctx, vocabulary)
+	err := v.vocabularyRepository.CreateOneByNameUnitInAdmin(ctx, vocabulary)
 
 	if err != nil {
 		return err
@@ -140,10 +140,10 @@ func (v *vocabularyUseCase) CreateOneByNameUnit(ctx context.Context, vocabulary 
 	return nil
 }
 
-func (v *vocabularyUseCase) CreateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
+func (v *vocabularyUseCase) CreateOneInAdmin(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
-	err := v.vocabularyRepository.CreateOne(ctx, vocabulary)
+	err := v.vocabularyRepository.CreateOneInAdmin(ctx, vocabulary)
 
 	if err != nil {
 		return err
@@ -152,11 +152,11 @@ func (v *vocabularyUseCase) CreateOne(ctx context.Context, vocabulary *vocabular
 	return nil
 }
 
-func (v *vocabularyUseCase) UpdateOne(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
+func (v *vocabularyUseCase) UpdateOneInAdmin(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	data, err := v.vocabularyRepository.UpdateOne(ctx, vocabulary)
+	data, err := v.vocabularyRepository.UpdateOneInAdmin(ctx, vocabulary)
 	if err != nil {
 		return nil, err
 	}
@@ -164,11 +164,11 @@ func (v *vocabularyUseCase) UpdateOne(ctx context.Context, vocabulary *vocabular
 	return data, err
 }
 
-func (v *vocabularyUseCase) UpdateOneImage(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
+func (v *vocabularyUseCase) UpdateOneImageInAdmin(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	data, err := v.vocabularyRepository.UpdateOneImage(ctx, vocabulary)
+	data, err := v.vocabularyRepository.UpdateOneImageInAdmin(ctx, vocabulary)
 	if err != nil {
 		return nil, err
 	}
@@ -176,11 +176,11 @@ func (v *vocabularyUseCase) UpdateOneImage(ctx context.Context, vocabulary *voca
 	return data, err
 }
 
-func (v *vocabularyUseCase) UpdateOneAudio(c context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
+func (v *vocabularyUseCase) UpdateOneAudioInAdmin(c context.Context, vocabulary *vocabulary_domain.Vocabulary) error {
 	ctx, cancel := context.WithTimeout(c, v.contextTimeout)
 	defer cancel()
 
-	err := v.vocabularyRepository.UpdateOneAudio(ctx, vocabulary)
+	err := v.vocabularyRepository.UpdateOneAudioInAdmin(ctx, vocabulary)
 	if err != nil {
 		return err
 	}
@@ -188,11 +188,11 @@ func (v *vocabularyUseCase) UpdateOneAudio(c context.Context, vocabulary *vocabu
 	return nil
 }
 
-func (v *vocabularyUseCase) UpdateIsFavourite(ctx context.Context, vocabularyID string, isFavourite int) error {
+func (v *vocabularyUseCase) UpdateIsFavouriteInUser(ctx context.Context, vocabularyID string, isFavourite int) error {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	err := v.vocabularyRepository.UpdateIsFavourite(ctx, vocabularyID, isFavourite)
+	err := v.vocabularyRepository.UpdateIsFavouriteInUser(ctx, vocabularyID, isFavourite)
 	if err != nil {
 		return err
 	}
@@ -200,11 +200,11 @@ func (v *vocabularyUseCase) UpdateIsFavourite(ctx context.Context, vocabularyID 
 	return nil
 }
 
-func (v *vocabularyUseCase) DeleteOne(ctx context.Context, vocabularyID string) error {
+func (v *vocabularyUseCase) DeleteOneInAdmin(ctx context.Context, vocabularyID string) error {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
 
-	err := v.vocabularyRepository.DeleteOne(ctx, vocabularyID)
+	err := v.vocabularyRepository.DeleteOneInAdmin(ctx, vocabularyID)
 	if err != nil {
 		return err
 	}

@@ -44,6 +44,11 @@ func (c *courseUseCase) FetchByIDInUser(ctx context.Context, userID primitive.Ob
 	return course, nil
 }
 
+func (c *courseUseCase) UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (c *courseUseCase) FetchByIDInAdmin(ctx context.Context, courseID string) (course_domain.CourseResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.contextTimeout)
 	defer cancel()
@@ -90,11 +95,6 @@ func (c *courseUseCase) CreateOneInAdmin(ctx context.Context, course *course_dom
 	}
 
 	return nil
-}
-
-func (c *courseUseCase) UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (c *courseUseCase) UpdateOneInAdmin(ctx context.Context, course *course_domain.Course) (*mongo.UpdateResult, error) {

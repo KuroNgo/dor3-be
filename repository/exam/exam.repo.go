@@ -38,7 +38,7 @@ var (
 	wg sync.WaitGroup
 )
 
-func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
+func (e *examRepository) FetchManyInAdmin(ctx context.Context, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -101,7 +101,7 @@ func (e *examRepository) FetchMany(ctx context.Context, page string) ([]exam_dom
 	return exams, detail, nil
 }
 
-func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
+func (e *examRepository) FetchManyByUnitIDInAdmin(ctx context.Context, unitID string, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -172,7 +172,7 @@ func (e *examRepository) FetchManyByUnitID(ctx context.Context, unitID string, p
 	return exams, detail, nil
 }
 
-func (e *examRepository) FetchExamByID(ctx context.Context, id string) (exam_domain.Exam, error) {
+func (e *examRepository) FetchExamByIDInAdmin(ctx context.Context, id string) (exam_domain.Exam, error) {
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	idExam, err := primitive.ObjectIDFromHex(id)
@@ -193,7 +193,7 @@ func (e *examRepository) FetchExamByID(ctx context.Context, id string) (exam_dom
 	return exam, nil
 }
 
-func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exam_domain.Exam, error) {
+func (e *examRepository) FetchOneByUnitIDInAdmin(ctx context.Context, unitID string) (exam_domain.Exam, error) {
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	idUnit, err := primitive.ObjectIDFromHex(unitID)
@@ -242,7 +242,7 @@ func (e *examRepository) FetchOneByUnitID(ctx context.Context, unitID string) (e
 	return randomExam, nil
 }
 
-func (e *examRepository) CreateOne(ctx context.Context, exam *exam_domain.Exam) error {
+func (e *examRepository) CreateOneInAdmin(ctx context.Context, exam *exam_domain.Exam) error {
 	collectionExam := e.database.Collection(e.collectionExam)
 	collectionLesson := e.database.Collection(e.collectionLesson)
 	collectionUnit := e.database.Collection(e.collectionUnit)
@@ -273,7 +273,7 @@ func (e *examRepository) CreateOne(ctx context.Context, exam *exam_domain.Exam) 
 	return nil
 }
 
-func (e *examRepository) UpdateOne(ctx context.Context, exam *exam_domain.Exam) (*mongo.UpdateResult, error) {
+func (e *examRepository) UpdateOneInAdmin(ctx context.Context, exam *exam_domain.Exam) (*mongo.UpdateResult, error) {
 	collection := e.database.Collection(e.collectionExam)
 
 	filter := bson.M{"_id": exam.ID}
@@ -293,7 +293,7 @@ func (e *examRepository) UpdateOne(ctx context.Context, exam *exam_domain.Exam) 
 	return data, err
 }
 
-func (e *examRepository) UpdateCompleted(ctx context.Context, exam *exam_domain.Exam) error {
+func (e *examRepository) UpdateCompletedInUser(ctx context.Context, exam *exam_domain.Exam) error {
 	collection := e.database.Collection(e.collectionExam)
 
 	filter := bson.D{{Key: "_id", Value: exam.ID}}
@@ -310,7 +310,7 @@ func (e *examRepository) UpdateCompleted(ctx context.Context, exam *exam_domain.
 	return nil
 }
 
-func (e *examRepository) DeleteOne(ctx context.Context, examID string) error {
+func (e *examRepository) DeleteOneInAdmin(ctx context.Context, examID string) error {
 	collectionExam := e.database.Collection(e.collectionExam)
 	objID, err := primitive.ObjectIDFromHex(examID)
 	if err != nil {

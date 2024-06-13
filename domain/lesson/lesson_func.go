@@ -30,7 +30,7 @@ type ILessonUseCase interface {
 	FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, lessonID string) (LessonProcessResponse, error)
 	FetchByIDCourseInUser(ctx context.Context, userID primitive.ObjectID, courseID string, page string) ([]LessonProcessResponse, DetailResponse, error)
 	FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]LessonProcessResponse, DetailResponse, error)
-	UpdateCompleteInUser(ctx context.Context) (*mongo.UpdateResult, error)
+	UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error)
 
 	FetchManyInAdmin(ctx context.Context, page string) ([]LessonResponse, DetailResponse, error)
 	FetchManyNotPaginationInAdmin(ctx context.Context) ([]LessonResponse, DetailResponse, error)

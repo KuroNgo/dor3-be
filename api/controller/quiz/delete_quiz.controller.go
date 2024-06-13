@@ -28,7 +28,7 @@ func (q *QuizController) DeleteOneQuiz(ctx *gin.Context) {
 
 	quizID := ctx.Query("_id")
 
-	err = q.QuizUseCase.DeleteOne(ctx, quizID)
+	err = q.QuizUseCase.DeleteOneInAdmin(ctx, quizID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

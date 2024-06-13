@@ -27,12 +27,12 @@ type Complete struct {
 }
 
 type IExerciseUseCase interface {
-	FetchMany(ctx context.Context, page string) ([]Exercise, DetailResponse, error)
-	FetchByID(ctx context.Context, id string) (Exercise, error)
-	FetchOneByUnitID(ctx context.Context, unitID string) (Exercise, error)
-	FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]Exercise, DetailResponse, error)
+	FetchManyInAdmin(ctx context.Context, page string) ([]Exercise, DetailResponse, error)
+	FetchByIDInAdmin(ctx context.Context, id string) (Exercise, error)
+	FetchOneByUnitIDInAdmin(ctx context.Context, unitID string) (Exercise, error)
+	FetchManyByUnitIDInAdmin(ctx context.Context, unitID string, page string) ([]Exercise, DetailResponse, error)
 
-	UpdateOne(ctx context.Context, exercise *Exercise) (*mongo.UpdateResult, error)
-	CreateOne(ctx context.Context, exercise *Exercise) error
-	DeleteOne(ctx context.Context, exerciseID string) error
+	UpdateOneInAdmin(ctx context.Context, exercise *Exercise) (*mongo.UpdateResult, error)
+	CreateOneInAdmin(ctx context.Context, exercise *Exercise) error
+	DeleteOneInAdmin(ctx context.Context, exerciseID string) error
 }

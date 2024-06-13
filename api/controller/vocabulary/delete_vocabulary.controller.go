@@ -20,7 +20,7 @@ func (v *VocabularyController) DeleteOneVocabulary(ctx *gin.Context) {
 
 	vocabularyID := ctx.Query("_id")
 
-	err = v.VocabularyUseCase.DeleteOne(ctx, vocabularyID)
+	err = v.VocabularyUseCase.DeleteOneInAdmin(ctx, vocabularyID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -65,7 +65,7 @@ func (v *VocabularyController) DeleteManyVocabulary(ctx *gin.Context) {
 
 	vocabularyID := ctx.QueryArray("_id")
 	for _, id := range vocabularyID {
-		err = v.VocabularyUseCase.DeleteOne(ctx, id)
+		err = v.VocabularyUseCase.DeleteOneInAdmin(ctx, id)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",

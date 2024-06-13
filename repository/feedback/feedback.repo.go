@@ -32,7 +32,7 @@ var (
 	wg sync.WaitGroup
 )
 
-func (f *feedbackRepository) FetchMany(ctx context.Context, page string) (feedback_domain.Response, error) {
+func (f *feedbackRepository) FetchManyInAdmin(ctx context.Context, page string) (feedback_domain.Response, error) {
 	collection := f.database.Collection(f.collectionFeedback)
 	collectionUser := f.database.Collection(f.collectionUser)
 
@@ -111,7 +111,7 @@ func (f *feedbackRepository) FetchMany(ctx context.Context, page string) (feedba
 	return feedbackRes, nil
 }
 
-func (f *feedbackRepository) FetchByUserID(ctx context.Context, userID string, page string) (feedback_domain.Response, error) {
+func (f *feedbackRepository) FetchByUserIDInAdmin(ctx context.Context, userID string, page string) (feedback_domain.Response, error) {
 	collection := f.database.Collection(f.collectionFeedback)
 	collectionUser := f.database.Collection(f.collectionUser)
 
@@ -195,7 +195,7 @@ func (f *feedbackRepository) FetchByUserID(ctx context.Context, userID string, p
 	return feedbackRes, nil
 }
 
-func (f *feedbackRepository) FetchBySubmittedDate(ctx context.Context, date string, page string) (feedback_domain.Response, error) {
+func (f *feedbackRepository) FetchBySubmittedDateInAdmin(ctx context.Context, date string, page string) (feedback_domain.Response, error) {
 	collection := f.database.Collection(f.collectionFeedback)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -248,13 +248,13 @@ func (f *feedbackRepository) FetchBySubmittedDate(ctx context.Context, date stri
 	return feedbackRes, nil
 }
 
-func (f *feedbackRepository) CreateOneByUser(ctx context.Context, feedback *feedback_domain.Feedback) error {
+func (f *feedbackRepository) CreateOneInUser(ctx context.Context, feedback *feedback_domain.Feedback) error {
 	collectionFeedback := f.database.Collection(f.collectionFeedback)
 	_, err := collectionFeedback.InsertOne(ctx, feedback)
 	return err
 }
 
-func (f *feedbackRepository) UpdateSeen(ctx context.Context, id string, isSeen int) error {
+func (f *feedbackRepository) UpdateSeenInAdmin(ctx context.Context, id string, isSeen int) error {
 	collection := f.database.Collection(f.collectionFeedback)
 
 	ID, _ := primitive.ObjectIDFromHex(id)
@@ -273,7 +273,7 @@ func (f *feedbackRepository) UpdateSeen(ctx context.Context, id string, isSeen i
 	return nil
 }
 
-func (f *feedbackRepository) DeleteOneByAdmin(ctx context.Context, feedbackID string) error {
+func (f *feedbackRepository) DeleteOneInAdmin(ctx context.Context, feedbackID string) error {
 	collectionFeedback := f.database.Collection(f.collectionFeedback)
 
 	objID, err := primitive.ObjectIDFromHex(feedbackID)

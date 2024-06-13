@@ -31,7 +31,7 @@ import (
 func AdminCourseRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
 	co := course_repository.NewCourseRepository(db, course_domain.CollectionCourse, course_domain.CollectionCourseProcess, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
 	le := lesson_repository.NewLessonRepository(db, lesson_domain.CollectionLesson, lesson_domain.CollectionLessonProcess, course_domain.CollectionCourse, unit_domain.CollectionUnit, vocabulary_domain.CollectionVocabulary)
-	un := unit_repo.NewUnitRepository(db, unit_domain.CollectionUnit, lesson_domain.CollectionLesson, vocabulary_domain.CollectionVocabulary, exam_domain.CollectionExam, exercise_domain.CollectionExercise, quiz_domain.CollectionQuiz)
+	un := unit_repo.NewUnitRepository(db, unit_domain.CollectionUnit, unit_domain.CollectionUnitProcess, lesson_domain.CollectionLesson, vocabulary_domain.CollectionVocabulary, exam_domain.CollectionExam, exercise_domain.CollectionExercise, quiz_domain.CollectionQuiz)
 	vo := vocabulary_repository.NewVocabularyRepository(db, vocabulary_domain.CollectionVocabulary, mark_domain.CollectionMark, unit_domain.CollectionUnit, lesson_domain.CollectionLesson)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 

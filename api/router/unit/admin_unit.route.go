@@ -21,7 +21,7 @@ import (
 )
 
 func AdminUnitRouter(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	un := unit_repo.NewUnitRepository(db, unit_domain.CollectionUnit, lesson_domain.CollectionLesson,
+	un := unit_repo.NewUnitRepository(db, unit_domain.CollectionUnit, unit_domain.CollectionUnitProcess, lesson_domain.CollectionLesson,
 		vocabulary_domain.CollectionVocabulary, exam_domain.CollectionExam, exercise_domain.CollectionExercise, quiz_domain.CollectionQuiz)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 

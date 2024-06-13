@@ -38,7 +38,7 @@ var (
 	wg sync.WaitGroup
 )
 
-func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string) (exercise_domain.Exercise, error) {
+func (e *exerciseRepository) FetchOneByUnitIDInAdmin(ctx context.Context, unitID string) (exercise_domain.Exercise, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
 
 	idUnit, err := primitive.ObjectIDFromHex(unitID)
@@ -85,7 +85,7 @@ func (e *exerciseRepository) FetchOneByUnitID(ctx context.Context, unitID string
 	return randomExercise, nil
 }
 
-func (e *exerciseRepository) FetchByID(ctx context.Context, id string) (exercise_domain.Exercise, error) {
+func (e *exerciseRepository) FetchByIDInAdmin(ctx context.Context, id string) (exercise_domain.Exercise, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
 
 	idExercise, err := primitive.ObjectIDFromHex(id)
@@ -106,7 +106,7 @@ func (e *exerciseRepository) FetchByID(ctx context.Context, id string) (exercise
 	return exercise, nil
 }
 
-func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID string, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
+func (e *exerciseRepository) FetchManyByUnitIDInAdmin(ctx context.Context, unitID string, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -169,7 +169,7 @@ func (e *exerciseRepository) FetchManyByUnitID(ctx context.Context, unitID strin
 	return exercises, detail, nil
 }
 
-func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
+func (e *exerciseRepository) FetchManyInAdmin(ctx context.Context, page string) ([]exercise_domain.Exercise, exercise_domain.DetailResponse, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -227,7 +227,7 @@ func (e *exerciseRepository) FetchMany(ctx context.Context, page string) ([]exer
 	return exercises, detail, nil
 }
 
-func (e *exerciseRepository) UpdateOne(ctx context.Context, exercise *exercise_domain.Exercise) (*mongo.UpdateResult, error) {
+func (e *exerciseRepository) UpdateOneInAdmin(ctx context.Context, exercise *exercise_domain.Exercise) (*mongo.UpdateResult, error) {
 	collection := e.database.Collection(e.collectionExercise)
 
 	filter := bson.D{{Key: "_id", Value: exercise.Id}}
@@ -246,7 +246,7 @@ func (e *exerciseRepository) UpdateOne(ctx context.Context, exercise *exercise_d
 	return data, nil
 }
 
-func (e *exerciseRepository) CreateOne(ctx context.Context, exercise *exercise_domain.Exercise) error {
+func (e *exerciseRepository) CreateOneInAdmin(ctx context.Context, exercise *exercise_domain.Exercise) error {
 	collectionExercise := e.database.Collection(e.collectionExercise)
 	collectionLesson := e.database.Collection(e.collectionLesson)
 	collectionUnit := e.database.Collection(e.collectionUnit)
@@ -277,7 +277,7 @@ func (e *exerciseRepository) CreateOne(ctx context.Context, exercise *exercise_d
 	return nil
 }
 
-func (e *exerciseRepository) DeleteOne(ctx context.Context, exerciseID string) error {
+func (e *exerciseRepository) DeleteOneInAdmin(ctx context.Context, exerciseID string) error {
 	collectionExercise := e.database.Collection(e.collectionExercise)
 
 	objID, err := primitive.ObjectIDFromHex(exerciseID)

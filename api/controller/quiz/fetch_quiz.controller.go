@@ -26,7 +26,7 @@ func (q *QuizController) FetchManyQuiz(ctx *gin.Context) {
 	}
 
 	page := ctx.DefaultQuery("page", "1")
-	quiz, detail, err := q.QuizUseCase.FetchMany(ctx, page)
+	quiz, detail, err := q.QuizUseCase.FetchManyInAdmin(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -63,7 +63,7 @@ func (q *QuizController) FetchOneQuizByUnitID(ctx *gin.Context) {
 
 	unitID := ctx.Query("unit_id")
 
-	quiz, err := q.QuizUseCase.FetchOneByUnitID(ctx, unitID)
+	quiz, err := q.QuizUseCase.FetchOneByUnitIDInAdmin(ctx, unitID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -100,7 +100,7 @@ func (q *QuizController) FetchManyQuizByUnitID(ctx *gin.Context) {
 	unitID := ctx.Query("unit_id")
 	page := ctx.DefaultQuery("page", "1")
 
-	quiz, detail, err := q.QuizUseCase.FetchManyByUnitID(ctx, unitID, page)
+	quiz, detail, err := q.QuizUseCase.FetchManyByUnitIDInAdmin(ctx, unitID, page)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -136,7 +136,7 @@ func (q *QuizController) FetchOneExerciseQuestionByID(ctx *gin.Context) {
 	}
 
 	id := ctx.Query("_id")
-	quiz, err := q.QuizUseCase.FetchByID(ctx, id)
+	quiz, err := q.QuizUseCase.FetchByIDInAdmin(ctx, id)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -172,7 +172,7 @@ func (q *QuizController) FetchManyQuizInAdmin(ctx *gin.Context) {
 	}
 
 	page := ctx.DefaultQuery("page", "1")
-	quiz, detail, err := q.QuizUseCase.FetchMany(ctx, page)
+	quiz, detail, err := q.QuizUseCase.FetchManyInAdmin(ctx, page)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -209,7 +209,7 @@ func (q *QuizController) FetchOneQuizByUnitIDInAdmin(ctx *gin.Context) {
 	}
 
 	unitID := ctx.Query("unit_id")
-	quiz, err := q.QuizUseCase.FetchOneByUnitID(ctx, unitID)
+	quiz, err := q.QuizUseCase.FetchOneByUnitIDInAdmin(ctx, unitID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -245,7 +245,7 @@ func (q *QuizController) FetchManyQuizByUnitIDInAdmin(ctx *gin.Context) {
 
 	unitID := ctx.Query("unit_id")
 	page := ctx.DefaultQuery("page", "1")
-	quiz, detail, err := q.QuizUseCase.FetchManyByUnitID(ctx, unitID, page)
+	quiz, detail, err := q.QuizUseCase.FetchManyByUnitIDInAdmin(ctx, unitID, page)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -281,7 +281,7 @@ func (q *QuizController) FetchOneExerciseQuestionByIDInAdmin(ctx *gin.Context) {
 	}
 
 	id := ctx.Query("_id")
-	quiz, err := q.QuizUseCase.FetchByID(ctx, id)
+	quiz, err := q.QuizUseCase.FetchByIDInAdmin(ctx, id)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
