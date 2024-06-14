@@ -47,7 +47,7 @@ var (
 	unitCache             = cache.NewTTL[string, unit_domain.UnitResponse]()
 	unitsUserProcessCache = cache.NewTTL[string, []unit_domain.UnitProcessResponse]()
 	unitUserProcessCache  = cache.NewTTL[string, unit_domain.UnitProcessResponse]()
-	detailCache           = cache.NewTTL[string, unit_domain.DetailResponse]()
+	detailUnitCache       = cache.NewTTL[string, unit_domain.DetailResponse]()
 
 	wg           sync.WaitGroup
 	mu           sync.Mutex
@@ -60,8 +60,6 @@ var (
 func (u *unitRepository) FetchManyInUser(ctx context.Context, user primitive.ObjectID, page string) ([]unit_domain.UnitProcessResponse, unit_domain.DetailResponse, error) {
 	// Create a buffered error channel to handle errors from goroutines
 	errCh := make(chan error, 1)
-	defer close(errCh)
-
 	// Create channels to retrieve unit processes and detail responses
 	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse)
 	detailCh := make(chan unit_domain.DetailResponse)
@@ -81,7 +79,7 @@ func (u *unitRepository) FetchManyInUser(ctx context.Context, user primitive.Obj
 	// Goroutine to fetch detail from cache
 	go func() {
 		defer wg.Done() // Decrement the wait group counter when the goroutine completes
-		data, found := detailCache.Get(user.Hex() + "detail")
+		data, found := detailUnitCache.Get(user.Hex() + "detail")
 		if found {
 			detailCh <- data // Send the data to the channel if found
 		}
@@ -151,7 +149,9 @@ func (u *unitRepository) FetchManyInUser(ctx context.Context, user primitive.Obj
 			if err = cursorUnit.Decode(&unit); err != nil {
 				return nil, unit_domain.DetailResponse{}, err
 			}
+			wg.Add(1)
 			go func(unit unit_domain.Unit) {
+				defer wg.Done()
 				unitProcess := unit_domain.UnitProcess{
 					UnitID:     unit.ID,
 					LessonID:   unit.LessonID,
@@ -175,6 +175,8 @@ func (u *unitRepository) FetchManyInUser(ctx context.Context, user primitive.Obj
 				}
 			}(unit)
 		}
+		wg.Wait()
+
 		cursor, err := collectionUnitProcess.Find(ctx, filterUnitProcessByUser, findOptions)
 		if err != nil {
 			return nil, unit_domain.DetailResponse{}, err
@@ -206,24 +208,29 @@ func (u *unitRepository) FetchManyInUser(ctx context.Context, user primitive.Obj
 			return nil, unit_domain.DetailResponse{}, err
 		}
 
-		filter := bson.M{"_id": unitProcess.UnitID}
-		var unit unit_domain.Unit
-		err = collectionUnit.FindOne(ctx, filter).Decode(&unit)
+		wg.Add(1)
+		go func(unitProcess unit_domain.UnitProcess) {
+			defer wg.Done()
+			filter := bson.M{"_id": unitProcess.UnitID}
+			var unit unit_domain.Unit
+			err = collectionUnit.FindOne(ctx, filter).Decode(&unit)
 
-		var unitProcessRes = unit_domain.UnitProcessResponse{
-			Unit:               unit,
-			UserID:             user,
-			IsComplete:         unitProcess.IsComplete,
-			ExamIsComplete:     unitProcess.ExamIsComplete,
-			ExerciseIsComplete: unitProcess.ExerciseIsComplete,
-			QuizIsComplete:     unitProcess.QuizIsComplete,
-			TotalScore:         unitProcess.TotalScore,
-		}
+			var unitProcessRes = unit_domain.UnitProcessResponse{
+				Unit:               unit,
+				UserID:             user,
+				IsComplete:         unitProcess.IsComplete,
+				ExamIsComplete:     unitProcess.ExamIsComplete,
+				ExerciseIsComplete: unitProcess.ExerciseIsComplete,
+				QuizIsComplete:     unitProcess.QuizIsComplete,
+				TotalScore:         unitProcess.TotalScore,
+			}
 
-		mu.Lock()
-		unitsProcess = append(unitsProcess, unitProcessRes)
-		mu.Unlock()
+			mu.Lock()
+			unitsProcess = append(unitsProcess, unitProcessRes)
+			mu.Unlock()
+		}(unitProcess)
 	}
+	wg.Wait()
 
 	if err := cursor.Err(); err != nil {
 		return nil, unit_domain.DetailResponse{}, err
@@ -301,7 +308,6 @@ func (u *unitRepository) FetchOneByIDInUser(ctx context.Context, user primitive.
 func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user primitive.ObjectID) ([]unit_domain.UnitProcessResponse, error) {
 	// Create a buffered error channel to handle errors from goroutines
 	errCh := make(chan error, 1)
-	defer close(errCh)
 
 	// Create channels to retrieve unit processes and detail responses
 	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse)
@@ -368,7 +374,10 @@ func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user 
 			if err = cursorUnit.Decode(&unit); err != nil {
 				return nil, err
 			}
+
+			wg.Add(1)
 			go func(unit unit_domain.Unit) {
+				defer wg.Done()
 				unitProcess := unit_domain.UnitProcess{
 					UnitID:     unit.ID,
 					LessonID:   unit.LessonID,
@@ -392,6 +401,8 @@ func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user 
 				}
 			}(unit)
 		}
+		wg.Wait()
+
 		cursor, err := collectionUnitProcess.Find(ctx, filterUnitProcessByUser)
 		if err != nil {
 			return nil, err
@@ -423,24 +434,29 @@ func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user 
 			return nil, err
 		}
 
-		filter := bson.M{"_id": unitProcess.UnitID}
-		var unit unit_domain.Unit
-		err = collectionUnit.FindOne(ctx, filter).Decode(&unit)
+		wg.Add(1)
+		go func(unitProcess unit_domain.UnitProcess) {
+			defer wg.Done()
+			filter := bson.M{"_id": unitProcess.UnitID}
+			var unit unit_domain.Unit
+			err = collectionUnit.FindOne(ctx, filter).Decode(&unit)
 
-		var unitProcessRes = unit_domain.UnitProcessResponse{
-			Unit:               unit,
-			UserID:             user,
-			IsComplete:         unitProcess.IsComplete,
-			ExamIsComplete:     unitProcess.ExamIsComplete,
-			ExerciseIsComplete: unitProcess.ExerciseIsComplete,
-			QuizIsComplete:     unitProcess.QuizIsComplete,
-			TotalScore:         unitProcess.TotalScore,
-		}
+			var unitProcessRes = unit_domain.UnitProcessResponse{
+				Unit:               unit,
+				UserID:             user,
+				IsComplete:         unitProcess.IsComplete,
+				ExamIsComplete:     unitProcess.ExamIsComplete,
+				ExerciseIsComplete: unitProcess.ExerciseIsComplete,
+				QuizIsComplete:     unitProcess.QuizIsComplete,
+				TotalScore:         unitProcess.TotalScore,
+			}
 
-		mu.Lock()
-		unitsProcess = append(unitsProcess, unitProcessRes)
-		mu.Unlock()
+			mu.Lock()
+			unitsProcess = append(unitsProcess, unitProcessRes)
+			mu.Unlock()
+		}(unitProcess)
 	}
+	wg.Wait()
 
 	if err := cursor.Err(); err != nil {
 		return nil, err
@@ -457,7 +473,6 @@ func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user 
 
 func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string, page string) ([]unit_domain.UnitProcessResponse, unit_domain.DetailResponse, error) {
 	errCh := make(chan error)
-	defer close(errCh)
 
 	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse)
 	detailCh := make(chan unit_domain.DetailResponse)
@@ -473,7 +488,7 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 
 	go func() {
 		defer wg.Done()
-		data, found := detailCache.Get(user.Hex() + idLesson + "detail")
+		data, found := detailUnitCache.Get(user.Hex() + idLesson + "detail")
 		if found {
 			detailCh <- data
 		}
@@ -606,24 +621,29 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 			return nil, unit_domain.DetailResponse{}, err
 		}
 
-		filter := bson.M{"_id": unitProcess.UnitID}
-		var unit unit_domain.Unit
-		err = collectionUnit.FindOne(ctx, filter).Decode(&unit)
+		wg.Add(1)
+		go func(unitProcess unit_domain.UnitProcess) {
+			defer wg.Done()
+			filter := bson.M{"_id": unitProcess.UnitID}
+			var unit unit_domain.Unit
+			err = collectionUnit.FindOne(ctx, filter).Decode(&unit)
 
-		var unitProcessRes = unit_domain.UnitProcessResponse{
-			Unit:               unit,
-			UserID:             unitProcess.UserID,
-			IsComplete:         unitProcess.IsComplete,
-			ExamIsComplete:     unitProcess.ExamIsComplete,
-			ExerciseIsComplete: unitProcess.ExerciseIsComplete,
-			QuizIsComplete:     unitProcess.QuizIsComplete,
-			TotalScore:         unitProcess.TotalScore,
-		}
+			var unitProcessRes = unit_domain.UnitProcessResponse{
+				Unit:               unit,
+				UserID:             unitProcess.UserID,
+				IsComplete:         unitProcess.IsComplete,
+				ExamIsComplete:     unitProcess.ExamIsComplete,
+				ExerciseIsComplete: unitProcess.ExerciseIsComplete,
+				QuizIsComplete:     unitProcess.QuizIsComplete,
+				TotalScore:         unitProcess.TotalScore,
+			}
 
-		mu.Lock()
-		unitsProcess = append(unitsProcess, unitProcessRes)
-		mu.Unlock()
+			mu.Lock()
+			unitsProcess = append(unitsProcess, unitProcessRes)
+			mu.Unlock()
+		}(unitProcess)
 	}
+	wg.Wait()
 
 	if err := cursor.Err(); err != nil {
 		return nil, unit_domain.DetailResponse{}, err
@@ -637,7 +657,7 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 	}
 
 	unitsUserProcessCache.Set(user.Hex()+idLesson+page, unitsProcess, 5*time.Minute)
-	detailCache.Set(user.Hex()+idLesson+"detail", detail, 5*time.Minute)
+	detailUnitCache.Set(user.Hex()+idLesson+"detail", detail, 5*time.Minute)
 
 	select {
 	case err = <-errCh:
@@ -667,7 +687,6 @@ func (u *unitRepository) UpdateCompleteInUser(ctx context.Context, user primitiv
 func (u *unitRepository) FetchManyInAdmin(ctx context.Context, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
 	// Channel to log errors
 	errCh := make(chan error, 1)
-	defer close(errCh)
 	// Channel to save units
 	unitsCh := make(chan []unit_domain.UnitResponse)
 	// Channel to save detail
@@ -689,7 +708,7 @@ func (u *unitRepository) FetchManyInAdmin(ctx context.Context, page string) ([]u
 	// Goroutine to fetch detail from cache
 	go func() {
 		defer wg.Done()
-		data, found := detailCache.Get("detail")
+		data, found := detailUnitCache.Get("detail")
 		if found {
 			detailCh <- data
 			return
@@ -745,16 +764,16 @@ func (u *unitRepository) FetchManyInAdmin(ctx context.Context, page string) ([]u
 	}(cursor, ctx)
 
 	var units []unit_domain.UnitResponse
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for cursor.Next(ctx) {
-			var unit unit_domain.UnitResponse
-			if err = cursor.Decode(&unit); err != nil {
-				errCh <- err
-				return
-			}
 
+	for cursor.Next(ctx) {
+		var unit unit_domain.UnitResponse
+		if err = cursor.Decode(&unit); err != nil {
+			return nil, unit_domain.DetailResponse{}, err
+		}
+
+		wg.Add(1)
+		go func(unit unit_domain.UnitResponse) {
+			defer wg.Done()
 			// Fetch related data for each unit
 			countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
 			if err != nil {
@@ -765,8 +784,8 @@ func (u *unitRepository) FetchManyInAdmin(ctx context.Context, page string) ([]u
 			// Set fetched data to unit
 			unit.CountVocabulary = countVocabulary
 			units = append(units, unit)
-		}
-	}()
+		}(unit)
+	}
 	wg.Wait()
 
 	// Prepare detail response
@@ -777,7 +796,7 @@ func (u *unitRepository) FetchManyInAdmin(ctx context.Context, page string) ([]u
 
 	// Cache the results
 	unitsCache.Set(page, units, 5*time.Minute)
-	detailCache.Set("detail", detail, 5*time.Minute)
+	detailUnitCache.Set("detail", detail, 5*time.Minute)
 
 	// Return results or error
 	select {
@@ -789,10 +808,9 @@ func (u *unitRepository) FetchManyInAdmin(ctx context.Context, page string) ([]u
 }
 
 func (u *unitRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([]unit_domain.UnitResponse, error) {
-	errCh := make(chan error)
-	defer close(errCh)
+	errCh := make(chan error, 1)
 	// Channel to save units
-	unitsCh := make(chan []unit_domain.UnitResponse)
+	unitsCh := make(chan []unit_domain.UnitResponse, 1)
 	wg.Add(1)
 	// Goroutine to fetch units from cache
 	go func() {
@@ -831,16 +849,17 @@ func (u *unitRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([]u
 	}(cursor, ctx)
 
 	var units []unit_domain.UnitResponse
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for cursor.Next(ctx) {
-			var unit unit_domain.UnitResponse
-			if err = cursor.Decode(&unit); err != nil {
-				errCh <- err
-				return
-			}
 
+	for cursor.Next(ctx) {
+		var unit unit_domain.UnitResponse
+		if err = cursor.Decode(&unit); err != nil {
+			errCh <- err
+			return nil, err
+		}
+
+		wg.Add(1)
+		go func(unit unit_domain.UnitResponse) {
+			defer wg.Done()
 			countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
 			if err != nil {
 				errCh <- err
@@ -849,9 +868,8 @@ func (u *unitRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([]u
 
 			unit.CountVocabulary = countVocabulary
 			units = append(units, unit)
-		}
-
-	}()
+		}(unit)
+	}
 	wg.Wait()
 
 	// Cache the results
@@ -867,6 +885,40 @@ func (u *unitRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([]u
 }
 
 func (u *unitRepository) FetchByIdLessonInAdmin(ctx context.Context, idLesson string, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
+	errCh := make(chan error, 1)
+	unitsCh := make(chan []unit_domain.UnitResponse)
+	detailCh := make(chan unit_domain.DetailResponse)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := unitsCache.Get(idLesson + page)
+		if found {
+			unitsCh <- data
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := detailUnitCache.Get(idLesson + "detail")
+		if found {
+			detailCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(unitsCh)
+		defer close(detailCh)
+		wg.Wait()
+	}()
+
+	unitsData := <-unitsCh
+	detailData := <-detailCh
+	if !internal.IsZeroValue(unitsData) && !internal.IsZeroValue(detailData) {
+		return unitsData, detailData, nil
+	}
+
 	collectionUnit := u.database.Collection(u.collectionUnit)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -896,8 +948,9 @@ func (u *unitRepository) FetchByIdLessonInAdmin(ctx context.Context, idLesson st
 		return nil, unit_domain.DetailResponse{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+		err = cursor.Close(ctx)
 		if err != nil {
+			errCh <- err
 			return
 		}
 	}(cursor, ctx)
@@ -905,27 +958,42 @@ func (u *unitRepository) FetchByIdLessonInAdmin(ctx context.Context, idLesson st
 	var units []unit_domain.UnitResponse
 	for cursor.Next(ctx) {
 		var unit unit_domain.UnitResponse
-		if err := cursor.Decode(&unit); err != nil {
+		if err = cursor.Decode(&unit); err != nil {
 			return nil, unit_domain.DetailResponse{}, err
 		}
 
-		countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
-		if err != nil {
-			return nil, unit_domain.DetailResponse{}, err
-		}
+		wg.Add(1)
+		go func(unit unit_domain.UnitResponse) {
+			defer wg.Done()
+			countVocabulary, err := u.countVocabularyByUnitID(ctx, unit.ID)
+			if err != nil {
+				errCh <- err
+				return
+			}
 
-		// Gắn LessonID vào đơn vị
-		unit.LessonID = idLesson2
-		unit.CountVocabulary = countVocabulary
+			// Gắn LessonID vào đơn vị
+			unit.LessonID = idLesson2
+			unit.CountVocabulary = countVocabulary
 
-		units = append(units, unit)
+			units = append(units, unit)
+		}(unit)
 	}
+	wg.Wait()
 
 	response := unit_domain.DetailResponse{
 		Page:        totalPages,
 		CurrentPage: pageNumber,
 	}
-	return units, response, nil
+
+	unitsCache.Set(idLesson+page, units, 5*time.Minute)
+	detailUnitCache.Set(idLesson+"detail", response, 5*time.Minute)
+
+	select {
+	case err = <-errCh:
+		return nil, unit_domain.DetailResponse{}, err
+	default:
+		return units, response, nil
+	}
 }
 
 func (u *unitRepository) FetchOneByIDInAdmin(ctx context.Context, id string) (unit_domain.UnitResponse, error) {
@@ -1013,6 +1081,21 @@ func (u *unitRepository) CreateOneByNameLessonInAdmin(ctx context.Context, unit 
 	if err != nil {
 		return err
 	}
+
+	// Clear data value in cache memory
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		unitsCache.Clear()
+	}()
+
+	// clear data value in cache memory due to increase num
+	go func() {
+		defer wg.Done()
+		detailUnitCache.Clear()
+	}()
+
+	wg.Wait()
 	return nil
 }
 
@@ -1063,6 +1146,24 @@ func (u *unitRepository) CreateOneInAdmin(ctx context.Context, unit *unit_domain
 	}
 	if countVocabulary == 0 || countVocabulary > 5 {
 		_, err = collectionUnit.InsertOne(ctx, unit)
+		if err != nil {
+			return err
+		}
+
+		// Clear data value in cache memory
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			unitsCache.Clear()
+		}()
+
+		// clear data value in cache memory due to increase num
+		go func() {
+			defer wg.Done()
+			detailUnitCache.Clear()
+		}()
+
+		wg.Wait()
 		return nil
 	}
 
@@ -1070,6 +1171,19 @@ func (u *unitRepository) CreateOneInAdmin(ctx context.Context, unit *unit_domain
 }
 
 func (u *unitRepository) UpdateOneInAdmin(ctx context.Context, unit *unit_domain.Unit) (*mongo.UpdateResult, error) {
+	// Khóa lock giúp bảo vệ course
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return nil, errors.New("another goroutine is already processing")
+	}
+
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collection := u.database.Collection(u.collectionUnit)
 
 	filter := bson.D{{Key: "_id", Value: unit.ID}}
@@ -1079,10 +1193,42 @@ func (u *unitRepository) UpdateOneInAdmin(ctx context.Context, unit *unit_domain
 	if err != nil {
 		return nil, err
 	}
+
+	// Clear data value in cache memory
+	wg.Add(3)
+	go func() {
+		defer wg.Done()
+		unitsCache.Clear()
+	}()
+
+	go func() {
+		defer wg.Done()
+		unitCache.Remove(unit.ID.Hex())
+	}()
+
+	// clear data value in cache memory due to increase num
+	go func() {
+		defer wg.Done()
+		detailUnitCache.Clear()
+	}()
+
+	wg.Wait()
 	return data, nil
 }
 
 func (u *unitRepository) DeleteOneInAdmin(ctx context.Context, unitID string) error {
+	// Khóa lock giúp bảo vệ course
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collectionUnit := u.database.Collection(u.collectionUnit)
 	collectionVocabulary := u.database.Collection(u.collectionVocabulary)
 	objID, err := primitive.ObjectIDFromHex(unitID)
@@ -1114,6 +1260,29 @@ func (u *unitRepository) DeleteOneInAdmin(ctx context.Context, unitID string) er
 	}
 
 	_, err = collectionUnit.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+	// Clear data value in cache memory
+	wg.Add(3)
+	go func() {
+		defer wg.Done()
+		unitsCache.Clear()
+	}()
+
+	go func() {
+		defer wg.Done()
+		unitCache.Remove(unitID)
+	}()
+
+	// clear data value in cache memory due to increase num
+	go func() {
+		defer wg.Done()
+		detailUnitCache.Clear()
+	}()
+
+	wg.Wait()
+
 	return err
 }
 

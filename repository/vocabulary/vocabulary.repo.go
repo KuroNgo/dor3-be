@@ -36,15 +36,8 @@ func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, co
 }
 
 func (v *vocabularyRepository) FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error) {
-	//collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
 	collectionLesson := v.database.Collection(v.collectionLesson)
-
-	// Tìm kiếm unit có cùng level
-	//filter := bson.M{"level": unitLevel}
-	//var existingUnit struct {
-	//	Id primitive.ObjectID `bson:"_id"`
-	//}
 
 	// Tìm lesson
 	var lessons []lesson_domain.Lesson
@@ -79,11 +72,6 @@ func (v *vocabularyRepository) FindUnitIDByUnitLevelInAdmin(ctx context.Context,
 			break
 		}
 	}
-
-	//err = collectionUnit.FindOne(ctx, filter).Decode(&existingUnit)
-	//if err != nil {
-	//	return primitive.NilObjectID, err
-	//}
 
 	return unitMain.ID, nil
 }
@@ -287,18 +275,6 @@ func (v *vocabularyRepository) FetchByIdUnitInAdmin(ctx context.Context, idUnit 
 }
 
 func (v *vocabularyRepository) FetchByWordInBoth(ctx context.Context, word string) (vocabulary_domain.SearchingResponse, error) {
-	//v.cacheMutex.RLock()
-	//cachedData, found := v.vocabularyOneCache[word]
-	//v.cacheMutex.RUnlock()
-
-	//if found {
-	//	vocabularyRes := vocabulary_domain.SearchingResponse{
-	//		CountVocabularySearch: int64(len(cachedData)),
-	//		Vocabulary:            cachedData,
-	//	}
-	//	return vocabularyRes, nil
-	//}
-
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
 	regex := primitive.Regex{Pattern: word, Options: "i"}
@@ -331,11 +307,6 @@ func (v *vocabularyRepository) FetchByWordInBoth(ctx context.Context, word strin
 		CountVocabularySearch: count,
 		Vocabulary:            vocabularies,
 	}
-
-	//v.cacheMutex.Lock()
-	//v.vocabularyOneCache[word] = vocabularies
-	//v.vocabularyCacheExpires[word] = time.Now().Add(5 * time.Minute)
-	//v.cacheMutex.Unlock()
 
 	return vocabularyRes, nil
 }
@@ -378,15 +349,6 @@ func (v *vocabularyRepository) FetchByLessonInBoth(ctx context.Context, lessonNa
 }
 
 func (v *vocabularyRepository) FetchManyInBoth(ctx context.Context, page string) (vocabulary_domain.Response, error) {
-	// Kiểm tra cache trước khi truy vấn cơ sở dữ liệu
-	//v.cacheMutex.RLock()
-	//cachedData, found := v.vocabularyManyCache[page]
-	//v.cacheMutex.RUnlock()
-	//
-	//if found {
-	//	return cachedData, nil
-	//}
-
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
 	collectionLesson := v.database.Collection(v.collectionLesson)
@@ -473,11 +435,6 @@ func (v *vocabularyRepository) FetchManyInBoth(ctx context.Context, page string)
 		CurrentPage:        pageNumber,
 		VocabularyResponse: vocabularies,
 	}
-
-	//v.cacheMutex.Lock()
-	//v.vocabularyManyCache[page] = vocabularyRes
-	//v.vocabularyCacheExpires[page] = time.Now().Add(5 * time.Minute) // Ví dụ: hết hạn sau 5 phút
-	//v.cacheMutex.Unlock()
 
 	return vocabularyRes, nil
 }
