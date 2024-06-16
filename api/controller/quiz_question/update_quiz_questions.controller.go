@@ -47,7 +47,7 @@ func (q *QuizQuestionsController) UpdateOneQuizOptions(ctx *gin.Context) {
 		WhoUpdate:    admin.FullName,
 	}
 
-	_, err = q.QuizQuestionUseCase.UpdateOne(ctx, &questions)
+	_, err = q.QuizQuestionUseCase.UpdateOneInAdmin(ctx, &questions)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

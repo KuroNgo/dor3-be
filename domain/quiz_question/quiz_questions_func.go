@@ -19,12 +19,12 @@ type Input struct {
 }
 
 type IQuizQuestionUseCase interface {
-	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchByID(ctx context.Context, id string) (QuizQuestion, error)
-	FetchManyByQuizID(ctx context.Context, quizID string) (Response, error)
-	FetchOneByQuizID(ctx context.Context, quizID string) (QuizQuestion, error)
+	FetchManyInAdmin(ctx context.Context, page string) (Response, error)
+	FetchByIDInAdmin(ctx context.Context, id string) (QuizQuestion, error)
+	FetchManyByQuizIDInAdmin(ctx context.Context, quizID string) (Response, error)
+	FetchOneByQuizIDInAdmin(ctx context.Context, quizID string) (QuizQuestion, error)
 
-	UpdateOne(ctx context.Context, quizQuestion *QuizQuestion) (*mongo.UpdateResult, error)
-	CreateOne(ctx context.Context, quizQuestion *QuizQuestion) error
-	DeleteOne(ctx context.Context, quizID string) error
+	UpdateOneInAdmin(ctx context.Context, quizQuestion *QuizQuestion) (*mongo.UpdateResult, error)
+	CreateOneInAdmin(ctx context.Context, quizQuestion *QuizQuestion) error
+	DeleteOneInAdmin(ctx context.Context, quizID string) error
 }

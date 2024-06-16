@@ -26,7 +26,7 @@ func (e *ExamResultController) UpdateComplete(ctx *gin.Context) {
 
 	examID := ctx.Query("exam_id")
 
-	_, err = e.ExamResultUseCase.UpdateStatus(ctx, examID, 1)
+	_, err = e.ExamResultUseCase.UpdateStatusInUser(ctx, examID, 1)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

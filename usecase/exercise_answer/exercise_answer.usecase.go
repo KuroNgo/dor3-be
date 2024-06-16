@@ -18,11 +18,11 @@ func NewExerciseAnswerUseCase(exerciseAnswerRepository exercise_answer_domain.IE
 	}
 }
 
-func (e *exerciseAnswerUseCase) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (exercise_answer_domain.Response, error) {
+func (e *exerciseAnswerUseCase) FetchManyAnswerQuestionIDInUser(ctx context.Context, questionID string, userID string) (exercise_answer_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.exerciseAnswerRepository.FetchManyAnswerByUserIDAndQuestionID(ctx, questionID, userID)
+	data, err := e.exerciseAnswerRepository.FetchManyAnswerQuestionIDInUser(ctx, questionID, userID)
 	if err != nil {
 		return exercise_answer_domain.Response{}, err
 	}
@@ -30,11 +30,11 @@ func (e *exerciseAnswerUseCase) FetchManyAnswerByUserIDAndQuestionID(ctx context
 	return data, nil
 }
 
-func (e *exerciseAnswerUseCase) CreateOne(ctx context.Context, exerciseAnswer *exercise_answer_domain.ExerciseAnswer) error {
+func (e *exerciseAnswerUseCase) CreateOneInUser(ctx context.Context, exerciseAnswer *exercise_answer_domain.ExerciseAnswer) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.exerciseAnswerRepository.CreateOne(ctx, exerciseAnswer)
+	err := e.exerciseAnswerRepository.CreateOneInUser(ctx, exerciseAnswer)
 	if err != nil {
 		return err
 	}
@@ -42,11 +42,11 @@ func (e *exerciseAnswerUseCase) CreateOne(ctx context.Context, exerciseAnswer *e
 	return nil
 }
 
-func (e *exerciseAnswerUseCase) DeleteOne(ctx context.Context, exerciseID string) error {
+func (e *exerciseAnswerUseCase) DeleteOneInUser(ctx context.Context, exerciseID string) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.exerciseAnswerRepository.DeleteOne(ctx, exerciseID)
+	err := e.exerciseAnswerRepository.DeleteOneInUser(ctx, exerciseID)
 	if err != nil {
 		return err
 	}
@@ -54,11 +54,11 @@ func (e *exerciseAnswerUseCase) DeleteOne(ctx context.Context, exerciseID string
 	return nil
 }
 
-func (e *exerciseAnswerUseCase) DeleteAllAnswerByExerciseID(ctx context.Context, exerciseId string) error {
+func (e *exerciseAnswerUseCase) DeleteAllAnswerByExerciseIDInUser(ctx context.Context, exerciseId string) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.exerciseAnswerRepository.DeleteAllAnswerByExerciseID(ctx, exerciseId)
+	err := e.exerciseAnswerRepository.DeleteAllAnswerByExerciseIDInUser(ctx, exerciseId)
 	if err != nil {
 		return err
 	}

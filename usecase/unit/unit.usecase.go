@@ -13,31 +13,76 @@ type unitUseCase struct {
 	contextTimeout time.Duration
 }
 
-func (u *unitUseCase) FetchManyInUser(ctx context.Context, user primitive.ObjectID, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (u *unitUseCase) FetchOneByIDInUser(ctx context.Context, user primitive.ObjectID, id string) (unit_domain.UnitResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (u *unitUseCase) FetchManyNotPaginationInUser(ctx context.Context, user primitive.ObjectID) ([]unit_domain.UnitResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (u *unitUseCase) FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewUnitUseCase(unitRepository unit_domain.IUnitRepository, timeout time.Duration) unit_domain.IUnitUseCase {
 	return &unitUseCase{
 		unitRepository: unitRepository,
 		contextTimeout: timeout,
 	}
+}
+
+func (u *unitUseCase) FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
+	unit, err := u.unitRepository.FindUnitIDByUnitLevelInAdmin(ctx, unitLevel, fieldOfIT)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
+	return unit, err
+}
+
+func (u *unitUseCase) FetchManyInUser(ctx context.Context, user primitive.ObjectID, page string) ([]unit_domain.UnitProcessResponse, unit_domain.DetailResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
+	unit, detail, err := u.unitRepository.FetchManyInUser(ctx, user, page)
+	if err != nil {
+		return nil, unit_domain.DetailResponse{}, err
+	}
+
+	return unit, detail, err
+}
+
+func (u *unitUseCase) FetchOneByIDInUser(ctx context.Context, user primitive.ObjectID, id string) (unit_domain.UnitProcessResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
+	unit, err := u.unitRepository.FetchOneByIDInUser(ctx, user, id)
+	if err != nil {
+		return unit_domain.UnitProcessResponse{}, err
+	}
+
+	return unit, err
+}
+
+func (u *unitUseCase) FetchManyNotPaginationInUser(ctx context.Context, user primitive.ObjectID) ([]unit_domain.UnitProcessResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
+	unit, err := u.unitRepository.FetchManyNotPaginationInUser(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return unit, err
+}
+
+func (u *unitUseCase) FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string, page string) ([]unit_domain.UnitProcessResponse, unit_domain.DetailResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
+	unit, detail, err := u.unitRepository.FetchByIdLessonInUser(ctx, user, idLesson, page)
+	if err != nil {
+		return nil, unit_domain.DetailResponse{}, err
+	}
+
+	return unit, detail, err
+}
+
+func (u *unitUseCase) UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (u *unitUseCase) FetchManyInAdmin(ctx context.Context, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
@@ -121,11 +166,6 @@ func (u *unitUseCase) UpdateOneInAdmin(ctx context.Context, unit *unit_domain.Un
 		return nil, err
 	}
 	return data, nil
-}
-
-func (u *unitUseCase) UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (u *unitUseCase) DeleteOneInAdmin(ctx context.Context, unitID string) error {

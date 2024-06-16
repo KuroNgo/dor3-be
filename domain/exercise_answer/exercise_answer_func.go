@@ -16,8 +16,8 @@ type Input struct {
 }
 
 type IExerciseAnswerUseCase interface {
-	FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (Response, error)
-	CreateOne(ctx context.Context, exerciseAnswer *ExerciseAnswer) error
-	DeleteOne(ctx context.Context, exerciseID string) error
-	DeleteAllAnswerByExerciseID(ctx context.Context, exerciseId string) error
+	FetchManyAnswerQuestionIDInUser(ctx context.Context, questionID string, userID string) (Response, error)
+	CreateOneInUser(ctx context.Context, exerciseAnswer *ExerciseAnswer) error
+	DeleteOneInUser(ctx context.Context, exerciseID string) error
+	DeleteAllAnswerByExerciseIDInUser(ctx context.Context, exerciseId string) error
 }

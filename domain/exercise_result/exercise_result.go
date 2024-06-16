@@ -36,17 +36,16 @@ type Statistics struct {
 }
 
 type IExerciseResultRepository interface {
-	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchManyByExerciseID(ctx context.Context, userID string) (Response, error)
-	FetchManyByUserID(ctx context.Context, exerciseID string) (Response, error)
+	FetchManyInUser(ctx context.Context, page string) (Response, error)
+	FetchManyByExerciseIDInUser(ctx context.Context, userID string) (Response, error)
 
-	GetResultsByUserIDAndExerciseID(ctx context.Context, userID string, exerciseID string) (ExerciseResult, error)
-	GetAverageScoreByUser(ctx context.Context, userID string) (float64, error)
-	GetOverallPerformance(ctx context.Context, userID string) (float64, error)
+	GetResultsExerciseIDInUser(ctx context.Context, userID string, exerciseID string) (ExerciseResult, error)
+	GetAverageScoreInUser(ctx context.Context, userID string) (float64, error)
+	GetOverallPerformanceInUser(ctx context.Context, userID string) (float64, error)
 
-	CreateOne(ctx context.Context, exerciseResult *ExerciseResult) error
-	UpdateStatus(ctx context.Context, exerciseResultID string, status int) (*mongo.UpdateResult, error)
-	DeleteOne(ctx context.Context, exerciseResultID string) error
+	CreateOneInUser(ctx context.Context, exerciseResult *ExerciseResult) error
+	UpdateStatusInUser(ctx context.Context, exerciseResultID string, status int) (*mongo.UpdateResult, error)
+	DeleteOneInUser(ctx context.Context, exerciseResultID string) error
 
 	CalculateScore(ctx context.Context, correctAnswers, totalQuestions int) int
 	CalculatePercentage(ctx context.Context, correctAnswers, totalQuestions int) float64

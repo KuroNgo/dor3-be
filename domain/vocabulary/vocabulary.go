@@ -80,8 +80,8 @@ type IVocabularyRepository interface {
 	FetchByWordInBoth(ctx context.Context, word string) (SearchingResponse, error)
 	FetchByLessonInBoth(ctx context.Context, unitName string) (SearchingResponse, error)
 	UpdateIsFavouriteInUser(ctx context.Context, vocabularyID string, isFavourite int) error
+	UpdateVocabularyProcess(ctx context.Context, vocabularyID string, process VocabularyProcess) error
 
-	FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error)
 	FindVocabularyIDByVocabularyConfigInAdmin(ctx context.Context, word string) (primitive.ObjectID, error)
 	FetchByIdUnitInAdmin(ctx context.Context, idUnit string) ([]Vocabulary, error)
 	GetAllVocabularyInAdmin(ctx context.Context) ([]string, error)

@@ -20,7 +20,16 @@ type exerciseQuestionRepository struct {
 	collectionVocabulary string
 }
 
-func (e *exerciseQuestionRepository) FetchOneByExerciseID(ctx context.Context, exerciseID string) (exercise_questions_domain.ExerciseQuestionResponse, error) {
+func NewExerciseQuestionRepository(db *mongo.Database, collectionQuestion string, collectionExercise string, collectionVocabulary string) exercise_questions_domain.IExerciseQuestionRepository {
+	return &exerciseQuestionRepository{
+		database:             db,
+		collectionQuestion:   collectionQuestion,
+		collectionExercise:   collectionExercise,
+		collectionVocabulary: collectionVocabulary,
+	}
+}
+
+func (e *exerciseQuestionRepository) FetchOneByExerciseIDInAdmin(ctx context.Context, exerciseID string) (exercise_questions_domain.ExerciseQuestionResponse, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
 
@@ -54,7 +63,7 @@ func (e *exerciseQuestionRepository) FetchOneByExerciseID(ctx context.Context, e
 	return exerciseQuestionRes, nil
 }
 
-func (e *exerciseQuestionRepository) FetchByID(ctx context.Context, id string) (exercise_questions_domain.ExerciseQuestionResponse, error) {
+func (e *exerciseQuestionRepository) FetchByIDInAdmin(ctx context.Context, id string) (exercise_questions_domain.ExerciseQuestionResponse, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
 
@@ -91,16 +100,7 @@ func (e *exerciseQuestionRepository) FetchByID(ctx context.Context, id string) (
 	return exerciseQuestionRes, nil
 }
 
-func NewExerciseQuestionRepository(db *mongo.Database, collectionQuestion string, collectionExercise string, collectionVocabulary string) exercise_questions_domain.IExerciseQuestionRepository {
-	return &exerciseQuestionRepository{
-		database:             db,
-		collectionQuestion:   collectionQuestion,
-		collectionExercise:   collectionExercise,
-		collectionVocabulary: collectionVocabulary,
-	}
-}
-
-func (e *exerciseQuestionRepository) FetchMany(ctx context.Context, page string) (exercise_questions_domain.Response, error) {
+func (e *exerciseQuestionRepository) FetchManyInAdmin(ctx context.Context, page string) (exercise_questions_domain.Response, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 	collectVocabulary := e.database.Collection(e.collectionVocabulary)
 
@@ -157,7 +157,7 @@ func (e *exerciseQuestionRepository) FetchMany(ctx context.Context, page string)
 	return questionsRes, nil
 }
 
-func (e *exerciseQuestionRepository) FetchManyByExerciseID(ctx context.Context, exerciseID string) (exercise_questions_domain.Response, error) {
+func (e *exerciseQuestionRepository) FetchManyByExerciseIDInAdmin(ctx context.Context, exerciseID string) (exercise_questions_domain.Response, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 	collectVocabulary := e.database.Collection(e.collectionVocabulary)
 
@@ -243,7 +243,7 @@ func (e *exerciseQuestionRepository) FetchManyByExerciseID(ctx context.Context, 
 	return questionsRes, nil
 }
 
-func (e *exerciseQuestionRepository) CreateOne(ctx context.Context, exerciseQuestion *exercise_questions_domain.ExerciseQuestion) error {
+func (e *exerciseQuestionRepository) CreateOneInAdmin(ctx context.Context, exerciseQuestion *exercise_questions_domain.ExerciseQuestion) error {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 	collectionExercise := e.database.Collection(e.collectionExercise)
 	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
@@ -279,7 +279,7 @@ func (e *exerciseQuestionRepository) CreateOne(ctx context.Context, exerciseQues
 	return nil
 }
 
-func (e *exerciseQuestionRepository) UpdateOne(ctx context.Context, exerciseQuestion *exercise_questions_domain.ExerciseQuestion) (*mongo.UpdateResult, error) {
+func (e *exerciseQuestionRepository) UpdateOneInAdmin(ctx context.Context, exerciseQuestion *exercise_questions_domain.ExerciseQuestion) (*mongo.UpdateResult, error) {
 	collection := e.database.Collection(e.collectionQuestion)
 
 	filter := bson.D{{Key: "_id", Value: exerciseQuestion.ID}}
@@ -300,7 +300,7 @@ func (e *exerciseQuestionRepository) UpdateOne(ctx context.Context, exerciseQues
 	return data, nil
 }
 
-func (e *exerciseQuestionRepository) DeleteOne(ctx context.Context, exerciseID string) error {
+func (e *exerciseQuestionRepository) DeleteOneInAdmin(ctx context.Context, exerciseID string) error {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
 	objID, err := primitive.ObjectIDFromHex(exerciseID)

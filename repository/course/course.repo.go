@@ -43,7 +43,7 @@ var (
 	coursePrimOIDCache      = cache.NewTTL[string, primitive.ObjectID]()
 	coursesUserProcessCache = cache.NewTTL[string, []course_domain.CourseProcess]()
 	courseUserProcessCache  = cache.NewTTL[string, course_domain.CourseProcess]()
-	detailCache             = cache.NewTTL[string, course_domain.DetailForManyResponse]()
+	detailCourseCache       = cache.NewTTL[string, course_domain.DetailForManyResponse]()
 	statisticsCache         = cache.NewTTL[string, course_domain.Statistics]()
 
 	wg           sync.WaitGroup
@@ -230,7 +230,7 @@ func (c *courseRepository) FetchManyInUser(ctx context.Context, userID primitive
 
 	go func() {
 		defer wg.Done()
-		data, found := detailCache.Get(userID.Hex() + "detail")
+		data, found := detailCourseCache.Get(userID.Hex() + "detail")
 		if found {
 			detailCh <- data
 		}
@@ -379,7 +379,7 @@ func (c *courseRepository) FetchManyInUser(ctx context.Context, userID primitive
 	}
 
 	coursesUserProcessCache.Set(userID.Hex(), coursesProcess, 5*time.Minute)
-	detailCache.Set(userID.Hex()+"detail", detail, 5*time.Minute)
+	detailCourseCache.Set(userID.Hex()+"detail", detail, 5*time.Minute)
 
 	select {
 	case err = <-errCh:
@@ -518,7 +518,7 @@ func (c *courseRepository) FetchManyForEachCourseInAdmin(ctx context.Context, pa
 	go func() {
 		defer wg.Done()
 		defer close(detailCh)
-		detailData, foundDetail := detailCache.Get("detail")
+		detailData, foundDetail := detailCourseCache.Get("detail")
 		if foundDetail {
 			detailCh <- detailData
 			return
@@ -633,7 +633,7 @@ func (c *courseRepository) FetchManyForEachCourseInAdmin(ctx context.Context, pa
 
 	// Thiết lập Set cache memory với dữ liệu cần thiết với thơi gian là 5 phút
 	coursesCache.Set(page, courses, 5*time.Minute)
-	detailCache.Set("detail", detail, 5*time.Minute)
+	detailCourseCache.Set("detail", detail, 5*time.Minute)
 
 	// Thu thập kết quả
 	select {
@@ -813,7 +813,7 @@ func (c *courseRepository) CreateOneInAdmin(ctx context.Context, course *course_
 	// clear data value in cache memory due to increase num
 	go func() {
 		defer wg.Done()
-		detailCache.Clear()
+		detailCourseCache.Clear()
 	}()
 
 	// clear data value in cache memory due to increase num
@@ -893,7 +893,7 @@ func (c *courseRepository) DeleteOneInAdmin(ctx context.Context, courseID string
 	// clear data value with detail in cache due to decrease num
 	go func() {
 		defer wg.Done()
-		detailCache.Clear()
+		detailCourseCache.Clear()
 	}()
 
 	// clear data value with detail in cache due to decrease num

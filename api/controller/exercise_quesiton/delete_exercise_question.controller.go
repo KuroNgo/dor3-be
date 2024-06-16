@@ -26,7 +26,7 @@ func (e *ExerciseQuestionsController) DeleteOneExerciseQuestions(ctx *gin.Contex
 	}
 
 	answerID := ctx.Query("_id")
-	err = e.ExerciseQuestionUseCase.DeleteOne(ctx, answerID)
+	err = e.ExerciseQuestionUseCase.DeleteOneInAdmin(ctx, answerID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

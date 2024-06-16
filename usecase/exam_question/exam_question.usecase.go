@@ -19,11 +19,11 @@ func NewExamQuestionUseCase(examQuestionRepository exam_question_domain.IExamQue
 	}
 }
 
-func (e *examQuestionUseCase) FetchMany(ctx context.Context, page string) (exam_question_domain.Response, error) {
+func (e *examQuestionUseCase) FetchManyInAdmin(ctx context.Context, page string) (exam_question_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examQuestionRepository.FetchMany(ctx, page)
+	data, err := e.examQuestionRepository.FetchManyInAdmin(ctx, page)
 	if err != nil {
 		return exam_question_domain.Response{}, err
 	}
@@ -31,11 +31,11 @@ func (e *examQuestionUseCase) FetchMany(ctx context.Context, page string) (exam_
 	return data, nil
 }
 
-func (e *examQuestionUseCase) FetchOneByExamID(ctx context.Context, examID string) (exam_question_domain.ExamQuestionResponse, error) {
+func (e *examQuestionUseCase) FetchOneByExamIDInAdmin(ctx context.Context, examID string) (exam_question_domain.ExamQuestionResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examQuestionRepository.FetchOneByExamID(ctx, examID)
+	data, err := e.examQuestionRepository.FetchOneByExamIDInAdmin(ctx, examID)
 	if err != nil {
 		return exam_question_domain.ExamQuestionResponse{}, err
 	}
@@ -43,11 +43,11 @@ func (e *examQuestionUseCase) FetchOneByExamID(ctx context.Context, examID strin
 	return data, nil
 }
 
-func (e *examQuestionUseCase) FetchQuestionByID(ctx context.Context, id string) (exam_question_domain.ExamQuestion, error) {
+func (e *examQuestionUseCase) FetchQuestionByIDInAdmin(ctx context.Context, id string) (exam_question_domain.ExamQuestion, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examQuestionRepository.FetchQuestionByID(ctx, id)
+	data, err := e.examQuestionRepository.FetchQuestionByIDInAdmin(ctx, id)
 	if err != nil {
 		return exam_question_domain.ExamQuestion{}, err
 	}
@@ -55,11 +55,11 @@ func (e *examQuestionUseCase) FetchQuestionByID(ctx context.Context, id string) 
 	return data, nil
 }
 
-func (e *examQuestionUseCase) FetchManyByExamID(ctx context.Context, examID string, page string) (exam_question_domain.Response, error) {
+func (e *examQuestionUseCase) FetchManyByExamIDInAdmin(ctx context.Context, examID string, page string) (exam_question_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examQuestionRepository.FetchManyByExamID(ctx, examID, page)
+	data, err := e.examQuestionRepository.FetchManyByExamIDInAdmin(ctx, examID, page)
 	if err != nil {
 		return exam_question_domain.Response{}, err
 	}
@@ -67,11 +67,11 @@ func (e *examQuestionUseCase) FetchManyByExamID(ctx context.Context, examID stri
 	return data, nil
 }
 
-func (e *examQuestionUseCase) UpdateOne(ctx context.Context, examQuestion *exam_question_domain.ExamQuestion) (*mongo.UpdateResult, error) {
+func (e *examQuestionUseCase) UpdateOneInAdmin(ctx context.Context, examQuestion *exam_question_domain.ExamQuestion) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examQuestionRepository.UpdateOne(ctx, examQuestion)
+	data, err := e.examQuestionRepository.UpdateOneInAdmin(ctx, examQuestion)
 	if err != nil {
 		return nil, err
 	}
@@ -79,11 +79,11 @@ func (e *examQuestionUseCase) UpdateOne(ctx context.Context, examQuestion *exam_
 	return data, nil
 }
 
-func (e *examQuestionUseCase) CreateOne(ctx context.Context, examQuestion *exam_question_domain.ExamQuestion) error {
+func (e *examQuestionUseCase) CreateOneInAdmin(ctx context.Context, examQuestion *exam_question_domain.ExamQuestion) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.examQuestionRepository.CreateOne(ctx, examQuestion)
+	err := e.examQuestionRepository.CreateOneInAdmin(ctx, examQuestion)
 	if err != nil {
 		return err
 	}
@@ -91,11 +91,11 @@ func (e *examQuestionUseCase) CreateOne(ctx context.Context, examQuestion *exam_
 	return nil
 }
 
-func (e *examQuestionUseCase) DeleteOne(ctx context.Context, examID string) error {
+func (e *examQuestionUseCase) DeleteOneInAdmin(ctx context.Context, examID string) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.examQuestionRepository.DeleteOne(ctx, examID)
+	err := e.examQuestionRepository.DeleteOneInAdmin(ctx, examID)
 	if err != nil {
 		return err
 	}

@@ -59,7 +59,7 @@ func (e *ExerciseAnswerController) CreateOneExerciseAnswer(ctx *gin.Context) {
 		SubmittedAt: time.Now(),
 	}
 
-	err = e.ExerciseAnswerUseCase.CreateOne(ctx, &answer)
+	err = e.ExerciseAnswerUseCase.CreateOneInUser(ctx, &answer)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -68,7 +68,7 @@ func (e *ExerciseAnswerController) CreateOneExerciseAnswer(ctx *gin.Context) {
 		return
 	}
 
-	data, err := e.ExerciseAnswerUseCase.FetchManyAnswerByUserIDAndQuestionID(ctx, answerInput.QuestionID.Hex(), user.ID.Hex())
+	data, err := e.ExerciseAnswerUseCase.FetchManyAnswerQuestionIDInUser(ctx, answerInput.QuestionID.Hex(), user.ID.Hex())
 	if err != nil {
 		handleError(ctx, http.StatusInternalServerError, "Failed to fetch answers", err)
 	}
@@ -95,7 +95,7 @@ func (e *ExerciseAnswerController) CreateOneExerciseAnswer(ctx *gin.Context) {
 			IsComplete: IsCorrect,
 		}
 
-		err := e.ExerciseResultUseCase.CreateOne(ctx, exerciseResult)
+		err := e.ExerciseResultUseCase.CreateOneInUser(ctx, exerciseResult)
 		if err != nil {
 			handleError(ctx, http.StatusInternalServerError, "Failed to create exam result", err)
 			return

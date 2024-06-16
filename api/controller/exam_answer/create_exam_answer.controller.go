@@ -51,13 +51,13 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 		SubmittedAt: time.Now(),
 	}
 
-	err = e.ExamAnswerUseCase.CreateOne(ctx, &answer)
+	err = e.ExamAnswerUseCase.CreateOneInUser(ctx, &answer)
 	if err != nil {
 		handleError(ctx, http.StatusInternalServerError, "Failed to create answer", err)
 		return
 	}
 
-	data, err := e.ExamAnswerUseCase.FetchManyAnswerByUserIDAndQuestionID(ctx, answerInput.QuestionID.Hex(), user.ID.Hex())
+	data, err := e.ExamAnswerUseCase.FetchManyAnswerByQuestionIDInUser(ctx, answerInput.QuestionID.Hex(), user.ID.Hex())
 	if err != nil {
 		handleError(ctx, http.StatusInternalServerError, "Failed to fetch answers", err)
 	}
@@ -84,7 +84,7 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 			IsComplete: IsCorrect,
 		}
 
-		err := e.ExamResultUseCase.CreateOne(ctx, examResult)
+		err := e.ExamResultUseCase.CreateOneInUser(ctx, examResult)
 		if err != nil {
 			handleError(ctx, http.StatusInternalServerError, "Failed to create exam result", err)
 			return

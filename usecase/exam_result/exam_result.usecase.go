@@ -3,6 +3,7 @@ package exam_result_usecase
 import (
 	exam_result_domain "clean-architecture/domain/exam_result"
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
@@ -19,11 +20,11 @@ func NewExamResultUseCase(examResultRepository exam_result_domain.IExamResultRep
 	}
 }
 
-func (e *examResultUseCase) FetchMany(ctx context.Context, page string) (exam_result_domain.Response, error) {
+func (e *examResultUseCase) FetchManyInUser(ctx context.Context, examID string, userID primitive.ObjectID) (exam_result_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examResultRepository.FetchMany(ctx, page)
+	data, err := e.examResultRepository.FetchManyInUser(ctx, examID)
 	if err != nil {
 		return exam_result_domain.Response{}, err
 	}
@@ -31,11 +32,11 @@ func (e *examResultUseCase) FetchMany(ctx context.Context, page string) (exam_re
 	return data, nil
 }
 
-func (e *examResultUseCase) GetResultByID(ctx context.Context, userID string) (exam_result_domain.ExamResult, error) {
+func (e *examResultUseCase) GetResultByIDInUser(ctx context.Context, userID string) (exam_result_domain.ExamResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examResultRepository.GetResultByID(ctx, userID)
+	data, err := e.examResultRepository.GetResultByIDInUser(ctx, userID)
 	if err != nil {
 		return exam_result_domain.ExamResult{}, err
 	}
@@ -43,11 +44,11 @@ func (e *examResultUseCase) GetResultByID(ctx context.Context, userID string) (e
 	return data, nil
 }
 
-func (e *examResultUseCase) FetchManyByExamID(ctx context.Context, examID string) (exam_result_domain.Response, error) {
+func (e *examResultUseCase) FetchManyByExamIDInUser(ctx context.Context, examID string) (exam_result_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examResultRepository.FetchManyByExamID(ctx, examID)
+	data, err := e.examResultRepository.FetchManyInUser(ctx, examID)
 	if err != nil {
 		return exam_result_domain.Response{}, err
 	}
@@ -56,11 +57,11 @@ func (e *examResultUseCase) FetchManyByExamID(ctx context.Context, examID string
 
 }
 
-func (e *examResultUseCase) GetResultsByUserIDAndExamID(ctx context.Context, userID string, examID string) (exam_result_domain.ExamResult, error) {
+func (e *examResultUseCase) GetResultsByExamIDInUser(ctx context.Context, userID string, examID string) (exam_result_domain.ExamResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examResultRepository.GetResultsByUserIDAndExamID(ctx, userID, examID)
+	data, err := e.examResultRepository.GetResultsByExamIDInUser(ctx, userID, examID)
 	if err != nil {
 		return exam_result_domain.ExamResult{}, err
 	}
@@ -68,11 +69,11 @@ func (e *examResultUseCase) GetResultsByUserIDAndExamID(ctx context.Context, use
 	return data, nil
 }
 
-func (e *examResultUseCase) CreateOne(ctx context.Context, examResult *exam_result_domain.ExamResult) error {
+func (e *examResultUseCase) CreateOneInUser(ctx context.Context, examResult *exam_result_domain.ExamResult) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.examResultRepository.CreateOne(ctx, examResult)
+	err := e.examResultRepository.CreateOneInUser(ctx, examResult)
 	if err != nil {
 		return err
 	}
@@ -80,11 +81,11 @@ func (e *examResultUseCase) CreateOne(ctx context.Context, examResult *exam_resu
 	return nil
 }
 
-func (e *examResultUseCase) UpdateStatus(ctx context.Context, examResultID string, status int) (*mongo.UpdateResult, error) {
+func (e *examResultUseCase) UpdateStatusInUser(ctx context.Context, examResultID string, status int) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.examResultRepository.UpdateStatus(ctx, examResultID, status)
+	data, err := e.examResultRepository.UpdateStatusInUser(ctx, examResultID, status)
 	if err != nil {
 		return nil, err
 	}
@@ -108,11 +109,11 @@ func (e *examResultUseCase) CalculatePercentage(ctx context.Context, correctAnsw
 	return value
 }
 
-func (e *examResultUseCase) DeleteOne(ctx context.Context, examResultID string) error {
+func (e *examResultUseCase) DeleteOneInUser(ctx context.Context, examResultID string) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.examResultRepository.DeleteOne(ctx, examResultID)
+	err := e.examResultRepository.DeleteOneInUser(ctx, examResultID)
 	if err != nil {
 		return err
 	}

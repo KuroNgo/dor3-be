@@ -47,7 +47,7 @@ func (e *ExerciseResultController) CreateOneExercise(ctx *gin.Context) {
 		IsComplete: 1,
 	}
 
-	err = e.ExerciseResultUseCase.CreateOne(ctx, &result)
+	err = e.ExerciseResultUseCase.CreateOneInUser(ctx, &result)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

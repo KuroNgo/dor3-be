@@ -19,6 +19,7 @@ type Auto struct {
 type IUserProcessUseCase interface {
 	FetchManyByUserID(ctx context.Context, userID string) (Response, error)
 	FetchOneByUnitIDAndUserID(ctx context.Context, userID string, unit string) (ExamManagement, error)
+
 	CreateExamManagementByExerciseID(ctx context.Context, userID ExamManagement) error
 	UpdateExamManagementByUserID(ctx context.Context, userID ExamManagement) error
 	UpdateExamManagementByExamID(ctx context.Context, userID ExamManagement) error

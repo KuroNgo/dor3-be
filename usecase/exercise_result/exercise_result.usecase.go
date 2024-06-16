@@ -3,6 +3,7 @@ package exercise_result_usecase
 import (
 	exercise_result_domain "clean-architecture/domain/exercise_result"
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
@@ -12,6 +13,11 @@ type exerciseResultUseCase struct {
 	contextTimeout             time.Duration
 }
 
+func (e *exerciseResultUseCase) FetchManyInUser2(ctx context.Context, examID string, userID primitive.ObjectID) (exercise_result_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewExerciseQuestionUseCase(exerciseQuestionRepository exercise_result_domain.IExerciseResultRepository, timeout time.Duration) exercise_result_domain.IExerciseResultUseCase {
 	return &exerciseResultUseCase{
 		exerciseQuestionRepository: exerciseQuestionRepository,
@@ -19,11 +25,11 @@ func NewExerciseQuestionUseCase(exerciseQuestionRepository exercise_result_domai
 	}
 }
 
-func (e *exerciseResultUseCase) FetchManyByExerciseID(ctx context.Context, exerciseID string) (exercise_result_domain.Response, error) {
+func (e *exerciseResultUseCase) FetchManyByExerciseIDInUser(ctx context.Context, exerciseID string) (exercise_result_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.exerciseQuestionRepository.FetchManyByExerciseID(ctx, exerciseID)
+	data, err := e.exerciseQuestionRepository.FetchManyByExerciseIDInUser(ctx, exerciseID)
 	if err != nil {
 		return exercise_result_domain.Response{}, err
 	}
@@ -31,11 +37,11 @@ func (e *exerciseResultUseCase) FetchManyByExerciseID(ctx context.Context, exerc
 	return data, nil
 }
 
-func (e *exerciseResultUseCase) GetResultsByUserIDAndExerciseID(ctx context.Context, userID string, exerciseID string) (exercise_result_domain.ExerciseResult, error) {
+func (e *exerciseResultUseCase) GetResultsExerciseIDInUser(ctx context.Context, userID string, exerciseID string) (exercise_result_domain.ExerciseResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.exerciseQuestionRepository.GetResultsByUserIDAndExerciseID(ctx, userID, exerciseID)
+	data, err := e.exerciseQuestionRepository.GetResultsExerciseIDInUser(ctx, userID, exerciseID)
 	if err != nil {
 		return exercise_result_domain.ExerciseResult{}, err
 	}
@@ -43,11 +49,11 @@ func (e *exerciseResultUseCase) GetResultsByUserIDAndExerciseID(ctx context.Cont
 	return data, nil
 }
 
-func (e *exerciseResultUseCase) UpdateStatus(ctx context.Context, exerciseResultID string, status int) (*mongo.UpdateResult, error) {
+func (e *exerciseResultUseCase) UpdateStatusInUser(ctx context.Context, exerciseResultID string, status int) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.exerciseQuestionRepository.UpdateStatus(ctx, exerciseResultID, status)
+	data, err := e.exerciseQuestionRepository.UpdateStatusInUser(ctx, exerciseResultID, status)
 	if err != nil {
 		return nil, err
 	}
@@ -73,11 +79,11 @@ func (e *exerciseResultUseCase) CalculatePercentage(ctx context.Context, correct
 	return data
 }
 
-func (e *exerciseResultUseCase) FetchMany(ctx context.Context, page string) (exercise_result_domain.Response, error) {
+func (e *exerciseResultUseCase) FetchManyInUser(ctx context.Context, page string) (exercise_result_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	data, err := e.exerciseQuestionRepository.FetchMany(ctx, page)
+	data, err := e.exerciseQuestionRepository.FetchManyInUser(ctx, page)
 	if err != nil {
 		return exercise_result_domain.Response{}, err
 	}
@@ -85,11 +91,11 @@ func (e *exerciseResultUseCase) FetchMany(ctx context.Context, page string) (exe
 	return data, nil
 }
 
-func (e *exerciseResultUseCase) CreateOne(ctx context.Context, exerciseResult *exercise_result_domain.ExerciseResult) error {
+func (e *exerciseResultUseCase) CreateOneInUser(ctx context.Context, exerciseResult *exercise_result_domain.ExerciseResult) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.exerciseQuestionRepository.CreateOne(ctx, exerciseResult)
+	err := e.exerciseQuestionRepository.CreateOneInUser(ctx, exerciseResult)
 	if err != nil {
 		return err
 	}
@@ -97,11 +103,11 @@ func (e *exerciseResultUseCase) CreateOne(ctx context.Context, exerciseResult *e
 	return nil
 }
 
-func (e *exerciseResultUseCase) DeleteOne(ctx context.Context, exerciseResultID string) error {
+func (e *exerciseResultUseCase) DeleteOneInUser(ctx context.Context, exerciseResultID string) error {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.exerciseQuestionRepository.DeleteOne(ctx, exerciseResultID)
+	err := e.exerciseQuestionRepository.DeleteOneInUser(ctx, exerciseResultID)
 	if err != nil {
 		return err
 	}

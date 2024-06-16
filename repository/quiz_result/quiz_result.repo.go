@@ -26,7 +26,7 @@ func NewQuizResultRepository(db *mongo.Database, collectionQuizResult string, co
 	}
 }
 
-func (q *quizResultRepository) FetchMany(ctx context.Context, page string) (quiz_result_domain.Response, error) {
+func (q *quizResultRepository) FetchManyInUser(ctx context.Context, page string) (quiz_result_domain.Response, error) {
 	collectionResult := q.database.Collection(q.collectionQuizResult)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -73,7 +73,7 @@ func (q *quizResultRepository) FetchMany(ctx context.Context, page string) (quiz
 	return resultRes, nil
 }
 
-func (q *quizResultRepository) FetchManyByQuizID(ctx context.Context, quizID string) (quiz_result_domain.Response, error) {
+func (q *quizResultRepository) FetchManyByQuizIDInUser(ctx context.Context, quizID string) (quiz_result_domain.Response, error) {
 	collectionResult := q.database.Collection(q.collectionQuizResult)
 
 	idQuiz, err := primitive.ObjectIDFromHex(quizID)
@@ -105,7 +105,7 @@ func (q *quizResultRepository) FetchManyByQuizID(ctx context.Context, quizID str
 	return resultRes, nil
 }
 
-func (q *quizResultRepository) FetchManyByUserID(ctx context.Context, userID string) (quiz_result_domain.Response, error) {
+func (q *quizResultRepository) FetchManyByUserIDInUser(ctx context.Context, userID string) (quiz_result_domain.Response, error) {
 	collectionResult := q.database.Collection(q.collectionQuizResult)
 
 	idUser, err := primitive.ObjectIDFromHex(userID)
@@ -146,7 +146,7 @@ func (q *quizResultRepository) FetchManyByUserID(ctx context.Context, userID str
 	return resultRes, nil
 }
 
-func (q *quizResultRepository) GetResultsByUserIDAndQuizID(ctx context.Context, userID string, exerciseID string) (quiz_result_domain.QuizResult, error) {
+func (q *quizResultRepository) GetResultsByUserIDAndQuizIDInUser(ctx context.Context, userID string, exerciseID string) (quiz_result_domain.QuizResult, error) {
 	collection := q.database.Collection(q.collectionQuizResult)
 
 	var result quiz_result_domain.QuizResult
@@ -168,7 +168,7 @@ func (q *quizResultRepository) GetResultsByUserIDAndQuizID(ctx context.Context, 
 }
 
 func (q *quizResultRepository) GetAverageScoreByUser(ctx context.Context, userID string) (float64, error) {
-	results, err := q.FetchManyByUserID(ctx, userID)
+	results, err := q.FetchManyByUserIDInUser(ctx, userID)
 	if err != nil {
 		return 0, err
 	}
@@ -188,7 +188,7 @@ func (q *quizResultRepository) GetAverageScoreByUser(ctx context.Context, userID
 
 func (e *quizResultRepository) GetScoreByUser(ctx context.Context, userID string) (int16, error) {
 	// Lấy tất cả các kết quả của bài kiểm tra từ cơ sở dữ liệu MongoDB
-	results, err := e.FetchManyByUserID(ctx, userID)
+	results, err := e.FetchManyByUserIDInUser(ctx, userID)
 	if err != nil {
 		return 0, err
 	}
@@ -217,7 +217,7 @@ func (q *quizResultRepository) GetOverallPerformance(ctx context.Context, userID
 	return overallPerformance, nil
 }
 
-func (q *quizResultRepository) CreateOne(ctx context.Context, quizResult *quiz_result_domain.QuizResult) error {
+func (q *quizResultRepository) CreateOneInUser(ctx context.Context, quizResult *quiz_result_domain.QuizResult) error {
 	collectionResult := q.database.Collection(q.collectionQuizResult)
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
@@ -235,7 +235,7 @@ func (q *quizResultRepository) CreateOne(ctx context.Context, quizResult *quiz_r
 	return nil
 }
 
-func (q *quizResultRepository) DeleteOne(ctx context.Context, quizResultID string) error {
+func (q *quizResultRepository) DeleteOneInUser(ctx context.Context, quizResultID string) error {
 	collectionResult := q.database.Collection(q.collectionQuizResult)
 
 	objID, err := primitive.ObjectIDFromHex(quizResultID)
@@ -256,7 +256,7 @@ func (q *quizResultRepository) DeleteOne(ctx context.Context, quizResultID strin
 	return err
 }
 
-func (q *quizResultRepository) UpdateStatus(ctx context.Context, quizResultID string, status int) (*mongo.UpdateResult, error) {
+func (q *quizResultRepository) UpdateStatusInUser(ctx context.Context, quizResultID string, status int) (*mongo.UpdateResult, error) {
 	collection := q.database.Collection(q.collectionQuizResult)
 
 	filter := bson.D{{Key: "quiz_id", Value: quizResultID}}

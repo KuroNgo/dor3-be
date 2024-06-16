@@ -35,59 +35,6 @@ func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, co
 	}
 }
 
-func (v *vocabularyRepository) FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error) {
-	//collectionVocabulary := v.database.Collection(v.collectionVocabulary)
-	collectionUnit := v.database.Collection(v.collectionUnit)
-	collectionLesson := v.database.Collection(v.collectionLesson)
-
-	// Tìm kiếm unit có cùng level
-	//filter := bson.M{"level": unitLevel}
-	//var existingUnit struct {
-	//	Id primitive.ObjectID `bson:"_id"`
-	//}
-
-	// Tìm lesson
-	var lessons []lesson_domain.Lesson
-	cursor, err := collectionLesson.Find(ctx, bson.D{})
-	for cursor.Next(ctx) {
-		var lesson lesson_domain.Lesson
-		if err := cursor.Decode(&lesson); err != nil {
-			return primitive.NilObjectID, err
-		}
-
-		lessons = append(lessons, lesson)
-	}
-
-	var unitMain unit_domain.Unit
-	for _, data := range lessons {
-		if fieldOfIT == data.Name {
-			var lesson lesson_domain.Lesson
-			filterLesson := bson.M{"name": fieldOfIT}
-			err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
-			if err != nil {
-				return primitive.NilObjectID, err
-			}
-
-			var unit unit_domain.Unit
-			filterUnit := bson.M{"lesson_id": lesson.ID, "level": unitLevel}
-			err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
-			if err != nil {
-				return primitive.NilObjectID, err
-			}
-
-			unitMain = unit
-			break
-		}
-	}
-
-	//err = collectionUnit.FindOne(ctx, filter).Decode(&existingUnit)
-	//if err != nil {
-	//	return primitive.NilObjectID, err
-	//}
-
-	return unitMain.ID, nil
-}
-
 func (v *vocabularyRepository) FindVocabularyIDByVocabularyConfigInAdmin(ctx context.Context, word string) (primitive.ObjectID, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
@@ -287,18 +234,6 @@ func (v *vocabularyRepository) FetchByIdUnitInAdmin(ctx context.Context, idUnit 
 }
 
 func (v *vocabularyRepository) FetchByWordInBoth(ctx context.Context, word string) (vocabulary_domain.SearchingResponse, error) {
-	//v.cacheMutex.RLock()
-	//cachedData, found := v.vocabularyOneCache[word]
-	//v.cacheMutex.RUnlock()
-
-	//if found {
-	//	vocabularyRes := vocabulary_domain.SearchingResponse{
-	//		CountVocabularySearch: int64(len(cachedData)),
-	//		Vocabulary:            cachedData,
-	//	}
-	//	return vocabularyRes, nil
-	//}
-
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
 	regex := primitive.Regex{Pattern: word, Options: "i"}
@@ -331,11 +266,6 @@ func (v *vocabularyRepository) FetchByWordInBoth(ctx context.Context, word strin
 		CountVocabularySearch: count,
 		Vocabulary:            vocabularies,
 	}
-
-	//v.cacheMutex.Lock()
-	//v.vocabularyOneCache[word] = vocabularies
-	//v.vocabularyCacheExpires[word] = time.Now().Add(5 * time.Minute)
-	//v.cacheMutex.Unlock()
 
 	return vocabularyRes, nil
 }
@@ -378,15 +308,6 @@ func (v *vocabularyRepository) FetchByLessonInBoth(ctx context.Context, lessonNa
 }
 
 func (v *vocabularyRepository) FetchManyInBoth(ctx context.Context, page string) (vocabulary_domain.Response, error) {
-	// Kiểm tra cache trước khi truy vấn cơ sở dữ liệu
-	//v.cacheMutex.RLock()
-	//cachedData, found := v.vocabularyManyCache[page]
-	//v.cacheMutex.RUnlock()
-	//
-	//if found {
-	//	return cachedData, nil
-	//}
-
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 	collectionUnit := v.database.Collection(v.collectionUnit)
 	collectionLesson := v.database.Collection(v.collectionLesson)
@@ -474,11 +395,6 @@ func (v *vocabularyRepository) FetchManyInBoth(ctx context.Context, page string)
 		VocabularyResponse: vocabularies,
 	}
 
-	//v.cacheMutex.Lock()
-	//v.vocabularyManyCache[page] = vocabularyRes
-	//v.vocabularyCacheExpires[page] = time.Now().Add(5 * time.Minute) // Ví dụ: hết hạn sau 5 phút
-	//v.cacheMutex.Unlock()
-
 	return vocabularyRes, nil
 }
 
@@ -542,6 +458,11 @@ func (v *vocabularyRepository) UpdateOneAudioInAdmin(c context.Context, vocabula
 	}
 
 	return nil
+}
+
+func (v *vocabularyRepository) UpdateVocabularyProcess(ctx context.Context, vocabularyID string, process vocabulary_domain.VocabularyProcess) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (v *vocabularyRepository) UpdateIsFavouriteInUser(ctx context.Context, vocabularyID string, isFavourite int) error {

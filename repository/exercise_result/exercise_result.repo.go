@@ -7,8 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -31,53 +29,7 @@ var (
 	wg sync.WaitGroup
 )
 
-func (e *exerciseResultRepository) FetchMany(ctx context.Context, page string) (exercise_result_domain.Response, error) {
-	collectionResult := e.database.Collection(e.collectionExerciseResult)
-
-	pageNumber, err := strconv.Atoi(page)
-	if err != nil {
-		return exercise_result_domain.Response{}, errors.New("invalid page number")
-	}
-	perPage := 7
-	skip := (pageNumber - 1) * perPage
-	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
-
-	count, err := collectionResult.CountDocuments(ctx, bson.D{})
-	if err != nil {
-		return exercise_result_domain.Response{}, err
-	}
-
-	cal1 := count / int64(perPage)
-	cal2 := count % int64(perPage)
-	var cal int64 = 0
-	if cal2 != 0 {
-		cal = cal1 + 1
-	}
-
-	cursor, err := collectionResult.Find(ctx, bson.D{}, findOptions)
-	if err != nil {
-		return exercise_result_domain.Response{}, err
-	}
-
-	var results []exercise_result_domain.ExerciseResult
-	for cursor.Next(ctx) {
-		var result exercise_result_domain.ExerciseResult
-		if err = cursor.Decode(&result); err != nil {
-			return exercise_result_domain.Response{}, err
-		}
-
-		results = append(results, result)
-	}
-
-	resultRes := exercise_result_domain.Response{
-		Page:           cal,
-		ExerciseResult: results,
-	}
-
-	return resultRes, nil
-}
-
-func (e *exerciseResultRepository) FetchManyByExerciseID(ctx context.Context, exerciseID string) (exercise_result_domain.Response, error) {
+func (e *exerciseResultRepository) FetchManyByExerciseIDInUser(ctx context.Context, exerciseID string) (exercise_result_domain.Response, error) {
 	collectionResult := e.database.Collection(e.collectionExerciseResult)
 
 	idExercise, err := primitive.ObjectIDFromHex(exerciseID)
@@ -122,7 +74,7 @@ func (e *exerciseResultRepository) FetchManyByExerciseID(ctx context.Context, ex
 	return resultRes, nil
 }
 
-func (e *exerciseResultRepository) FetchManyByUserID(ctx context.Context, userID string) (exercise_result_domain.Response, error) {
+func (e *exerciseResultRepository) FetchManyInUser(ctx context.Context, userID string) (exercise_result_domain.Response, error) {
 	collectionResult := e.database.Collection(e.collectionExerciseResult)
 
 	idUser, err := primitive.ObjectIDFromHex(userID)
@@ -155,8 +107,8 @@ func (e *exerciseResultRepository) FetchManyByUserID(ctx context.Context, userID
 		result.Score = score
 		results = append(results, result)
 	}
-	averageScore, _ := e.GetAverageScoreByUser(ctx, userID)
-	percentScore, _ := e.GetOverallPerformance(ctx, userID)
+	averageScore, _ := e.GetAverageScoreInUser(ctx, userID)
+	percentScore, _ := e.GetOverallPerformanceInUser(ctx, userID)
 
 	resultRes := exercise_result_domain.Response{
 		ExerciseResult: results,
@@ -167,7 +119,7 @@ func (e *exerciseResultRepository) FetchManyByUserID(ctx context.Context, userID
 	return resultRes, nil
 }
 
-func (e *exerciseResultRepository) GetResultsByUserIDAndExerciseID(ctx context.Context, userID string, exerciseID string) (exercise_result_domain.ExerciseResult, error) {
+func (e *exerciseResultRepository) GetResultsExerciseIDInUser(ctx context.Context, userID string, exerciseID string) (exercise_result_domain.ExerciseResult, error) {
 	collection := e.database.Collection(e.collectionExerciseResult)
 
 	var result exercise_result_domain.ExerciseResult
@@ -188,8 +140,8 @@ func (e *exerciseResultRepository) GetResultsByUserIDAndExerciseID(ctx context.C
 	return result, err
 }
 
-func (e *exerciseResultRepository) GetAverageScoreByUser(ctx context.Context, userID string) (float64, error) {
-	results, err := e.FetchManyByUserID(ctx, userID)
+func (e *exerciseResultRepository) GetAverageScoreInUser(ctx context.Context, userID string) (float64, error) {
+	results, err := e.FetchManyInUser(ctx, userID)
 	if err != nil {
 		return 0, err
 	}
@@ -207,8 +159,8 @@ func (e *exerciseResultRepository) GetAverageScoreByUser(ctx context.Context, us
 	return 0, nil
 }
 
-func (e *exerciseResultRepository) GetOverallPerformance(ctx context.Context, userID string) (float64, error) {
-	averageScore, err := e.GetAverageScoreByUser(ctx, userID)
+func (e *exerciseResultRepository) GetOverallPerformanceInUser(ctx context.Context, userID string) (float64, error) {
+	averageScore, err := e.GetAverageScoreInUser(ctx, userID)
 	if err != nil {
 		return 0, err
 	}
@@ -221,7 +173,7 @@ func (e *exerciseResultRepository) GetOverallPerformance(ctx context.Context, us
 	return overallPerformance, nil
 }
 
-func (e *exerciseResultRepository) CreateOne(ctx context.Context, exerciseResult *exercise_result_domain.ExerciseResult) error {
+func (e *exerciseResultRepository) CreateOneInUser(ctx context.Context, exerciseResult *exercise_result_domain.ExerciseResult) error {
 	collectionResult := e.database.Collection(e.collectionExerciseResult)
 	collectionExam := e.database.Collection(e.collectionExercise)
 
@@ -239,7 +191,7 @@ func (e *exerciseResultRepository) CreateOne(ctx context.Context, exerciseResult
 	return nil
 }
 
-func (e *exerciseResultRepository) UpdateStatus(ctx context.Context, exerciseResultID string, status int) (*mongo.UpdateResult, error) {
+func (e *exerciseResultRepository) UpdateStatusInUser(ctx context.Context, exerciseResultID string, status int) (*mongo.UpdateResult, error) {
 	collection := e.database.Collection(e.collectionExerciseResult)
 
 	filter := bson.D{{Key: "exam_id", Value: exerciseResultID}}
@@ -258,7 +210,7 @@ func (e *exerciseResultRepository) UpdateStatus(ctx context.Context, exerciseRes
 	return data, nil
 }
 
-func (e *exerciseResultRepository) DeleteOne(ctx context.Context, exerciseResultID string) error {
+func (e *exerciseResultRepository) DeleteOneInUser(ctx context.Context, exerciseResultID string) error {
 	collectionResult := e.database.Collection(e.collectionExerciseResult)
 
 	objID, err := primitive.ObjectIDFromHex(exerciseResultID)
@@ -298,7 +250,7 @@ func (e *exerciseResultRepository) CalculatePercentage(ctx context.Context, corr
 }
 
 func (e *exerciseResultRepository) GetScoreByUser(ctx context.Context, userID string) (int16, error) {
-	results, err := e.FetchManyByUserID(ctx, userID)
+	results, err := e.FetchManyInUser(ctx, userID)
 	if err != nil {
 		return 0, err
 	}

@@ -37,7 +37,7 @@ func NewExamAnswerRepository(db *mongo.Database, collectionQuestion string, coll
 	}
 }
 
-func (e *examAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (exam_answer_domain.Response, error) {
+func (e *examAnswerRepository) FetchManyAnswerByQuestionIDInUser(ctx context.Context, questionID string, userID string) (exam_answer_domain.Response, error) {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
@@ -138,7 +138,7 @@ func questionIDs(questions []exam_question_domain.ExamQuestion) []primitive.Obje
 	return ids
 }
 
-func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_answer_domain.ExamAnswer) error {
+func (e *examAnswerRepository) CreateOneInUser(ctx context.Context, examAnswer *exam_answer_domain.ExamAnswer) error {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
@@ -173,7 +173,7 @@ func (e *examAnswerRepository) CreateOne(ctx context.Context, examAnswer *exam_a
 	return nil
 }
 
-func (e *examAnswerRepository) DeleteOne(ctx context.Context, examID string) error {
+func (e *examAnswerRepository) DeleteOneInUser(ctx context.Context, examID string) error {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
 	objID, err := primitive.ObjectIDFromHex(examID)
 	if err != nil {
@@ -193,7 +193,7 @@ func (e *examAnswerRepository) DeleteOne(ctx context.Context, examID string) err
 	return err
 }
 
-func (e *examAnswerRepository) DeleteAllAnswerByExamID(ctx context.Context, examID string) error {
+func (e *examAnswerRepository) DeleteAllAnswerByExamIDInUser(ctx context.Context, examID string) error {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
 
 	objID, err := primitive.ObjectIDFromHex(examID)

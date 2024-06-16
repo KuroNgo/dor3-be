@@ -29,7 +29,7 @@ func NewQuizQuestionRepository(db *mongo.Database, collectionQuestion string, co
 	}
 }
 
-func (q quizQuestionRepository) FetchMany(ctx context.Context, page string) (quiz_question_domain.Response, error) {
+func (q quizQuestionRepository) FetchManyInAdmin(ctx context.Context, page string) (quiz_question_domain.Response, error) {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
 	collectionVocabulary := q.database.Collection(q.collectionVocabulary)
 
@@ -85,7 +85,7 @@ func (q quizQuestionRepository) FetchMany(ctx context.Context, page string) (qui
 	return questionsRes, nil
 }
 
-func (q quizQuestionRepository) FetchOneByQuizID(ctx context.Context, quizID string) (quiz_question_domain.QuizQuestion, error) {
+func (q quizQuestionRepository) FetchOneByQuizIDInAdmin(ctx context.Context, quizID string) (quiz_question_domain.QuizQuestion, error) {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
 
 	idQuiz, err := primitive.ObjectIDFromHex(quizID)
@@ -103,7 +103,7 @@ func (q quizQuestionRepository) FetchOneByQuizID(ctx context.Context, quizID str
 	return quizQuestion, nil
 }
 
-func (q quizQuestionRepository) FetchByID(ctx context2.Context, id string) (quiz_question_domain.QuizQuestion, error) {
+func (q quizQuestionRepository) FetchByIDInAdmin(ctx context2.Context, id string) (quiz_question_domain.QuizQuestion, error) {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
 
 	idQuestion, err := primitive.ObjectIDFromHex(id)
@@ -124,7 +124,7 @@ func (q quizQuestionRepository) FetchByID(ctx context2.Context, id string) (quiz
 	return quizQuestion, nil
 }
 
-func (q quizQuestionRepository) FetchManyByQuizID(ctx context.Context, quizID string) (quiz_question_domain.Response, error) {
+func (q quizQuestionRepository) FetchManyByQuizIDInAdmin(ctx context.Context, quizID string) (quiz_question_domain.Response, error) {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
 	collectionVocabulary := q.database.Collection(q.collectionVocabulary)
 
@@ -175,7 +175,7 @@ func (q quizQuestionRepository) FetchManyByQuizID(ctx context.Context, quizID st
 	return questionsRes, nil
 }
 
-func (q quizQuestionRepository) UpdateOne(ctx context.Context, quizQuestion *quiz_question_domain.QuizQuestion) (*mongo.UpdateResult, error) {
+func (q quizQuestionRepository) UpdateOneInAdmin(ctx context.Context, quizQuestion *quiz_question_domain.QuizQuestion) (*mongo.UpdateResult, error) {
 	collection := q.database.Collection(q.collectionQuestion)
 
 	filter := bson.D{{Key: "_id", Value: quizQuestion.ID}}
@@ -196,7 +196,7 @@ func (q quizQuestionRepository) UpdateOne(ctx context.Context, quizQuestion *qui
 	return data, nil
 }
 
-func (q quizQuestionRepository) CreateOne(ctx context.Context, quizQuestion *quiz_question_domain.QuizQuestion) error {
+func (q quizQuestionRepository) CreateOneInAdmin(ctx context.Context, quizQuestion *quiz_question_domain.QuizQuestion) error {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
@@ -214,7 +214,7 @@ func (q quizQuestionRepository) CreateOne(ctx context.Context, quizQuestion *qui
 	return nil
 }
 
-func (q quizQuestionRepository) DeleteOne(ctx context.Context, quizID string) error {
+func (q quizQuestionRepository) DeleteOneInAdmin(ctx context.Context, quizID string) error {
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
 
 	objID, err := primitive.ObjectIDFromHex(quizID)

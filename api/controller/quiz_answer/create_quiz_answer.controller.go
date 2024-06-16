@@ -58,7 +58,7 @@ func (q *QuizAnswerController) CreateOneQuizAnswer(ctx *gin.Context) {
 		SubmittedAt: time.Now(),
 	}
 
-	err = q.QuizAnswerUseCase.CreateOne(ctx, &answer)
+	err = q.QuizAnswerUseCase.CreateOneInUser(ctx, &answer)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -67,7 +67,7 @@ func (q *QuizAnswerController) CreateOneQuizAnswer(ctx *gin.Context) {
 		return
 	}
 
-	data, err := q.QuizAnswerUseCase.FetchManyAnswerByUserIDAndQuestionID(ctx, answerInput.QuestionID.Hex(), user.ID.Hex())
+	data, err := q.QuizAnswerUseCase.FetchManyAnswerQuestionIDInUser(ctx, answerInput.QuestionID.Hex(), user.ID.Hex())
 	if err != nil {
 		handleError(ctx, http.StatusInternalServerError, "Failed to fetch answers", err)
 	}
@@ -94,7 +94,7 @@ func (q *QuizAnswerController) CreateOneQuizAnswer(ctx *gin.Context) {
 			IsComplete: IsCorrect,
 		}
 
-		err := q.QuizResultUseCase.CreateOne(ctx, quizResult)
+		err := q.QuizResultUseCase.CreateOneInUser(ctx, quizResult)
 		if err != nil {
 			handleError(ctx, http.StatusInternalServerError, "Failed to create exam result", err)
 			return

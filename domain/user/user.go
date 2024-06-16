@@ -48,7 +48,7 @@ type IUserRepository interface {
 	GetByID(ctx context.Context, id string) (*User, error)
 	GetByVerificationCode(ctx context.Context, verificationCode string) (*User, error)
 	CheckVerify(ctx context.Context, verificationCode string) bool
-	DeleteOne(ctx context.Context, userID string) error
+
 	Login(ctx context.Context, request SignIn) (*User, error)
 	Create(ctx context.Context, user *User) error
 	Update(ctx context.Context, user *User) error
@@ -57,6 +57,7 @@ type IUserRepository interface {
 	UpdateVerifyForChangePassword(ctx context.Context, user *User) (*mongo.UpdateResult, error)
 	UpsertOne(ctx context.Context, email string, user *User) (*User, error)
 	UpdateImage(ctx context.Context, userID string, imageURL string) error
+	DeleteOne(ctx context.Context, userID string) error
 	UniqueVerificationCode(ctx context.Context, verificationCode string) bool
 	Statistics(ctx context.Context) (Statistics, error)
 }

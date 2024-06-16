@@ -44,7 +44,7 @@ var (
 	lessonPrimOIDCache      = cache.NewTTL[string, primitive.ObjectID]()
 	lessonsUserProcessCache = cache.NewTTL[string, []lesson_domain.LessonProcessResponse]()
 	lessonUserProcessCache  = cache.NewTTL[string, lesson_domain.LessonProcessResponse]()
-	detailCache             = cache.NewTTL[string, lesson_domain.DetailResponse]()
+	detailLessonCache       = cache.NewTTL[string, lesson_domain.DetailResponse]()
 	statisticsCache         = cache.NewTTL[string, lesson_domain.Statistics]()
 
 	wg           sync.WaitGroup
@@ -69,7 +69,7 @@ func (l *lessonRepository) FetchManyNotPaginationInUser(ctx context.Context, use
 
 	go func() {
 		defer wg.Done()
-		data, found := detailCache.Get(userID.Hex() + "detail")
+		data, found := detailLessonCache.Get(userID.Hex() + "detail")
 		if found {
 			detailCh <- data
 		}
@@ -221,7 +221,7 @@ func (l *lessonRepository) FetchManyNotPaginationInUser(ctx context.Context, use
 	}
 
 	lessonsUserProcessCache.Set(userID.Hex(), lessonsProcess, 5*time.Minute)
-	detailCache.Set(userID.Hex()+"detail", detail, 5*time.Minute)
+	detailLessonCache.Set(userID.Hex()+"detail", detail, 5*time.Minute)
 
 	select {
 	case err = <-errCh:
@@ -232,6 +232,27 @@ func (l *lessonRepository) FetchManyNotPaginationInUser(ctx context.Context, use
 }
 
 func (l *lessonRepository) FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, lessonID string) (lesson_domain.LessonProcessResponse, error) {
+	lessonProcessCh := make(chan lesson_domain.LessonProcessResponse, 1)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := lessonUserProcessCache.Get(userID.Hex() + lessonID)
+		if found {
+			lessonProcessCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(lessonProcessCh)
+		wg.Wait()
+	}()
+
+	lessonProcessData := <-lessonProcessCh
+	if !internal.IsZeroValue(lessonProcessData) {
+		return lessonProcessData, nil
+	}
+
 	collectionLesson := l.database.Collection(l.collectionLesson)
 	collectionLessonProcess := l.database.Collection(l.collectionLessonProcess)
 
@@ -259,6 +280,7 @@ func (l *lessonRepository) FetchByIDInUser(ctx context.Context, userID primitive
 		TotalScore:   lessonProcess.TotalScore,
 	}
 
+	lessonUserProcessCache.Set(userID.Hex()+lessonID, lessonProcessRes, 5*time.Minute)
 	return lessonProcessRes, nil
 }
 
@@ -279,7 +301,7 @@ func (l *lessonRepository) FetchByIDCourseInUser(ctx context.Context, userID pri
 
 	go func() {
 		defer wg.Done()
-		data, found := detailCache.Get(userID.Hex() + courseID + "detail")
+		data, found := detailLessonCache.Get(userID.Hex() + courseID + "detail")
 		if found {
 			detailCh <- data
 		}
@@ -448,7 +470,7 @@ func (l *lessonRepository) FetchByIDCourseInUser(ctx context.Context, userID pri
 	}
 
 	lessonsUserProcessCache.Set(userID.Hex()+courseID+page, lessonsProcess, 5*time.Minute)
-	detailCache.Set(userID.Hex()+courseID+"detail", detail, 5*time.Minute)
+	detailLessonCache.Set(userID.Hex()+courseID+"detail", detail, 5*time.Minute)
 
 	select {
 	case err = <-errCh:
@@ -475,7 +497,7 @@ func (l *lessonRepository) FetchManyInUser(ctx context.Context, userID primitive
 
 	go func() {
 		defer wg.Done()
-		data, found := detailCache.Get(userID.Hex() + "detail")
+		data, found := detailLessonCache.Get(userID.Hex() + "detail")
 		if found {
 			detailCh <- data
 		}
@@ -636,7 +658,7 @@ func (l *lessonRepository) FetchManyInUser(ctx context.Context, userID primitive
 	}
 
 	lessonsUserProcessCache.Set(userID.Hex()+page, lessonsProcess, 5*time.Minute)
-	detailCache.Set(userID.Hex()+"detail", detail, 5*time.Minute)
+	detailLessonCache.Set(userID.Hex()+"detail", detail, 5*time.Minute)
 
 	select {
 	case err = <-errCh:
@@ -678,7 +700,7 @@ func (l *lessonRepository) FetchManyInAdmin(ctx context.Context, page string) ([
 	// Khởi động một goroutine cho tìm dữ liệu detail trong cache memory
 	go func() {
 		defer wg.Done()
-		data, found := detailCache.Get("detail")
+		data, found := detailLessonCache.Get("detail")
 		if found {
 			detailCh <- data
 			return
@@ -819,7 +841,7 @@ func (l *lessonRepository) FetchManyInAdmin(ctx context.Context, page string) ([
 
 	// Thiết lập Set cache memory với dữ liệu cần thiết với thơi gian là 5 phút
 	lessonsCache.Set(page, lessons, 5*time.Minute)
-	detailCache.Set("detail", response, 5*time.Minute)
+	detailLessonCache.Set("detail", response, 5*time.Minute)
 
 	// Thu thập kết quả
 	select {
@@ -856,7 +878,7 @@ func (l *lessonRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([
 	// Goroutine để lấy chi tiết từ cache
 	go func() {
 		defer wg.Done()
-		data, found := detailCache.Get("detail")
+		data, found := detailLessonCache.Get("detail")
 		if found {
 			detailCh <- data
 			return
@@ -959,7 +981,7 @@ func (l *lessonRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([
 
 	// Lưu trữ dữ liệu đã lấy vào cache
 	lessonsCache.Set("lessons", lessons, 5*time.Minute)
-	detailCache.Set("detail", detail, 5*time.Minute)
+	detailLessonCache.Set("detail", detail, 5*time.Minute)
 
 	// Trả về dữ liệu đã lấy hoặc lỗi
 	select {
@@ -1132,7 +1154,7 @@ func (l *lessonRepository) FetchByIdCourseInAdmin(ctx context.Context, idCourse 
 	// Goroutine to retrieve detail information from cache
 	go func() {
 		defer wg.Done()
-		data, found := detailCache.Get(idCourse + "detail")
+		data, found := detailLessonCache.Get(idCourse + "detail")
 		if found {
 			detailCh <- data
 			return
@@ -1265,7 +1287,7 @@ func (l *lessonRepository) FetchByIdCourseInAdmin(ctx context.Context, idCourse 
 
 	// Cache the retrieved lessons and detail response
 	lessonsCache.Set(idCourse+page, lessons, 5*time.Minute)
-	detailCache.Set(idCourse+"detail", response, 5*time.Minute)
+	detailLessonCache.Set(idCourse+"detail", response, 5*time.Minute)
 
 	// Check for errors in the error channel
 	select {
@@ -1280,6 +1302,17 @@ func (l *lessonRepository) FetchByIdCourseInAdmin(ctx context.Context, idCourse 
 // Hàm này nhận tham số là một đối tượng và trả về kết quả thông tin xử lý (không phải là thông tin của đối tượng đó)
 // Nếu có lỗi xảy ra trong quá trình xử lý, lỗi sẽ được trả về với kết quả đã lấy được và dừng chương trình
 func (l *lessonRepository) CreateOneInAdmin(ctx context.Context, lesson *lesson_domain.Lesson) error {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collectionLesson := l.database.Collection(l.collectionLesson)
 	collectionCourse := l.database.Collection(l.collectionCourse)
 
@@ -1315,7 +1348,7 @@ func (l *lessonRepository) CreateOneInAdmin(ctx context.Context, lesson *lesson_
 	// clear data value in cache memory due to increase num
 	go func() {
 		defer wg.Done()
-		detailCache.Clear()
+		detailLessonCache.Clear()
 	}()
 
 	wg.Wait()
@@ -1323,6 +1356,17 @@ func (l *lessonRepository) CreateOneInAdmin(ctx context.Context, lesson *lesson_
 }
 
 func (l *lessonRepository) CreateOneByNameCourseInAdmin(ctx context.Context, lesson *lesson_domain.Lesson) error {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collectionLesson := l.database.Collection(l.collectionLesson)
 
 	filter := bson.M{"name": lesson.Name}
@@ -1345,7 +1389,7 @@ func (l *lessonRepository) CreateOneByNameCourseInAdmin(ctx context.Context, les
 	// clear data value in cache memory due to increase num
 	go func() {
 		defer wg.Done()
-		detailCache.Clear()
+		detailLessonCache.Clear()
 	}()
 
 	wg.Wait()
@@ -1362,7 +1406,6 @@ func (l *lessonRepository) UpdateOneInAdmin(ctx context.Context, lesson *lesson_
 	if isProcessing {
 		return nil, errors.New("another goroutine is already processing")
 	}
-
 	isProcessing = true
 	defer func() {
 		isProcessing = false
@@ -1371,7 +1414,6 @@ func (l *lessonRepository) UpdateOneInAdmin(ctx context.Context, lesson *lesson_
 	collection := l.database.Collection(l.collectionLesson)
 
 	filter := bson.M{"_id": lesson.ID}
-
 	update := bson.M{
 		"$set": bson.M{
 			"name":        lesson.Name,
@@ -1414,7 +1456,6 @@ func (l *lessonRepository) UpdateImageInAdmin(ctx context.Context, lesson *lesso
 	if isProcessing {
 		return nil, errors.New("another goroutine is already processing")
 	}
-
 	isProcessing = true
 	defer func() {
 		isProcessing = false
@@ -1423,7 +1464,6 @@ func (l *lessonRepository) UpdateImageInAdmin(ctx context.Context, lesson *lesso
 	collection := l.database.Collection(l.collectionLesson)
 
 	filter := bson.M{"_id": lesson.ID}
-
 	update := bson.M{
 		"$set": bson.M{
 			"image_url":   lesson.ImageURL,
@@ -1509,7 +1549,7 @@ func (l *lessonRepository) DeleteOneInAdmin(ctx context.Context, lessonID string
 	// clear data value with detail in cache due to decrease num
 	go func() {
 		defer wg.Done()
-		detailCache.Clear()
+		detailLessonCache.Clear()
 	}()
 
 	go func() {

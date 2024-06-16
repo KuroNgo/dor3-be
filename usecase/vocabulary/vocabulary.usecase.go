@@ -20,6 +20,11 @@ func NewVocabularyUseCase(vocabularyRepository vocabulary_domain.IVocabularyRepo
 	}
 }
 
+func (v *vocabularyUseCase) UpdateVocabularyProcess(ctx context.Context, vocabularyID string, process vocabulary_domain.VocabularyProcess) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (v *vocabularyUseCase) FindVocabularyIDByVocabularyConfigInAdmin(ctx context.Context, word string) (primitive.ObjectID, error) {
 	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
 	defer cancel()
@@ -114,18 +119,6 @@ func (v *vocabularyUseCase) GetAllVocabularyInAdmin(ctx context.Context) ([]stri
 	}
 
 	return vocabulary, nil
-}
-
-func (v *vocabularyUseCase) FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error) {
-	ctx, cancel := context.WithTimeout(ctx, v.contextTimeout)
-	defer cancel()
-
-	unitID, err := v.vocabularyRepository.FindUnitIDByUnitLevelInAdmin(ctx, unitLevel, fieldOfIT)
-	if err != nil {
-		return primitive.NilObjectID, err
-	}
-
-	return unitID, err
 }
 
 func (v *vocabularyUseCase) CreateOneByNameUnitInAdmin(ctx context.Context, vocabulary *vocabulary_domain.Vocabulary) error {

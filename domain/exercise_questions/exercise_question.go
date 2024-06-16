@@ -56,12 +56,12 @@ type Statistics struct {
 }
 
 type IExerciseQuestionRepository interface {
-	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchByID(ctx context.Context, id string) (ExerciseQuestionResponse, error)
-	FetchManyByExerciseID(ctx context.Context, exerciseID string) (Response, error)
-	FetchOneByExerciseID(ctx context.Context, exerciseID string) (ExerciseQuestionResponse, error)
+	FetchManyInAdmin(ctx context.Context, page string) (Response, error)
+	FetchByIDInAdmin(ctx context.Context, id string) (ExerciseQuestionResponse, error)
+	FetchManyByExerciseIDInAdmin(ctx context.Context, exerciseID string) (Response, error)
+	FetchOneByExerciseIDInAdmin(ctx context.Context, exerciseID string) (ExerciseQuestionResponse, error)
 
-	UpdateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) (*mongo.UpdateResult, error)
-	CreateOne(ctx context.Context, exerciseQuestion *ExerciseQuestion) error
-	DeleteOne(ctx context.Context, exerciseID string) error
+	UpdateOneInAdmin(ctx context.Context, exerciseQuestion *ExerciseQuestion) (*mongo.UpdateResult, error)
+	CreateOneInAdmin(ctx context.Context, exerciseQuestion *ExerciseQuestion) error
+	DeleteOneInAdmin(ctx context.Context, exerciseID string) error
 }

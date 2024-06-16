@@ -27,7 +27,7 @@ func (e *ExerciseAnswerController) FetchManyAnswerByUserIDAndQuestionID(ctx *gin
 
 	questionID := ctx.Query("question_id")
 
-	answer, err := e.ExerciseAnswerUseCase.FetchManyAnswerByUserIDAndQuestionID(ctx, questionID, user.ID.Hex())
+	answer, err := e.ExerciseAnswerUseCase.FetchManyAnswerQuestionIDInUser(ctx, questionID, user.ID.Hex())
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

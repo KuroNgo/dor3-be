@@ -19,11 +19,11 @@ func NewQuizQuestionUseCase(quizQuestionRepository quiz_question_domain.IQuizQue
 	}
 }
 
-func (q *quizQuestionUseCase) FetchMany(ctx context.Context, page string) (quiz_question_domain.Response, error) {
+func (q *quizQuestionUseCase) FetchManyInAdmin(ctx context.Context, page string) (quiz_question_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizQuestionRepository.FetchMany(ctx, page)
+	data, err := q.quizQuestionRepository.FetchManyInAdmin(ctx, page)
 	if err != nil {
 		return quiz_question_domain.Response{}, err
 	}
@@ -31,11 +31,11 @@ func (q *quizQuestionUseCase) FetchMany(ctx context.Context, page string) (quiz_
 	return data, nil
 }
 
-func (q *quizQuestionUseCase) FetchOneByQuizID(ctx context.Context, quizID string) (quiz_question_domain.QuizQuestion, error) {
+func (q *quizQuestionUseCase) FetchOneByQuizIDInAdmin(ctx context.Context, quizID string) (quiz_question_domain.QuizQuestion, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizQuestionRepository.FetchOneByQuizID(ctx, quizID)
+	data, err := q.quizQuestionRepository.FetchOneByQuizIDInAdmin(ctx, quizID)
 	if err != nil {
 		return quiz_question_domain.QuizQuestion{}, err
 	}
@@ -43,11 +43,11 @@ func (q *quizQuestionUseCase) FetchOneByQuizID(ctx context.Context, quizID strin
 	return data, nil
 }
 
-func (q *quizQuestionUseCase) FetchByID(ctx context.Context, id string) (quiz_question_domain.QuizQuestion, error) {
+func (q *quizQuestionUseCase) FetchByIDInAdmin(ctx context.Context, id string) (quiz_question_domain.QuizQuestion, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizQuestionRepository.FetchByID(ctx, id)
+	data, err := q.quizQuestionRepository.FetchByIDInAdmin(ctx, id)
 	if err != nil {
 		return quiz_question_domain.QuizQuestion{}, err
 	}
@@ -55,11 +55,11 @@ func (q *quizQuestionUseCase) FetchByID(ctx context.Context, id string) (quiz_qu
 	return data, nil
 }
 
-func (q *quizQuestionUseCase) FetchManyByQuizID(ctx context.Context, quizID string) (quiz_question_domain.Response, error) {
+func (q *quizQuestionUseCase) FetchManyByQuizIDInAdmin(ctx context.Context, quizID string) (quiz_question_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizQuestionRepository.FetchManyByQuizID(ctx, quizID)
+	data, err := q.quizQuestionRepository.FetchManyByQuizIDInAdmin(ctx, quizID)
 	if err != nil {
 		return quiz_question_domain.Response{}, err
 	}
@@ -67,11 +67,11 @@ func (q *quizQuestionUseCase) FetchManyByQuizID(ctx context.Context, quizID stri
 	return data, nil
 }
 
-func (q *quizQuestionUseCase) UpdateOne(ctx context.Context, quizQuestion *quiz_question_domain.QuizQuestion) (*mongo.UpdateResult, error) {
+func (q *quizQuestionUseCase) UpdateOneInAdmin(ctx context.Context, quizQuestion *quiz_question_domain.QuizQuestion) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizQuestionRepository.UpdateOne(ctx, quizQuestion)
+	data, err := q.quizQuestionRepository.UpdateOneInAdmin(ctx, quizQuestion)
 	if err != nil {
 		return nil, err
 	}
@@ -79,11 +79,11 @@ func (q *quizQuestionUseCase) UpdateOne(ctx context.Context, quizQuestion *quiz_
 	return data, nil
 }
 
-func (q *quizQuestionUseCase) CreateOne(ctx context.Context, quizQuestion *quiz_question_domain.QuizQuestion) error {
+func (q *quizQuestionUseCase) CreateOneInAdmin(ctx context.Context, quizQuestion *quiz_question_domain.QuizQuestion) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	err := q.quizQuestionRepository.CreateOne(ctx, quizQuestion)
+	err := q.quizQuestionRepository.CreateOneInAdmin(ctx, quizQuestion)
 	if err != nil {
 		return err
 	}
@@ -91,11 +91,11 @@ func (q *quizQuestionUseCase) CreateOne(ctx context.Context, quizQuestion *quiz_
 	return nil
 }
 
-func (q *quizQuestionUseCase) DeleteOne(ctx context.Context, quizID string) error {
+func (q *quizQuestionUseCase) DeleteOneInAdmin(ctx context.Context, quizID string) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	err := q.quizQuestionRepository.DeleteOne(ctx, quizID)
+	err := q.quizQuestionRepository.DeleteOneInAdmin(ctx, quizID)
 	if err != nil {
 		return err
 	}

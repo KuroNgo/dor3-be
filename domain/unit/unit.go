@@ -56,6 +56,7 @@ type IUnitRepository interface {
 	FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string, page string) ([]UnitProcessResponse, DetailResponse, error)
 	UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error)
 
+	FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error)
 	FetchManyInAdmin(ctx context.Context, page string) ([]UnitResponse, DetailResponse, error)
 	FetchOneByIDInAdmin(ctx context.Context, id string) (UnitResponse, error)
 	FetchManyNotPaginationInAdmin(ctx context.Context) ([]UnitResponse, error)

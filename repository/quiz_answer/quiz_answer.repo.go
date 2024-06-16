@@ -27,7 +27,7 @@ func NewQuizAnswerRepository(db *mongo.Database, collectionQuestion string, coll
 	}
 }
 
-func (q *quizAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (quiz_answer_domain.Response, error) {
+func (q *quizAnswerRepository) FetchManyAnswerQuestionIDInUser(ctx context.Context, questionID string, userID string) (quiz_answer_domain.Response, error) {
 	collectionAnswer := q.database.Collection(q.collectionAnswer)
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
 
@@ -133,7 +133,7 @@ func questionIDs(questions []quiz_question_domain.QuizQuestion) []primitive.Obje
 	return ids
 }
 
-func (q *quizAnswerRepository) CreateOne(ctx context.Context, quizAnswer *quiz_answer_domain.QuizAnswer) error {
+func (q *quizAnswerRepository) CreateOneInUser(ctx context.Context, quizAnswer *quiz_answer_domain.QuizAnswer) error {
 	collectionAnswer := q.database.Collection(q.collectionAnswer)
 	collectionQuestion := q.database.Collection(q.collectionQuestion)
 
@@ -151,7 +151,7 @@ func (q *quizAnswerRepository) CreateOne(ctx context.Context, quizAnswer *quiz_a
 	return nil
 }
 
-func (q *quizAnswerRepository) DeleteOne(ctx context.Context, quizID string) error {
+func (q *quizAnswerRepository) DeleteOneInUser(ctx context.Context, quizID string) error {
 	collectionAnswer := q.database.Collection(q.collectionAnswer)
 	objID, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
@@ -171,7 +171,7 @@ func (q *quizAnswerRepository) DeleteOne(ctx context.Context, quizID string) err
 	return err
 }
 
-func (q *quizAnswerRepository) DeleteAllAnswerByQuizID(ctx context.Context, quizId string) error {
+func (q *quizAnswerRepository) DeleteAllAnswerByQuizIDInUser(ctx context.Context, quizId string) error {
 	collectionAnswer := q.database.Collection(q.collectionAnswer)
 
 	objID, err := primitive.ObjectIDFromHex(quizId)

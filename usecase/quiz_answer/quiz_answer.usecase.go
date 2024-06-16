@@ -11,11 +11,11 @@ type quizResultUseCase struct {
 	contextTimeout       time.Duration
 }
 
-func (q *quizResultUseCase) DeleteAllAnswerByQuizID(ctx context.Context, quizId string) error {
+func (q *quizResultUseCase) DeleteAllAnswerByQuizIDInUser(ctx context.Context, quizId string) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	err := q.quizAnswerRepository.DeleteAllAnswerByQuizID(ctx, quizId)
+	err := q.quizAnswerRepository.DeleteAllAnswerByQuizIDInUser(ctx, quizId)
 	if err != nil {
 		return err
 	}
@@ -23,11 +23,11 @@ func (q *quizResultUseCase) DeleteAllAnswerByQuizID(ctx context.Context, quizId 
 	return nil
 }
 
-func (q *quizResultUseCase) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (quiz_answer_domain.Response, error) {
+func (q *quizResultUseCase) FetchManyAnswerQuestionIDInUser(ctx context.Context, questionID string, userID string) (quiz_answer_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizAnswerRepository.FetchManyAnswerByUserIDAndQuestionID(ctx, questionID, userID)
+	data, err := q.quizAnswerRepository.FetchManyAnswerQuestionIDInUser(ctx, questionID, userID)
 	if err != nil {
 		return quiz_answer_domain.Response{}, err
 	}
@@ -35,11 +35,11 @@ func (q *quizResultUseCase) FetchManyAnswerByUserIDAndQuestionID(ctx context.Con
 	return data, nil
 }
 
-func (q *quizResultUseCase) CreateOne(ctx context.Context, quizAnswer *quiz_answer_domain.QuizAnswer) error {
+func (q *quizResultUseCase) CreateOneInUser(ctx context.Context, quizAnswer *quiz_answer_domain.QuizAnswer) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	err := q.quizAnswerRepository.CreateOne(ctx, quizAnswer)
+	err := q.quizAnswerRepository.CreateOneInUser(ctx, quizAnswer)
 	if err != nil {
 		return err
 	}
@@ -47,11 +47,11 @@ func (q *quizResultUseCase) CreateOne(ctx context.Context, quizAnswer *quiz_answ
 	return nil
 }
 
-func (q *quizResultUseCase) DeleteOne(ctx context.Context, quizID string) error {
+func (q *quizResultUseCase) DeleteOneInUser(ctx context.Context, quizID string) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	err := q.quizAnswerRepository.DeleteOne(ctx, quizID)
+	err := q.quizAnswerRepository.DeleteOneInUser(ctx, quizID)
 	if err != nil {
 		return err
 	}

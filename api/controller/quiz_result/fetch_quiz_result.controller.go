@@ -9,7 +9,7 @@ import (
 func (e *QuizResultController) FetchManyExerciseResult(ctx *gin.Context) {
 	page := ctx.DefaultQuery("page", "1")
 
-	exam, err := e.QuizResultUseCase.FetchMany(ctx, page)
+	exam, err := e.QuizResultUseCase.FetchManyInUser(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -27,7 +27,7 @@ func (e *QuizResultController) FetchManyExerciseResult(ctx *gin.Context) {
 func (e *QuizResultController) FetchResultByQuizID(ctx *gin.Context) {
 	exerciseID := ctx.Param("quiz_id")
 
-	exercise, err := e.QuizResultUseCase.FetchManyByQuizID(ctx, exerciseID)
+	exercise, err := e.QuizResultUseCase.FetchManyByQuizIDInUser(ctx, exerciseID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -46,7 +46,7 @@ func (e *QuizResultController) GetResultsByUserIDAndQuizID(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser")
 	examId := ctx.Param("quiz_id")
 
-	exam, err := e.QuizResultUseCase.GetResultsByUserIDAndQuizID(ctx, fmt.Sprintf("%s", currentUser), examId)
+	exam, err := e.QuizResultUseCase.GetResultsByUserIDAndQuizIDInUser(ctx, fmt.Sprintf("%s", currentUser), examId)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
