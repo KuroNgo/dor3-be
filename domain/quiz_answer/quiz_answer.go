@@ -38,8 +38,8 @@ type Response struct {
 }
 
 type IQuizAnswerRepository interface {
-	FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (Response, error)
-	CreateOne(ctx context.Context, quizAnswer *QuizAnswer) error
-	DeleteOne(ctx context.Context, quizID string) error
-	DeleteAllAnswerByQuizID(ctx context.Context, quizId string) error
+	FetchManyAnswerQuestionIDInUser(ctx context.Context, questionID string, userID string) (Response, error)
+	CreateOneInUser(ctx context.Context, quizAnswer *QuizAnswer) error
+	DeleteOneInUser(ctx context.Context, quizID string) error
+	DeleteAllAnswerByQuizIDInUser(ctx context.Context, quizId string) error
 }

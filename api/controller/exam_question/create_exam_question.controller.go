@@ -50,7 +50,7 @@ func (e *ExamQuestionsController) CreateOneExamQuestions(ctx *gin.Context) {
 		WhoUpdate:     admin.FullName,
 	}
 
-	err = e.ExamQuestionUseCase.CreateOne(ctx, &question)
+	err = e.ExamQuestionUseCase.CreateOneInAdmin(ctx, &question)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

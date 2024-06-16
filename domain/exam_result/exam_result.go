@@ -30,18 +30,18 @@ type Response struct {
 }
 
 type IExamResultRepository interface {
-	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchManyByExamID(ctx context.Context, userID string) (Response, error)
-	FetchManyByUserID(ctx context.Context, examID string) (Response, error)
+	FetchManyInUser2(ctx context.Context, page string, userID primitive.ObjectID) (Response, error)
+	FetchManyInUser(ctx context.Context, page string) (Response, error)
+	FetchManyExamIDInUser(ctx context.Context, examID string, userID primitive.ObjectID) (Response, error)
 
-	GetResultsByUserIDAndExamID(ctx context.Context, userID string, examID string) (ExamResult, error)
-	GetAverageScoreByUser(ctx context.Context, userID string) (float64, error)
-	GetOverallPerformance(ctx context.Context, userID string) (float64, error)
-	GetResultByID(ctx context.Context, userID string) (ExamResult, error)
+	GetResultsByExamIDInUser(ctx context.Context, userID string, examID string) (ExamResult, error)
+	GetAverageScoreInUser(ctx context.Context, userID string) (float64, error)
+	GetOverallPerformanceInUser(ctx context.Context, userID string) (float64, error)
+	GetResultByIDInUser(ctx context.Context, userID string) (ExamResult, error)
 
-	CreateOne(ctx context.Context, examResult *ExamResult) error
-	UpdateStatus(ctx context.Context, examResultID string, status int) (*mongo.UpdateResult, error)
-	DeleteOne(ctx context.Context, examResultID string) error
+	CreateOneInUser(ctx context.Context, examResult *ExamResult) error
+	UpdateStatusInUser(ctx context.Context, examResultID string, status int) (*mongo.UpdateResult, error)
+	DeleteOneInUser(ctx context.Context, examResultID string) error
 
 	CalculateScore(ctx context.Context, correctAnswers, totalQuestions int) int
 	CalculatePercentage(ctx context.Context, correctAnswers, totalQuestions int) float64

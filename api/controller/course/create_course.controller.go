@@ -288,7 +288,7 @@ func (c *CourseController) CreateLessonManagementWithFileInAdmin(ctx *gin.Contex
 
 	var vocabularies []vocabulary_domain.Vocabulary
 	for _, vocabulary := range resVocabulary {
-		unitID, err := c.VocabularyUseCase.FindUnitIDByUnitLevelInAdmin(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
+		unitID, err := c.UnitUseCase.FindUnitIDByUnitLevelInAdmin(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

@@ -26,7 +26,7 @@ func (e *ExerciseResultController) UpdateComplete(ctx *gin.Context) {
 
 	exerciseID := ctx.Query("exercise_id")
 
-	_, err = e.ExerciseResultUseCase.UpdateStatus(ctx, exerciseID, 1)
+	_, err = e.ExerciseResultUseCase.UpdateStatusInUser(ctx, exerciseID, 1)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

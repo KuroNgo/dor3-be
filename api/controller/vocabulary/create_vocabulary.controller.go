@@ -171,7 +171,7 @@ func (v *VocabularyController) CreateVocabularyWithFileInAdmin(ctx *gin.Context)
 	go func() {
 		defer wg.Done()
 		for _, vocabulary := range result {
-			unitID, err := v.VocabularyUseCase.FindUnitIDByUnitLevelInAdmin(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
+			unitID, err := v.UnitUseCase.FindUnitIDByUnitLevelInAdmin(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
 			if err != nil {
 				ctx.JSON(500, gin.H{"error": err.Error()})
 				return
@@ -275,7 +275,7 @@ func (v *VocabularyController) CreateVocabularyWithFileInUser(ctx *gin.Context) 
 	var vocabularies []vocabulary_domain.Vocabulary
 
 	for _, vocabulary := range result {
-		unitID, err := v.VocabularyUseCase.FindUnitIDByUnitLevelInAdmin(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
+		unitID, err := v.UnitUseCase.FindUnitIDByUnitLevelInAdmin(ctx, vocabulary.UnitLevel, vocabulary.FieldOfIT)
 		if err != nil {
 			ctx.JSON(500, gin.H{"error": err.Error()})
 			return

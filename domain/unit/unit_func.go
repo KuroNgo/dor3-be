@@ -27,12 +27,13 @@ type Update struct {
 
 //go:generate mockery --name IUnitUseCase
 type IUnitUseCase interface {
-	FetchManyInUser(ctx context.Context, user primitive.ObjectID, page string) ([]UnitResponse, DetailResponse, error)
-	FetchOneByIDInUser(ctx context.Context, user primitive.ObjectID, id string) (UnitResponse, error)
-	FetchManyNotPaginationInUser(ctx context.Context, user primitive.ObjectID) ([]UnitResponse, error)
-	FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string, page string) ([]UnitResponse, DetailResponse, error)
+	FetchManyInUser(ctx context.Context, user primitive.ObjectID, page string) ([]UnitProcessResponse, DetailResponse, error)
+	FetchOneByIDInUser(ctx context.Context, user primitive.ObjectID, id string) (UnitProcessResponse, error)
+	FetchManyNotPaginationInUser(ctx context.Context, user primitive.ObjectID) ([]UnitProcessResponse, error)
+	FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string, page string) ([]UnitProcessResponse, DetailResponse, error)
 	UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error)
 
+	FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error)
 	FetchManyInAdmin(ctx context.Context, page string) ([]UnitResponse, DetailResponse, error)
 	FetchOneByIDInAdmin(ctx context.Context, id string) (UnitResponse, error)
 	FetchManyNotPaginationInAdmin(ctx context.Context) ([]UnitResponse, error)

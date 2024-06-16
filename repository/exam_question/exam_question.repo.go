@@ -29,7 +29,7 @@ func NewExamQuestionRepository(db *mongo.Database, collectionQuestion string, co
 	}
 }
 
-func (e *examQuestionRepository) FetchMany(ctx context.Context, page string) (exam_question_domain.Response, error) {
+func (e *examQuestionRepository) FetchManyInAdmin(ctx context.Context, page string) (exam_question_domain.Response, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 	collectVocabulary := e.database.Collection(e.collectionVocabulary)
 
@@ -86,7 +86,7 @@ func (e *examQuestionRepository) FetchMany(ctx context.Context, page string) (ex
 	return questionsRes, nil
 }
 
-func (e *examQuestionRepository) FetchOneByExamID(ctx context.Context, examID string) (exam_question_domain.ExamQuestionResponse, error) {
+func (e *examQuestionRepository) FetchOneByExamIDInAdmin(ctx context.Context, examID string) (exam_question_domain.ExamQuestionResponse, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
 
@@ -123,7 +123,7 @@ func (e *examQuestionRepository) FetchOneByExamID(ctx context.Context, examID st
 	return examQuestionRes, nil
 }
 
-func (e *examQuestionRepository) FetchQuestionByID(ctx context.Context, id string) (exam_question_domain.ExamQuestion, error) {
+func (e *examQuestionRepository) FetchQuestionByIDInAdmin(ctx context.Context, id string) (exam_question_domain.ExamQuestion, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
 	idQuestion, err := primitive.ObjectIDFromHex(id)
@@ -144,7 +144,7 @@ func (e *examQuestionRepository) FetchQuestionByID(ctx context.Context, id strin
 	return examQuestion, nil
 }
 
-func (e *examQuestionRepository) FetchManyByExamID(ctx context.Context, examID string, page string) (exam_question_domain.Response, error) {
+func (e *examQuestionRepository) FetchManyByExamIDInAdmin(ctx context.Context, examID string, page string) (exam_question_domain.Response, error) {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 	collectVocabulary := e.database.Collection(e.collectionVocabulary)
 
@@ -235,7 +235,7 @@ func (e *examQuestionRepository) FetchManyByExamID(ctx context.Context, examID s
 	return questionsRes, nil
 }
 
-func (e *examQuestionRepository) UpdateOne(ctx context.Context, examQuestion *exam_question_domain.ExamQuestion) (*mongo.UpdateResult, error) {
+func (e *examQuestionRepository) UpdateOneInAdmin(ctx context.Context, examQuestion *exam_question_domain.ExamQuestion) (*mongo.UpdateResult, error) {
 	collection := e.database.Collection(e.collectionQuestion)
 
 	filter := bson.D{{Key: "_id", Value: examQuestion.ID}}
@@ -258,7 +258,7 @@ func (e *examQuestionRepository) UpdateOne(ctx context.Context, examQuestion *ex
 	return data, nil
 }
 
-func (e *examQuestionRepository) CreateOne(ctx context.Context, examQuestion *exam_question_domain.ExamQuestion) error {
+func (e *examQuestionRepository) CreateOneInAdmin(ctx context.Context, examQuestion *exam_question_domain.ExamQuestion) error {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 	collectionExam := e.database.Collection(e.collectionExam)
 	collectionVocabulary := e.database.Collection(e.collectionVocabulary)
@@ -298,7 +298,7 @@ func (e *examQuestionRepository) CreateOne(ctx context.Context, examQuestion *ex
 	return nil
 }
 
-func (e *examQuestionRepository) DeleteOne(ctx context.Context, examID string) error {
+func (e *examQuestionRepository) DeleteOneInAdmin(ctx context.Context, examID string) error {
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
 	objID, err := primitive.ObjectIDFromHex(examID)

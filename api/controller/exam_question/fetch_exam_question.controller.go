@@ -25,7 +25,7 @@ func (e *ExamQuestionsController) FetchManyExamQuestions(ctx *gin.Context) {
 	}
 
 	page := ctx.DefaultQuery("page", "1")
-	exam, err := e.ExamQuestionUseCase.FetchMany(ctx, page)
+	exam, err := e.ExamQuestionUseCase.FetchManyInAdmin(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -59,7 +59,7 @@ func (e *ExamQuestionsController) FetchOneExamQuestionsByID(ctx *gin.Context) {
 	}
 
 	questionID := ctx.Query("_id")
-	question, err := e.ExamQuestionUseCase.FetchQuestionByID(ctx, questionID)
+	question, err := e.ExamQuestionUseCase.FetchQuestionByIDInAdmin(ctx, questionID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -93,7 +93,7 @@ func (e *ExamQuestionsController) FetchOneExamQuestionsByExamID(ctx *gin.Context
 	}
 
 	examID := ctx.Query("exam_id")
-	exam, err := e.ExamQuestionUseCase.FetchOneByExamID(ctx, examID)
+	exam, err := e.ExamQuestionUseCase.FetchOneByExamIDInAdmin(ctx, examID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -128,7 +128,7 @@ func (e *ExamQuestionsController) FetchManyExamQuestionsByExamID(ctx *gin.Contex
 
 	examID := ctx.Query("exam_id")
 	page := ctx.DefaultQuery("page", "1")
-	exam, err := e.ExamQuestionUseCase.FetchManyByExamID(ctx, examID, page)
+	exam, err := e.ExamQuestionUseCase.FetchManyByExamIDInAdmin(ctx, examID, page)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -162,7 +162,7 @@ func (e *ExamQuestionsController) FetchManyExamQuestionsInAdmin(ctx *gin.Context
 	}
 
 	page := ctx.DefaultQuery("page", "1")
-	exam, err := e.ExamQuestionUseCase.FetchMany(ctx, page)
+	exam, err := e.ExamQuestionUseCase.FetchManyInAdmin(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -196,7 +196,7 @@ func (e *ExamQuestionsController) FetchOneExamQuestionsByIDInAdmin(ctx *gin.Cont
 	}
 
 	questionID := ctx.Query("_id")
-	question, err := e.ExamQuestionUseCase.FetchQuestionByID(ctx, questionID)
+	question, err := e.ExamQuestionUseCase.FetchQuestionByIDInAdmin(ctx, questionID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -231,7 +231,7 @@ func (e *ExamQuestionsController) FetchManyExamQuestionsByExamIDInAdmin(ctx *gin
 
 	examID := ctx.Query("exam_id")
 	page := ctx.DefaultQuery("page", "1")
-	exam, err := e.ExamQuestionUseCase.FetchManyByExamID(ctx, examID, page)
+	exam, err := e.ExamQuestionUseCase.FetchManyByExamIDInAdmin(ctx, examID, page)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -265,7 +265,7 @@ func (e *ExamQuestionsController) FetchOneExamQuestionsByExamIDInAdmin(ctx *gin.
 	}
 
 	examID := ctx.Query("exam_id")
-	exam, err := e.ExamQuestionUseCase.FetchOneByExamID(ctx, examID)
+	exam, err := e.ExamQuestionUseCase.FetchOneByExamIDInAdmin(ctx, examID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

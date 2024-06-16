@@ -41,7 +41,7 @@ func (e *ExamResultController) DeleteOneExamResult(ctx *gin.Context) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err = e.ExamResultUseCase.DeleteOne(ctx, resultID)
+		err = e.ExamResultUseCase.DeleteOneInUser(ctx, resultID)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",
@@ -54,7 +54,7 @@ func (e *ExamResultController) DeleteOneExamResult(ctx *gin.Context) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		res, err := e.ExamResultUseCase.GetResultByID(ctx, resultID)
+		res, err := e.ExamResultUseCase.GetResultsByExamIDInUser(ctx, user.ID.Hex(), resultID)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",

@@ -20,6 +20,11 @@ type examResultRepository struct {
 	collectionExam       string
 }
 
+func (e *examResultRepository) FetchManyInUser2(ctx context.Context, page string, userID primitive.ObjectID) (exam_result_domain.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewExamResultRepository(db *mongo.Database, collectionExamResult string, collectionExam string) exam_result_domain.IExamResultRepository {
 	return &examResultRepository{
 		database:             db,
@@ -32,7 +37,7 @@ var (
 	wg sync.WaitGroup
 )
 
-func (e *examResultRepository) GetResultByID(ctx context.Context, id string) (exam_result_domain.ExamResult, error) {
+func (e *examResultRepository) GetResultByIDInUser(ctx context.Context, id string) (exam_result_domain.ExamResult, error) {
 	collectionResult := e.database.Collection(e.collectionExamResult)
 
 	iD, err := primitive.ObjectIDFromHex(id)
@@ -49,7 +54,7 @@ func (e *examResultRepository) GetResultByID(ctx context.Context, id string) (ex
 	return res, nil
 }
 
-func (e *examResultRepository) FetchManyByUserID(ctx context.Context, userID string) (exam_result_domain.Response, error) {
+func (e *examResultRepository) FetchManyByUserIDInUser(ctx context.Context, userID string) (exam_result_domain.Response, error) {
 	collectionResult := e.database.Collection(e.collectionExamResult)
 
 	idUser, err := primitive.ObjectIDFromHex(userID)
@@ -70,7 +75,7 @@ func (e *examResultRepository) FetchManyByUserID(ctx context.Context, userID str
 	}(cursor, ctx)
 
 	var results []exam_result_domain.ExamResult
-	score, _ := e.GetScoreByUser(ctx, userID)
+	score, _ := e.GetScoreByUserInUser(ctx, userID)
 
 	for cursor.Next(ctx) {
 		var result exam_result_domain.ExamResult
@@ -82,8 +87,8 @@ func (e *examResultRepository) FetchManyByUserID(ctx context.Context, userID str
 		result.Score = score
 		results = append(results, result)
 	}
-	averageScore, _ := e.GetAverageScoreByUser(ctx, userID)
-	percentScore, _ := e.GetOverallPerformance(ctx, userID)
+	averageScore, _ := e.GetAverageScoreInUser(ctx, userID)
+	percentScore, _ := e.GetOverallPerformanceInUser(ctx, userID)
 
 	resultRes := exam_result_domain.Response{
 		ExamResult:   results,
@@ -94,7 +99,7 @@ func (e *examResultRepository) FetchManyByUserID(ctx context.Context, userID str
 	return resultRes, nil
 }
 
-func (e *examResultRepository) GetResultsByUserIDAndExamID(ctx context.Context, userID string, examID string) (exam_result_domain.ExamResult, error) {
+func (e *examResultRepository) GetResultsByUserIDAndExamIDInUser(ctx context.Context, userID string, examID string) (exam_result_domain.ExamResult, error) {
 	collection := e.database.Collection(e.collectionExamResult)
 
 	var result exam_result_domain.ExamResult
@@ -115,7 +120,7 @@ func (e *examResultRepository) GetResultsByUserIDAndExamID(ctx context.Context, 
 	return result, err
 }
 
-func (e *examResultRepository) FetchMany(ctx context.Context, page string) (exam_result_domain.Response, error) {
+func (e *examResultRepository) FetchManyInUser(ctx context.Context, page string) (exam_result_domain.Response, error) {
 	collectionResult := e.database.Collection(e.collectionExamResult)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -161,7 +166,7 @@ func (e *examResultRepository) FetchMany(ctx context.Context, page string) (exam
 	return resultRes, nil
 }
 
-func (e *examResultRepository) FetchManyByExamID(ctx context.Context, examID string) (exam_result_domain.Response, error) {
+func (e *examResultRepository) FetchManyExamIDInUser(ctx context.Context, examID string, userID primitive.ObjectID) (exam_result_domain.Response, error) {
 	collectionResult := e.database.Collection(e.collectionExamResult)
 
 	idExam, err := primitive.ObjectIDFromHex(examID)
@@ -206,7 +211,7 @@ func (e *examResultRepository) FetchManyByExamID(ctx context.Context, examID str
 	return resultRes, nil
 }
 
-func (e *examResultRepository) CreateOne(ctx context.Context, examResult *exam_result_domain.ExamResult) error {
+func (e *examResultRepository) CreateOneInUser(ctx context.Context, examResult *exam_result_domain.ExamResult) error {
 	collectionResult := e.database.Collection(e.collectionExamResult)
 	collectionExam := e.database.Collection(e.collectionExam)
 
@@ -224,7 +229,7 @@ func (e *examResultRepository) CreateOne(ctx context.Context, examResult *exam_r
 	return nil
 }
 
-func (e *examResultRepository) UpdateStatus(ctx context.Context, examID string, status int) (*mongo.UpdateResult, error) {
+func (e *examResultRepository) UpdateStatusInUser(ctx context.Context, examID string, status int) (*mongo.UpdateResult, error) {
 	collection := e.database.Collection(e.collectionExamResult)
 
 	filter := bson.D{{Key: "exam_id", Value: examID}}
@@ -243,7 +248,7 @@ func (e *examResultRepository) UpdateStatus(ctx context.Context, examID string, 
 	return data, nil
 }
 
-func (e *examResultRepository) DeleteOne(ctx context.Context, examResultID string) error {
+func (e *examResultRepository) DeleteOneInUser(ctx context.Context, examResultID string) error {
 	collectionResult := e.database.Collection(e.collectionExamResult)
 
 	objID, err := primitive.ObjectIDFromHex(examResultID)
@@ -282,9 +287,9 @@ func (e *examResultRepository) CalculatePercentage(ctx context.Context, correctA
 	return percentage
 }
 
-func (e *examResultRepository) GetScoreByUser(ctx context.Context, userID string) (int16, error) {
+func (e *examResultRepository) GetScoreByUserInUser(ctx context.Context, userID string) (int16, error) {
 	// Lấy tất cả các kết quả của bài kiểm tra từ cơ sở dữ liệu MongoDB
-	results, err := e.FetchManyByUserID(ctx, userID)
+	results, err := e.FetchManyByUserIDInUser(ctx, userID)
 	if err != nil {
 		return 0, err
 	}
@@ -305,8 +310,8 @@ func (e *examResultRepository) GetScoreByUser(ctx context.Context, userID string
 	return totalScore, nil
 }
 
-func (e *examResultRepository) GetAverageScoreByUser(ctx context.Context, userID string) (float64, error) {
-	results, err := e.FetchManyByUserID(ctx, userID)
+func (e *examResultRepository) GetAverageScoreInUser(ctx context.Context, userID string) (float64, error) {
+	results, err := e.FetchManyByUserIDInUser(ctx, userID)
 	if err != nil {
 		return 0, err
 	}
@@ -324,8 +329,8 @@ func (e *examResultRepository) GetAverageScoreByUser(ctx context.Context, userID
 	return 0, nil
 }
 
-func (e *examResultRepository) GetOverallPerformance(ctx context.Context, userID string) (float64, error) {
-	averageScore, err := e.GetAverageScoreByUser(ctx, userID)
+func (e *examResultRepository) GetOverallPerformanceInUser(ctx context.Context, userID string) (float64, error) {
+	averageScore, err := e.GetAverageScoreInUser(ctx, userID)
 	if err != nil {
 		return 0, err
 	}
@@ -337,4 +342,9 @@ func (e *examResultRepository) GetOverallPerformance(ctx context.Context, userID
 	overallPerformance := averageScore * 100
 
 	return overallPerformance, nil
+}
+
+func (e *examResultRepository) GetResultsByExamIDInUser(ctx context.Context, userID string, examID string) (exam_result_domain.ExamResult, error) {
+	//TODO implement me
+	panic("implement me")
 }

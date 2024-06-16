@@ -18,14 +18,14 @@ type Input struct {
 }
 
 type IExerciseResultUseCase interface {
-	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchManyByExerciseID(ctx context.Context, userID string) (Response, error)
+	FetchManyInUser2(ctx context.Context, examID string, userID primitive.ObjectID) (Response, error)
+	FetchManyInUser(ctx context.Context, page string) (Response, error)
+	FetchManyByExerciseIDInUser(ctx context.Context, userID string) (Response, error)
+	GetResultsExerciseIDInUser(ctx context.Context, userID string, exerciseID string) (ExerciseResult, error)
 
-	GetResultsByUserIDAndExerciseID(ctx context.Context, userID string, exerciseID string) (ExerciseResult, error)
-
-	CreateOne(ctx context.Context, exerciseResult *ExerciseResult) error
-	UpdateStatus(ctx context.Context, exerciseResultID string, status int) (*mongo.UpdateResult, error)
-	DeleteOne(ctx context.Context, exerciseResultID string) error
+	CreateOneInUser(ctx context.Context, exerciseResult *ExerciseResult) error
+	UpdateStatusInUser(ctx context.Context, exerciseResultID string, status int) (*mongo.UpdateResult, error)
+	DeleteOneInUser(ctx context.Context, exerciseResultID string) error
 
 	CalculateScore(ctx context.Context, correctAnswers, totalQuestions int) int
 	CalculatePercentage(ctx context.Context, correctAnswers, totalQuestions int) float64

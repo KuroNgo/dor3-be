@@ -17,7 +17,7 @@ func (e *ExerciseQuestionsController) FetchManyExerciseOptions(ctx *gin.Context)
 	}
 
 	page := ctx.DefaultQuery("page", "1")
-	exam, err := e.ExerciseQuestionUseCase.FetchMany(ctx, page)
+	exam, err := e.ExerciseQuestionUseCase.FetchManyInAdmin(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -51,7 +51,7 @@ func (e *ExerciseQuestionsController) FetchOneExerciseQuestionByID(ctx *gin.Cont
 	}
 
 	id := ctx.Query("_id")
-	exercise, err := e.ExerciseQuestionUseCase.FetchByID(ctx, id)
+	exercise, err := e.ExerciseQuestionUseCase.FetchByIDInAdmin(ctx, id)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -86,7 +86,7 @@ func (e *ExerciseQuestionsController) FetchOneExerciseQuestionByExerciseID(ctx *
 	}
 
 	exerciseId := ctx.Query("exercise_id")
-	exercise, err := e.ExerciseQuestionUseCase.FetchOneByExerciseID(ctx, exerciseId)
+	exercise, err := e.ExerciseQuestionUseCase.FetchOneByExerciseIDInAdmin(ctx, exerciseId)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -121,7 +121,7 @@ func (e *ExerciseQuestionsController) FetchManyExerciseQuestionByExerciseID(ctx 
 	}
 
 	exerciseId := ctx.Query("exercise_id")
-	exercise, err := e.ExerciseQuestionUseCase.FetchManyByExerciseID(ctx, exerciseId)
+	exercise, err := e.ExerciseQuestionUseCase.FetchManyByExerciseIDInAdmin(ctx, exerciseId)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -148,7 +148,7 @@ func (e *ExerciseQuestionsController) FetchManyExerciseOptionsInAdmin(ctx *gin.C
 	}
 
 	page := ctx.DefaultQuery("page", "1")
-	exam, err := e.ExerciseQuestionUseCase.FetchMany(ctx, page)
+	exam, err := e.ExerciseQuestionUseCase.FetchManyInAdmin(ctx, page)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -182,7 +182,7 @@ func (e *ExerciseQuestionsController) FetchOneExerciseQuestionByIDInAdmin(ctx *g
 	}
 
 	id := ctx.Query("_id")
-	exercise, err := e.ExerciseQuestionUseCase.FetchByID(ctx, id)
+	exercise, err := e.ExerciseQuestionUseCase.FetchByIDInAdmin(ctx, id)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -217,7 +217,7 @@ func (e *ExerciseQuestionsController) FetchOneExerciseQuestionByExerciseIDInAdmi
 	}
 
 	exerciseId := ctx.Query("exercise_id")
-	exercise, err := e.ExerciseQuestionUseCase.FetchOneByExerciseID(ctx, exerciseId)
+	exercise, err := e.ExerciseQuestionUseCase.FetchOneByExerciseIDInAdmin(ctx, exerciseId)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -252,7 +252,7 @@ func (e *ExerciseQuestionsController) FetchManyExerciseQuestionByExerciseIDInAdm
 	}
 
 	exerciseId := ctx.Query("exercise_id")
-	exercise, err := e.ExerciseQuestionUseCase.FetchManyByExerciseID(ctx, exerciseId)
+	exercise, err := e.ExerciseQuestionUseCase.FetchManyByExerciseIDInAdmin(ctx, exerciseId)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{

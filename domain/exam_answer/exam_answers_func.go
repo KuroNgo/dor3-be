@@ -14,8 +14,8 @@ type Input struct {
 }
 
 type IExamAnswerUseCase interface {
-	FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (Response, error)
-	CreateOne(ctx context.Context, examAnswer *ExamAnswer) error
-	DeleteOne(ctx context.Context, examID string) error
-	DeleteAllAnswerByExamID(ctx context.Context, examID string) error
+	FetchManyAnswerByQuestionIDInUser(ctx context.Context, questionID string, userID string) (Response, error)
+	CreateOneInUser(ctx context.Context, examAnswer *ExamAnswer) error
+	DeleteOneInUser(ctx context.Context, examID string) error
+	DeleteAllAnswerByExamIDInUser(ctx context.Context, examID string) error
 }

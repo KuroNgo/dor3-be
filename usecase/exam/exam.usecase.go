@@ -3,6 +3,7 @@ package exam_usecase
 import (
 	exam_domain "clean-architecture/domain/exam"
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
@@ -10,6 +11,11 @@ import (
 type examUseCase struct {
 	examRepository exam_domain.IExamRepository
 	contextTimeout time.Duration
+}
+
+func (e *examUseCase) FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (exam_domain.Exam, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewExamUseCase(examRepository exam_domain.IExamRepository, timeout time.Duration) exam_domain.IExamUseCase {

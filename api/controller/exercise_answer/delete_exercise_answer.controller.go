@@ -26,7 +26,7 @@ func (e *ExerciseAnswerController) DeleteOneAnswer(ctx *gin.Context) {
 	}
 
 	answerID := ctx.Query("_id")
-	err = e.ExerciseAnswerUseCase.DeleteOne(ctx, answerID)
+	err = e.ExerciseAnswerUseCase.DeleteOneInUser(ctx, answerID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -60,7 +60,7 @@ func (e *ExerciseAnswerController) DeleteAllAnswerInExerciseID(ctx *gin.Context)
 	}
 
 	exerciseID := ctx.Query("exercise_id")
-	err = e.ExerciseAnswerUseCase.DeleteAllAnswerByExerciseID(ctx, exerciseID)
+	err = e.ExerciseAnswerUseCase.DeleteAllAnswerByExerciseIDInUser(ctx, exerciseID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

@@ -35,47 +35,6 @@ func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, co
 	}
 }
 
-func (v *vocabularyRepository) FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error) {
-	collectionUnit := v.database.Collection(v.collectionUnit)
-	collectionLesson := v.database.Collection(v.collectionLesson)
-
-	// Tìm lesson
-	var lessons []lesson_domain.Lesson
-	cursor, err := collectionLesson.Find(ctx, bson.D{})
-	for cursor.Next(ctx) {
-		var lesson lesson_domain.Lesson
-		if err := cursor.Decode(&lesson); err != nil {
-			return primitive.NilObjectID, err
-		}
-
-		lessons = append(lessons, lesson)
-	}
-
-	var unitMain unit_domain.Unit
-	for _, data := range lessons {
-		if fieldOfIT == data.Name {
-			var lesson lesson_domain.Lesson
-			filterLesson := bson.M{"name": fieldOfIT}
-			err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
-			if err != nil {
-				return primitive.NilObjectID, err
-			}
-
-			var unit unit_domain.Unit
-			filterUnit := bson.M{"lesson_id": lesson.ID, "level": unitLevel}
-			err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
-			if err != nil {
-				return primitive.NilObjectID, err
-			}
-
-			unitMain = unit
-			break
-		}
-	}
-
-	return unitMain.ID, nil
-}
-
 func (v *vocabularyRepository) FindVocabularyIDByVocabularyConfigInAdmin(ctx context.Context, word string) (primitive.ObjectID, error) {
 	collectionVocabulary := v.database.Collection(v.collectionVocabulary)
 
@@ -499,6 +458,11 @@ func (v *vocabularyRepository) UpdateOneAudioInAdmin(c context.Context, vocabula
 	}
 
 	return nil
+}
+
+func (v *vocabularyRepository) UpdateVocabularyProcess(ctx context.Context, vocabularyID string, process vocabulary_domain.VocabularyProcess) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (v *vocabularyRepository) UpdateIsFavouriteInUser(ctx context.Context, vocabularyID string, isFavourite int) error {

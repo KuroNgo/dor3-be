@@ -1,6 +1,7 @@
 package unit_repo
 
 import (
+	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
 	"clean-architecture/internal"
 	"clean-architecture/internal/cache"
@@ -45,12 +46,14 @@ func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionUnit
 var (
 	unitsCache            = cache.NewTTL[string, []unit_domain.UnitResponse]()
 	unitCache             = cache.NewTTL[string, unit_domain.UnitResponse]()
+	unitPrimOIDCache      = cache.NewTTL[string, primitive.ObjectID]()
 	unitsUserProcessCache = cache.NewTTL[string, []unit_domain.UnitProcessResponse]()
 	unitUserProcessCache  = cache.NewTTL[string, unit_domain.UnitProcessResponse]()
 	detailUnitCache       = cache.NewTTL[string, unit_domain.DetailResponse]()
 
 	wg           sync.WaitGroup
 	mu           sync.Mutex
+	rx           sync.RWMutex
 	isProcessing bool
 )
 
@@ -310,7 +313,7 @@ func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user 
 	errCh := make(chan error, 1)
 
 	// Create channels to retrieve unit processes and detail responses
-	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse)
+	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse, 1)
 
 	// Increment wait group counter by 2 for the two goroutines
 	wg.Add(2)
@@ -393,7 +396,7 @@ func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user 
 				}
 
 				if countUnitChild == 0 {
-					_, err := collectionUnitProcess.InsertOne(ctx, &unitProcess)
+					_, err = collectionUnitProcess.InsertOne(ctx, &unitProcess)
 					if err != nil {
 						errCh <- err
 						return
@@ -516,7 +519,7 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 	}
 	perPage := 7
 	skip := (pageNumber - 1) * perPage
-	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip)).SetSort(bson.M{"level": 1})
 
 	lessonID, _ := primitive.ObjectIDFromHex(idLesson)
 
@@ -688,9 +691,9 @@ func (u *unitRepository) FetchManyInAdmin(ctx context.Context, page string) ([]u
 	// Channel to log errors
 	errCh := make(chan error, 1)
 	// Channel to save units
-	unitsCh := make(chan []unit_domain.UnitResponse)
+	unitsCh := make(chan []unit_domain.UnitResponse, 1)
 	// Channel to save detail
-	detailCh := make(chan unit_domain.DetailResponse)
+	detailCh := make(chan unit_domain.DetailResponse, 1)
 
 	// Use WaitGroup to wait for all goroutines to complete
 	wg.Add(2)
@@ -739,7 +742,7 @@ func (u *unitRepository) FetchManyInAdmin(ctx context.Context, page string) ([]u
 	}
 	perPage := 5
 	skip := (pageNumber - 1) * perPage
-	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip)).SetSort(bson.M{"level": 1})
 
 	// Count total units
 	count, err := collectionUnit.CountDocuments(ctx, bson.D{})
@@ -764,7 +767,6 @@ func (u *unitRepository) FetchManyInAdmin(ctx context.Context, page string) ([]u
 	}(cursor, ctx)
 
 	var units []unit_domain.UnitResponse
-
 	for cursor.Next(ctx) {
 		var unit unit_domain.UnitResponse
 		if err = cursor.Decode(&unit); err != nil {
@@ -783,7 +785,9 @@ func (u *unitRepository) FetchManyInAdmin(ctx context.Context, page string) ([]u
 
 			// Set fetched data to unit
 			unit.CountVocabulary = countVocabulary
+			mu.Lock()
 			units = append(units, unit)
+			mu.Unlock()
 		}(unit)
 	}
 	wg.Wait()
@@ -1214,6 +1218,66 @@ func (u *unitRepository) UpdateOneInAdmin(ctx context.Context, unit *unit_domain
 
 	wg.Wait()
 	return data, nil
+}
+
+func (u *unitRepository) FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error) {
+	unitPrimOIDCh := make(chan primitive.ObjectID)
+	go func() {
+		data, found := unitPrimOIDCache.Get(strconv.Itoa(unitLevel) + fieldOfIT)
+		if found {
+			unitPrimOIDCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(unitPrimOIDCh)
+		wg.Wait()
+	}()
+
+	unitData := <-unitPrimOIDCh
+	if !internal.IsZeroValue(unitData) {
+		return unitData, nil
+	}
+	collectionUnit := u.database.Collection(u.collectionUnit)
+	collectionLesson := u.database.Collection(u.collectionLesson)
+
+	// Tìm lesson
+	var lessons []lesson_domain.Lesson
+	cursor, err := collectionLesson.Find(ctx, bson.D{})
+	for cursor.Next(ctx) {
+		var lesson lesson_domain.Lesson
+		if err := cursor.Decode(&lesson); err != nil {
+			return primitive.NilObjectID, err
+		}
+
+		lessons = append(lessons, lesson)
+	}
+
+	var unitMain unit_domain.Unit
+	for _, data := range lessons {
+		if fieldOfIT == data.Name {
+			var lesson lesson_domain.Lesson
+
+			filterLesson := bson.M{"name": fieldOfIT}
+			err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
+			if err != nil {
+				return primitive.NilObjectID, err
+			}
+
+			var unit unit_domain.Unit
+			filterUnit := bson.M{"lesson_id": lesson.ID, "level": unitLevel}
+			err = collectionUnit.FindOne(ctx, filterUnit).Decode(&unit)
+			if err != nil {
+				return primitive.NilObjectID, err
+			}
+
+			unitMain = unit
+			break
+		}
+	}
+
+	unitPrimOIDCache.Set(strconv.Itoa(unitLevel)+fieldOfIT, unitMain.ID, 5*time.Minute)
+	return unitMain.ID, nil
 }
 
 func (u *unitRepository) DeleteOneInAdmin(ctx context.Context, unitID string) error {

@@ -18,11 +18,11 @@ func NewQuizQuestionUseCase(quizQuestionRepository quiz_result_domain.IQuizResul
 	}
 }
 
-func (q *quizResultUseCase) FetchMany(ctx context.Context, page string) (quiz_result_domain.Response, error) {
+func (q *quizResultUseCase) FetchManyInUser(ctx context.Context, page string) (quiz_result_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizQuestionRepository.FetchMany(ctx, page)
+	data, err := q.quizQuestionRepository.FetchManyInUser(ctx, page)
 	if err != nil {
 		return quiz_result_domain.Response{}, err
 	}
@@ -30,11 +30,11 @@ func (q *quizResultUseCase) FetchMany(ctx context.Context, page string) (quiz_re
 	return data, nil
 }
 
-func (q *quizResultUseCase) FetchManyByQuizID(ctx context.Context, quizID string) (quiz_result_domain.Response, error) {
+func (q *quizResultUseCase) FetchManyByQuizIDInUser(ctx context.Context, quizID string) (quiz_result_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizQuestionRepository.FetchManyByQuizID(ctx, quizID)
+	data, err := q.quizQuestionRepository.FetchManyByQuizIDInUser(ctx, quizID)
 	if err != nil {
 		return quiz_result_domain.Response{}, err
 	}
@@ -42,11 +42,11 @@ func (q *quizResultUseCase) FetchManyByQuizID(ctx context.Context, quizID string
 	return data, nil
 }
 
-func (q *quizResultUseCase) GetResultsByUserIDAndQuizID(ctx context.Context, userID string, quizID string) (quiz_result_domain.QuizResult, error) {
+func (q *quizResultUseCase) GetResultsByUserIDAndQuizIDInUser(ctx context.Context, userID string, quizID string) (quiz_result_domain.QuizResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	data, err := q.quizQuestionRepository.GetResultsByUserIDAndQuizID(ctx, userID, quizID)
+	data, err := q.quizQuestionRepository.GetResultsByUserIDAndQuizIDInUser(ctx, userID, quizID)
 	if err != nil {
 		return quiz_result_domain.QuizResult{}, err
 	}
@@ -54,11 +54,11 @@ func (q *quizResultUseCase) GetResultsByUserIDAndQuizID(ctx context.Context, use
 	return data, nil
 }
 
-func (q *quizResultUseCase) CreateOne(ctx context.Context, quizResult *quiz_result_domain.QuizResult) error {
+func (q *quizResultUseCase) CreateOneInUser(ctx context.Context, quizResult *quiz_result_domain.QuizResult) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	err := q.quizQuestionRepository.CreateOne(ctx, quizResult)
+	err := q.quizQuestionRepository.CreateOneInUser(ctx, quizResult)
 	if err != nil {
 		return err
 	}
@@ -66,11 +66,11 @@ func (q *quizResultUseCase) CreateOne(ctx context.Context, quizResult *quiz_resu
 	return nil
 }
 
-func (q *quizResultUseCase) DeleteOne(ctx context.Context, quizResultID string) error {
+func (q *quizResultUseCase) DeleteOneInUser(ctx context.Context, quizResultID string) error {
 	ctx, cancel := context.WithTimeout(ctx, q.contextTimeout)
 	defer cancel()
 
-	err := q.quizQuestionRepository.DeleteOne(ctx, quizResultID)
+	err := q.quizQuestionRepository.DeleteOneInUser(ctx, quizResultID)
 	if err != nil {
 		return err
 	}

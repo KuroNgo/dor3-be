@@ -56,7 +56,7 @@ func (e *ExamResultController) CreateOneExamResult(ctx *gin.Context) {
 		}
 
 		mutex.Lock()
-		err = e.ExamResultUseCase.CreateOne(ctx, &result)
+		err = e.ExamResultUseCase.CreateOneInUser(ctx, &result)
 		mutex.Unlock()
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{

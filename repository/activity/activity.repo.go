@@ -30,7 +30,7 @@ func (a *activityRepository) CreateOne(ctx context.Context, log activity_log_dom
 	collectionActivity := a.database.Collection(a.collectionActivity)
 
 	now := time.Now()
-	tomorrow := now.Add(24 * 30 * time.Hour)
+	tomorrow := now.Add(24 * 30 * time.Hour) // test
 	expireTime := time.Date(tomorrow.Year(), tomorrow.Month(), tomorrow.Day(), 0, 0, 0, 0, time.UTC)
 
 	log.ExpireAt = expireTime
@@ -83,10 +83,6 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	}(cursor, ctx)
 
 	var activities []activity_log_domain.ActivityLog
-
-	//internal.Wg.Add(1)
-	//go func() {
-	//	defer internal.Wg.Done()
 	for cursor.Next(ctx) {
 		var activity activity_log_domain.ActivityLog
 		if err := cursor.Decode(&activity); err != nil {
@@ -97,26 +93,11 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 		var admin admin_domain.Admin
 		filterUser := bson.M{"_id": activity.UserID}
 		_ = collectionAdmin.FindOne(ctx, filterUser).Decode(&admin)
-
-		var activityResponse activity_log_domain.ActivityLogResponse
-		activityResponse.LogID = activity.LogID
-		activityResponse.UserID = admin
-		activityResponse.ClientIP = activity.ClientIP
-		activityResponse.Method = activity.Method
-		activityResponse.StatusCode = activity.StatusCode
-		activityResponse.BodySize = activity.BodySize
-		activityResponse.Path = activity.Path
-		activityResponse.Latency = activity.Latency
-		activityResponse.Error = activity.Error
-		activityResponse.ActivityTime = activity.ActivityTime
-		activityResponse.ExpireAt = activity.ExpireAt
+		activity.UserID = admin.Id
 
 		// Thêm activity vào slice activities
 		activities = append(activities, activity)
 	}
-	//}()
-
-	//internal.Wg.Wait()
 
 	count := <-cal
 	statisticsCh := make(chan activity_log_domain.Statistics)

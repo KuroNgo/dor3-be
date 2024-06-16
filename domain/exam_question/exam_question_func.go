@@ -19,12 +19,12 @@ type Input struct {
 }
 
 type IExamQuestionUseCase interface {
-	FetchMany(ctx context.Context, page string) (Response, error)
-	FetchQuestionByID(ctx context.Context, id string) (ExamQuestion, error)
-	FetchManyByExamID(ctx context.Context, examID string, page string) (Response, error)
-	FetchOneByExamID(ctx context.Context, examID string) (ExamQuestionResponse, error)
+	FetchManyInAdmin(ctx context.Context, page string) (Response, error)
+	FetchQuestionByIDInAdmin(ctx context.Context, id string) (ExamQuestion, error)
+	FetchManyByExamIDInAdmin(ctx context.Context, examID string, page string) (Response, error)
+	FetchOneByExamIDInAdmin(ctx context.Context, examID string) (ExamQuestionResponse, error)
 
-	CreateOne(ctx context.Context, examQuestion *ExamQuestion) error
-	UpdateOne(ctx context.Context, examQuestion *ExamQuestion) (*mongo.UpdateResult, error)
-	DeleteOne(ctx context.Context, examID string) error
+	CreateOneInAdmin(ctx context.Context, examQuestion *ExamQuestion) error
+	UpdateOneInAdmin(ctx context.Context, examQuestion *ExamQuestion) (*mongo.UpdateResult, error)
+	DeleteOneInAdmin(ctx context.Context, examID string) error
 }

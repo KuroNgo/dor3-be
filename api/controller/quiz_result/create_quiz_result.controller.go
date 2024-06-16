@@ -47,7 +47,7 @@ func (q *QuizResultController) CreateOneQuizResult(ctx *gin.Context) {
 		IsComplete: 1,
 	}
 
-	err = q.QuizResultUseCase.CreateOne(ctx, &result)
+	err = q.QuizResultUseCase.CreateOneInUser(ctx, &result)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

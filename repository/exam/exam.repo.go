@@ -23,6 +23,11 @@ type examRepository struct {
 	collectionVocabulary   string
 }
 
+func (e *examRepository) FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (exam_domain.Exam, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionExamQuestion string, collectionVocabulary string) exam_domain.IExamRepository {
 	return &examRepository{
 		database:               db,

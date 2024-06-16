@@ -25,7 +25,7 @@ func (e *ExamResultController) FetchManyExamResult(ctx *gin.Context) {
 	}
 	page := ctx.DefaultQuery("page", "1")
 
-	exam, err := e.ExamResultUseCase.FetchMany(ctx, page)
+	exam, err := e.ExamResultUseCase.FetchManyInUser(ctx, page, user.ID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -60,7 +60,7 @@ func (e *ExamResultController) FetchResultByExamID(ctx *gin.Context) {
 
 	examID := ctx.Param("exam_id")
 
-	exam, err := e.ExamResultUseCase.FetchManyByExamID(ctx, examID)
+	exam, err := e.ExamResultUseCase.FetchManyByExamIDInUser(ctx, examID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -94,7 +94,7 @@ func (e *ExamResultController) GetResultsByUserIDAndExamID(ctx *gin.Context) {
 	}
 	examId := ctx.Param("exam_id")
 
-	exam, err := e.ExamResultUseCase.GetResultsByUserIDAndExamID(ctx, fmt.Sprintf("%s", currentUser), examId)
+	exam, err := e.ExamResultUseCase.GetResultsByExamIDInUser(ctx, fmt.Sprintf("%s", currentUser), examId)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

@@ -25,7 +25,7 @@ func NewExerciseAnswerRepository(db *mongo.Database, collectionQuestion string, 
 	}
 }
 
-func (e *exerciseAnswerRepository) FetchManyAnswerByUserIDAndQuestionID(ctx context.Context, questionID string, userID string) (exercise_answer_domain.Response, error) {
+func (e *exerciseAnswerRepository) FetchManyAnswerQuestionIDInUser(ctx context.Context, questionID string, userID string) (exercise_answer_domain.Response, error) {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
@@ -137,7 +137,7 @@ func questionIDs(questions []exercise_questions_domain.ExerciseQuestion) []primi
 	return ids
 }
 
-func (e *exerciseAnswerRepository) CreateOne(ctx context.Context, exerciseAnswer *exercise_answer_domain.ExerciseAnswer) error {
+func (e *exerciseAnswerRepository) CreateOneInUser(ctx context.Context, exerciseAnswer *exercise_answer_domain.ExerciseAnswer) error {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
 	collectionQuestion := e.database.Collection(e.collectionQuestion)
 
@@ -155,7 +155,7 @@ func (e *exerciseAnswerRepository) CreateOne(ctx context.Context, exerciseAnswer
 	return nil
 }
 
-func (e *exerciseAnswerRepository) DeleteOne(ctx context.Context, exerciseID string) error {
+func (e *exerciseAnswerRepository) DeleteOneInUser(ctx context.Context, exerciseID string) error {
 	collectionExercise := e.database.Collection(e.collectionAnswer)
 	objID, err := primitive.ObjectIDFromHex(exerciseID)
 	if err != nil {
@@ -175,7 +175,7 @@ func (e *exerciseAnswerRepository) DeleteOne(ctx context.Context, exerciseID str
 	return err
 }
 
-func (e *exerciseAnswerRepository) DeleteAllAnswerByExerciseID(ctx context.Context, exerciseId string) error {
+func (e *exerciseAnswerRepository) DeleteAllAnswerByExerciseIDInUser(ctx context.Context, exerciseId string) error {
 	collectionAnswer := e.database.Collection(e.collectionAnswer)
 
 	objID, err := primitive.ObjectIDFromHex(exerciseId)
