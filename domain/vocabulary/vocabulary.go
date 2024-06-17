@@ -1,8 +1,6 @@
 package vocabulary_domain
 
 import (
-	lesson_domain "clean-architecture/domain/lesson"
-	unit_domain "clean-architecture/domain/unit"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -37,16 +35,10 @@ type Vocabulary struct {
 	WhoUpdates string    `bson:"who_updates" json:"who_updates"`
 }
 
-type VocabularyResponse struct {
-	Vocabulary Vocabulary           `bson:"vocabulary" json:"vocabulary"`
-	Unit       unit_domain.Unit     `bson:"unit_id" json:"unit_id"`
-	Lesson     lesson_domain.Lesson `bson:"lesson" json:"lesson"`
-}
-
 type Response struct {
-	Page               int64                `bson:"page" json:"page"`
-	CurrentPage        int                  `bson:"current_page" json:"current_page"`
-	VocabularyResponse []VocabularyResponse `bson:"vocabulary" json:"vocabulary"`
+	Page        int64        `bson:"page" json:"page"`
+	CurrentPage int          `bson:"current_page" json:"current_page"`
+	Vocabulary  []Vocabulary `bson:"vocabulary" json:"vocabulary"`
 }
 
 type SearchingResponse struct {
