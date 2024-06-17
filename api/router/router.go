@@ -4,6 +4,7 @@ import (
 	"clean-architecture/api/middleware"
 	activity_log_route "clean-architecture/api/router/activity_log"
 	admin_route "clean-architecture/api/router/admin"
+	casbin_route "clean-architecture/api/router/casbin"
 	course_route "clean-architecture/api/router/course"
 	exam_route "clean-architecture/api/router/exam"
 	exam_answer_route "clean-architecture/api/router/exam_answer"
@@ -97,6 +98,7 @@ func SetUp(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, g
 	vocabulary_route.VocabularyRoute(env, timeout, db, publicRouter)
 
 	// All Private API
+	casbin_route.CasbinRouter(privateRouter)
 	activity_log_route.AdminActivityRoute(env, timeout, db, privateRouter)
 	feedback_route.AdminFeedbackRoute(env, timeout, db, privateRouter)
 

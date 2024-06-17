@@ -25,7 +25,7 @@ func (u *UnitController) FetchMany(ctx *gin.Context) {
 	}
 	page := ctx.DefaultQuery("page", "1")
 
-	unit, detail, err := u.UnitUseCase.FetchManyInAdmin(ctx, page)
+	unit, detail, err := u.UnitUseCase.FetchManyInUser(ctx, user.ID, page)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -58,7 +58,7 @@ func (u *UnitController) FetchManyNotPagination(ctx *gin.Context) {
 		})
 		return
 	}
-	unit, err := u.UnitUseCase.FetchManyNotPaginationInAdmin(ctx)
+	unit, err := u.UnitUseCase.FetchManyNotPaginationInUser(ctx, user.ID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -91,9 +91,8 @@ func (u *UnitController) FetchByIdLesson(ctx *gin.Context) {
 		return
 	}
 	idLesson := ctx.Query("lesson_id")
-	page := ctx.DefaultQuery("page", "1")
 
-	unit, detail, err := u.UnitUseCase.FetchByIdLessonInAdmin(ctx, idLesson, page)
+	unit, err := u.UnitUseCase.FetchByIdLessonInUser(ctx, user.ID, idLesson)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -104,7 +103,6 @@ func (u *UnitController) FetchByIdLesson(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "success",
-		"detail": detail,
 		"unit":   unit,
 	})
 }
@@ -128,7 +126,7 @@ func (u *UnitController) FetchById(ctx *gin.Context) {
 	}
 	idUnit := ctx.Query("_id")
 
-	unit, err := u.UnitUseCase.FetchOneByIDInAdmin(ctx, idUnit)
+	unit, err := u.UnitUseCase.FetchOneByIDInUser(ctx, user.ID, idUnit)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
