@@ -30,7 +30,7 @@ type IUnitUseCase interface {
 	FetchManyInUser(ctx context.Context, user primitive.ObjectID, page string) ([]UnitProcessResponse, DetailResponse, error)
 	FetchOneByIDInUser(ctx context.Context, user primitive.ObjectID, id string) (UnitProcessResponse, error)
 	FetchManyNotPaginationInUser(ctx context.Context, user primitive.ObjectID) ([]UnitProcessResponse, error)
-	FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string, page string) ([]UnitProcessResponse, DetailResponse, error)
+	FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string) ([]UnitProcessResponse, error)
 	UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error)
 
 	FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error)

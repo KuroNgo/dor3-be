@@ -64,8 +64,8 @@ func (u *unitRepository) FetchManyInUser(ctx context.Context, user primitive.Obj
 	// Create a buffered error channel to handle errors from goroutines
 	errCh := make(chan error, 1)
 	// Create channels to retrieve unit processes and detail responses
-	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse)
-	detailCh := make(chan unit_domain.DetailResponse)
+	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse, 1)
+	detailCh := make(chan unit_domain.DetailResponse, 1)
 
 	// Increment wait group counter by 2 for the two goroutines
 	wg.Add(2)
@@ -170,7 +170,7 @@ func (u *unitRepository) FetchManyInUser(ctx context.Context, user primitive.Obj
 				}
 
 				if countUnitChild == 0 {
-					_, err := collectionUnitProcess.InsertOne(ctx, &unitProcess)
+					_, err = collectionUnitProcess.InsertOne(ctx, &unitProcess)
 					if err != nil {
 						errCh <- err
 						return
@@ -316,8 +316,7 @@ func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user 
 	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse, 1)
 
 	// Increment wait group counter by 2 for the two goroutines
-	wg.Add(2)
-
+	wg.Add(1)
 	// Goroutine to fetch unit processes from cache
 	go func() {
 		defer wg.Done() // Decrement the wait group counter when the goroutine completes
@@ -474,16 +473,16 @@ func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user 
 	}
 }
 
-func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string, page string) ([]unit_domain.UnitProcessResponse, unit_domain.DetailResponse, error) {
-	errCh := make(chan error)
+func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string) ([]unit_domain.UnitProcessResponse, error) {
+	errCh := make(chan error, 1)
 
-	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse)
-	detailCh := make(chan unit_domain.DetailResponse)
+	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse, 1)
+	detailCh := make(chan unit_domain.DetailResponse, 1)
 
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		data, found := unitsUserProcessCache.Get(user.Hex() + idLesson + page)
+		data, found := unitsUserProcessCache.Get(user.Hex() + idLesson)
 		if found {
 			unitsUserProcessCh <- data
 		}
@@ -506,20 +505,11 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 	unitsUserProcessData := <-unitsUserProcessCh
 	detailData := <-detailCh
 	if !internal.IsZeroValue(unitsUserProcessData) && !internal.IsZeroValue(detailData) {
-		return unitsUserProcessData, detailData, nil
+		return unitsUserProcessData, nil
 	}
 
 	collectionUnit := u.database.Collection(u.collectionUnit)
 	collectionUnitProcess := u.database.Collection(u.collectionUnitProcess)
-
-	// Thực hiện phân trang
-	pageNumber, err := strconv.Atoi(page)
-	if err != nil {
-		return nil, unit_domain.DetailResponse{}, errors.New("invalid page number")
-	}
-	perPage := 7
-	skip := (pageNumber - 1) * perPage
-	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip)).SetSort(bson.M{"level": 1})
 
 	lessonID, _ := primitive.ObjectIDFromHex(idLesson)
 
@@ -527,25 +517,22 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 	filterUnit := bson.M{"lesson_id": lessonID}
 	countUnit, err := collectionUnit.CountDocuments(ctx, filterUnit)
 	if err != nil {
-		return nil, unit_domain.DetailResponse{}, err
+		return nil, err
 	}
 
 	// Đếm số lượng CourseProcess của người dùng
 	filterLessonProcessByUser := bson.M{"lesson_id": lessonID, "user_id": user}
 	count, err := collectionUnitProcess.CountDocuments(ctx, filterLessonProcessByUser)
 	if err != nil {
-		return nil, unit_domain.DetailResponse{}, err
+		return nil, err
 	}
-
-	// Tính toán tổng số trang dựa trên số lượng khóa học và số khóa học mỗi trang
-	totalPages := (count + int64(perPage) - 1) / int64(perPage)
 
 	var unitsProcess []unit_domain.UnitProcessResponse
 	// Nếu không có LessonProcess cho người dùng, khởi tạo chúng
-	if count != countUnit {
+	if count < countUnit {
 		cursorUnit, err := collectionUnit.Find(ctx, bson.D{})
 		if err != nil {
-			return nil, unit_domain.DetailResponse{}, err
+			return nil, err
 		}
 		defer func(cursorUnit *mongo.Cursor, ctx context.Context) {
 			err = cursorUnit.Close(ctx)
@@ -557,7 +544,7 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 		for cursorUnit.Next(ctx) {
 			var unit unit_domain.Unit
 			if err = cursorUnit.Decode(&unit); err != nil {
-				return nil, unit_domain.DetailResponse{}, err
+				return nil, err
 			}
 
 			wg.Add(1)
@@ -591,9 +578,9 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 		wg.Wait()
 
 		// Tìm các LessonProcess của người dùng với phân trang
-		cursor, err := collectionUnitProcess.Find(ctx, filterLessonProcessByUser, findOptions)
+		cursor, err := collectionUnitProcess.Find(ctx, filterLessonProcessByUser)
 		if err != nil {
-			return nil, unit_domain.DetailResponse{}, err
+			return nil, err
 		}
 		defer func(cursor *mongo.Cursor, ctx context.Context) {
 			err := cursor.Close(ctx)
@@ -604,10 +591,11 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 		}(cursor, ctx)
 	}
 
+	findOptions := options.Find().SetSort(bson.M{"level": 1})
 	// Tìm các LessonProcess của người dùng với phân trang
 	cursor, err := collectionUnitProcess.Find(ctx, filterLessonProcessByUser, findOptions)
 	if err != nil {
-		return nil, unit_domain.DetailResponse{}, err
+		return nil, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
 		err := cursor.Close(ctx)
@@ -621,7 +609,7 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 	for cursor.Next(ctx) {
 		var unitProcess unit_domain.UnitProcess
 		if err := cursor.Decode(&unitProcess); err != nil {
-			return nil, unit_domain.DetailResponse{}, err
+			return nil, err
 		}
 
 		wg.Add(1)
@@ -648,25 +636,18 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 	}
 	wg.Wait()
 
-	if err := cursor.Err(); err != nil {
-		return nil, unit_domain.DetailResponse{}, err
+	if err = cursor.Err(); err != nil {
+		return nil, err
 	}
 	sort.Sort(unit_domain.UnitProcessResponseList(unitsProcess))
 
-	// Lấy thống kê cho detail response
-	detail := unit_domain.DetailResponse{
-		Page:        totalPages,
-		CurrentPage: pageNumber,
-	}
-
-	unitsUserProcessCache.Set(user.Hex()+idLesson+page, unitsProcess, 5*time.Minute)
-	detailUnitCache.Set(user.Hex()+idLesson+"detail", detail, 5*time.Minute)
+	unitsUserProcessCache.Set(user.Hex()+idLesson, unitsProcess, 5*time.Minute)
 
 	select {
 	case err = <-errCh:
-		return nil, unit_domain.DetailResponse{}, err
+		return nil, err
 	default:
-		return unitsProcess, detail, nil
+		return unitsProcess, nil
 	}
 }
 
@@ -890,10 +871,10 @@ func (u *unitRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([]u
 
 func (u *unitRepository) FetchByIdLessonInAdmin(ctx context.Context, idLesson string, page string) ([]unit_domain.UnitResponse, unit_domain.DetailResponse, error) {
 	errCh := make(chan error, 1)
-	unitsCh := make(chan []unit_domain.UnitResponse)
-	detailCh := make(chan unit_domain.DetailResponse)
+	unitsCh := make(chan []unit_domain.UnitResponse, 1)
+	detailCh := make(chan unit_domain.DetailResponse, 1)
 
-	wg.Add(1)
+	wg.Add(2)
 	go func() {
 		defer wg.Done()
 		data, found := unitsCache.Get(idLesson + page)
@@ -902,7 +883,6 @@ func (u *unitRepository) FetchByIdLessonInAdmin(ctx context.Context, idLesson st
 		}
 	}()
 
-	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		data, found := detailUnitCache.Get(idLesson + "detail")

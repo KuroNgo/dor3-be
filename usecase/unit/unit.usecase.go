@@ -68,16 +68,16 @@ func (u *unitUseCase) FetchManyNotPaginationInUser(ctx context.Context, user pri
 	return unit, err
 }
 
-func (u *unitUseCase) FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string, page string) ([]unit_domain.UnitProcessResponse, unit_domain.DetailResponse, error) {
+func (u *unitUseCase) FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string) ([]unit_domain.UnitProcessResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
-	unit, detail, err := u.unitRepository.FetchByIdLessonInUser(ctx, user, idLesson, page)
+	unit, err := u.unitRepository.FetchByIdLessonInUser(ctx, user, idLesson)
 	if err != nil {
-		return nil, unit_domain.DetailResponse{}, err
+		return nil, err
 	}
 
-	return unit, detail, err
+	return unit, err
 }
 
 func (u *unitUseCase) UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error) {
