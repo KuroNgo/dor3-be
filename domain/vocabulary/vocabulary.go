@@ -38,29 +38,9 @@ type Vocabulary struct {
 }
 
 type VocabularyResponse struct {
-	Id     primitive.ObjectID   `bson:"_id" json:"_id"`
-	Unit   unit_domain.Unit     `bson:"unit_id" json:"unit_id"`
-	Lesson lesson_domain.Lesson `bson:"lesson" json:"lesson"`
-
-	Word          string `bson:"word" json:"word"`
-	WordForConfig string `bson:"word_for_config" json:"word_for_config"`
-	PartOfSpeech  string `bson:"part_of_speech" json:"part_of_speech"`
-	Mean          string `bson:"mean" json:"mean"`
-	Pronunciation string `bson:"pronunciation" json:"pronunciation"`
-	ExampleVie    string `bson:"example_vie" json:"example_vie"`
-	ExampleEng    string `bson:"example_eng" json:"example_eng"`
-	ExplainVie    string `bson:"explain_vie" json:"explain_vie"`
-	ExplainEng    string `bson:"explain_eng" json:"explain_eng"`
-	FieldOfIT     string `bson:"field_of_it" json:"field_of_it"`
-	LinkURL       string `bson:"link_url" json:"link_url"`
-	VideoURL      string `bson:"video_url" json:"video_url"`
-	ImageURL      string `bson:"image_url" json:"image_url"`
-	AssetURL      string `bson:"asset_url" json:"asset_url"`
-
-	IsFavourite int       `bson:"is_favourite" json:"is_favourite"`
-	CreatedAt   time.Time `bson:"created_at" json:"created_at"`
-	UpdatedAt   time.Time `bson:"updated_at" json:"updated_at"`
-	WhoUpdates  string    `bson:"who_updates" json:"who_updates"`
+	Vocabulary Vocabulary           `bson:"vocabulary" json:"vocabulary"`
+	Unit       unit_domain.Unit     `bson:"unit_id" json:"unit_id"`
+	Lesson     lesson_domain.Lesson `bson:"lesson" json:"lesson"`
 }
 
 type Response struct {
