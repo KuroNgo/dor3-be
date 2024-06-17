@@ -24,7 +24,7 @@ type Update struct {
 	Level    int                `bson:"level" json:"level"`
 }
 
-//go:generate mockery --name ICourseUseCase
+//go:generate mockery --name ILessonUseCase
 type ILessonUseCase interface {
 	FetchManyNotPaginationInUser(ctx context.Context, userID primitive.ObjectID) ([]LessonProcessResponse, DetailResponse, error)
 	FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, lessonID string) (LessonProcessResponse, error)
