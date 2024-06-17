@@ -1344,7 +1344,6 @@ func (u *unitRepository) DeleteOneInAdmin(ctx context.Context, unitID string) er
 		defer wg.Done()
 		detailUnitCache.Clear()
 	}()
-
 	wg.Wait()
 
 	return err
