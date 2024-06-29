@@ -42,7 +42,7 @@ func Authorize(enforcer *casbin.Enforcer) gin.HandlerFunc {
 
 		if !ok {
 			c.JSON(http.StatusForbidden, gin.H{
-				"message": "You are not authorized",
+				"message": "You are not authorized!",
 			})
 			return
 		}

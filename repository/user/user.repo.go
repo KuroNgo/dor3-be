@@ -4,7 +4,7 @@ import (
 	"clean-architecture/domain/user"
 	user_detail_domain "clean-architecture/domain/user_detail"
 	"clean-architecture/internal"
-	"clean-architecture/internal/cache"
+	"clean-architecture/internal/cache/memory"
 	"context"
 	"errors"
 	"fmt"
@@ -31,8 +31,8 @@ func NewUserRepository(db *mongo.Database, collectionUser string, collectionUser
 }
 
 var (
-	userCache  = cache.New[string, *user_domain.User]()
-	usersCache = cache.NewTTL[string, user_domain.Response]()
+	userCache  = memory.New[string, *user_domain.User]()
+	usersCache = memory.NewTTL[string, user_domain.Response]()
 
 	wg sync.WaitGroup
 	mu sync.Mutex

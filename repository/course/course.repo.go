@@ -3,7 +3,7 @@ package course_repository
 import (
 	course_domain "clean-architecture/domain/course"
 	"clean-architecture/internal"
-	"clean-architecture/internal/cache"
+	"clean-architecture/internal/cache/memory"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -38,13 +38,13 @@ func NewCourseRepository(db *mongo.Database, collectionCourse string, collection
 }
 
 var (
-	courseCache             = cache.NewTTL[string, course_domain.CourseResponse]()
-	coursesCache            = cache.NewTTL[string, []course_domain.CourseResponse]()
-	coursePrimOIDCache      = cache.NewTTL[string, primitive.ObjectID]()
-	coursesUserProcessCache = cache.NewTTL[string, []course_domain.CourseProcess]()
-	courseUserProcessCache  = cache.NewTTL[string, course_domain.CourseProcess]()
-	detailCourseCache       = cache.NewTTL[string, course_domain.DetailForManyResponse]()
-	statisticsCache         = cache.NewTTL[string, course_domain.Statistics]()
+	courseCache             = memory.NewTTL[string, course_domain.CourseResponse]()
+	coursesCache            = memory.NewTTL[string, []course_domain.CourseResponse]()
+	coursePrimOIDCache      = memory.NewTTL[string, primitive.ObjectID]()
+	coursesUserProcessCache = memory.NewTTL[string, []course_domain.CourseProcess]()
+	courseUserProcessCache  = memory.NewTTL[string, course_domain.CourseProcess]()
+	detailCourseCache       = memory.NewTTL[string, course_domain.DetailForManyResponse]()
+	statisticsCache         = memory.NewTTL[string, course_domain.Statistics]()
 
 	wg           sync.WaitGroup
 	mu           sync.Mutex

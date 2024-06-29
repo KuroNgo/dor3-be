@@ -4,7 +4,7 @@ import (
 	admin_domain "clean-architecture/domain/admin"
 	user_domain "clean-architecture/domain/user"
 	"clean-architecture/internal"
-	"clean-architecture/internal/cache"
+	"clean-architecture/internal/cache/memory"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -30,7 +30,7 @@ func NewAdminRepository(db *mongo.Database, collectionAdmin string, collectionUs
 }
 
 var (
-	adminsCache = cache.NewTTL[string, admin_domain.Response]()
+	adminsCache = memory.NewTTL[string, admin_domain.Response]()
 	wg          sync.WaitGroup
 )
 

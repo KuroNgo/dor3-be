@@ -1,5 +1,7 @@
 package casbin_controller
 
+import "go.mongodb.org/mongo-driver/bson/primitive"
+
 type RoleData struct {
 	Role   string   `json:"role"`
 	API    []string `json:"api"`
@@ -7,8 +9,8 @@ type RoleData struct {
 }
 
 type UserRole struct {
-	UserID []string `json:"user_id"`
-	Role   string   `json:"role"`
+	UserID []primitive.ObjectID `json:"user_id"`
+	Role   string               `json:"role"`
 }
 
 type APIData struct {

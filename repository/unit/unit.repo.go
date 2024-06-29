@@ -4,7 +4,7 @@ import (
 	lesson_domain "clean-architecture/domain/lesson"
 	unit_domain "clean-architecture/domain/unit"
 	"clean-architecture/internal"
-	"clean-architecture/internal/cache"
+	"clean-architecture/internal/cache/memory"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -44,12 +44,12 @@ func NewUnitRepository(db *mongo.Database, collectionUnit string, collectionUnit
 }
 
 var (
-	unitsCache            = cache.NewTTL[string, []unit_domain.UnitResponse]()
-	unitCache             = cache.NewTTL[string, unit_domain.UnitResponse]()
-	unitPrimOIDCache      = cache.NewTTL[string, primitive.ObjectID]()
-	unitsUserProcessCache = cache.NewTTL[string, []unit_domain.UnitProcessResponse]()
-	unitUserProcessCache  = cache.NewTTL[string, unit_domain.UnitProcessResponse]()
-	detailUnitCache       = cache.NewTTL[string, unit_domain.DetailResponse]()
+	unitsCache            = memory.NewTTL[string, []unit_domain.UnitResponse]()
+	unitCache             = memory.NewTTL[string, unit_domain.UnitResponse]()
+	unitPrimOIDCache      = memory.NewTTL[string, primitive.ObjectID]()
+	unitsUserProcessCache = memory.NewTTL[string, []unit_domain.UnitProcessResponse]()
+	unitUserProcessCache  = memory.NewTTL[string, unit_domain.UnitProcessResponse]()
+	detailUnitCache       = memory.NewTTL[string, unit_domain.DetailResponse]()
 
 	wg           sync.WaitGroup
 	mu           sync.Mutex
