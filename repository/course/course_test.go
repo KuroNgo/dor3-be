@@ -47,13 +47,20 @@ func TestUpdateOneInAdmin(t *testing.T) {
 		WhoUpdated:  "tester",
 	}
 
+	mockEmptyCourse := &course_domain.Course{}
+
 	// Test case for successful update
 	t.Run("success", func(t *testing.T) {
 		ur := NewCourseRepository(database, course, courseProcess, lesson, unit, vocabulary)
-		_, err := ur.UpdateOneInAdmin(context.Background(), mockCourse)
+		_, err = ur.UpdateOneInAdmin(context.Background(), mockCourse)
 		assert.NoError(t, err, "Error updating course")
 	})
 
+	t.Run("error", func(t *testing.T) {
+		ur := NewCourseRepository(database, course, courseProcess, lesson, unit, vocabulary)
+		_, err = ur.UpdateOneInAdmin(context.Background(), mockEmptyCourse)
+		assert.Error(t, err)
+	})
 }
 
 func TestCreateOneInAdmin(t *testing.T) {
@@ -83,4 +90,38 @@ func TestCreateOneInAdmin(t *testing.T) {
 		err := ur.CreateOneInAdmin(context.Background(), mockEmptyCourse)
 		assert.Error(t, err)
 	})
+}
+
+func TestDeleteOneInAdmin(t *testing.T) {
+	client, database := mongo.SetupTestDatabase(t)
+	defer mongo.TearDownTestDatabase(client, t)
+
+	// Access the collection for courses
+	collectionCourse := database.Collection(course)
+
+	// Retrieve the first course from the database
+	var firstCourse course_domain.Course
+	err := collectionCourse.FindOne(
+		context.Background(),
+		bson.M{},
+		options.FindOne().SetSort(bson.D{{Key: "_id", Value: 1}}),
+	).Decode(&firstCourse)
+	assert.NoError(t, err, "Error fetching first course")
+
+	mockEmptyCourse := primitive.NilObjectID
+	// Test case for successful update
+	t.Run("success", func(t *testing.T) {
+		ur := NewCourseRepository(database, course, courseProcess, lesson, unit, vocabulary)
+		err = ur.DeleteOneInAdmin(context.Background(), firstCourse.Id.Hex())
+		assert.NoError(t, err, "Error updating course")
+	})
+
+	t.Run("error", func(t *testing.T) {
+		ur := NewCourseRepository(database, course, courseProcess, lesson, unit, vocabulary)
+
+		// Trying to insert an empty user, expecting an error
+		err = ur.DeleteOneInAdmin(context.Background(), mockEmptyCourse.Hex())
+		assert.Error(t, err)
+	})
+
 }

@@ -724,8 +724,13 @@ func (c *courseRepository) UpdateOneInAdmin(ctx context.Context, course *course_
 	// khởi tạo đối tượng collection, ở đây là course
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
+	if course.Id == primitive.NilObjectID {
+		return nil, errors.New("the course id not nil")
+	}
+
 	// Thực hiện tìm kiếm theo id
 	filter := bson.D{{Key: "_id", Value: course.Id}}
+
 	// Thực hiện cập nhật đối tương theo các trường cho trước
 	update := bson.M{
 		"$set": bson.M{
@@ -788,12 +793,17 @@ func (c *courseRepository) CreateOneInAdmin(ctx context.Context, course *course_
 	// khởi tạo đối tượng collection, ở đây là course
 	collectionCourse := c.database.Collection(c.collectionCourse)
 
+	if course.Id == primitive.NilObjectID {
+		return errors.New("the course id not nil")
+	}
+
 	// Thực hiện tìm kiếm theo name để kiểm tra có dữ liệu trùng không
 	filter := bson.M{"name": course.Name}
 	count, err := collectionCourse.CountDocuments(ctx, filter)
 	if err != nil {
 		return err
 	}
+
 	if count > 0 {
 		return errors.New("the course name already exists")
 	}

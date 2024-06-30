@@ -38,6 +38,7 @@ type Statistics struct {
 
 type IExamRepository interface {
 	FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (Exam, error)
+	UpdateCompletedInUser(ctx context.Context, exam *Exam) error
 
 	FetchManyInAdmin(ctx context.Context, page string) ([]Exam, DetailResponse, error)
 	FetchExamByIDInAdmin(ctx context.Context, id string) (Exam, error)
@@ -46,7 +47,6 @@ type IExamRepository interface {
 
 	CreateOneInAdmin(ctx context.Context, exam *Exam) error
 	UpdateOneInAdmin(ctx context.Context, exam *Exam) (*mongo.UpdateResult, error)
-	UpdateCompletedInUser(ctx context.Context, exam *Exam) error
 	DeleteOneInAdmin(ctx context.Context, examID string) error
 	Statistics(ctx context.Context) (Statistics, error)
 }

@@ -38,6 +38,16 @@ var (
 	wg sync.WaitGroup
 )
 
+func (e *exerciseRepository) FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (exercise_domain.Exercise, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *exerciseRepository) UpdateCompletedInUser(ctx context.Context, exercise *exercise_domain.Exercise) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (e *exerciseRepository) FetchOneByUnitIDInAdmin(ctx context.Context, unitID string) (exercise_domain.Exercise, error) {
 	collectionExercise := e.database.Collection(e.collectionExercise)
 

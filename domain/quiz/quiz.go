@@ -38,6 +38,9 @@ type Statistics struct {
 
 //go:generate mockery --name IQuizRepository
 type IQuizRepository interface {
+	FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (Quiz, error)
+	UpdateCompletedInUser(ctx context.Context, quiz *Quiz) error
+
 	FetchManyInAdmin(ctx context.Context, page string) ([]Quiz, Response, error)
 	FetchByIDInAdmin(ctx context.Context, id string) (Quiz, error)
 	FetchManyByUnitIDInAdmin(ctx context.Context, unitID string, page string) ([]Quiz, Response, error)
