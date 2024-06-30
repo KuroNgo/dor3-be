@@ -3,7 +3,7 @@ package lesson_repository
 import (
 	lesson_domain "clean-architecture/domain/lesson"
 	"clean-architecture/internal"
-	"clean-architecture/internal/cache"
+	"clean-architecture/internal/cache/memory"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -39,13 +39,13 @@ func NewLessonRepository(db *mongo.Database, collectionLesson string, collection
 }
 
 var (
-	lessonsCache            = cache.NewTTL[string, []lesson_domain.LessonResponse]()
-	lessonCache             = cache.NewTTL[string, lesson_domain.LessonResponse]()
-	lessonPrimOIDCache      = cache.NewTTL[string, primitive.ObjectID]()
-	lessonsUserProcessCache = cache.NewTTL[string, []lesson_domain.LessonProcessResponse]()
-	lessonUserProcessCache  = cache.NewTTL[string, lesson_domain.LessonProcessResponse]()
-	detailLessonCache       = cache.NewTTL[string, lesson_domain.DetailResponse]()
-	statisticsCache         = cache.NewTTL[string, lesson_domain.Statistics]()
+	lessonsCache            = memory.NewTTL[string, []lesson_domain.LessonResponse]()
+	lessonCache             = memory.NewTTL[string, lesson_domain.LessonResponse]()
+	lessonPrimOIDCache      = memory.NewTTL[string, primitive.ObjectID]()
+	lessonsUserProcessCache = memory.NewTTL[string, []lesson_domain.LessonProcessResponse]()
+	lessonUserProcessCache  = memory.NewTTL[string, lesson_domain.LessonProcessResponse]()
+	detailLessonCache       = memory.NewTTL[string, lesson_domain.DetailResponse]()
+	statisticsCache         = memory.NewTTL[string, lesson_domain.Statistics]()
 
 	wg           sync.WaitGroup
 	mu           sync.Mutex

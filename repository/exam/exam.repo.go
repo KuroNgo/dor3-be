@@ -23,11 +23,6 @@ type examRepository struct {
 	collectionVocabulary   string
 }
 
-func (e *examRepository) FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (exam_domain.Exam, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionExamQuestion string, collectionVocabulary string) exam_domain.IExamRepository {
 	return &examRepository{
 		database:               db,
@@ -42,6 +37,28 @@ func NewExamRepository(db *mongo.Database, collectionExam string, collectionLess
 var (
 	wg sync.WaitGroup
 )
+
+func (e *examRepository) FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (exam_domain.Exam, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *examRepository) UpdateCompletedInUser(ctx context.Context, exam *exam_domain.Exam) error {
+	collection := e.database.Collection(e.collectionExam)
+
+	filter := bson.D{{Key: "_id", Value: exam.ID}}
+	update := bson.M{
+		"$set": bson.M{
+			"updated_at": time.Now(),
+		},
+	}
+
+	_, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func (e *examRepository) FetchManyInAdmin(ctx context.Context, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
 	collectionExam := e.database.Collection(e.collectionExam)
@@ -296,23 +313,6 @@ func (e *examRepository) UpdateOneInAdmin(ctx context.Context, exam *exam_domain
 	}
 
 	return data, err
-}
-
-func (e *examRepository) UpdateCompletedInUser(ctx context.Context, exam *exam_domain.Exam) error {
-	collection := e.database.Collection(e.collectionExam)
-
-	filter := bson.D{{Key: "_id", Value: exam.ID}}
-	update := bson.M{
-		"$set": bson.M{
-			"updated_at": time.Now(),
-		},
-	}
-
-	_, err := collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (e *examRepository) DeleteOneInAdmin(ctx context.Context, examID string) error {

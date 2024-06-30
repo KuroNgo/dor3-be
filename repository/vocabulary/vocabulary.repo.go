@@ -4,7 +4,7 @@ import (
 	unit_domain "clean-architecture/domain/unit"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"clean-architecture/internal"
-	"clean-architecture/internal/cache"
+	"clean-architecture/internal/cache/memory"
 	"context"
 	"errors"
 	"fmt"
@@ -28,16 +28,6 @@ type vocabularyRepository struct {
 }
 
 // NewVocabularyRepository creates a new instance of vocabularyRepository.
-// It initializes the repository with the provided MongoDB database and collection names.
-// Parameters:
-//   - db: The MongoDB database.
-//   - collectionVocabulary: The name of the vocabulary collection.
-//   - collectionMark: The name of the mark collection.
-//   - collectionUnit: The name of the unit collection.
-//   - collectionLesson: The name of the lesson collection.
-//
-// Returns:
-//   - vocabulary_domain.IVocabularyRepository: An interface to interact with the vocabulary repository.
 func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, collectionMark string, collectionUnit string, collectionLesson string) vocabulary_domain.IVocabularyRepository {
 	return &vocabularyRepository{
 		database:             db,
@@ -48,18 +38,17 @@ func NewVocabularyRepository(db *mongo.Database, collectionVocabulary string, co
 	}
 }
 
-// Cache variables and synchronization primitives
 var (
-	vocabularyCache         = cache.NewTTL[string, vocabulary_domain.Vocabulary]()        // Cache for single vocabulary entries
-	vocabulariesCache       = cache.NewTTL[string, []vocabulary_domain.Vocabulary]()      // Cache for multiple vocabulary entries
-	vocabulariesSearchCache = cache.NewTTL[string, vocabulary_domain.SearchingResponse]() // Cache for vocabulary search responses
-	vocabularyResponseCache = cache.NewTTL[string, vocabulary_domain.Response]()          // Cache for vocabulary response pages
-	vocabularyPrimOIDCache  = cache.NewTTL[string, primitive.ObjectID]()                  // Cache for vocabulary ObjectID mappings
-	vocabularyArrCache      = cache.NewTTL[string, []string]()                            // Cache for arrays of vocabulary strings
+	vocabularyCache         = memory.NewTTL[string, vocabulary_domain.Vocabulary]()
+	vocabulariesCache       = memory.NewTTL[string, []vocabulary_domain.Vocabulary]()
+	vocabulariesSearchCache = memory.NewTTL[string, vocabulary_domain.SearchingResponse]()
+	vocabularyResponseCache = memory.NewTTL[string, vocabulary_domain.Response]()
+	vocabularyPrimOIDCache  = memory.NewTTL[string, primitive.ObjectID]()
+	vocabularyArrCache      = memory.NewTTL[string, []string]()
 
-	mu           sync.Mutex     // Mutex for ensuring thread safety
-	wg           sync.WaitGroup // WaitGroup for managing goroutines
-	isProcessing bool           // Flag to indicate if a process is ongoing
+	mu           sync.Mutex
+	wg           sync.WaitGroup
+	isProcessing bool
 )
 
 // FindVocabularyIDByVocabularyConfigInAdmin finds the ObjectID of a vocabulary entry by its configuration word within an admin context.

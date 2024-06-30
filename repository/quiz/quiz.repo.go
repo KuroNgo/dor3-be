@@ -22,6 +22,25 @@ type quizRepository struct {
 	collectionUnit   string
 }
 
+func NewQuizRepository(db *mongo.Database, collectionQuiz string, collectionLesson string, collectionUnit string) quiz_domain.IQuizRepository {
+	return &quizRepository{
+		database:         db,
+		collectionQuiz:   collectionQuiz,
+		collectionLesson: collectionLesson,
+		collectionUnit:   collectionUnit,
+	}
+}
+
+func (q *quizRepository) FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (quiz_domain.Quiz, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (q *quizRepository) UpdateCompletedInUser(ctx context.Context, quiz *quiz_domain.Quiz) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (q *quizRepository) FetchByIDInAdmin(ctx context.Context, id string) (quiz_domain.Quiz, error) {
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
@@ -41,15 +60,6 @@ func (q *quizRepository) FetchByIDInAdmin(ctx context.Context, id string) (quiz_
 	}
 
 	return quiz, nil
-}
-
-func NewQuizRepository(db *mongo.Database, collectionQuiz string, collectionLesson string, collectionUnit string) quiz_domain.IQuizRepository {
-	return &quizRepository{
-		database:         db,
-		collectionQuiz:   collectionQuiz,
-		collectionLesson: collectionLesson,
-		collectionUnit:   collectionUnit,
-	}
 }
 
 func (q *quizRepository) FetchOneByUnitIDInAdmin(ctx context.Context, unitID string) (quiz_domain.Quiz, error) {

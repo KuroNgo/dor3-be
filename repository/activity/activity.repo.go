@@ -85,7 +85,7 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	var activities []activity_log_domain.ActivityLog
 	for cursor.Next(ctx) {
 		var activity activity_log_domain.ActivityLog
-		if err := cursor.Decode(&activity); err != nil {
+		if err = cursor.Decode(&activity); err != nil {
 			return activity_log_domain.Response{}, err
 		}
 		activity.ActivityTime = activity.ActivityTime.Add(7 * time.Hour)

@@ -8,13 +8,13 @@ import (
 )
 
 // Authorize determines if current user has been authorized to take an action on an object.
-func Authorize(obj string, act string, enforcer *casbin.Enforcer) gin.HandlerFunc {
+func Authorize(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get current user/subject
-		sub, existed := c.Get("userID")
-		if !existed {
+		currentUser, exists := c.Get("currentUser")
+		if !exists {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"message": "User hasn't logged in yet",
+				"status":  "fail",
+				"message": "You are not logged in!",
 			})
 			return
 		}
@@ -29,7 +29,9 @@ func Authorize(obj string, act string, enforcer *casbin.Enforcer) gin.HandlerFun
 		}
 
 		// Casbin enforces policy
-		ok, err := enforcer.Enforce(fmt.Sprint(sub), obj, act)
+		object := "http://localhost:8080" + c.Request.URL.Path
+		action := c.Request.Method
+		ok, err := enforcer.Enforce(fmt.Sprint(currentUser), object, action)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -40,7 +42,7 @@ func Authorize(obj string, act string, enforcer *casbin.Enforcer) gin.HandlerFun
 
 		if !ok {
 			c.JSON(http.StatusForbidden, gin.H{
-				"message": "You are not authorized",
+				"message": "You are not authorized!",
 			})
 			return
 		}

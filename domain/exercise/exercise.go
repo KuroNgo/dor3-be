@@ -37,6 +37,9 @@ type Statistics struct {
 }
 
 type IExerciseRepository interface {
+	FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (Exercise, error)
+	UpdateCompletedInUser(ctx context.Context, exercise *Exercise) error
+
 	FetchManyInAdmin(ctx context.Context, page string) ([]Exercise, DetailResponse, error)
 	FetchByIDInAdmin(ctx context.Context, id string) (Exercise, error)
 	FetchOneByUnitIDInAdmin(ctx context.Context, unitID string) (Exercise, error)

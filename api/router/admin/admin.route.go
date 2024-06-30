@@ -7,6 +7,7 @@ import (
 	admin_domain "clean-architecture/domain/admin"
 	user_domain "clean-architecture/domain/user"
 	user_detail_domain "clean-architecture/domain/user_detail"
+	"clean-architecture/internal/casbin"
 	admin_repository "clean-architecture/repository/admin"
 	user_repository "clean-architecture/repository/user"
 	admin_usecase "clean-architecture/usecase/admin"
@@ -26,12 +27,15 @@ func AdminRouter(env *bootstrap.Database, timeout time.Duration, db *mongo.Datab
 		Database:     env,
 	}
 
+	// Khởi tạo Casbin enforcer
+	enforcer := casbin.SetUp()
+
 	router := group.Group("/admin")
 	router.POST("/signup", admin.SignUp)
 	router.GET("/get-me", admin.GetMe)
 	router.PUT("/update", admin.UpdateAdmin)
 	router.GET("/refresh", admin.RefreshToken)
-	router.GET("/logout", middleware.DeserializeUser(), admin.Logout)
+	router.GET("/logout", middleware.DeserializeUser(), middleware.Authorize(enforcer), admin.Logout)
 	router.GET("/user/fetch", middleware.DeserializeUser(), admin.FetchManyUser)
 	router.GET("/user/fetch/user_id", middleware.DeserializeUser(), admin.FetchUserByID)
 }
