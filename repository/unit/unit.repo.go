@@ -311,7 +311,6 @@ func (u *unitRepository) FetchOneByIDInUser(ctx context.Context, user primitive.
 func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user primitive.ObjectID) ([]unit_domain.UnitProcessResponse, error) {
 	// Create a buffered error channel to handle errors from goroutines
 	errCh := make(chan error, 1)
-
 	// Create channels to retrieve unit processes and detail responses
 	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse, 1)
 
@@ -475,7 +474,6 @@ func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user 
 
 func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primitive.ObjectID, idLesson string) ([]unit_domain.UnitProcessResponse, error) {
 	errCh := make(chan error, 1)
-
 	unitsUserProcessCh := make(chan []unit_domain.UnitProcessResponse, 1)
 	detailCh := make(chan unit_domain.DetailResponse, 1)
 

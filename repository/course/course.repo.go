@@ -214,8 +214,6 @@ func (c *courseRepository) FetchByIDInUser(ctx context.Context, userID primitive
 // - error: Any error encountered during the operation.
 func (c *courseRepository) FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]course_domain.CourseProcess, course_domain.DetailForManyResponse, error) {
 	errCh := make(chan error)
-	defer close(errCh)
-
 	courseUserProcessCh := make(chan []course_domain.CourseProcess)
 	detailCh := make(chan course_domain.DetailForManyResponse)
 
@@ -501,12 +499,12 @@ func (c *courseRepository) FetchManyForEachCourseInAdmin(ctx context.Context, pa
 	coursesCh := make(chan []course_domain.CourseResponse, 1)
 	// Khởi tạo channel để lưu trữ kết quả detail
 	detailCh := make(chan course_domain.DetailForManyResponse, 1)
+
 	// Sử dụng WaitGroup để đợi tất cả các goroutine hoàn thành
 	wg.Add(2)
 	// Khởi động một goroutine cho tìm dữ liệu lesson trong cache memory
 	go func() {
 		defer wg.Done()
-		defer close(coursesCh)
 		data, found := coursesCache.Get(page)
 		if found {
 			coursesCh <- data
@@ -517,15 +515,18 @@ func (c *courseRepository) FetchManyForEachCourseInAdmin(ctx context.Context, pa
 	// Khởi động một goroutine cho tìm dữ liệu detail trong cache memory
 	go func() {
 		defer wg.Done()
-		defer close(detailCh)
-		detailData, foundDetail := detailCourseCache.Get("detail")
-		if foundDetail {
-			detailCh <- detailData
+		data, found := detailCourseCache.Get("detail")
+		if found {
+			detailCh <- data
 			return
 		}
 	}()
 
-	wg.Wait()
+	go func() {
+		defer close(detailCh)
+		defer close(coursesCh)
+		wg.Wait()
+	}()
 
 	// Gán giá trị từ channel
 	courseData := <-coursesCh

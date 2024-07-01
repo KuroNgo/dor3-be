@@ -3,12 +3,14 @@ package activity_repository
 import (
 	activity_log_domain "clean-architecture/domain/activity_log"
 	admin_domain "clean-architecture/domain/admin"
+	"clean-architecture/internal/cache/memory"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -25,6 +27,14 @@ func NewActivityRepository(db *mongo.Database, collectionActivity string, collec
 		collectionAdmin:    collectionAdmin,
 	}
 }
+
+var (
+	activityCache   = memory.NewTTL[string, activity_log_domain.Response]()
+	statisticsCache = memory.NewTTL[string, activity_log_domain.Statistics]()
+
+	wg sync.WaitGroup
+	mu sync.Mutex
+)
 
 func (a *activityRepository) CreateOne(ctx context.Context, log activity_log_domain.ActivityLog) error {
 	collectionActivity := a.database.Collection(a.collectionActivity)

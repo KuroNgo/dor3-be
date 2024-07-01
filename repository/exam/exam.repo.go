@@ -2,6 +2,8 @@ package exam_repository
 
 import (
 	exam_domain "clean-architecture/domain/exam"
+	"clean-architecture/internal"
+	"clean-architecture/internal/cache/memory"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -35,7 +37,20 @@ func NewExamRepository(db *mongo.Database, collectionExam string, collectionLess
 }
 
 var (
-	wg sync.WaitGroup
+	examCache       = memory.NewTTL[string, exam_domain.Exam]()
+	examsCache      = memory.NewTTL[string, []exam_domain.Exam]()
+	examUserCache   = memory.NewTTL[string, exam_domain.Exam]()
+	examsUserCache  = memory.NewTTL[string, []exam_domain.Exam]()
+	detailCache     = memory.NewTTL[string, exam_domain.DetailResponse]()
+	statisticsCache = memory.NewTTL[string, exam_domain.Statistics]()
+
+	mu           sync.Mutex
+	wg           sync.WaitGroup
+	isProcessing bool
+)
+
+const (
+	cacheTTL = 5 * time.Minute
 )
 
 func (e *examRepository) FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (exam_domain.Exam, error) {
@@ -61,6 +76,39 @@ func (e *examRepository) UpdateCompletedInUser(ctx context.Context, exam *exam_d
 }
 
 func (e *examRepository) FetchManyInAdmin(ctx context.Context, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
+	errCh := make(chan error, 1)
+	examsCh := make(chan []exam_domain.Exam, 1)
+	detailCh := make(chan exam_domain.DetailResponse, 1)
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		data, found := examsCache.Get(page)
+		if found {
+			examsCh <- data
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		data, found := detailCache.Get("detail" + page)
+		if found {
+			detailCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(examsCh)
+		defer close(detailCh)
+		wg.Wait()
+	}()
+
+	examsData := <-examsCh
+	detailData := <-detailCh
+	if !internal.IsZeroValue(examsData) && !internal.IsZeroValue(detailData) {
+		return examsData, detailData, nil
+	}
+
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -75,23 +123,17 @@ func (e *examRepository) FetchManyInAdmin(ctx context.Context, page string) ([]e
 		return nil, exam_domain.DetailResponse{}, err
 	}
 
-	calCh := make(chan int64)
-	go func() {
-		defer close(calCh)
-		cal1 := count / int64(perPage)
-		cal2 := count % int64(perPage)
-		if cal2 != 0 {
-			calCh <- cal1 + 1
-		}
-	}()
+	// Tính toán tổng số trang dựa trên số lượng khóa học và số khóa học mỗi trang
+	totalPages := (count + int64(perPage) - 1) / int64(perPage)
 
 	cursor, err := collectionExam.Find(ctx, bson.D{}, findOptions)
 	if err != nil {
 		return nil, exam_domain.DetailResponse{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+		err = cursor.Close(ctx)
 		if err != nil {
+			errCh <- err
 			return
 		}
 	}(cursor, ctx)
@@ -103,8 +145,14 @@ func (e *examRepository) FetchManyInAdmin(ctx context.Context, page string) ([]e
 			return nil, exam_domain.DetailResponse{}, err
 		}
 
-		exams = append(exams, exam)
+		wg.Add(1)
+		go func(exam exam_domain.Exam) {
+			defer wg.Done()
+			exams = append(exams, exam)
+		}(exam)
 	}
+	wg.Wait()
+
 	statisticsCh := make(chan exam_domain.Statistics)
 	go func() {
 		statistics, _ := e.Statistics(ctx)
@@ -112,18 +160,58 @@ func (e *examRepository) FetchManyInAdmin(ctx context.Context, page string) ([]e
 	}()
 	statistics := <-statisticsCh
 
-	cal := <-calCh
 	detail := exam_domain.DetailResponse{
-		Page:        cal,
+		Page:        totalPages,
 		CurrentPage: pageNumber,
 		CountExam:   int64(len(exams)),
 		Statistics:  statistics,
 	}
 
-	return exams, detail, nil
+	examsCache.Set(page, exams, cacheTTL)
+	detailCache.Set("detail"+page, detail, cacheTTL)
+
+	select {
+	case err = <-errCh:
+		return nil, exam_domain.DetailResponse{}, err
+	default:
+		return exams, detail, nil
+	}
 }
 
 func (e *examRepository) FetchManyByUnitIDInAdmin(ctx context.Context, unitID string, page string) ([]exam_domain.Exam, exam_domain.DetailResponse, error) {
+	errCh := make(chan error, 1)
+	examsCh := make(chan []exam_domain.Exam, 1)
+	detailCh := make(chan exam_domain.DetailResponse, 1)
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		data, found := examsCache.Get(unitID + page)
+		if found {
+			examsCh <- data
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		data, found := detailCache.Get("detail" + unitID)
+		if found {
+			detailCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(examsCh)
+		defer close(detailCh)
+		wg.Wait()
+	}()
+
+	examsData := <-examsCh
+	detailData := <-detailCh
+	if !internal.IsZeroValue(examsData) && !internal.IsZeroValue(detailData) {
+		return examsData, detailData, nil
+	}
+
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -155,8 +243,9 @@ func (e *examRepository) FetchManyByUnitIDInAdmin(ctx context.Context, unitID st
 		return nil, exam_domain.DetailResponse{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+		err = cursor.Close(ctx)
 		if err != nil {
+			errCh <- err
 			return
 		}
 	}(cursor, ctx)
@@ -170,8 +259,13 @@ func (e *examRepository) FetchManyByUnitIDInAdmin(ctx context.Context, unitID st
 			return nil, exam_domain.DetailResponse{}, err
 		}
 
-		exams = append(exams, exam)
+		wg.Add(1)
+		go func(exam exam_domain.Exam) {
+			defer wg.Done()
+			exams = append(exams, exam)
+		}(exam)
 	}
+	wg.Wait()
 
 	if err = cursor.Err(); err != nil {
 		return nil, exam_domain.DetailResponse{}, err
@@ -191,10 +285,39 @@ func (e *examRepository) FetchManyByUnitIDInAdmin(ctx context.Context, unitID st
 		CurrentPage: pageNumber,
 	}
 
-	return exams, detail, nil
+	examsCache.Set(unitID+page, exams, cacheTTL)
+	detailCache.Set("detail"+unitID, detail, cacheTTL)
+
+	select {
+	case err = <-errCh:
+		return nil, exam_domain.DetailResponse{}, err
+	default:
+		return exams, detail, nil
+	}
 }
 
 func (e *examRepository) FetchExamByIDInAdmin(ctx context.Context, id string) (exam_domain.Exam, error) {
+	examCh := make(chan exam_domain.Exam, 1)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := examCache.Get(id)
+		if found {
+			examCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(examCh)
+		wg.Wait()
+	}()
+
+	examData := <-examCh
+	if !internal.IsZeroValue(examData) {
+		return examData, nil
+	}
+
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	idExam, err := primitive.ObjectIDFromHex(id)
@@ -212,10 +335,32 @@ func (e *examRepository) FetchExamByIDInAdmin(ctx context.Context, id string) (e
 		return exam_domain.Exam{}, err
 	}
 
+	examCache.Set(id, exam, cacheTTL)
 	return exam, nil
 }
 
 func (e *examRepository) FetchOneByUnitIDInAdmin(ctx context.Context, unitID string) (exam_domain.Exam, error) {
+	errCh := make(chan error, 1)
+	examCh := make(chan exam_domain.Exam, 1)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := examCache.Get(unitID)
+		if found {
+			examCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(examCh)
+		wg.Wait()
+	}()
+
+	examData := <-examCh
+	if !internal.IsZeroValue(examData) {
+		return examData, nil
+	}
+
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	idUnit, err := primitive.ObjectIDFromHex(unitID)
@@ -229,27 +374,26 @@ func (e *examRepository) FetchOneByUnitIDInAdmin(ctx context.Context, unitID str
 		return exam_domain.Exam{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+		err = cursor.Close(ctx)
 		if err != nil {
+			errCh <- err
 			return
 		}
 	}(cursor, ctx)
 
 	var exams []exam_domain.Exam
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for cursor.Next(ctx) {
-			var exam exam_domain.Exam
-			if err = cursor.Decode(&exam); err != nil {
-				return
-			}
-
-			exams = append(exams, exam)
-
+	for cursor.Next(ctx) {
+		var exam exam_domain.Exam
+		if err = cursor.Decode(&exam); err != nil {
+			return exam_domain.Exam{}, err
 		}
-	}()
+
+		wg.Add(1)
+		go func(exam exam_domain.Exam) {
+			defer wg.Done()
+			exams = append(exams, exam)
+		}(exam)
+	}
 	wg.Wait()
 
 	// Kiểm tra nếu danh sách exercises không rỗng
@@ -261,10 +405,30 @@ func (e *examRepository) FetchOneByUnitIDInAdmin(ctx context.Context, unitID str
 	randomIndex := rand.Intn(len(exams))
 	randomExam := exams[randomIndex]
 
-	return randomExam, nil
+	examCache.Set(unitID, randomExam, cacheTTL)
+
+	select {
+	case err = <-errCh:
+		return exam_domain.Exam{}, err
+	default:
+		return randomExam, nil
+	}
 }
 
 func (e *examRepository) CreateOneInAdmin(ctx context.Context, exam *exam_domain.Exam) error {
+	// Khóa lock giúp bảo vệ course
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collectionExam := e.database.Collection(e.collectionExam)
 	collectionLesson := e.database.Collection(e.collectionLesson)
 	collectionUnit := e.database.Collection(e.collectionUnit)
@@ -353,6 +517,22 @@ func (e *examRepository) countQuestion(ctx context.Context, examID string) int64
 }
 
 func (e *examRepository) Statistics(ctx context.Context) (exam_domain.Statistics, error) {
+	statisticsCh := make(chan exam_domain.Statistics)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := statisticsCache.Get("statistics")
+		if found {
+			statisticsCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(statisticsCh)
+		wg.Wait()
+	}()
+
 	collectionExam := e.database.Collection(e.collectionExam)
 
 	count, err := collectionExam.CountDocuments(ctx, bson.D{})
@@ -363,5 +543,7 @@ func (e *examRepository) Statistics(ctx context.Context) (exam_domain.Statistics
 	statistics := exam_domain.Statistics{
 		Total: count,
 	}
+
+	statisticsCache.Set("statistics", statistics, cacheTTL)
 	return statistics, nil
 }
