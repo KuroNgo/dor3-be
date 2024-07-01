@@ -54,7 +54,6 @@ var (
 
 func (l *lessonRepository) FetchManyNotPaginationInUser(ctx context.Context, userID primitive.ObjectID) ([]lesson_domain.LessonProcessResponse, lesson_domain.DetailResponse, error) {
 	errCh := make(chan error, 1)
-
 	lessonsUserProcessCh := make(chan []lesson_domain.LessonProcessResponse, 1)
 	detailCh := make(chan lesson_domain.DetailResponse, 1)
 
@@ -286,7 +285,6 @@ func (l *lessonRepository) FetchByIDInUser(ctx context.Context, userID primitive
 
 func (l *lessonRepository) FetchByIDCourseInUser(ctx context.Context, userID primitive.ObjectID, courseID string, page string) ([]lesson_domain.LessonProcessResponse, lesson_domain.DetailResponse, error) {
 	errCh := make(chan error)
-
 	lessonsUserProcessCh := make(chan []lesson_domain.LessonProcessResponse)
 	detailCh := make(chan lesson_domain.DetailResponse)
 
@@ -482,7 +480,6 @@ func (l *lessonRepository) FetchByIDCourseInUser(ctx context.Context, userID pri
 
 func (l *lessonRepository) FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]lesson_domain.LessonProcessResponse, lesson_domain.DetailResponse, error) {
 	errCh := make(chan error, 1)
-
 	lessonsUserProcessCh := make(chan []lesson_domain.LessonProcessResponse, 1)
 	detailCh := make(chan lesson_domain.DetailResponse, 1)
 
@@ -680,11 +677,11 @@ func (l *lessonRepository) UpdateCompleteInUser(ctx context.Context, user primit
 func (l *lessonRepository) FetchManyInAdmin(ctx context.Context, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
 	// Khởi tạo channel để luu trữ lỗi
 	errCh := make(chan error, 1)
-
 	// Khởi tạo channel để lưu trữ kết quả lesson
 	lessonsCh := make(chan []lesson_domain.LessonResponse, 1)
 	// Khởi tạo channel để lưu trữ kết quả detail
 	detailCh := make(chan lesson_domain.DetailResponse, 1)
+
 	// Sử dụng WaitGroup để đợi tất cả các goroutine hoàn thành
 	wg.Add(2)
 	// Khởi động một goroutine cho tìm dữ liệu lesson trong cache memory
@@ -860,11 +857,10 @@ func (l *lessonRepository) FetchManyInAdmin(ctx context.Context, page string) ([
 func (l *lessonRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
 	// Khởi tạo channels để lưu trữ lỗi, bài học và chi tiết
 	errCh := make(chan error, 1)
-
 	lessonsCh := make(chan []lesson_domain.LessonResponse, 1)
 	detailCh := make(chan lesson_domain.DetailResponse, 1)
-	wg.Add(2)
 
+	wg.Add(2)
 	// Goroutine để lấy bài học từ cache
 	go func() {
 		defer wg.Done()
@@ -1035,9 +1031,9 @@ func (l *lessonRepository) FindLessonIDByLessonNameInAdmin(ctx context.Context, 
 func (l *lessonRepository) FetchByIDInAdmin(ctx context.Context, lessonID string) (lesson_domain.LessonResponse, error) {
 	// Khởi tạo channel để luu trữ lỗi
 	errCh := make(chan error, 1)
-
 	// Khởi tạo channel để lưu trữ kết quả lesson
 	lessonCh := make(chan lesson_domain.LessonResponse, 1)
+
 	// Sử dụng waitGroup để đợi tất cả goroutine hoàn thành
 	wg.Add(1)
 	// Khởi động Goroutine giúp tìm dữ liệu lesson
@@ -1135,7 +1131,6 @@ func (l *lessonRepository) FetchByIDInAdmin(ctx context.Context, lessonID string
 func (l *lessonRepository) FetchByIdCourseInAdmin(ctx context.Context, idCourse string, page string) ([]lesson_domain.LessonResponse, lesson_domain.DetailResponse, error) {
 	// Create channels for errors, lessons, and detail responses
 	errCh := make(chan error, 1)
-
 	lessonsCh := make(chan []lesson_domain.LessonResponse, 1)
 	detailCh := make(chan lesson_domain.DetailResponse, 1)
 
