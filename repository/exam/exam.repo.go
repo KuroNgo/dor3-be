@@ -58,7 +58,7 @@ func (e *examRepository) FetchOneByUnitIDInUser(ctx context.Context, userID prim
 	panic("implement me")
 }
 
-func (e *examRepository) UpdateCompletedInUser(ctx context.Context, exam *exam_domain.Exam) error {
+func (e *examRepository) UpdateCompletedInUser(ctx context.Context, userID primitive.ObjectID, exam *exam_domain.Exam) error {
 	collection := e.database.Collection(e.collectionExam)
 
 	filter := bson.D{{Key: "_id", Value: exam.ID}}
