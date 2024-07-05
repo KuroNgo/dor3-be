@@ -13,11 +13,13 @@ type Input struct {
 }
 
 type IMarkListUseCase interface {
-	FetchManyByUserID(ctx context.Context, userId string) (Response, error)
-	FetchMany(ctx context.Context) (Response, error)
-	FetchById(ctx context.Context, id string) (MarkList, error)
+	FetchManyByUser(ctx context.Context, user primitive.ObjectID) (Response, error)
+	FetchByIdByUser(ctx context.Context, user primitive.ObjectID, id string) (MarkList, error)
 
-	CreateOne(ctx context.Context, markList *MarkList) error
-	UpdateOne(ctx context.Context, markList *MarkList) (*mongo.UpdateResult, error)
-	DeleteOne(ctx context.Context, markListID string) error
+	CreateOneByUser(ctx context.Context, user primitive.ObjectID, markList *MarkList) error
+	UpdateOneByUser(ctx context.Context, user primitive.ObjectID, markList *MarkList) (*mongo.UpdateResult, error)
+	DeleteOneByUser(ctx context.Context, user primitive.ObjectID, markListID string) error
+
+	FetchManyByAdmin(ctx context.Context) (Response, error)
+	FetchByIdByAdmin(ctx context.Context, id string) (MarkList, error)
 }

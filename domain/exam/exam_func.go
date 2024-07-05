@@ -17,8 +17,8 @@ type Input struct {
 }
 
 type IExamUseCase interface {
-	FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (Exam, error)
-	UpdateCompletedInUser(ctx context.Context, exam *Exam) error
+	FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (ExamProcessRes, error)
+	UpdateCompletedInUser(ctx context.Context, userID primitive.ObjectID, exam *ExamProcess) error
 
 	FetchManyInAdmin(ctx context.Context, page string) ([]Exam, DetailResponse, error)
 	FetchExamByIDInAdmin(ctx context.Context, id string) (Exam, error)

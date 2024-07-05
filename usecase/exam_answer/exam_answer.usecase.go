@@ -3,6 +3,7 @@ package exam_answer_usecase
 import (
 	exam_answer_domain "clean-architecture/domain/exam_answer"
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
@@ -18,19 +19,19 @@ func NewExamAnswerUseCase(examAnswerRepository exam_answer_domain.IExamAnswerRep
 	}
 }
 
-func (e *examAnswerUseCase) DeleteAllAnswerByExamIDInUser(ctx context.Context, examID string) error {
+func (e *examAnswerUseCase) FetchManyAnswerByQuestionIDInUser(ctx context.Context, questionID string, userID primitive.ObjectID) (exam_answer_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
-	err := e.examAnswerRepository.DeleteAllAnswerByExamIDInUser(ctx, examID)
+	data, err := e.examAnswerRepository.FetchManyAnswerByQuestionIDInUser(ctx, questionID, userID)
 	if err != nil {
-		return err
+		return exam_answer_domain.Response{}, err
 	}
 
-	return nil
+	return data, nil
 }
 
-func (e *examAnswerUseCase) FetchManyAnswerByQuestionIDInUser(ctx context.Context, questionID string, userID string) (exam_answer_domain.Response, error) {
+func (e *examAnswerUseCase) FetchOneAnswerByQuestionIDInUser(ctx context.Context, questionID string, userID primitive.ObjectID) (exam_answer_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
 	defer cancel()
 
@@ -59,6 +60,18 @@ func (e *examAnswerUseCase) DeleteOneInUser(ctx context.Context, examID string) 
 	defer cancel()
 
 	err := e.examAnswerRepository.DeleteOneInUser(ctx, examID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e *examAnswerUseCase) DeleteAllAnswerByExamIDInUser(ctx context.Context, examID string) error {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	err := e.examAnswerRepository.DeleteAllAnswerByExamIDInUser(ctx, examID)
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package exercise_repository
 
 import (
 	exercise_domain "clean-architecture/domain/exercise"
+	"clean-architecture/internal/cache/memory"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,6 +13,7 @@ import (
 	"math/rand"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type exerciseRepository struct {
@@ -35,7 +37,18 @@ func NewExerciseRepository(db *mongo.Database, collectionLesson string, collecti
 }
 
 var (
-	wg sync.WaitGroup
+	exerciseCache   = memory.NewTTL[string, exercise_domain.Exercise]()
+	exercisesCache  = memory.NewTTL[string, []exercise_domain.Exercise]()
+	detailCache     = memory.NewTTL[string, exercise_domain.DetailResponse]()
+	statisticsCache = memory.NewTTL[string, exercise_domain.Statistics]()
+
+	mu           sync.Mutex
+	wg           sync.WaitGroup
+	isProcessing bool
+)
+
+const (
+	cacheTTL = 5 * time.Minute
 )
 
 func (e *exerciseRepository) FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (exercise_domain.Exercise, error) {

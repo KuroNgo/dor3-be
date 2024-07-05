@@ -63,13 +63,6 @@ func (q *quizRepository) FetchByIDInAdmin(ctx context.Context, id string) (quiz_
 }
 
 func (q *quizRepository) FetchOneByUnitIDInAdmin(ctx context.Context, unitID string) (quiz_domain.Quiz, error) {
-	//e.cacheMutex.RLock()
-	//cacheData, found := e.examOneCache[unitID]
-	//e.cacheMutex.RUnlock()
-
-	//if found {
-	//	return cacheData, nil
-	//}
 	collectionQuiz := q.database.Collection(q.collectionQuiz)
 
 	idUnit, err := primitive.ObjectIDFromHex(unitID)

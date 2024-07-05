@@ -42,8 +42,8 @@ func (a *activityRepository) CreateOne(ctx context.Context, log activity_log_dom
 	collectionActivity := a.database.Collection(a.collectionActivity)
 
 	now := time.Now()
-	tomorrow := now.Add(24 * 30 * time.Second) // test
-	expireTime := time.Date(tomorrow.Year(), tomorrow.Month(), tomorrow.Day(), 0, 0, 0, 0, time.UTC)
+	tomorrow := now.Add(24 * time.Hour)
+	expireTime := time.Date(tomorrow.Year(), tomorrow.Month()+1, tomorrow.Day(), 0, 0, 0, 0, time.UTC)
 
 	log.ExpireAt = expireTime
 
@@ -107,6 +107,7 @@ func (a *activityRepository) FetchMany(ctx context.Context, page string) (activi
 	}(cursor, ctx)
 
 	var activities []activity_log_domain.ActivityLog
+	activities = make([]activity_log_domain.ActivityLog, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
 		var activity activity_log_domain.ActivityLog
 		if err = cursor.Decode(&activity); err != nil {

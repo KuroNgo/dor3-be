@@ -21,14 +21,17 @@ type examRepository struct {
 	collectionLesson       string
 	collectionUnit         string
 	collectionExam         string
+	collectionExamProcess  string
 	collectionExamQuestion string
 	collectionVocabulary   string
 }
 
-func NewExamRepository(db *mongo.Database, collectionExam string, collectionLesson string, collectionUnit string, collectionExamQuestion string, collectionVocabulary string) exam_domain.IExamRepository {
+func NewExamRepository(db *mongo.Database, collectionExam string, collectionExamProcess string,
+	collectionLesson string, collectionUnit string, collectionExamQuestion string, collectionVocabulary string) exam_domain.IExamRepository {
 	return &examRepository{
 		database:               db,
 		collectionExam:         collectionExam,
+		collectionExamProcess:  collectionExamProcess,
 		collectionLesson:       collectionLesson,
 		collectionUnit:         collectionUnit,
 		collectionExamQuestion: collectionExamQuestion,
@@ -37,12 +40,11 @@ func NewExamRepository(db *mongo.Database, collectionExam string, collectionLess
 }
 
 var (
-	examCache       = memory.NewTTL[string, exam_domain.Exam]()
-	examsCache      = memory.NewTTL[string, []exam_domain.Exam]()
-	examUserCache   = memory.NewTTL[string, exam_domain.Exam]()
-	examsUserCache  = memory.NewTTL[string, []exam_domain.Exam]()
-	detailCache     = memory.NewTTL[string, exam_domain.DetailResponse]()
-	statisticsCache = memory.NewTTL[string, exam_domain.Statistics]()
+	examCache        = memory.NewTTL[string, exam_domain.Exam]()
+	examsCache       = memory.NewTTL[string, []exam_domain.Exam]()
+	examProcessCache = memory.NewTTL[string, exam_domain.ExamProcessRes]()
+	detailCache      = memory.NewTTL[string, exam_domain.DetailResponse]()
+	statisticsCache  = memory.NewTTL[string, exam_domain.Statistics]()
 
 	mu           sync.Mutex
 	wg           sync.WaitGroup
@@ -53,25 +55,142 @@ const (
 	cacheTTL = 5 * time.Minute
 )
 
-func (e *examRepository) FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (exam_domain.Exam, error) {
-	//TODO implement me
-	panic("implement me")
+func (e *examRepository) FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (exam_domain.ExamProcessRes, error) {
+	errCh := make(chan error, 1)
+	examProcessResCh := make(chan exam_domain.ExamProcessRes, 1)
+
+	wg.Add(1)
+	go func() {
+		data, found := examProcessCache.Get(userID.Hex() + unitID)
+		if found {
+			examProcessResCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(examProcessResCh)
+		wg.Wait()
+	}()
+
+	examProcessResData := <-examProcessResCh
+	if !internal.IsZeroValue(examProcessResData) {
+		return examProcessResData, nil
+	}
+
+	collectionExam := e.database.Collection(e.collectionExam)
+	collectionExamProcess := e.database.Collection(e.collectionExamProcess)
+
+	idUnit, _ := primitive.ObjectIDFromHex(unitID)
+	filter := bson.M{"unit_id": idUnit}
+	filterExamProcess := bson.M{"user_id": userID, "unit_id": idUnit}
+
+	countExam, err := collectionExam.CountDocuments(ctx, filter)
+	if err != nil {
+		return exam_domain.ExamProcessRes{}, err
+	}
+
+	count, err := collectionExamProcess.CountDocuments(ctx, filterExamProcess)
+	if err != nil {
+		return exam_domain.ExamProcessRes{}, err
+	}
+
+	if count < countExam {
+		cursorExam, err := collectionExam.Find(ctx, filter)
+		if err != nil {
+			return exam_domain.ExamProcessRes{}, err
+		}
+		defer func(cursorExam *mongo.Cursor, ctx context.Context) {
+			err = cursorExam.Close(ctx)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}(cursorExam, ctx)
+
+		for cursorExam.Next(ctx) {
+			var exam exam_domain.Exam
+			if err = cursorExam.Decode(&exam); err != nil {
+				return exam_domain.ExamProcessRes{}, err
+			}
+
+			wg.Add(1)
+			go func(exam exam_domain.Exam) {
+				defer wg.Done()
+				examProcess := exam_domain.ExamProcess{
+					ExamID:     exam.ID,
+					UserID:     userID,
+					IsComplete: 0,
+				}
+
+				filterExam := bson.M{"exam_id": exam.ID, "user_id": userID}
+				countExamChild, err := collectionExamProcess.CountDocuments(ctx, filterExam)
+				if err != nil {
+					errCh <- err
+					return
+				}
+
+				if countExamChild == 0 {
+					_, err = collectionExamProcess.InsertOne(ctx, &examProcess)
+					if err != nil {
+						errCh <- err
+						return
+					}
+				}
+			}(exam)
+		}
+		wg.Wait()
+	}
+
+	var exam exam_domain.Exam
+	err = collectionExam.FindOne(ctx, filter).Decode(&exam)
+	if err != nil {
+		return exam_domain.ExamProcessRes{}, err
+	}
+
+	examProcessRes := exam_domain.ExamProcessRes{
+		Exam:       exam,
+		UserID:     userID,
+		IsComplete: 0,
+	}
+
+	examProcessCache.Set(userID.Hex(), examProcessRes, cacheTTL)
+
+	select {
+	case err = <-errCh:
+		return exam_domain.ExamProcessRes{}, err
+	default:
+		return examProcessRes, nil
+	}
 }
 
-func (e *examRepository) UpdateCompletedInUser(ctx context.Context, userID primitive.ObjectID, exam *exam_domain.Exam) error {
-	collection := e.database.Collection(e.collectionExam)
+func (e *examRepository) UpdateCompletedInUser(ctx context.Context, userID primitive.ObjectID, exam *exam_domain.ExamProcess) error {
+	// Khóa lock giúp bảo vệ course
+	mu.Lock()
+	defer mu.Unlock()
 
-	filter := bson.D{{Key: "_id", Value: exam.ID}}
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
+	collectionExamProcess := e.database.Collection(e.collectionExamProcess)
+
+	filter := bson.D{{"_id", exam.ExamID}, {"user_id", userID}}
 	update := bson.M{
 		"$set": bson.M{
 			"updated_at": time.Now(),
 		},
 	}
 
-	_, err := collection.UpdateOne(ctx, filter, update)
+	_, err := collectionExamProcess.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -251,7 +370,7 @@ func (e *examRepository) FetchManyByUnitIDInAdmin(ctx context.Context, unitID st
 	}(cursor, ctx)
 
 	var exams []exam_domain.Exam
-
+	exams = make([]exam_domain.Exam, 0, cursor.RemainingBatchLength())
 	// Process each exercise
 	for cursor.Next(ctx) {
 		var exam exam_domain.Exam
@@ -430,6 +549,7 @@ func (e *examRepository) CreateOneInAdmin(ctx context.Context, exam *exam_domain
 	}()
 
 	collectionExam := e.database.Collection(e.collectionExam)
+
 	collectionLesson := e.database.Collection(e.collectionLesson)
 	collectionUnit := e.database.Collection(e.collectionUnit)
 
@@ -460,7 +580,8 @@ func (e *examRepository) CreateOneInAdmin(ctx context.Context, exam *exam_domain
 }
 
 func (e *examRepository) UpdateOneInAdmin(ctx context.Context, exam *exam_domain.Exam) (*mongo.UpdateResult, error) {
-	collection := e.database.Collection(e.collectionExam)
+	collectionExam := e.database.Collection(e.collectionExam)
+	collectionExamProcess := e.database.Collection(e.collectionExamProcess)
 
 	filter := bson.M{"_id": exam.ID}
 	update := bson.M{
@@ -471,7 +592,12 @@ func (e *examRepository) UpdateOneInAdmin(ctx context.Context, exam *exam_domain
 		},
 	}
 
-	data, err := collection.UpdateOne(ctx, filter, &update)
+	data, err := collectionExam.UpdateOne(ctx, filter, &update)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = collectionExamProcess.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return nil, err
 	}
@@ -481,6 +607,8 @@ func (e *examRepository) UpdateOneInAdmin(ctx context.Context, exam *exam_domain
 
 func (e *examRepository) DeleteOneInAdmin(ctx context.Context, examID string) error {
 	collectionExam := e.database.Collection(e.collectionExam)
+	collectionExamProcess := e.database.Collection(e.collectionExamProcess)
+
 	objID, err := primitive.ObjectIDFromHex(examID)
 	if err != nil {
 		return err
@@ -496,6 +624,14 @@ func (e *examRepository) DeleteOneInAdmin(ctx context.Context, examID string) er
 	}
 
 	_, err = collectionExam.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	_, err = collectionExamProcess.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
 	return err
 }
 

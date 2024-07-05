@@ -57,7 +57,7 @@ func (e *ExamAnswerController) CreateOneExamAnswer(ctx *gin.Context) {
 		return
 	}
 
-	data, err := e.ExamAnswerUseCase.FetchManyAnswerByQuestionIDInUser(ctx, answerInput.QuestionID.Hex(), user.ID.Hex())
+	data, err := e.ExamAnswerUseCase.FetchManyAnswerByQuestionIDInUser(ctx, answerInput.QuestionID.Hex(), user.ID)
 	if err != nil {
 		handleError(ctx, http.StatusInternalServerError, "Failed to fetch answers", err)
 	}

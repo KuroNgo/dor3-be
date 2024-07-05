@@ -2,6 +2,7 @@ package image_repository
 
 import (
 	image_domain "clean-architecture/domain/image"
+	"clean-architecture/internal/cache/memory"
 	"context"
 	"errors"
 	"fmt"
@@ -10,6 +11,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
+	"sync"
+	"time"
 )
 
 type imageRepository struct {
@@ -17,7 +20,27 @@ type imageRepository struct {
 	collection string
 }
 
+func NewImageRepository(db *mongo.Database, collection string) image_domain.IImageRepository {
+	return &imageRepository{
+		database:   db,
+		collection: collection,
+	}
+}
+
+var (
+	imageResCache = memory.NewTTL[string, image_domain.Response]()
+	imageCache    = memory.NewTTL[string, image_domain.Image]()
+
+	wg sync.WaitGroup
+	mu sync.Mutex
+)
+
+const (
+	cacheTTL = 5 * time.Minute
+)
+
 func (i *imageRepository) FetchByCategory(ctx context.Context, category string, page string) (image_domain.Response, error) {
+	errCh := make(chan error, 1)
 	collectionImage := i.database.Collection(i.collection)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -50,17 +73,30 @@ func (i *imageRepository) FetchByCategory(ctx context.Context, category string, 
 	if err != nil {
 		return image_domain.Response{}, err
 	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err = cursor.Close(ctx)
+		if err != nil {
+			errCh <- err
+			return
+		}
+	}(cursor, ctx)
 
 	var images []image_domain.Image
+	images = make([]image_domain.Image, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
 		var image image_domain.Image
-		if err := cursor.Decode(&image); err != nil {
+		if err = cursor.Decode(&image); err != nil {
 			return image_domain.Response{}, err
 		}
 
-		image.Category = category
-		images = append(images, image)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			image.Category = category
+			images = append(images, image)
+		}()
 	}
+	wg.Wait()
 
 	cal := <-calculate
 
@@ -68,13 +104,12 @@ func (i *imageRepository) FetchByCategory(ctx context.Context, category string, 
 		Page:  cal,
 		Image: images,
 	}
-	return imgRes, nil
-}
 
-func NewImageRepository(db *mongo.Database, collection string) image_domain.IImageRepository {
-	return &imageRepository{
-		database:   db,
-		collection: collection,
+	select {
+	case err = <-errCh:
+		return image_domain.Response{}, err
+	default:
+		return imgRes, nil
 	}
 }
 
@@ -106,6 +141,7 @@ func (i *imageRepository) GetURLByName(ctx context.Context, name string) (image_
 	err := collection.FindOne(ctx, bson.M{"image_name": name}).Decode(&image)
 	return image, err
 }
+
 func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_domain.Response, error) {
 	collection := i.database.Collection(i.collection)
 
@@ -132,7 +168,12 @@ func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_dom
 	if err != nil {
 		return image_domain.Response{}, fmt.Errorf("error finding documents: %v", err)
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	for cursor.Next(ctx) {
 		var doc image_domain.Image
@@ -276,7 +317,12 @@ func (i *imageRepository) Statistics(ctx context.Context) (image_domain.Statisti
 	if err != nil {
 		return image_domain.Statistics{}, fmt.Errorf("error aggregating documents: %v", err)
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	if cursor.Next(ctx) {
 		if err := cursor.Decode(&result); err != nil {

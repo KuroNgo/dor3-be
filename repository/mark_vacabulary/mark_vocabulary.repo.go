@@ -5,12 +5,14 @@ import (
 	mark_vocabulary_domain "clean-architecture/domain/mark_vocabulary"
 	vocabulary_domain "clean-architecture/domain/vocabulary"
 	"clean-architecture/internal"
+	"clean-architecture/internal/cache/memory"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"sync"
+	"time"
 )
 
 type markVocabularyRepository struct {
@@ -30,10 +32,41 @@ func NewMarkVocabularyRepository(db *mongo.Database, collectionMarkList string, 
 }
 
 var (
-	wg sync.WaitGroup
+	markVocabulariesCache = memory.NewTTL[string, []mark_vocabulary_domain.MarkToFavourite]()
+	markVocabResCache     = memory.NewTTL[string, mark_vocabulary_domain.Response]()
+
+	mu           sync.Mutex
+	wg           sync.WaitGroup
+	isProcessing bool
+)
+
+const (
+	cacheTTL = 5 * time.Minute
 )
 
 func (m *markVocabularyRepository) FetchManyByMarkListID(ctx context.Context, markListId string) ([]mark_vocabulary_domain.MarkToFavourite, error) {
+	errCh := make(chan error, 1)
+	markToFavouriteCh := make(chan []mark_vocabulary_domain.MarkToFavourite, 1)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := markVocabulariesCache.Get(markListId)
+		if found {
+			markToFavouriteCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(markToFavouriteCh)
+		wg.Wait()
+	}()
+
+	markToFavouriteData := <-markToFavouriteCh
+	if !internal.IsZeroValue(markToFavouriteData) {
+		return markToFavouriteData, nil
+	}
+
 	collectionMarkVocabulary := m.database.Collection(m.collectionMarkList)
 
 	// Tạo các bộ lọc
@@ -47,21 +80,63 @@ func (m *markVocabularyRepository) FetchManyByMarkListID(ctx context.Context, ma
 	if err != nil {
 		return nil, err
 	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err = cursor.Close(ctx)
+		if err != nil {
+			errCh <- err
+			return
+		}
+	}(cursor, ctx)
 
 	var markVocabs []mark_vocabulary_domain.MarkToFavourite
+	markVocabs = make([]mark_vocabulary_domain.MarkToFavourite, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
 		var markVocab mark_vocabulary_domain.MarkToFavourite
 		if err = cursor.Decode(&markVocab); err != nil {
 			return nil, err
 		}
 
-		markVocabs = append(markVocabs, markVocab)
+		wg.Add(1)
+		go func(markVocab mark_vocabulary_domain.MarkToFavourite) {
+			defer wg.Done()
+			markVocabs = append(markVocabs, markVocab)
+		}(markVocab)
 	}
+	wg.Wait()
 
-	return markVocabs, nil
+	markVocabulariesCache.Set(markListId, markVocabs, cacheTTL)
+
+	select {
+	case err = <-errCh:
+		return nil, err
+	default:
+		return markVocabs, nil
+	}
 }
 
-func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Context, markListID string, userID string) (mark_vocabulary_domain.Response, error) {
+func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Context, markListID string, userID primitive.ObjectID) (mark_vocabulary_domain.Response, error) {
+	errCh := make(chan error, 1)
+	markVocabsResCh := make(chan mark_vocabulary_domain.Response, 1)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := markVocabResCache.Get(userID.Hex() + markListID)
+		if found {
+			markVocabsResCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(markVocabsResCh)
+		wg.Wait()
+	}()
+
+	markVocabsResData := <-markVocabsResCh
+	if !internal.IsZeroValue(markVocabsResData) {
+		return markVocabsResData, nil
+	}
+
 	collectionMarkVocabulary := m.database.Collection(m.collectionMarkVocabulary)
 	collectionVocabulary := m.database.Collection(m.collectionVocabulary)
 	collectionMarkList := m.database.Collection(m.collectionMarkList)
@@ -73,7 +148,7 @@ func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Co
 	}
 
 	// Tạo các bộ lọc
-	filterMarkList := bson.D{{Key: "mark_list_id", Value: markListObjID}}
+	filterMarkList := bson.D{{Key: "mark_list_id", Value: markListObjID}, {"user_id", userID}}
 
 	// Tìm các mark vocabulary của mark list
 	cursor, err := collectionMarkVocabulary.Find(ctx, filterMarkList)
@@ -83,11 +158,13 @@ func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Co
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
 		err = cursor.Close(ctx)
 		if err != nil {
+			errCh <- err
 			return
 		}
 	}(cursor, ctx)
 
 	var markVocabularies []mark_vocabulary_domain.MarkToFavouriteResponse
+	markVocabularies = make([]mark_vocabulary_domain.MarkToFavouriteResponse, 0, cursor.RemainingBatchLength())
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -97,29 +174,34 @@ func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Co
 				return
 			}
 
-			var markVocabularyRes mark_vocabulary_domain.MarkToFavouriteResponse
-			if err = cursor.Decode(&markVocabulary); err != nil {
-				return
-			}
+			wg.Add(1)
+			go func(markVocabulary mark_vocabulary_domain.MarkToFavourite) {
+				defer wg.Done()
+				var markVocabularyRes mark_vocabulary_domain.MarkToFavouriteResponse
+				if err = cursor.Decode(&markVocabulary); err != nil {
+					errCh <- err
+					return
+				}
 
-			// Gắn MarkListID vào mark vocabulary
-			var vocabulary vocabulary_domain.Vocabulary
-			filterVocabulary := bson.M{"_id": markVocabulary.VocabularyID}
-			_ = collectionVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
+				// Gắn MarkListID vào mark vocabulary
+				var vocabulary vocabulary_domain.Vocabulary
+				filterVocabulary := bson.M{"_id": markVocabulary.VocabularyID}
+				_ = collectionVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
 
-			var markList mark_list_domain.MarkList
-			filterMarkList := bson.D{{Key: "_id", Value: markListObjID}}
-			_ = collectionMarkList.FindOne(ctx, filterMarkList).Decode(&markList)
+				var markList mark_list_domain.MarkList
+				filterMarkList = bson.D{{Key: "_id", Value: markListObjID}}
+				_ = collectionMarkList.FindOne(ctx, filterMarkList).Decode(&markList)
 
-			markVocabularyRes.ID = markVocabulary.ID
-			markVocabularyRes.UserId = markVocabulary.UserId
-			markVocabularyRes.Vocabulary = vocabulary
-			markVocabularyRes.MarkList = markList
+				markVocabularyRes.ID = markVocabulary.ID
+				markVocabularyRes.UserId = markVocabulary.UserId
+				markVocabularyRes.Vocabulary = vocabulary
+				markVocabularyRes.MarkList = markList
 
-			markVocabularies = append(markVocabularies, markVocabularyRes)
+				markVocabularies = append(markVocabularies, markVocabularyRes)
+			}(markVocabulary)
 		}
+		wg.Wait()
 	}()
-
 	wg.Wait()
 
 	// Tạo và trả về response
@@ -127,10 +209,38 @@ func (m *markVocabularyRepository) FetchManyByMarkListIDAndUserId(ctx context.Co
 		Total:                   len(markVocabularies),
 		MarkToFavouriteResponse: markVocabularies,
 	}
-	return response, nil
+
+	markVocabResCache.Set(userID.Hex()+markListID, response, cacheTTL)
+
+	select {
+	case err = <-errCh:
+		return mark_vocabulary_domain.Response{}, err
+	default:
+		return response, nil
+	}
 }
 
 func (m *markVocabularyRepository) FetchManyByMarkList(ctx context.Context, markListId string) (mark_vocabulary_domain.Response, error) {
+	errCh := make(chan error, 1)
+	markVocabsResCh := make(chan mark_vocabulary_domain.Response, 1)
+
+	go func() {
+		data, found := markVocabResCache.Get(markListId)
+		if found {
+			markVocabsResCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(markVocabsResCh)
+		wg.Wait()
+	}()
+
+	markVocabsResData := <-markVocabsResCh
+	if !internal.IsZeroValue(markVocabsResData) {
+		return markVocabsResData, nil
+	}
+
 	collectionMarkList := m.database.Collection(m.collectionMarkList)
 	collectionMarkVocabulary := m.database.Collection(m.collectionMarkVocabulary)
 	collectionVocabulary := m.database.Collection(m.collectionVocabulary)
@@ -155,48 +265,57 @@ func (m *markVocabularyRepository) FetchManyByMarkList(ctx context.Context, mark
 		return mark_vocabulary_domain.Response{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+		err = cursor.Close(ctx)
 		if err != nil {
+			errCh <- err
 			return
 		}
 	}(cursor, ctx)
 
 	var markVocabularies []mark_vocabulary_domain.MarkToFavouriteResponse
-
+	markVocabularies = make([]mark_vocabulary_domain.MarkToFavouriteResponse, 0, cursor.RemainingBatchLength())
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for cursor.Next(ctx) {
 			var markVocabulary mark_vocabulary_domain.MarkToFavourite
 			if err = cursor.Decode(&markVocabulary); err != nil {
+				errCh <- err
 				return
 			}
 
-			// Gắn MarkListID vào mark vocabulary
-			var vocabulary vocabulary_domain.Vocabulary
-			filterVocabulary := bson.M{"_id": markVocabulary.VocabularyID}
-			err = collectionVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
-			if err != nil {
-				return
-			}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				// Gắn MarkListID vào mark vocabulary
+				var vocabulary vocabulary_domain.Vocabulary
+				filterVocabulary := bson.M{"_id": markVocabulary.VocabularyID}
+				err = collectionVocabulary.FindOne(ctx, filterVocabulary).Decode(&vocabulary)
+				if err != nil {
+					errCh <- err
+					return
+				}
 
-			var markList mark_list_domain.MarkList
-			err = collectionMarkList.FindOne(ctx, filter).Decode(&markList)
-			if err != nil {
-				return
-			}
+				var markList mark_list_domain.MarkList
+				err = collectionMarkList.FindOne(ctx, filter).Decode(&markList)
+				if err != nil {
+					errCh <- err
+					return
+				}
 
-			var markVocabularyRes mark_vocabulary_domain.MarkToFavouriteResponse
-			if err = cursor.Decode(&markVocabulary); err != nil {
-				return
-			}
-			markVocabularyRes.Vocabulary = vocabulary
-			markVocabularyRes.MarkList = markList
+				var markVocabularyRes mark_vocabulary_domain.MarkToFavouriteResponse
+				if err = cursor.Decode(&markVocabulary); err != nil {
+					errCh <- err
+					return
+				}
+				markVocabularyRes.Vocabulary = vocabulary
+				markVocabularyRes.MarkList = markList
 
-			markVocabularies = append(markVocabularies, markVocabularyRes)
+				markVocabularies = append(markVocabularies, markVocabularyRes)
+			}()
 		}
+		wg.Wait()
 	}()
-
 	wg.Wait()
 
 	response := mark_vocabulary_domain.Response{
@@ -204,10 +323,28 @@ func (m *markVocabularyRepository) FetchManyByMarkList(ctx context.Context, mark
 		MarkToFavouriteResponse: markVocabularies,
 	}
 
-	return response, nil
+	markVocabResCache.Set(markListId, response, cacheTTL)
+
+	select {
+	case err = <-errCh:
+		return mark_vocabulary_domain.Response{}, err
+	default:
+		return response, nil
+	}
 }
 
 func (m *markVocabularyRepository) UpdateOne(ctx context.Context, markVocabularyID string, markVocabulary mark_vocabulary_domain.MarkToFavourite) error {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collection := m.database.Collection(m.collectionMarkVocabulary)
 	objID, err := primitive.ObjectIDFromHex(markVocabularyID)
 	doc, err := internal.ToDoc(markVocabulary)
@@ -216,10 +353,37 @@ func (m *markVocabularyRepository) UpdateOne(ctx context.Context, markVocabulary
 	update := bson.M{"$set": doc}
 
 	_, err = collection.UpdateOne(ctx, filter, update)
-	return err
+	if err != nil {
+		return err
+	}
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		markVocabResCache.Remove(markVocabularyID)
+	}()
+
+	go func() {
+		defer wg.Done()
+		markVocabulariesCache.Clear()
+	}()
+	wg.Wait()
+
+	return nil
 }
 
 func (m *markVocabularyRepository) CreateOne(ctx context.Context, markVocabulary *mark_vocabulary_domain.MarkToFavourite) error {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	// Lấy các collection cụ thể từ cơ sở dữ liệu MongoDB
 	collectionMarkVocabulary := m.database.Collection(m.collectionMarkVocabulary)
 	collectionMarkList := m.database.Collection(m.collectionMarkList)
@@ -257,10 +421,32 @@ func (m *markVocabularyRepository) CreateOne(ctx context.Context, markVocabulary
 
 	// Thực hiện chèn dữ liệu mới vào collection MarkVocabulary
 	_, err = collectionMarkVocabulary.InsertOne(ctx, markVocabulary)
-	return err // Trả về kết quả của lệnh chèn hoặc lỗi nếu có lỗi xảy ra
+	if err != nil {
+		return err
+	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		markVocabulariesCache.Clear()
+	}()
+	wg.Wait()
+
+	return nil
 }
 
 func (m *markVocabularyRepository) DeleteOne(ctx context.Context, markVocabularyID string) error {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collectionMarkVocabulary := m.database.Collection(m.collectionMarkVocabulary)
 	objID, err := primitive.ObjectIDFromHex(markVocabularyID)
 	if err != nil {
@@ -280,5 +466,21 @@ func (m *markVocabularyRepository) DeleteOne(ctx context.Context, markVocabulary
 	}
 
 	_, err = collectionMarkVocabulary.DeleteOne(ctx, filter)
-	return err
+	if err != nil {
+		return err
+	}
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		markVocabResCache.Remove(markVocabularyID)
+	}()
+
+	go func() {
+		defer wg.Done()
+		markVocabulariesCache.Clear()
+	}()
+	wg.Wait()
+
+	return nil
 }

@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (m *MarkListController) FetchManyMarkListByUserID(ctx *gin.Context) {
+func (m *MarkListController) FetchManyMarkListByUser(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -24,7 +24,7 @@ func (m *MarkListController) FetchManyMarkListByUserID(ctx *gin.Context) {
 		return
 	}
 
-	markList, err := m.MarkListUseCase.FetchManyByUserID(ctx, user.ID.Hex())
+	markList, err := m.MarkListUseCase.FetchManyByUser(ctx, user.ID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -58,7 +58,7 @@ func (m *MarkListController) FetchManyMarkListByIDInAdmin(ctx *gin.Context) {
 	}
 
 	idMarkList := ctx.Query("_id")
-	markList, err := m.MarkListUseCase.FetchById(ctx, idMarkList)
+	markList, err := m.MarkListUseCase.FetchByIdByAdmin(ctx, idMarkList)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -91,7 +91,7 @@ func (m *MarkListController) FetchManyInAdmin(ctx *gin.Context) {
 		return
 	}
 
-	markList, err := m.MarkListUseCase.FetchMany(ctx)
+	markList, err := m.MarkListUseCase.FetchManyByAdmin(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

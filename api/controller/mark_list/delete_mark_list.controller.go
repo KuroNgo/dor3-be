@@ -7,8 +7,8 @@ import (
 	"sync"
 )
 
-// DeleteOneMarkList chỉ user mới có thể xóa
-func (m *MarkListController) DeleteOneMarkList(ctx *gin.Context) {
+// DeleteOneMarkListByUser chỉ user mới có thể xóa
+func (m *MarkListController) DeleteOneMarkListByUser(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -28,7 +28,7 @@ func (m *MarkListController) DeleteOneMarkList(ctx *gin.Context) {
 
 	markListID := ctx.Query("_id")
 
-	err = m.MarkListUseCase.DeleteOne(ctx, markListID)
+	err = m.MarkListUseCase.DeleteOneByUser(ctx, user.ID, markListID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

@@ -51,6 +51,11 @@ var (
 	isProcessing bool
 )
 
+func (v *vocabularyRepository) UpdateVocabularyProcess(ctx context.Context, vocabularyID string, process vocabulary_domain.VocabularyProcess) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 // FindVocabularyIDByVocabularyConfigInAdmin finds the ObjectID of a vocabulary entry by its configuration word within an admin context.
 // It first attempts to retrieve the ID from the cache, and if not found, queries the database and caches the result.
 // Parameters:
@@ -862,11 +867,6 @@ func (v *vocabularyRepository) UpdateOneAudioInAdmin(c context.Context, vocabula
 	}
 
 	return nil
-}
-
-func (v *vocabularyRepository) UpdateVocabularyProcess(ctx context.Context, vocabularyID string, process vocabulary_domain.VocabularyProcess) error {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (v *vocabularyRepository) UpdateIsFavouriteInUser(ctx context.Context, vocabularyID string, isFavourite int) error {
