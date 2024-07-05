@@ -24,7 +24,7 @@ import (
 )
 
 func ExamRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Database, group *gin.RouterGroup) {
-	ex := exam_repository.NewExamRepository(db, exam_domain.CollectionExam, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, exam_question_domain.CollectionExamQuestion, vocabulary_domain.CollectionVocabulary)
+	ex := exam_repository.NewExamRepository(db, exam_domain.CollectionExam, exam_domain.CollectionExamProcess, lesson_domain.CollectionLesson, unit_domain.CollectionUnit, exam_question_domain.CollectionExamQuestion, vocabulary_domain.CollectionVocabulary)
 	users := user_repository.NewUserRepository(db, user_domain.CollectionUser, user_detail_domain.CollectionUserDetail)
 	ad := admin_repository.NewAdminRepository(db, admin_domain.CollectionAdmin, user_domain.CollectionUser)
 

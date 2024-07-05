@@ -3,6 +3,7 @@ package mark_list_usecase
 import (
 	markList_domain "clean-architecture/domain/mark_list"
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
@@ -12,11 +13,18 @@ type markListUseCase struct {
 	contextTimeout     time.Duration
 }
 
-func (m *markListUseCase) FetchMany(ctx context.Context) (markList_domain.Response, error) {
+func NewMarkListUseCase(markListRepository markList_domain.IMarkListRepository, timeout time.Duration) markList_domain.IMarkListUseCase {
+	return &markListUseCase{
+		markListRepository: markListRepository,
+		contextTimeout:     timeout,
+	}
+}
+
+func (m *markListUseCase) FetchManyByUser(ctx context.Context, user primitive.ObjectID) (markList_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()
 
-	markList, err := m.markListRepository.FetchMany(ctx)
+	markList, err := m.markListRepository.FetchManyByUser(ctx, user)
 	if err != nil {
 		return markList_domain.Response{}, err
 	}
@@ -24,11 +32,11 @@ func (m *markListUseCase) FetchMany(ctx context.Context) (markList_domain.Respon
 	return markList, err
 }
 
-func (m *markListUseCase) FetchById(ctx context.Context, id string) (markList_domain.MarkList, error) {
+func (m *markListUseCase) FetchByIdByUser(ctx context.Context, user primitive.ObjectID, id string) (markList_domain.MarkList, error) {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()
 
-	markList, err := m.markListRepository.FetchById(ctx, id)
+	markList, err := m.markListRepository.FetchByIdByUser(ctx, user, id)
 	if err != nil {
 		return markList_domain.MarkList{}, err
 	}
@@ -36,11 +44,11 @@ func (m *markListUseCase) FetchById(ctx context.Context, id string) (markList_do
 	return markList, err
 }
 
-func (m *markListUseCase) FetchManyByUserID(ctx context.Context, userId string) (markList_domain.Response, error) {
+func (m *markListUseCase) FetchManyByUserIDByUser(ctx context.Context, user primitive.ObjectID) (markList_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()
 
-	markList, err := m.markListRepository.FetchManyByUserID(ctx, userId)
+	markList, err := m.markListRepository.FetchManyByUser(ctx, user)
 	if err != nil {
 		return markList_domain.Response{}, err
 	}
@@ -48,11 +56,11 @@ func (m *markListUseCase) FetchManyByUserID(ctx context.Context, userId string) 
 	return markList, err
 }
 
-func (m *markListUseCase) UpdateOne(ctx context.Context, markList *markList_domain.MarkList) (*mongo.UpdateResult, error) {
+func (m *markListUseCase) UpdateOneByUser(ctx context.Context, user primitive.ObjectID, markList *markList_domain.MarkList) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()
 
-	data, err := m.markListRepository.UpdateOne(ctx, markList)
+	data, err := m.markListRepository.UpdateOneByUser(ctx, user, markList)
 	if err != nil {
 		return nil, err
 	}
@@ -60,11 +68,11 @@ func (m *markListUseCase) UpdateOne(ctx context.Context, markList *markList_doma
 	return data, nil
 }
 
-func (m *markListUseCase) CreateOne(ctx context.Context, markList *markList_domain.MarkList) error {
+func (m *markListUseCase) CreateOneByUser(ctx context.Context, user primitive.ObjectID, markList *markList_domain.MarkList) error {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()
 
-	err := m.markListRepository.CreateOne(ctx, markList)
+	err := m.markListRepository.CreateOneByUser(ctx, user, markList)
 	if err != nil {
 		return err
 	}
@@ -72,11 +80,11 @@ func (m *markListUseCase) CreateOne(ctx context.Context, markList *markList_doma
 	return nil
 }
 
-func (m *markListUseCase) DeleteOne(ctx context.Context, markListID string) error {
+func (m *markListUseCase) DeleteOneByUser(ctx context.Context, user primitive.ObjectID, markListID string) error {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()
 
-	err := m.markListRepository.DeleteOne(ctx, markListID)
+	err := m.markListRepository.DeleteOneByUser(ctx, user, markListID)
 	if err != nil {
 		return err
 	}
@@ -84,9 +92,19 @@ func (m *markListUseCase) DeleteOne(ctx context.Context, markListID string) erro
 	return nil
 }
 
-func NewMarkListUseCase(markListRepository markList_domain.IMarkListRepository, timeout time.Duration) markList_domain.IMarkListUseCase {
-	return &markListUseCase{
-		markListRepository: markListRepository,
-		contextTimeout:     timeout,
+func (m *markListUseCase) FetchManyByAdmin(ctx context.Context) (markList_domain.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
+	defer cancel()
+
+	markList, err := m.markListRepository.FetchManyByAdmin(ctx)
+	if err != nil {
+		return markList_domain.Response{}, err
 	}
+
+	return markList, err
+}
+
+func (m *markListUseCase) FetchByIdByAdmin(ctx context.Context, id string) (markList_domain.MarkList, error) {
+	//TODO implement me
+	panic("implement me")
 }

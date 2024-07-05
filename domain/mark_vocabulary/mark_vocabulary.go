@@ -31,7 +31,7 @@ type Response struct {
 }
 
 type IMarkToFavouriteRepository interface {
-	FetchManyByMarkListIDAndUserId(ctx context.Context, markListId string, userId string) (Response, error)
+	FetchManyByMarkListIDAndUserId(ctx context.Context, markListId string, userId primitive.ObjectID) (Response, error)
 	FetchManyByMarkList(ctx context.Context, markListId string) (Response, error)
 	FetchManyByMarkListID(ctx context.Context, markListId string) ([]MarkToFavourite, error)
 

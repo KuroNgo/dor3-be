@@ -25,7 +25,7 @@ func (m *MarkVocabularyController) FetchManyByMarkListIdAndUserId(ctx *gin.Conte
 	}
 
 	idMarkList := ctx.Query("mark_list_id")
-	markVocabulary, err := m.MarkVocabularyUseCase.FetchManyByMarkListIDAndUserId(ctx, idMarkList, fmt.Sprint(user.ID))
+	markVocabulary, err := m.MarkVocabularyUseCase.FetchManyByMarkListIDAndUserId(ctx, idMarkList, user.ID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

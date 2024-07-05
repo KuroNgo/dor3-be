@@ -13,11 +13,6 @@ type examUseCase struct {
 	contextTimeout time.Duration
 }
 
-func (e *examUseCase) FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (exam_domain.Exam, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewExamUseCase(examRepository exam_domain.IExamRepository, timeout time.Duration) exam_domain.IExamUseCase {
 	return &examUseCase{
 		examRepository: examRepository,
@@ -109,7 +104,26 @@ func (e *examUseCase) DeleteOneInAdmin(ctx context.Context, examID string) error
 	return nil
 }
 
-func (e *examUseCase) UpdateCompletedInUser(ctx context.Context, exam *exam_domain.Exam) error {
-	//TODO implement me
-	panic("implement me")
+func (e *examUseCase) FetchOneByUnitIDInUser(ctx context.Context, userID primitive.ObjectID, unitID string) (exam_domain.ExamProcessRes, error) {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	data, err := e.examRepository.FetchOneByUnitIDInUser(ctx, userID, unitID)
+	if err != nil {
+		return exam_domain.ExamProcessRes{}, err
+	}
+
+	return data, nil
+}
+
+func (e *examUseCase) UpdateCompletedInUser(ctx context.Context, userID primitive.ObjectID, exam *exam_domain.ExamProcess) error {
+	ctx, cancel := context.WithTimeout(ctx, e.contextTimeout)
+	defer cancel()
+
+	err := e.examRepository.UpdateCompletedInUser(ctx, userID, exam)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

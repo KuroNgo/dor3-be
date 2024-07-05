@@ -37,7 +37,9 @@ type Response struct {
 }
 
 type IExamAnswerRepository interface {
-	FetchManyAnswerByQuestionIDInUser(ctx context.Context, questionID string, userID string) (Response, error)
+	FetchManyAnswerByQuestionIDInUser(ctx context.Context, questionID string, userID primitive.ObjectID) (Response, error)
+	FetchOneAnswerByQuestionIDInUser(ctx context.Context, questionID string, userID primitive.ObjectID) (Response, error)
+
 	CreateOneInUser(ctx context.Context, examAnswer *ExamAnswer) error
 	DeleteOneInUser(ctx context.Context, examID string) error
 	DeleteAllAnswerByExamIDInUser(ctx context.Context, examID string) error

@@ -51,25 +51,29 @@ var (
 	isProcessing bool
 )
 
+const (
+	cacheTTL = 5 * time.Minute
+)
+
 // FetchByIDInUser retrieves the course process data for a specific user and course.
 // It first checks the cache for the data. If not found, it queries the database and,
 // if necessary, initializes the course process data for the user.
 //
-// Parameters:
+// # Parameters
+//
 // - ctx: The context for managing request deadlines, cancellation signals, and other request-scoped values.
 // - userID: The ObjectID of the user whose course process data is being retrieved.
 // - courseID: The string representation of the ObjectID of the course.
 //
-// Returns:
+// # Returns
+//
 // - course_domain.CourseProcess: The course process data for the user.
 // - error: Any error encountered during the operation.
 func (c *courseRepository) FetchByIDInUser(ctx context.Context, userID primitive.ObjectID, courseID string) (course_domain.CourseProcess, error) {
 	// Create a channel to capture errors and defer its closure
-	errCh := make(chan error)
-	defer close(errCh)
-
+	errCh := make(chan error, 1)
 	// Create a channel to capture the course process data
-	courseUserProcessCh := make(chan course_domain.CourseProcess)
+	courseUserProcessCh := make(chan course_domain.CourseProcess, 1)
 
 	// Add a goroutine to the wait group to fetch data from the cache
 	wg.Add(1)
@@ -203,19 +207,21 @@ func (c *courseRepository) FetchByIDInUser(ctx context.Context, userID primitive
 // It first checks the cache for the data. If not found, it queries the database and,
 // if necessary, initializes the course process data for the user.
 //
-// Parameters:
+// # Parameters
+//
 // - ctx: The context for managing request deadlines, cancellation signals, and other request-scoped values.
 // - userID: The ObjectID of the user whose course process data is being retrieved.
 // - page: The page number for pagination.
 //
-// Returns:
+// # Returns
+//
 // - []course_domain.CourseProcess: A slice of course process data for the user.
 // - course_domain.DetailForManyResponse: Detailed response including statistics and pagination info.
 // - error: Any error encountered during the operation.
 func (c *courseRepository) FetchManyInUser(ctx context.Context, userID primitive.ObjectID, page string) ([]course_domain.CourseProcess, course_domain.DetailForManyResponse, error) {
-	errCh := make(chan error)
-	courseUserProcessCh := make(chan []course_domain.CourseProcess)
-	detailCh := make(chan course_domain.DetailForManyResponse)
+	errCh := make(chan error, 1)
+	courseUserProcessCh := make(chan []course_domain.CourseProcess, 1)
+	detailCh := make(chan course_domain.DetailForManyResponse, 1)
 
 	wg.Add(2)
 	go func() {
@@ -275,7 +281,6 @@ func (c *courseRepository) FetchManyInUser(ctx context.Context, userID primitive
 		return nil, course_domain.DetailForManyResponse{}, err
 	}
 
-	var coursesProcess []course_domain.CourseProcess
 	// Nếu không có CourseProcess cho người dùng, khởi tạo chúng
 	if count < countCourse {
 		cursorCourse, err := collectionCourse.Find(ctx, bson.D{})
@@ -324,46 +329,42 @@ func (c *courseRepository) FetchManyInUser(ctx context.Context, userID primitive
 			}(course)
 		}
 		wg.Wait()
-
-		// Tìm các CourseProcess của người dùng với phân trang
-		cursor, err := collectionCourseProcess.Find(ctx, filterCourseProcessByUser, findOptions)
-		if err != nil {
-			return nil, course_domain.DetailForManyResponse{}, err
-		}
-		defer func(cursor *mongo.Cursor, ctx context.Context) {
-			err := cursor.Close(ctx)
-			if err != nil {
-				errCh <- err
-				return
-			}
-		}(cursor, ctx)
 	}
 
+	var coursesProcess []course_domain.CourseProcess
 	// Tìm các CourseProcess của người dùng với phân trang
 	cursor, err := collectionCourseProcess.Find(ctx, filterCourseProcessByUser, findOptions)
 	if err != nil {
 		return nil, course_domain.DetailForManyResponse{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+		err = cursor.Close(ctx)
 		if err != nil {
 			errCh <- err
 			return
 		}
 	}(cursor, ctx)
 
+	coursesProcess = make([]course_domain.CourseProcess, 0, cursor.RemainingBatchLength())
 	// Đọc dữ liệu từ cursor và thêm vào slice coursesProcess
 	for cursor.Next(ctx) {
 		var courseProcess course_domain.CourseProcess
-		if err := cursor.Decode(&courseProcess); err != nil {
+		if err = cursor.Decode(&courseProcess); err != nil {
 			return nil, course_domain.DetailForManyResponse{}, err
 		}
-		mu.Lock()
-		coursesProcess = append(coursesProcess, courseProcess)
-		mu.Unlock()
-	}
 
-	if err := cursor.Err(); err != nil {
+		wg.Add(1)
+		go func(courseProcess course_domain.CourseProcess) {
+			defer wg.Done()
+
+			mu.Lock()
+			coursesProcess = append(coursesProcess, courseProcess)
+			mu.Unlock()
+		}(courseProcess)
+	}
+	wg.Wait()
+
+	if err = cursor.Err(); err != nil {
 		return nil, course_domain.DetailForManyResponse{}, err
 	}
 
@@ -399,7 +400,7 @@ func (c *courseRepository) FetchByIDInAdmin(ctx context.Context, courseID string
 	// Khởi tạo channel để luu trữ lỗi
 	errCh := make(chan error, 1)
 	// Khởi tạo channel để lưu trữ kết quả lesson
-	courseCh := make(chan course_domain.CourseResponse)
+	courseCh := make(chan course_domain.CourseResponse, 1)
 
 	wg.Add(1)
 	// Khởi động một goroutine cho tìm dữ liệu detail trong cache memory
@@ -579,6 +580,7 @@ func (c *courseRepository) FetchManyForEachCourseInAdmin(ctx context.Context, pa
 	}()
 
 	var courses []course_domain.CourseResponse
+	courses = make([]course_domain.CourseResponse, 0, cursor.RemainingBatchLength())
 	wg.Add(1)
 	// Khởi động một goroutine cho mỗi cursor
 	// TODO: Xử lý tìm từng dữ liệu liên quan đến course bao gồm các thông tin cơ bản và các thông tin khác
@@ -653,7 +655,7 @@ func (c *courseRepository) FetchManyForEachCourseInAdmin(ctx context.Context, pa
 // TODO: This function is intended to be a helper and not used as an API (controller).
 func (c *courseRepository) FindCourseIDByCourseNameInAdmin(ctx context.Context, courseName string) (primitive.ObjectID, error) {
 	// Channel to receive the course ID
-	courseIDCh := make(chan primitive.ObjectID)
+	courseIDCh := make(chan primitive.ObjectID, 1)
 
 	// Add a goroutine to the wait group
 	wg.Add(1)
@@ -724,6 +726,7 @@ func (c *courseRepository) UpdateOneInAdmin(ctx context.Context, course *course_
 
 	// khởi tạo đối tượng collection, ở đây là course
 	collectionCourse := c.database.Collection(c.collectionCourse)
+	collectionCourseProcess := c.database.Collection(c.collectionCourseProcess)
 
 	if course.Id == primitive.NilObjectID {
 		return nil, errors.New("the course id not nil")
@@ -731,7 +734,6 @@ func (c *courseRepository) UpdateOneInAdmin(ctx context.Context, course *course_
 
 	// Thực hiện tìm kiếm theo id
 	filter := bson.D{{Key: "_id", Value: course.Id}}
-
 	// Thực hiện cập nhật đối tương theo các trường cho trước
 	update := bson.M{
 		"$set": bson.M{
@@ -743,6 +745,11 @@ func (c *courseRepository) UpdateOneInAdmin(ctx context.Context, course *course_
 	}
 
 	data, err := collectionCourse.UpdateOne(ctx, filter, &update)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = collectionCourseProcess.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return nil, err
 	}
@@ -797,7 +804,6 @@ func (c *courseRepository) CreateOneInAdmin(ctx context.Context, course *course_
 	if course.Id == primitive.NilObjectID {
 		return errors.New("the course id not nil")
 	}
-
 	// Thực hiện tìm kiếm theo name để kiểm tra có dữ liệu trùng không
 	filter := bson.M{"name": course.Name}
 	count, err := collectionCourse.CountDocuments(ctx, filter)

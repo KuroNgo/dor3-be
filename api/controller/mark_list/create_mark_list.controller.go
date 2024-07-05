@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func (m *MarkListController) CreateOneMarkList(ctx *gin.Context) {
+func (m *MarkListController) CreateOneMarkListByUser(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -45,7 +45,7 @@ func (m *MarkListController) CreateOneMarkList(ctx *gin.Context) {
 		WhoCreated:  user.FullName,
 	}
 
-	err = m.MarkListUseCase.CreateOne(ctx, &markListReq)
+	err = m.MarkListUseCase.CreateOneByUser(ctx, user.ID, &markListReq)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Error create list mark vocabulary",

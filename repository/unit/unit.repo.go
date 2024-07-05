@@ -938,6 +938,7 @@ func (u *unitRepository) FetchByIdLessonInAdmin(ctx context.Context, idLesson st
 	}(cursor, ctx)
 
 	var units []unit_domain.UnitResponse
+	units = make([]unit_domain.UnitResponse, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
 		var unit unit_domain.UnitResponse
 		if err = cursor.Decode(&unit); err != nil {
@@ -979,7 +980,7 @@ func (u *unitRepository) FetchByIdLessonInAdmin(ctx context.Context, idLesson st
 }
 
 func (u *unitRepository) FetchOneByIDInAdmin(ctx context.Context, id string) (unit_domain.UnitResponse, error) {
-	unitCh := make(chan unit_domain.UnitResponse)
+	unitCh := make(chan unit_domain.UnitResponse, 1)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -1199,8 +1200,11 @@ func (u *unitRepository) UpdateOneInAdmin(ctx context.Context, unit *unit_domain
 }
 
 func (u *unitRepository) FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitLevel int, fieldOfIT string) (primitive.ObjectID, error) {
-	unitPrimOIDCh := make(chan primitive.ObjectID)
+	unitPrimOIDCh := make(chan primitive.ObjectID, 1)
+
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		data, found := unitPrimOIDCache.Get(strconv.Itoa(unitLevel) + fieldOfIT)
 		if found {
 			unitPrimOIDCh <- data
@@ -1222,20 +1226,25 @@ func (u *unitRepository) FindUnitIDByUnitLevelInAdmin(ctx context.Context, unitL
 	// Tìm lesson
 	var lessons []lesson_domain.Lesson
 	cursor, err := collectionLesson.Find(ctx, bson.D{})
+	lessons = make([]lesson_domain.Lesson, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
 		var lesson lesson_domain.Lesson
-		if err := cursor.Decode(&lesson); err != nil {
+		if err = cursor.Decode(&lesson); err != nil {
 			return primitive.NilObjectID, err
 		}
 
-		lessons = append(lessons, lesson)
+		wg.Add(1)
+		go func(lesson lesson_domain.Lesson) {
+			defer wg.Done()
+			lessons = append(lessons, lesson)
+		}(lesson)
 	}
+	wg.Wait()
 
 	var unitMain unit_domain.Unit
 	for _, data := range lessons {
 		if fieldOfIT == data.Name {
 			var lesson lesson_domain.Lesson
-
 			filterLesson := bson.M{"name": fieldOfIT}
 			err = collectionLesson.FindOne(ctx, filterLesson).Decode(&lesson)
 			if err != nil {

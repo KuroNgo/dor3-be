@@ -52,6 +52,10 @@ var (
 	isProcessing bool
 )
 
+const (
+	cacheTTL = 5 * time.Minute
+)
+
 func (l *lessonRepository) FetchManyNotPaginationInUser(ctx context.Context, userID primitive.ObjectID) ([]lesson_domain.LessonProcessResponse, lesson_domain.DetailResponse, error) {
 	errCh := make(chan error, 1)
 	lessonsUserProcessCh := make(chan []lesson_domain.LessonProcessResponse, 1)
@@ -152,19 +156,6 @@ func (l *lessonRepository) FetchManyNotPaginationInUser(ctx context.Context, use
 			}(lesson)
 		}
 		wg.Wait()
-
-		// Tìm các LessonProcess của người dùng với phân trang
-		cursor, err := collectionLessonProcess.Find(ctx, filterLessonProcessByUser)
-		if err != nil {
-			return nil, lesson_domain.DetailResponse{}, err
-		}
-		defer func(cursor *mongo.Cursor, ctx context.Context) {
-			err := cursor.Close(ctx)
-			if err != nil {
-				errCh <- err
-				return
-			}
-		}(cursor, ctx)
 	}
 
 	// Tìm các LessonProcess của người dùng với phân trang
@@ -173,12 +164,13 @@ func (l *lessonRepository) FetchManyNotPaginationInUser(ctx context.Context, use
 		return nil, lesson_domain.DetailResponse{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+		err = cursor.Close(ctx)
 		if err != nil {
 			errCh <- err
 			return
 		}
 	}(cursor, ctx)
+	lessonsProcess = make([]lesson_domain.LessonProcessResponse, 0, cursor.RemainingBatchLength())
 
 	// Đọc dữ liệu từ cursor và thêm vào slice LessonProcess
 	for cursor.Next(ctx) {
@@ -186,6 +178,7 @@ func (l *lessonRepository) FetchManyNotPaginationInUser(ctx context.Context, use
 		if err = cursor.Decode(&lessonProcess); err != nil {
 			return nil, lesson_domain.DetailResponse{}, err
 		}
+
 		wg.Add(1)
 		go func(lessonProcess lesson_domain.LessonProcess) {
 			defer wg.Done()
@@ -219,8 +212,8 @@ func (l *lessonRepository) FetchManyNotPaginationInUser(ctx context.Context, use
 		Statistics: statistics,
 	}
 
-	lessonsUserProcessCache.Set(userID.Hex(), lessonsProcess, 5*time.Minute)
-	detailLessonCache.Set(userID.Hex()+"detail", detail, 5*time.Minute)
+	lessonsUserProcessCache.Set(userID.Hex(), lessonsProcess, cacheTTL)
+	detailLessonCache.Set(userID.Hex()+"detail", detail, cacheTTL)
 
 	select {
 	case err = <-errCh:
@@ -279,7 +272,7 @@ func (l *lessonRepository) FetchByIDInUser(ctx context.Context, userID primitive
 		TotalScore:   lessonProcess.TotalScore,
 	}
 
-	lessonUserProcessCache.Set(userID.Hex()+lessonID, lessonProcessRes, 5*time.Minute)
+	lessonUserProcessCache.Set(userID.Hex()+lessonID, lessonProcessRes, cacheTTL)
 	return lessonProcessRes, nil
 }
 
@@ -397,19 +390,6 @@ func (l *lessonRepository) FetchByIDCourseInUser(ctx context.Context, userID pri
 			}(lesson)
 		}
 		wg.Wait()
-
-		// Tìm các LessonProcess của người dùng với phân trang
-		cursor, err := collectionLessonProcess.Find(ctx, filterLessonProcessByUser, findOptions)
-		if err != nil {
-			return nil, lesson_domain.DetailResponse{}, err
-		}
-		defer func(cursor *mongo.Cursor, ctx context.Context) {
-			err := cursor.Close(ctx)
-			if err != nil {
-				errCh <- err
-				return
-			}
-		}(cursor, ctx)
 	}
 
 	// Tìm các LessonProcess của người dùng với phân trang
@@ -424,6 +404,7 @@ func (l *lessonRepository) FetchByIDCourseInUser(ctx context.Context, userID pri
 			return
 		}
 	}(cursor, ctx)
+	lessonsProcess = make([]lesson_domain.LessonProcessResponse, 0, cursor.RemainingBatchLength())
 
 	// Đọc dữ liệu từ cursor và thêm vào slice LessonProcess
 	for cursor.Next(ctx) {
@@ -467,8 +448,8 @@ func (l *lessonRepository) FetchByIDCourseInUser(ctx context.Context, userID pri
 		CurrentPage: pageNumber,
 	}
 
-	lessonsUserProcessCache.Set(userID.Hex()+courseID+page, lessonsProcess, 5*time.Minute)
-	detailLessonCache.Set(userID.Hex()+courseID+"detail", detail, 5*time.Minute)
+	lessonsUserProcessCache.Set(userID.Hex()+courseID+page, lessonsProcess, cacheTTL)
+	detailLessonCache.Set(userID.Hex()+courseID+"detail", detail, cacheTTL)
 
 	select {
 	case err = <-errCh:
@@ -589,19 +570,6 @@ func (l *lessonRepository) FetchManyInUser(ctx context.Context, userID primitive
 			}(lesson)
 		}
 		wg.Wait()
-
-		// Tìm các LessonProcess của người dùng với phân trang
-		cursor, err := collectionLessonProcess.Find(ctx, filterLessonProcessByUser, findOptions)
-		if err != nil {
-			return nil, lesson_domain.DetailResponse{}, err
-		}
-		defer func(cursor *mongo.Cursor, ctx context.Context) {
-			err := cursor.Close(ctx)
-			if err != nil {
-				errCh <- err
-				return
-			}
-		}(cursor, ctx)
 	}
 
 	// Tìm các LessonProcess của người dùng với phân trang
@@ -617,6 +585,7 @@ func (l *lessonRepository) FetchManyInUser(ctx context.Context, userID primitive
 		}
 	}(cursor, ctx)
 
+	lessonsProcess = make([]lesson_domain.LessonProcessResponse, 0, cursor.RemainingBatchLength())
 	// Đọc dữ liệu từ cursor và thêm vào slice LessonProcess
 	for cursor.Next(ctx) {
 		var lessonProcess lesson_domain.LessonProcess
@@ -641,7 +610,7 @@ func (l *lessonRepository) FetchManyInUser(ctx context.Context, userID primitive
 		mu.Unlock()
 	}
 
-	if err := cursor.Err(); err != nil {
+	if err = cursor.Err(); err != nil {
 		return nil, lesson_domain.DetailResponse{}, err
 	}
 	sort.Sort(lesson_domain.LessonProcessResponseList(lessonsProcess))
@@ -654,8 +623,8 @@ func (l *lessonRepository) FetchManyInUser(ctx context.Context, userID primitive
 		CurrentPage: pageNumber,
 	}
 
-	lessonsUserProcessCache.Set(userID.Hex()+page, lessonsProcess, 5*time.Minute)
-	detailLessonCache.Set(userID.Hex()+"detail", detail, 5*time.Minute)
+	lessonsUserProcessCache.Set(userID.Hex()+page, lessonsProcess, cacheTTL)
+	detailLessonCache.Set(userID.Hex()+"detail", detail, cacheTTL)
 
 	select {
 	case err = <-errCh:
@@ -731,7 +700,6 @@ func (l *lessonRepository) FetchManyInAdmin(ctx context.Context, page string) ([
 	if err != nil {
 		return nil, lesson_domain.DetailResponse{}, errors.New("invalid page number")
 	}
-
 	// tối đa dữ liệu gửi đến ở mỗi trang được yêu cầu
 	perPage := 10
 	// nếu dữ liệu nhỏ hơn 1 sẽ skip
@@ -764,6 +732,7 @@ func (l *lessonRepository) FetchManyInAdmin(ctx context.Context, page string) ([
 	}(cursor, ctx)
 
 	var lessons []lesson_domain.LessonResponse
+	lessons = make([]lesson_domain.LessonResponse, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
 		// chuyển đổi sang JSON cho lesson
 		var lesson lesson_domain.LessonResponse
@@ -837,8 +806,8 @@ func (l *lessonRepository) FetchManyInAdmin(ctx context.Context, page string) ([
 	}
 
 	// Thiết lập Set cache memory với dữ liệu cần thiết với thơi gian là 5 phút
-	lessonsCache.Set(page, lessons, 5*time.Minute)
-	detailLessonCache.Set("detail", response, 5*time.Minute)
+	lessonsCache.Set(page, lessons, cacheTTL)
+	detailLessonCache.Set("detail", response, cacheTTL)
 
 	// Thu thập kết quả
 	select {
@@ -916,7 +885,7 @@ func (l *lessonRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([
 
 	// Khởi tạo slice để lưu trữ bài học
 	var lessons []lesson_domain.LessonResponse
-
+	lessons = make([]lesson_domain.LessonResponse, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
 		var lesson lesson_domain.LessonResponse
 		if err = cursor.Decode(&lesson); err != nil {
@@ -1216,7 +1185,7 @@ func (l *lessonRepository) FetchByIdCourseInAdmin(ctx context.Context, idCourse 
 
 	// List to hold lessons
 	var lessons []lesson_domain.LessonResponse
-
+	lessons = make([]lesson_domain.LessonResponse, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
 		var lesson lesson_domain.LessonResponse
 		if err = cursor.Decode(&lesson); err != nil {

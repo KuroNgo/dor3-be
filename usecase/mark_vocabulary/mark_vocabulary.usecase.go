@@ -3,6 +3,7 @@ package mark_vacabulary_usecase
 import (
 	mark_vocabulary_domain "clean-architecture/domain/mark_vocabulary"
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
@@ -30,7 +31,7 @@ func (m *markVocabularyUseCase) FetchManyByMarkList(ctx context.Context, markLis
 	return markVocabulary, err
 }
 
-func (m *markVocabularyUseCase) FetchManyByMarkListIDAndUserId(ctx context.Context, markListId string, userId string) (mark_vocabulary_domain.Response, error) {
+func (m *markVocabularyUseCase) FetchManyByMarkListIDAndUserId(ctx context.Context, markListId string, userId primitive.ObjectID) (mark_vocabulary_domain.Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, m.contextTimeout)
 	defer cancel()
 

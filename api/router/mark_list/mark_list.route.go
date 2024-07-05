@@ -29,8 +29,8 @@ func MarkListRoute(env *bootstrap.Database, timeout time.Duration, db *mongo.Dat
 
 	router := group.Group("/mark_list")
 	router.Use(middleware.DeserializeUser())
-	router.GET("/fetch", markList.FetchManyMarkListByUserID)
-	router.POST("/create", markList.CreateOneMarkList)
-	router.PATCH("/update", markList.UpdateOneMarkList)
-	router.DELETE("/delete/_id", markList.DeleteOneMarkList)
+	router.GET("/fetch", markList.FetchManyMarkListByUser)
+	router.POST("/create", markList.CreateOneMarkListByUser)
+	router.PATCH("/update", markList.UpdateOneMarkListByUser)
+	router.DELETE("/delete/_id", markList.DeleteOneMarkListByUser)
 }

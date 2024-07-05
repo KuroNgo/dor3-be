@@ -2,6 +2,7 @@ package mark_vocabulary_domain
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Input struct {
@@ -10,7 +11,7 @@ type Input struct {
 }
 
 type IMarkToFavouriteUseCase interface {
-	FetchManyByMarkListIDAndUserId(ctx context.Context, markListId string, userId string) (Response, error)
+	FetchManyByMarkListIDAndUserId(ctx context.Context, markListId string, userId primitive.ObjectID) (Response, error)
 	FetchManyByMarkList(ctx context.Context, markListId string) (Response, error)
 	FetchManyByMarkListID(ctx context.Context, markListId string) ([]MarkToFavourite, error)
 

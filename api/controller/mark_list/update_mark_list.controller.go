@@ -7,8 +7,8 @@ import (
 	"net/http"
 )
 
-// UpdateOneMarkList update one mark list for user
-func (m *MarkListController) UpdateOneMarkList(ctx *gin.Context) {
+// UpdateOneMarkListByUser update one mark list for user
+func (m *MarkListController) UpdateOneMarkListByUser(ctx *gin.Context) {
 	currentUser, exists := ctx.Get("currentUser")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -42,7 +42,7 @@ func (m *MarkListController) UpdateOneMarkList(ctx *gin.Context) {
 		Description: markListInput.Description,
 	}
 
-	data, err := m.MarkListUseCase.UpdateOne(ctx, &markListReq)
+	data, err := m.MarkListUseCase.UpdateOneByUser(ctx, user.ID, &markListReq)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

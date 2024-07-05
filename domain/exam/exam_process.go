@@ -11,3 +11,9 @@ type ExamProcess struct {
 	UserID     primitive.ObjectID `json:"user_id" bson:"user_id"`
 	IsComplete int                `json:"is_complete" bson:"is_complete"`
 }
+
+type ExamProcessRes struct {
+	Exam       Exam               `json:"exam" bson:"exam"`
+	UserID     primitive.ObjectID `json:"user_id" bson:"user_id"`
+	IsComplete int                `json:"is_complete" bson:"is_complete"`
+}
