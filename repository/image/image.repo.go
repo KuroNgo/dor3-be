@@ -2,6 +2,7 @@ package image_repository
 
 import (
 	image_domain "clean-architecture/domain/image"
+	"clean-architecture/internal"
 	"clean-architecture/internal/cache/memory"
 	"context"
 	"errors"
@@ -31,8 +32,9 @@ var (
 	imageResCache = memory.NewTTL[string, image_domain.Response]()
 	imageCache    = memory.NewTTL[string, image_domain.Image]()
 
-	wg sync.WaitGroup
-	mu sync.Mutex
+	wg           sync.WaitGroup
+	mu           sync.Mutex
+	isProcessing bool
 )
 
 const (
@@ -41,6 +43,27 @@ const (
 
 func (i *imageRepository) FetchByCategory(ctx context.Context, category string, page string) (image_domain.Response, error) {
 	errCh := make(chan error, 1)
+	imageResCh := make(chan image_domain.Response, 1)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := imageResCache.Get(category + page)
+		if found {
+			imageResCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(imageResCh)
+		wg.Wait()
+	}()
+
+	imageResData := <-imageResCh
+	if !internal.IsZeroValue(imageResData) {
+		return imageResData, nil
+	}
+
 	collectionImage := i.database.Collection(i.collection)
 
 	pageNumber, err := strconv.Atoi(page)
@@ -99,11 +122,16 @@ func (i *imageRepository) FetchByCategory(ctx context.Context, category string, 
 	wg.Wait()
 
 	cal := <-calculate
+	statistics, _ := i.Statistics(ctx)
 
 	imgRes := image_domain.Response{
-		Page:  cal,
-		Image: images,
+		Page:        cal,
+		CurrentPage: pageNumber,
+		Statistics:  statistics,
+		Image:       images,
 	}
+
+	imageResCache.Set(category+page, imgRes, cacheTTL)
 
 	select {
 	case err = <-errCh:
@@ -113,7 +141,145 @@ func (i *imageRepository) FetchByCategory(ctx context.Context, category string, 
 	}
 }
 
+func (i *imageRepository) GetURLByName(ctx context.Context, name string) (image_domain.Image, error) {
+	imageCh := make(chan image_domain.Image, 1)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := imageCache.Get(name)
+		if found {
+			imageCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(imageCh)
+		wg.Wait()
+	}()
+
+	imageData := <-imageCh
+	if !internal.IsZeroValue(imageData) {
+		return imageData, nil
+	}
+
+	collection := i.database.Collection(i.collection)
+	var image image_domain.Image
+	err := collection.FindOne(ctx, bson.M{"image_name": name}).Decode(&image)
+
+	imageCache.Set(name, image, cacheTTL)
+	return image, err
+}
+
+func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_domain.Response, error) {
+	errCh := make(chan error, 1)
+	imageResCh := make(chan image_domain.Response, 1)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, found := imageResCache.Get(page)
+		if found {
+			imageResCh <- data
+		}
+	}()
+
+	go func() {
+		defer close(imageResCh)
+		wg.Wait()
+	}()
+
+	imageResData := <-imageResCh
+	if !internal.IsZeroValue(imageResData) {
+		return imageResData, nil
+	}
+
+	collection := i.database.Collection(i.collection)
+
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil || pageNumber < 1 {
+		return image_domain.Response{}, errors.New("invalid page number")
+	}
+
+	const perPage = 7
+	skip := (pageNumber - 1) * perPage
+	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
+
+	var count int64
+
+	// Count the total number of documents in the collection
+	count, err = collection.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return image_domain.Response{}, fmt.Errorf("error counting documents: %v", err)
+	}
+
+	// Fetch the current page of images
+	cursor, err := collection.Find(ctx, bson.D{}, findOptions)
+	if err != nil {
+		return image_domain.Response{}, fmt.Errorf("error finding documents: %v", err)
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err = cursor.Close(ctx)
+		if err != nil {
+			errCh <- err
+			return
+		}
+	}(cursor, ctx)
+
+	var images []image_domain.Image
+	images = make([]image_domain.Image, 0, cursor.RemainingBatchLength())
+	for cursor.Next(ctx) {
+		var doc image_domain.Image
+		if err := cursor.Decode(&doc); err != nil {
+			return image_domain.Response{}, fmt.Errorf("error decoding document: %v", err)
+		}
+
+		wg.Add(1)
+		go func(doc image_domain.Image) {
+			defer wg.Done()
+			images = append(images, doc)
+		}(doc)
+	}
+	wg.Wait()
+
+	if err = cursor.Err(); err != nil {
+		return image_domain.Response{}, fmt.Errorf("error iterating cursor: %v", err)
+	}
+
+	totalPages := (count + int64(perPage) - 1) / int64(perPage)
+	statistics, _ := i.Statistics(ctx)
+
+	response := image_domain.Response{
+		Image:      images,
+		Statistics: statistics,
+		Page:       totalPages,
+	}
+
+	imageResCache.Set(page, response, cacheTTL)
+
+	select {
+	case err = <-errCh:
+		return image_domain.Response{}, err
+	default:
+		return response, nil
+	}
+
+}
+
 func (i *imageRepository) CreateMany(ctx context.Context, images []*image_domain.Image) error {
+	// Khóa lock giúp bảo vệ course
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collection := i.database.Collection(i.collection)
 
 	var documents []interface{}
@@ -135,77 +301,20 @@ func (i *imageRepository) CreateMany(ctx context.Context, images []*image_domain
 	return err
 }
 
-func (i *imageRepository) GetURLByName(ctx context.Context, name string) (image_domain.Image, error) {
-	collection := i.database.Collection(i.collection)
-	var image image_domain.Image
-	err := collection.FindOne(ctx, bson.M{"image_name": name}).Decode(&image)
-	return image, err
-}
-
-func (i *imageRepository) FetchMany(ctx context.Context, page string) (image_domain.Response, error) {
-	collection := i.database.Collection(i.collection)
-
-	pageNumber, err := strconv.Atoi(page)
-	if err != nil || pageNumber < 1 {
-		return image_domain.Response{}, errors.New("invalid page number")
-	}
-
-	const perPage = 7
-	skip := (pageNumber - 1) * perPage
-	findOptions := options.Find().SetLimit(int64(perPage)).SetSkip(int64(skip))
-
-	var count int64
-	var images []image_domain.Image
-
-	// Count the total number of documents in the collection
-	count, err = collection.CountDocuments(ctx, bson.D{})
-	if err != nil {
-		return image_domain.Response{}, fmt.Errorf("error counting documents: %v", err)
-	}
-
-	// Fetch the current page of images
-	cursor, err := collection.Find(ctx, bson.D{}, findOptions)
-	if err != nil {
-		return image_domain.Response{}, fmt.Errorf("error finding documents: %v", err)
-	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
-		if err != nil {
-			return
-		}
-	}(cursor, ctx)
-
-	for cursor.Next(ctx) {
-		var doc image_domain.Image
-		if err := cursor.Decode(&doc); err != nil {
-			return image_domain.Response{}, fmt.Errorf("error decoding document: %v", err)
-		}
-		images = append(images, doc)
-	}
-
-	if err := cursor.Err(); err != nil {
-		return image_domain.Response{}, fmt.Errorf("error iterating cursor: %v", err)
-	}
-
-	totalPages := (count + int64(perPage) - 1) / int64(perPage)
-
-	statisticsCh := make(chan image_domain.Statistics)
-	go func() {
-		statistics, _ := i.Statistics(ctx)
-		statisticsCh <- statistics
-	}()
-	statistics := <-statisticsCh
-
-	response := image_domain.Response{
-		Image:      images,
-		Statistics: statistics,
-		Page:       totalPages,
-	}
-
-	return response, nil
-}
-
 func (i *imageRepository) UpdateOne(ctx context.Context, updatedImage *image_domain.Image) error {
+	// Khóa lock giúp bảo vệ course
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collection := i.database.Collection(i.collection)
 
 	idImage, _ := primitive.ObjectIDFromHex(updatedImage.Id.Hex())
@@ -222,10 +331,34 @@ func (i *imageRepository) UpdateOne(ctx context.Context, updatedImage *image_dom
 		return fmt.Errorf("failed to update image: %w", err)
 	}
 
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		imageCache.Clear()
+	}()
+
+	go func() {
+		defer wg.Done()
+		imageResCache.Clear()
+	}()
+	wg.Wait()
 	return nil
 }
 
 func (i *imageRepository) CreateOne(ctx context.Context, image *image_domain.Image) error {
+	// Khóa lock giúp bảo vệ course
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collection := i.database.Collection(i.collection)
 
 	filter := bson.M{"image_name": image.ImageName, "image_url": image.ImageUrl}
@@ -239,10 +372,34 @@ func (i *imageRepository) CreateOne(ctx context.Context, image *image_domain.Ima
 	}
 
 	_, err = collection.InsertOne(ctx, image)
-	return err
+	if err != nil {
+		return err
+	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		imageResCache.Clear()
+	}()
+	wg.Wait()
+
+	return nil
 }
 
 func (i *imageRepository) DeleteOne(ctx context.Context, imageID string) error {
+	// Khóa lock giúp bảo vệ course
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collection := i.database.Collection(i.collection)
 	objID, err := primitive.ObjectIDFromHex(imageID)
 	if err != nil {
@@ -260,13 +417,41 @@ func (i *imageRepository) DeleteOne(ctx context.Context, imageID string) error {
 		return errors.New(`the course had been removed or does not exists`)
 	}
 	_, err = collection.DeleteOne(ctx, filter)
-	return err
+	if err != nil {
+		return err
+	}
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		imageCache.Remove(imageID)
+	}()
+
+	go func() {
+		defer wg.Done()
+		imageResCache.Clear()
+	}()
+	wg.Wait()
+
+	return nil
 }
 
 func (i *imageRepository) DeleteMany(ctx context.Context, imageID ...string) error {
+	// Khóa lock giúp bảo vệ course
+	mu.Lock()
+	defer mu.Unlock()
+
+	if isProcessing {
+		return errors.New("another goroutine is already processing")
+	}
+
+	isProcessing = true
+	defer func() {
+		isProcessing = false
+	}()
+
 	collection := i.database.Collection(i.collection)
 	var objIDs []primitive.ObjectID
-
 	for _, audioID := range imageID {
 		objID, err := primitive.ObjectIDFromHex(audioID)
 		if err != nil {
@@ -286,7 +471,23 @@ func (i *imageRepository) DeleteMany(ctx context.Context, imageID ...string) err
 		return errors.New("the images do not exists or has been removed")
 	}
 	_, err = collection.DeleteMany(ctx, filter)
-	return err
+	if err != nil {
+		return err
+	}
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		imageCache.Clear()
+	}()
+
+	go func() {
+		defer wg.Done()
+		imageResCache.Clear()
+	}()
+	wg.Wait()
+
+	return nil
 }
 
 func (i *imageRepository) Statistics(ctx context.Context) (image_domain.Statistics, error) {

@@ -1,22 +1,14 @@
 package image_controller
 
 import (
-	image_domain "clean-architecture/domain/image"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 func (im *ImageController) FetchImageByName(ctx *gin.Context) {
-	var imageInput image_domain.Input
-	if err := ctx.ShouldBindJSON(&imageInput); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"message": err.Error(),
-		})
-		return
-	}
+	imageName := ctx.Query("name")
 
-	imageURL, err := im.ImageUseCase.GetURLByName(ctx, imageInput.ImageName)
+	imageURL, err := im.ImageUseCase.GetURLByName(ctx, imageName)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

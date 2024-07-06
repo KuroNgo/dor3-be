@@ -20,11 +20,11 @@ import (
 
 // vocabularyRepository defines the structure for the repository that interacts with the vocabulary collections in the database.
 type vocabularyRepository struct {
-	database             *mongo.Database // Reference to the MongoDB database
-	collectionVocabulary string          // Name of the vocabulary collection
-	collectionMark       string          // Name of the mark collection
-	collectionUnit       string          // Name of the unit collection
-	collectionLesson     string          // Name of the lesson collection
+	database             *mongo.Database
+	collectionVocabulary string
+	collectionMark       string
+	collectionUnit       string
+	collectionLesson     string
 }
 
 // NewVocabularyRepository creates a new instance of vocabularyRepository.

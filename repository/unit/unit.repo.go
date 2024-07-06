@@ -57,6 +57,10 @@ var (
 	isProcessing bool
 )
 
+const (
+	cacheTTL = 5 * time.Minute
+)
+
 // FetchManyInUser fetches a paginated list of unit processes for a given user.
 // It attempts to retrieve data from cache first; if not found, it fetches from the database.
 // The function returns a list of unit processes, detail response with pagination info, and an error if any.
@@ -133,7 +137,6 @@ func (u *unitRepository) FetchManyInUser(ctx context.Context, user primitive.Obj
 		return nil, unit_domain.DetailResponse{}, err
 	}
 
-	var unitsProcess []unit_domain.UnitProcessResponse
 	if count < countUnit {
 		cursorUnit, err := collectionUnit.Find(ctx, bson.M{})
 		if err != nil {
@@ -179,18 +182,6 @@ func (u *unitRepository) FetchManyInUser(ctx context.Context, user primitive.Obj
 			}(unit)
 		}
 		wg.Wait()
-
-		cursor, err := collectionUnitProcess.Find(ctx, filterUnitProcessByUser, findOptions)
-		if err != nil {
-			return nil, unit_domain.DetailResponse{}, err
-		}
-		defer func(cursor *mongo.Cursor, ctx context.Context) {
-			err := cursor.Close(ctx)
-			if err != nil {
-				errCh <- err
-				return
-			}
-		}(cursor, ctx)
 	}
 
 	cursor, err := collectionUnitProcess.Find(ctx, filterUnitProcessByUser, findOptions)
@@ -198,16 +189,18 @@ func (u *unitRepository) FetchManyInUser(ctx context.Context, user primitive.Obj
 		return nil, unit_domain.DetailResponse{}, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+		err = cursor.Close(ctx)
 		if err != nil {
 			errCh <- err
 			return
 		}
 	}(cursor, ctx)
 
+	var unitsProcess []unit_domain.UnitProcessResponse
+	unitsProcess = make([]unit_domain.UnitProcessResponse, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
 		var unitProcess unit_domain.UnitProcess
-		if err := cursor.Decode(&unitProcess); err != nil {
+		if err = cursor.Decode(&unitProcess); err != nil {
 			return nil, unit_domain.DetailResponse{}, err
 		}
 
@@ -235,7 +228,7 @@ func (u *unitRepository) FetchManyInUser(ctx context.Context, user primitive.Obj
 	}
 	wg.Wait()
 
-	if err := cursor.Err(); err != nil {
+	if err = cursor.Err(); err != nil {
 		return nil, unit_domain.DetailResponse{}, err
 	}
 	sort.Sort(unit_domain.UnitProcessResponseList(unitsProcess))
@@ -244,6 +237,9 @@ func (u *unitRepository) FetchManyInUser(ctx context.Context, user primitive.Obj
 		Page:        totalPages,
 		CurrentPage: pageNumber,
 	}
+
+	unitsUserProcessCache.Set(user.Hex()+page, unitsProcess, cacheTTL)
+	detailUnitCache.Set(user.Hex()+"detail", detail, cacheTTL)
 
 	select {
 	case err = <-errCh:
@@ -356,7 +352,6 @@ func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user 
 		return nil, err
 	}
 
-	var unitsProcess []unit_domain.UnitProcessResponse
 	if count < countUnit {
 		cursorUnit, err := collectionUnit.Find(ctx, bson.M{})
 		if err != nil {
@@ -403,18 +398,6 @@ func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user 
 			}(unit)
 		}
 		wg.Wait()
-
-		cursor, err := collectionUnitProcess.Find(ctx, filterUnitProcessByUser)
-		if err != nil {
-			return nil, err
-		}
-		defer func(cursor *mongo.Cursor, ctx context.Context) {
-			err := cursor.Close(ctx)
-			if err != nil {
-				errCh <- err
-				return
-			}
-		}(cursor, ctx)
 	}
 
 	cursor, err := collectionUnitProcess.Find(ctx, filterUnitProcessByUser)
@@ -422,16 +405,18 @@ func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user 
 		return nil, err
 	}
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+		err = cursor.Close(ctx)
 		if err != nil {
 			errCh <- err
 			return
 		}
 	}(cursor, ctx)
 
+	var unitsProcess []unit_domain.UnitProcessResponse
+	unitsProcess = make([]unit_domain.UnitProcessResponse, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
 		var unitProcess unit_domain.UnitProcess
-		if err := cursor.Decode(&unitProcess); err != nil {
+		if err = cursor.Decode(&unitProcess); err != nil {
 			return nil, err
 		}
 
@@ -459,7 +444,7 @@ func (u *unitRepository) FetchManyNotPaginationInUser(ctx context.Context, user 
 	}
 	wg.Wait()
 
-	if err := cursor.Err(); err != nil {
+	if err = cursor.Err(); err != nil {
 		return nil, err
 	}
 	sort.Sort(unit_domain.UnitProcessResponseList(unitsProcess))
@@ -525,7 +510,6 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 		return nil, err
 	}
 
-	var unitsProcess []unit_domain.UnitProcessResponse
 	// Nếu không có LessonProcess cho người dùng, khởi tạo chúng
 	if count < countUnit {
 		cursorUnit, err := collectionUnit.Find(ctx, bson.D{})
@@ -574,19 +558,6 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 			}(unit)
 		}
 		wg.Wait()
-
-		// Tìm các LessonProcess của người dùng với phân trang
-		cursor, err := collectionUnitProcess.Find(ctx, filterLessonProcessByUser)
-		if err != nil {
-			return nil, err
-		}
-		defer func(cursor *mongo.Cursor, ctx context.Context) {
-			err := cursor.Close(ctx)
-			if err != nil {
-				errCh <- err
-				return
-			}
-		}(cursor, ctx)
 	}
 
 	findOptions := options.Find().SetSort(bson.M{"level": 1})
@@ -603,6 +574,8 @@ func (u *unitRepository) FetchByIdLessonInUser(ctx context.Context, user primiti
 		}
 	}(cursor, ctx)
 
+	var unitsProcess []unit_domain.UnitProcessResponse
+	unitsProcess = make([]unit_domain.UnitProcessResponse, 0, cursor.RemainingBatchLength())
 	// Đọc dữ liệu từ cursor và thêm vào slice LessonProcess
 	for cursor.Next(ctx) {
 		var unitProcess unit_domain.UnitProcess
@@ -746,6 +719,7 @@ func (u *unitRepository) FetchManyInAdmin(ctx context.Context, page string) ([]u
 	}(cursor, ctx)
 
 	var units []unit_domain.UnitResponse
+	units = make([]unit_domain.UnitResponse, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
 		var unit unit_domain.UnitResponse
 		if err = cursor.Decode(&unit); err != nil {
@@ -832,7 +806,7 @@ func (u *unitRepository) FetchManyNotPaginationInAdmin(ctx context.Context) ([]u
 	}(cursor, ctx)
 
 	var units []unit_domain.UnitResponse
-
+	units = make([]unit_domain.UnitResponse, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
 		var unit unit_domain.UnitResponse
 		if err = cursor.Decode(&unit); err != nil {

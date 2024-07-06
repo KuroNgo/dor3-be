@@ -32,27 +32,6 @@ func (u *userAttemptRepository) FetchOneByUnitIDAndUserID(ctx context.Context, u
 	panic("implement me")
 }
 
-//func (u *userAttemptRepository) FetchOneByUnitIDAndUserID(ctx context.Context, userID string, unit string) (user_attempt_domain.UserProcess, error) {
-//	//collectionExam := u.database.Collection(u.collectionExam)
-//	//collectionExercise := u.database.Collection(u.collectionExercise)
-//	//collectionUserAttempt := u.database.Collection(u.collectionUserAttempt)
-//	//collectionQuiz := u.database.Collection(u.collectionQuiz)
-//	//
-//	//idUser, err := primitive.ObjectIDFromHex(userID)
-//	//if err != nil {
-//	//	return user_attempt_domain.UserProcess{}, err
-//	//}
-//	//
-//	//idUnit, err := primitive.ObjectIDFromHex(unit)
-//	//if err != nil {
-//	//	return user_attempt_domain.UserProcess{}, err
-//	//}
-//	//
-//	//filter := bson.M{"user_id": idUser, "unit_id": idUnit}
-//	//panic(error())
-//
-//}
-
 func (u *userAttemptRepository) UpdateExamManagementByExamID(ctx context.Context, userID exam_management.ExamManagement) error {
 	collectionUserAttempt := u.database.Collection(u.collectionUserAttempt)
 

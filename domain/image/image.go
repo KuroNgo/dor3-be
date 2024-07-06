@@ -20,7 +20,7 @@ type Image struct {
 
 type Response struct {
 	Page        int64      `json:"page"`
-	CurrentPage int64      `json:"current_page"`
+	CurrentPage int        `json:"current_page"`
 	Statistics  Statistics `json:"statistics"`
 	Image       []Image    `json:"image" bson:"image"`
 }
