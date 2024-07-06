@@ -8,25 +8,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"sync"
-	"time"
 )
 
 type userDetailRepository struct {
 	database   *mongo.Database
 	collection string
-
-	userDetailOneCache     map[string]user_detail_domain.UserDetail
-	userDetailCacheExpires map[string]time.Time
-	cacheMutex             sync.RWMutex
 }
 
 func NewUserDetailRepository(db *mongo.Database, collection string) user_detail_domain.IUserDetailRepository {
 	return &userDetailRepository{
 		database:   db,
 		collection: collection,
-
-		userDetailOneCache:     make(map[string]user_detail_domain.UserDetail),
-		userDetailCacheExpires: make(map[string]time.Time),
 	}
 }
 

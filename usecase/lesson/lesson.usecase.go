@@ -13,16 +13,16 @@ type lessonUseCase struct {
 	contextTimeout   time.Duration
 }
 
-func (l *lessonUseCase) UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewLessonUseCase(lessonRepository lesson_domain.ILessonRepository, timeout time.Duration) lesson_domain.ILessonUseCase {
 	return &lessonUseCase{
 		lessonRepository: lessonRepository,
 		contextTimeout:   timeout,
 	}
+}
+
+func (l *lessonUseCase) UpdateCompleteInUser(ctx context.Context, user primitive.ObjectID) (*mongo.UpdateResult, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (l *lessonUseCase) FetchManyNotPaginationInUser(ctx context.Context, userID primitive.ObjectID) ([]lesson_domain.LessonProcessResponse, lesson_domain.DetailResponse, error) {
