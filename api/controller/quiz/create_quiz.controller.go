@@ -29,7 +29,6 @@ func (q *QuizController) CreateOneQuiz(ctx *gin.Context) {
 	}
 
 	var quizInput quiz_domain.Input
-
 	if err := ctx.ShouldBindJSON(&quizInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

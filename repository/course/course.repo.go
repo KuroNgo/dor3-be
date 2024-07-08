@@ -192,7 +192,7 @@ func (c *courseRepository) FetchByIDInUser(ctx context.Context, userID primitive
 	}
 
 	// Cache the CourseProcess data for 5 minutes
-	courseUserProcessCache.Set(userID.Hex()+courseID, courseUserProcess, 5*time.Minute)
+	courseUserProcessCache.Set(userID.Hex()+courseID, courseUserProcess, cacheTTL)
 
 	// Check if there were any errors in the error channel
 	select {
@@ -377,8 +377,8 @@ func (c *courseRepository) FetchManyInUser(ctx context.Context, userID primitive
 		CountCourse: countCourse,
 	}
 
-	coursesUserProcessCache.Set(userID.Hex(), coursesProcess, 5*time.Minute)
-	detailCourseCache.Set(userID.Hex()+"detail", detail, 5*time.Minute)
+	coursesUserProcessCache.Set(userID.Hex(), coursesProcess, cacheTTL)
+	detailCourseCache.Set(userID.Hex()+"detail", detail, cacheTTL)
 
 	select {
 	case err = <-errCh:
@@ -451,7 +451,7 @@ func (c *courseRepository) FetchByIDInAdmin(ctx context.Context, courseID string
 	// Goroutine để thực hiên đếm số lượng lesson trong lesson của course
 	go func() {
 		defer close(countLessonCh)
-		countLesson, err := c.countLessonsByCourseID(ctx, course.Id)
+		countLesson, err := c.countLessonsByCourseID(ctx, idCourse)
 		if err != nil {
 			errCh <- err
 			return
@@ -462,7 +462,7 @@ func (c *courseRepository) FetchByIDInAdmin(ctx context.Context, courseID string
 	// Goroutine để thực hiên đếm số lượng vocabulary trong lesson
 	go func() {
 		defer close(countVocabularyCh)
-		countVocabulary, err := c.countVocabularyByCourseID(ctx, course.Id)
+		countVocabulary, err := c.countVocabularyByCourseID(ctx, idCourse)
 		if err != nil {
 			errCh <- err
 			return
@@ -478,7 +478,7 @@ func (c *courseRepository) FetchByIDInAdmin(ctx context.Context, courseID string
 	course.CountLesson = countLesson
 
 	// Thiết lập Set cache memory với dữ liệu cần thiết với thơi gian là 5 phút
-	courseCache.Set(courseID, course, 5*time.Minute)
+	courseCache.Set(courseID, course, cacheTTL)
 
 	select {
 	// Nếu có lỗi, sẽ thực hiện trả về lỗi
@@ -587,32 +587,36 @@ func (c *courseRepository) FetchManyForEachCourseInAdmin(ctx context.Context, pa
 	go func() {
 		defer wg.Done()
 		for cursor.Next(ctx) {
-			// chuyển đổi sang JSON cho course
-			var course course_domain.CourseResponse
+			var course course_domain.Course
 			if err = cursor.Decode(&course); err != nil {
 				errCh <- err
 				return
 			}
 
+			// chuyển đổi sang JSON cho course
+			courseRes := course_domain.CourseResponse{
+				Course: course,
+			}
+
 			wg.Add(1)
 			// Goroutine giúp lấy kết quả đếm lesson, vocabulary cho mỗi course
-			go func(course2 course_domain.CourseResponse) {
+			go func(course course_domain.Course, courseRes course_domain.CourseResponse) {
 				defer wg.Done()
-				countLesson, err := c.countLessonsByCourseID(ctx, course2.Id)
+				countLesson, err := c.countLessonsByCourseID(ctx, course.Id)
 				if err != nil {
 					errCh <- err
 					return
 				}
 
-				countVocab, err := c.countVocabularyByCourseID(ctx, course2.Id)
+				countVocab, err := c.countVocabularyByCourseID(ctx, course.Id)
 				if err != nil {
 					errCh <- err
 					return
 				}
-				course2.CountVocabulary = countVocab
-				course2.CountLesson = countLesson
-				courses = append(courses, course2)
-			}(course)
+				courseRes.CountVocabulary = countVocab
+				courseRes.CountLesson = countLesson
+				courses = append(courses, courseRes)
+			}(course, courseRes)
 		}
 	}()
 	wg.Wait()
@@ -635,8 +639,8 @@ func (c *courseRepository) FetchManyForEachCourseInAdmin(ctx context.Context, pa
 	}
 
 	// Thiết lập Set cache memory với dữ liệu cần thiết với thơi gian là 5 phút
-	coursesCache.Set(page, courses, 5*time.Minute)
-	detailCourseCache.Set("detail", detail, 5*time.Minute)
+	coursesCache.Set(page, courses, cacheTTL)
+	detailCourseCache.Set("detail", detail, cacheTTL)
 
 	// Thu thập kết quả
 	select {
@@ -701,7 +705,7 @@ func (c *courseRepository) FindCourseIDByCourseNameInAdmin(ctx context.Context, 
 	}
 
 	// Cache the retrieved course ID
-	coursePrimOIDCache.Set(courseName, data.Id, 5*time.Minute)
+	coursePrimOIDCache.Set(courseName, data.Id, cacheTTL)
 	// Return the retrieved course ID
 	return data.Id, nil
 }
@@ -726,7 +730,6 @@ func (c *courseRepository) UpdateOneInAdmin(ctx context.Context, course *course_
 
 	// khởi tạo đối tượng collection, ở đây là course
 	collectionCourse := c.database.Collection(c.collectionCourse)
-	collectionCourseProcess := c.database.Collection(c.collectionCourseProcess)
 
 	if course.Id == primitive.NilObjectID {
 		return nil, errors.New("the course id not nil")
@@ -745,11 +748,6 @@ func (c *courseRepository) UpdateOneInAdmin(ctx context.Context, course *course_
 	}
 
 	data, err := collectionCourse.UpdateOne(ctx, filter, &update)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = collectionCourseProcess.UpdateOne(ctx, filter, &update)
 	if err != nil {
 		return nil, err
 	}
@@ -983,7 +981,7 @@ func (c *courseRepository) Statistics(ctx context.Context, countOptions bson.M) 
 	}
 
 	// Thiết lập Set cache memory với dữ liệu cần thiết với thơi gian là 5 phút
-	statisticsCache.Set("statistics", statistics, 5*time.Minute)
+	statisticsCache.Set("statistics", statistics, cacheTTL)
 	return statistics, nil
 }
 
