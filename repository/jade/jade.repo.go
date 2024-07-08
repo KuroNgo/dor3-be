@@ -78,9 +78,9 @@ func (j *jadeRepository) Rank(ctx context.Context) ([]jade_domain.JadeBlockchain
 func (j *jadeRepository) CreateCurrencyInUser(ctx context.Context, userID primitive.ObjectID, data int64) error {
 	collectionJade := j.database.Collection(j.collectionJade)
 
-	var blockchain blockchain2.BlockChain
-	blockchain.AddBlock(data)
-	newBlock := blockchain.Blocks[len(blockchain.Blocks)-1]
+	bc := blockchain2.NewBlockchain()
+	bc.AddBlock(data)
+	newBlock := bc.Blocks[len(bc.Blocks)-1]
 
 	jade := jade_domain.Jade{
 		ID:     primitive.NewObjectID(),
@@ -100,9 +100,9 @@ func (j *jadeRepository) UpdateCurrencyInUser(ctx context.Context, userID primit
 	collectionJade := j.database.Collection(j.collectionJade)
 
 	filter := bson.M{"user_id": userID}
-	var blockchain blockchain2.BlockChain
-	blockchain.AddBlock(data)
-	newBlock := blockchain.Blocks[len(blockchain.Blocks)-1]
+	bc := blockchain2.NewBlockchain()
+	bc.AddBlock(data)
+	newBlock := bc.Blocks[len(bc.Blocks)-1]
 	update := bson.M{
 		"$set": bson.M{
 			"amount": newBlock,

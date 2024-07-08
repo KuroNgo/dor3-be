@@ -15,6 +15,7 @@ type Block struct {
 	Hash          []byte `bson:"hash" json:"hash"`
 }
 
+// BlockChain represents the blockchain
 type BlockChain struct {
 	Blocks []*Block
 }
@@ -42,11 +43,11 @@ func (bc *BlockChain) AddBlock(data int64) {
 }
 
 // NewGenesisBlock creates and returns the genesis block
-func (b *Block) NewGenesisBlock() *Block {
-	return NewBlock(b.Timestamp, []byte{})
+func NewGenesisBlock() *Block {
+	return NewBlock(0, []byte{})
 }
 
 // NewBlockchain creates a new Blockchain with genesis Block
-func (b *Block) NewBlockchain() *BlockChain {
-	return &BlockChain{[]*Block{b.NewGenesisBlock()}}
+func NewBlockchain() *BlockChain {
+	return &BlockChain{[]*Block{NewGenesisBlock()}}
 }

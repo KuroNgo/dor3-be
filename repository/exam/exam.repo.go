@@ -258,6 +258,7 @@ func (e *examRepository) FetchManyInAdmin(ctx context.Context, page string) ([]e
 	}(cursor, ctx)
 
 	var exams []exam_domain.Exam
+	exams = make([]exam_domain.Exam, 0, cursor.RemainingBatchLength())
 	for cursor.Next(ctx) {
 		var exam exam_domain.Exam
 		if err = cursor.Decode(&exam); err != nil {
@@ -352,7 +353,6 @@ func (e *examRepository) FetchManyByUnitIDInAdmin(ctx context.Context, unitID st
 	if err != nil {
 		return nil, exam_domain.DetailResponse{}, err
 	}
-
 	totalPages := (count + int64(perPage) - 1) / int64(perPage) // Calculate total pages
 
 	// Query for exercises
