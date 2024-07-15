@@ -157,7 +157,7 @@ func (e *examAnswerRepository) FetchManyAnswerByQuestionIDInUser(ctx context.Con
 
 	// Kiểm tra số lượng câu hỏi và câu trả lời
 	if len(answers) != len(questions) {
-		return exam_answer_domain.Response{}, errors.New("số câu trả lời không bằng số câu hỏi nên chưa thể tạo kết quả")
+		return exam_answer_domain.Response{}, errors.New("the number of the answer is not equal to the number of the question")
 	}
 
 	// Tính điểm
