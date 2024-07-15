@@ -19,7 +19,7 @@ require (
 	github.com/xuri/excelize/v2 v2.8.0
 	go.mongodb.org/mongo-driver v1.13.1
 	golang.org/x/crypto v0.21.0
-	golang.org/x/net v0.22.0
+	golang.org/x/net v0.23.0
 	golang.org/x/oauth2 v0.19.0
 	gopkg.in/errgo.v2 v2.1.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
